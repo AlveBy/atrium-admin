@@ -311,6 +311,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Captcha
+    |--------------------------------------------------------------------------
+    |
+    | One captcha for the public forms of every module (reviews, forms, ...):
+    | a form draws <x-atrium::captcha /> and validates with
+    | app(CaptchaManager::class)->rules().
+    |
+    | driver — none (off), image (built in: a sum drawn as a picture, no keys,
+    | no outside service) or recaptcha (Google reCAPTCHA v2, keys from
+    | https://www.google.com/recaptcha/admin; without them the image one is
+    | used). Other kinds: CaptchaManager::extend().
+    | image.ttl — minutes a question of the image captcha can be answered.
+    |
+    */
+    'captcha' => [
+        'driver' => env('ATRIUM_CAPTCHA', 'none'),
+        'recaptcha' => [
+            'site_key' => env('RECAPTCHA_SITE_KEY'),
+            'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+        ],
+        'image' => [
+            'ttl' => 10,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Map Settings
     |--------------------------------------------------------------------------
     |

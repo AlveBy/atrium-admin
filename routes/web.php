@@ -7,6 +7,7 @@
 
 declare(strict_types=1);
 
+use Atrium\Admin\Http\Controllers\CaptchaController;
 use Atrium\Admin\Http\Controllers\SeoFilesController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,3 +24,7 @@ Route::middleware('atrium.site')->group(function (): void {
         Route::get('sitemap-{part}.xml', [SeoFilesController::class, 'sitemapPart'])->whereNumber('part')->name('atrium.sitemap.part');
     }
 });
+
+// The picture of the built-in captcha (atrium.captcha.driver = image); the
+// question is encrypted in the address, nothing is kept on the server.
+Route::get('atrium/captcha.png', [CaptchaController::class, 'image'])->name('atrium.captcha.image');

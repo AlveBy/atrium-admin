@@ -11,6 +11,7 @@ namespace Atrium\Admin;
 
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
+use Atrium\Admin\Captcha\CaptchaManager;
 use Atrium\Admin\Contracts\Sitemapable;
 use Atrium\Admin\Hooks\Hooks;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
@@ -76,6 +77,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(Modules::class);
         $this->app->singleton(Settings::class);
         $this->app->singleton(Hooks::class);
+        $this->app->singleton(CaptchaManager::class);
         $this->app->singleton(ResourceRegistry::class);
         $this->app->singleton(ApiResources::class);
         $this->app->singleton(Permissions::class);
