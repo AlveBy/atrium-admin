@@ -58,6 +58,8 @@ const formData = computed(() => ({
     ...form.data()
 }))
 provide('formData', formData)
+// The module key the AI buttons send (alveby/atrium-ai).
+provide('aiModule', props.routeName?.replace(/^admin\./, '') || null)
 
 // Use form.submit(method, url) rather than form.post()/form.put(): a field
 // named e.g. "post" shadows the like-named method on the form object and the

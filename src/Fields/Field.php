@@ -418,6 +418,7 @@ abstract class Field implements Arrayable, JsonSerializable
             'attributes' => $this->attributes,
             'tab' => $this->tab,
             'tabOrder' => $this->tabOrder,
+            'ai' => method_exists($this, 'getAi') ? $this->getAi() : null,
         ], $this->getFieldProps());
     }
 

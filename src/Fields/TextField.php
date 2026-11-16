@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Fields;
 
+use Atrium\Admin\Fields\Concerns\AssistedByAi;
+
 class TextField extends Field
 {
+    use AssistedByAi;
+
     protected int $maxLength = 255;
 
     protected ?string $inputType = 'text';

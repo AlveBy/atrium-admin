@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Fields;
 
+use Atrium\Admin\Fields\Concerns\AssistedByAi;
+
 class TextareaField extends Field
 {
+    use AssistedByAi;
+
     protected int $rows = 4;
 
     protected ?int $maxLength = null;

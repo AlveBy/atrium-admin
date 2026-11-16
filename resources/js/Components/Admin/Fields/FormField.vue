@@ -2,6 +2,7 @@
 import { computed, inject, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import AdminFieldRenderer from './AdminFieldRenderer.vue'
+import AiAssist from './AiAssist.vue'
 
 /**
  * One field of a record form. A translatable field shows the text of the
@@ -53,6 +54,11 @@ function update(next) {
         ? { ...(props.modelValue || {}), [locale.value]: next }
         : next)
 }
+
+// A translation from AiAssist: every other language at once.
+function updateAll(values) {
+    emit('update:modelValue', { ...(props.modelValue || {}), ...values })
+}
 </script>
 
 <template>
@@ -63,5 +69,13 @@ function update(next) {
         :error="error"
         :data-content-locale-field="translatable ? locale : null"
         @update:model-value="update"
+    />
+    <AiAssist
+        v-if="field.ai"
+        :field="shownField"
+        :locale="translatable ? locale : null"
+        :translatable="translatable"
+        @apply="update"
+        @apply-all="updateAll"
     />
 </template>

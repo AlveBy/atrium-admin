@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Fields;
 
+use Atrium\Admin\Fields\Concerns\AssistedByAi;
+
 /**
  * ContentField - a field with a Text/HTML/Visual editor mode switch
  *
@@ -16,6 +18,8 @@ namespace Atrium\Admin\Fields;
  */
 class ContentField extends Field
 {
+    use AssistedByAi;
+
     protected string $defaultMode = 'wysiwyg';
 
     protected array $modes = ['text', 'html', 'wysiwyg'];

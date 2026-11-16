@@ -44,4 +44,13 @@ class AtriumServer extends Server
         UpdateRecord::class,
         DeleteRecord::class,
     ];
+
+    /**
+     * Tools of other packages: they push their classes to atrium.mcp.tools
+     * (alveby/atrium-ai adds generate_text).
+     */
+    protected function boot(): void
+    {
+        $this->tools = array_values(array_unique([...$this->tools, ...(array) config('atrium.mcp.tools', [])]));
+    }
 }

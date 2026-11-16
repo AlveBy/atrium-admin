@@ -252,17 +252,20 @@ trait HasAdminSeo
             TextField::make('seo_title')
                 ->label(__('atrium::resource.seo.title'))
                 ->maxLength(255)
-                ->hint(__('atrium::resource.seo.title_hint')),
+                ->hint(__('atrium::resource.seo.title_hint'))
+                ->ai('seo_title'),
 
             TextareaField::make('seo_keywords')
                 ->label(__('atrium::resource.seo.keywords'))
                 ->rows(3)
-                ->hint(__('atrium::resource.seo.keywords_hint')),
+                ->hint(__('atrium::resource.seo.keywords_hint'))
+                ->ai('seo_keywords'),
 
             TextareaField::make('seo_description')
                 ->label(__('atrium::resource.seo.description'))
                 ->rows(3)
-                ->hint(__('atrium::resource.seo.description_hint')),
+                ->hint(__('atrium::resource.seo.description_hint'))
+                ->ai('seo_description'),
 
             TextField::make('seo_page_title')
                 ->label(__('atrium::resource.seo.page_title'))
@@ -271,7 +274,8 @@ trait HasAdminSeo
 
             TextareaField::make('seo_preview_picture_alt')
                 ->label(__('atrium::resource.seo.preview_picture_alt'))
-                ->rows(2),
+                ->rows(2)
+                ->ai('alt', from: 'preview_picture'),
 
             TextareaField::make('seo_preview_picture_title')
                 ->label(__('atrium::resource.seo.preview_picture_title'))
@@ -283,7 +287,8 @@ trait HasAdminSeo
 
             TextareaField::make('seo_detail_picture_alt')
                 ->label(__('atrium::resource.seo.detail_picture_alt'))
-                ->rows(2),
+                ->rows(2)
+                ->ai('alt', from: 'detail_picture'),
 
             TextareaField::make('seo_detail_picture_title')
                 ->label(__('atrium::resource.seo.detail_picture_title'))
