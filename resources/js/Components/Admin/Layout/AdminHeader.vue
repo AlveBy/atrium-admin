@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import AdminUserDropdown from './AdminUserDropdown.vue'
 import LocaleSwitcher from './LocaleSwitcher.vue'
+import SiteSwitcher from './SiteSwitcher.vue'
 
 const props = defineProps({
     user: {
@@ -53,7 +54,7 @@ const emit = defineEmits(['toggle-sidebar', 'toggle-collapse'])
             -->
             <a
                 data-action="visit-site"
-                href="/"
+                :href="$page.props.currentSite?.url || '/'"
                 target="_blank"
                 rel="noopener"
                 class="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -68,6 +69,7 @@ const emit = defineEmits(['toggle-sidebar', 'toggle-collapse'])
 
         <!-- Right side -->
         <div class="flex items-center space-x-4">
+            <SiteSwitcher />
             <LocaleSwitcher />
 
             <!-- User dropdown -->

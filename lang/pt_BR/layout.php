@@ -9,6 +9,7 @@ return [
     'brand_short' => 'Admin',
     'visit_site' => 'Ir para o site',
     'visit_site_hint' => 'Abrir o site em uma nova aba',
+    'site' => 'Site',
 
     'user_menu' => [
         'profile' => 'Perfil',

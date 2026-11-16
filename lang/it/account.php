@@ -42,6 +42,10 @@ return [
             'password_confirmation' => 'Conferma password',
             'is_active' => 'Attivo',
             'created_at' => 'Creato il',
+            'sites' => 'Siti',
+        ],
+        'hints' => [
+            'sites' => 'I siti con cui può lavorare questo amministratore. Nessuno selezionato: tutti.',
         ],
         'creating' => 'Nuovo',
         'total' => 'Record totali: :count',

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix(config('atrium.api.prefix', 'api/v1'))
-    ->middleware('api')
+    ->middleware(['api', 'atrium.site'])
     ->group(function () {
         Route::get('/', [DocsController::class, 'markdown'])->name('admin.api.docs');
         Route::get('openapi.json', [DocsController::class, 'openApi'])->name('admin.api.openapi');

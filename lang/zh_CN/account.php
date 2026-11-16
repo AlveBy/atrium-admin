@@ -42,6 +42,10 @@ return [
             'password_confirmation' => '确认密码',
             'is_active' => '已启用',
             'created_at' => '创建时间',
+            'sites' => '站点',
+        ],
+        'hints' => [
+            'sites' => '该管理员可以操作的站点。均不勾选则表示全部站点。',
         ],
         'creating' => '新建',
         'total' => '记录总数：:count',

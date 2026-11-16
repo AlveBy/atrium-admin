@@ -9,11 +9,15 @@ use Atrium\Admin\Columns\DateColumn;
 use Atrium\Admin\Columns\TextColumn;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\CheckboxField;
+use Atrium\Admin\Fields\MultiSelectField;
 use Atrium\Admin\Fields\TextField;
+use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Traits\InteractsWithAdmin;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 use Laravel\Sanctum\HasApiTokens;
 
 class AdminUser extends Authenticatable implements Administrable
@@ -28,6 +32,7 @@ class AdminUser extends Authenticatable implements Administrable
         'password',
         'is_active',
         'locale',
+        'site_ids',
     ];
 
     protected $hidden = [
@@ -43,6 +48,7 @@ class AdminUser extends Authenticatable implements Administrable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'two_factor_sent_at' => 'datetime',
+            'site_ids' => 'array',
             'two_factor_expires_at' => 'datetime',
         ];
     }
@@ -96,6 +102,14 @@ class AdminUser extends Authenticatable implements Administrable
             CheckboxField::make('is_active')
                 ->label(__('atrium::account.users.fields.is_active'))
                 ->default(true),
+
+            // With one site there is nothing to limit.
+            ...(app(Sites::class)->isMultisite() ? [
+                MultiSelectField::make('site_ids')
+                    ->label(__('atrium::account.users.fields.sites'))
+                    ->hint(__('atrium::account.users.hints.sites'))
+                    ->options(app(Sites::class)->all()->mapWithKeys(fn ($site) => [(string) $site->id => $site->name])->all()),
+            ] : []),
         ];
     }
 
@@ -141,6 +155,8 @@ class AdminUser extends Authenticatable implements Administrable
             'email' => ['required', 'string', 'email', 'max:255', 'unique:admin_users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'is_active' => ['boolean'],
+            'site_ids' => ['nullable', 'array'],
+            'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->map(fn ($id) => (string) $id)->all())],
         ];
     }
 
@@ -154,6 +170,8 @@ class AdminUser extends Authenticatable implements Administrable
             'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'is_active' => ['boolean'],
+            'site_ids' => ['nullable', 'array'],
+            'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->map(fn ($id) => (string) $id)->all())],
         ];
     }
 
@@ -163,5 +181,23 @@ class AdminUser extends Authenticatable implements Administrable
     public function getAdminTitle(): string
     {
         return $this->name;
+    }
+
+    /**
+     * The sites this administrator may work with: those ticked on the
+     * account, or all of them when none is.
+     *
+     * @return Collection<int,Site>
+     */
+    public function allowedSites(): Collection
+    {
+        $all = app(Sites::class)->all();
+        $ids = array_map('strval', (array) $this->site_ids);
+
+        if ($ids === []) {
+            return $all;
+        }
+
+        return $all->filter(fn (Site $site): bool => in_array((string) $site->id, $ids, true))->values();
     }
 }

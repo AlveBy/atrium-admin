@@ -9,6 +9,7 @@ return [
     'brand_short' => '管理',
     'visit_site' => 'サイトへ移動',
     'visit_site_hint' => '新しいタブでサイトを開く',
+    'site' => 'サイト',
 
     'user_menu' => [
         'profile' => 'プロフィール',

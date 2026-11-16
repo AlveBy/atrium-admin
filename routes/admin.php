@@ -11,6 +11,7 @@ use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Http\Controllers\LocaleController;
 use Atrium\Admin\Http\Controllers\ProfileController;
 use Atrium\Admin\Http\Controllers\ResourceController;
+use Atrium\Admin\Http\Controllers\SiteController;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Illuminate\Support\Facades\Route;
 
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix(config('atrium.prefix', 'admin'))
-    ->middleware([...config('atrium.middleware', ['web']), 'atrium.inertia'])
+    ->middleware([...config('atrium.middleware', ['web']), 'atrium.site', 'atrium.inertia'])
     ->group(function () {
 
         // Interface language — for guests on the sign-in page too.
@@ -61,6 +62,9 @@ Route::prefix(config('atrium.prefix', 'admin'))
             Route::post('upload', [FileManagerController::class, 'upload'])->name('admin.upload');
             Route::get('filemanager', [FileManagerController::class, 'index'])->name('admin.filemanager.index');
             Route::delete('filemanager', [FileManagerController::class, 'destroy'])->name('admin.filemanager.destroy');
+
+            // The site the panel works with (header switch)
+            Route::post('site', [SiteController::class, 'update'])->name('admin.site');
 
             // API tokens for external programs
             Route::get('api-tokens', [ApiTokenController::class, 'index'])->name('admin.api-tokens.index');

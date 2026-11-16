@@ -42,6 +42,10 @@ return [
             'password_confirmation' => 'Confirmar senha',
             'is_active' => 'Ativo',
             'created_at' => 'Criado em',
+            'sites' => 'Sites',
+        ],
+        'hints' => [
+            'sites' => 'Os sites com os quais este administrador pode trabalhar. Nenhum marcado — todos.',
         ],
         'creating' => 'Novo',
         'total' => 'Total de registros: :count',

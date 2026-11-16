@@ -9,6 +9,7 @@ return [
     'brand_short' => '管理',
     'visit_site' => '访问网站',
     'visit_site_hint' => '在新标签页中打开网站',
+    'site' => '站点',
 
     'user_menu' => [
         'profile' => '个人资料',

@@ -8,6 +8,7 @@ use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
+use Atrium\Admin\Support\Sites;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -73,9 +74,16 @@ final class HandleAtriumRequests extends Middleware
             // The languages the content is written in — for the switch on
             // forms with translatable fields.
             'contentLocales' => fn () => app(ContentLanguages::class)->all()
-                ->map(fn ($language) => ['code' => $language->code, 'name' => $language->name, 'default' => $language->is_default])
+                ->map(fn ($language) => ['code' => $language->code, 'name' => $language->name, 'default' => $language->code === app(ContentLanguages::class)->default()])
                 ->values()
                 ->all(),
+            // The header's site switch: the sites this admin may work with.
+            'sites' => fn () => $this->sites($request),
+            'currentSite' => fn () => [
+                'id' => app(Sites::class)->current()->id,
+                'name' => app(Sites::class)->current()->name,
+                'url' => app(Sites::class)->current()->url(),
+            ],
             // Sent once per language and kept by the client across visits.
             'translations' => Inertia::once(fn () => app(Locales::class)->dictionary(app()->getLocale()))
                 ->as('atrium.translations.'.app()->getLocale()),
@@ -87,5 +95,16 @@ final class HandleAtriumRequests extends Middleware
                 'info' => $request->session()->get('info'),
             ],
         ];
+    }
+
+    /**
+     * @return array<int,array{id:int|null,name:string}>
+     */
+    private function sites(Request $request): array
+    {
+        $user = $request->user(config('atrium.auth.guard', 'admin'));
+        $sites = $user instanceof AdminUser ? $user->allowedSites() : app(Sites::class)->all();
+
+        return $sites->map(fn ($site) => ['id' => $site->id, 'name' => $site->name])->values()->all();
     }
 }

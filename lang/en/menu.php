@@ -7,4 +7,5 @@ return [
     'administrators' => 'Administrators',
     'api_tokens' => 'API tokens',
     'languages' => 'Languages',
+    'sites' => 'Sites',
 ];

@@ -9,6 +9,7 @@ return [
     'brand_short' => 'Адмін',
     'visit_site' => 'Перайсці на сайт',
     'visit_site_hint' => 'Адкрыць сайт у новай укладцы',
+    'site' => 'Сайт',
 
     'user_menu' => [
         'profile' => 'Профіль',

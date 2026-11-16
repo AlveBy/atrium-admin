@@ -7,4 +7,5 @@ return [
     'administrators' => 'Администраторы',
     'api_tokens' => 'API-токены',
     'languages' => 'Языки',
+    'sites' => 'Сайты',
 ];

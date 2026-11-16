@@ -42,6 +42,10 @@ return [
             'password_confirmation' => 'Potwierdź hasło',
             'is_active' => 'Aktywny',
             'created_at' => 'Utworzono',
+            'sites' => 'Witryny',
+        ],
+        'hints' => [
+            'sites' => 'Witryny, z którymi może pracować ten administrator. Nic nie zaznaczono — wszystkie.',
         ],
         'creating' => 'Nowy',
         'total' => 'Liczba rekordów: :count',

@@ -10,6 +10,7 @@ return [
     'brand_short' => 'Admin',
     'visit_site' => 'Go to site',
     'visit_site_hint' => 'Open the site in a new tab',
+    'site' => 'Site',
 
     'user_menu' => [
         'profile' => 'Profile',

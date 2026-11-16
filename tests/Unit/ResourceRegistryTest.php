@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Unit;
 
 use Atrium\Admin\Models\Language;
+use Atrium\Admin\Models\Site;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Tests\Fixtures\NotAdministrable;
 use Atrium\Admin\Tests\Fixtures\Post;
@@ -17,7 +18,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $registry = new ResourceRegistry;
 
-        $this->assertSame(['languages' => Language::class, 'posts' => Post::class], $registry->all());
+        $this->assertSame(['sites' => Site::class, 'languages' => Language::class, 'posts' => Post::class], $registry->all());
         $this->assertSame('posts', $registry->keyOf(Post::class));
         $this->assertSame(Post::class, $registry->modelForRoute('admin.posts.edit'));
     }

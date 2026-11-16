@@ -42,6 +42,10 @@ return [
             'password_confirmation' => 'パスワードの確認',
             'is_active' => '有効',
             'created_at' => '作成日時',
+            'sites' => 'サイト',
+        ],
+        'hints' => [
+            'sites' => 'この管理者が操作できるサイトです。何も選択しない場合はすべてのサイトが対象です。',
         ],
         'creating' => '新規',
         'total' => '総件数: :count',

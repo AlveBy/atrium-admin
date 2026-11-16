@@ -43,6 +43,10 @@ return [
             'password_confirmation' => 'Confirm password',
             'is_active' => 'Active',
             'created_at' => 'Created',
+            'sites' => 'Sites',
+        ],
+        'hints' => [
+            'sites' => 'The sites this administrator may work with. None ticked — all of them.',
         ],
         'creating' => 'New',
         'total' => 'Total records: :count',

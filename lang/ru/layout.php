@@ -10,6 +10,7 @@ return [
     'brand_short' => 'Админка',
     'visit_site' => 'Перейти на сайт',
     'visit_site_hint' => 'Открыть сайт в новой вкладке',
+    'site' => 'Сайт',
 
     'user_menu' => [
         'profile' => 'Профиль',

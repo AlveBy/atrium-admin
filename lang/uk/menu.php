@@ -9,4 +9,5 @@ return [
     'administrators' => 'Адміністратори',
     'api_tokens' => 'Токени API',
     'languages' => 'Мови',
+    'sites' => 'Сайти',
 ];

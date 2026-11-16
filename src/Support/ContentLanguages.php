@@ -9,7 +9,9 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 
 /**
- * The languages the site's content is written in, as set in the admin.
+ * The languages the current site's content is written in, as set in the
+ * admin: every active language, or the ones the site lists, its own default
+ * language first.
  *
  * Read once per request. Before the migrations have run there is no table;
  * the app's own locale then stands in, so nothing that only reads content
@@ -21,7 +23,7 @@ final class ContentLanguages
     private ?Collection $active = null;
 
     /**
-     * Active languages, the default one first, then by sort.
+     * The site's languages, the default one first, then by sort.
      *
      * @return Collection<int,Language>
      */
@@ -99,11 +101,23 @@ final class ContentLanguages
             $languages = new Collection;
         }
 
-        if ($languages->isEmpty()) {
-            $code = str_replace('_', '-', strtolower((string) config('app.locale', 'en')));
-            $languages = new Collection([new Language(['code' => $code, 'name' => strtoupper($code), 'active' => true, 'is_default' => true])]);
+        $site = app(Sites::class)->current();
+
+        if ($site->languages) {
+            $languages = $languages->filter(fn (Language $language): bool => in_array($language->code, $site->languages, true))->values();
         }
 
-        return $languages;
+        if ($languages->isEmpty()) {
+            $code = str_replace('_', '-', strtolower((string) config('app.locale', 'en')));
+
+            return new Collection([new Language(['code' => $code, 'name' => strtoupper($code), 'active' => true, 'is_default' => true])]);
+        }
+
+        // The site's own default language, else the panel-wide one.
+        $default = $languages->firstWhere('code', $site->default_language)
+            ?? $languages->firstWhere('is_default', true)
+            ?? $languages->first();
+
+        return $languages->sortBy(fn (Language $language): int => $language->is($default) ? 0 : 1)->values();
     }
 }

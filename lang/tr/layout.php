@@ -9,6 +9,7 @@ return [
     'brand_short' => 'Yönetim',
     'visit_site' => 'Siteye git',
     'visit_site_hint' => 'Siteyi yeni sekmede aç',
+    'site' => 'Site',
 
     'user_menu' => [
         'profile' => 'Profil',

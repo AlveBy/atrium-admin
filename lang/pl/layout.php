@@ -9,6 +9,7 @@ return [
     'brand_short' => 'Admin',
     'visit_site' => 'Przejdź do witryny',
     'visit_site_hint' => 'Otwórz witrynę w nowej karcie',
+    'site' => 'Witryna',
 
     'user_menu' => [
         'profile' => 'Profil',

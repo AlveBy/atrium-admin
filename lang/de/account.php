@@ -42,6 +42,10 @@ return [
             'password_confirmation' => 'Passwort bestätigen',
             'is_active' => 'Aktiv',
             'created_at' => 'Erstellt',
+            'sites' => 'Websites',
+        ],
+        'hints' => [
+            'sites' => 'Die Websites, mit denen dieser Administrator arbeiten darf. Nichts ausgewählt – alle.',
         ],
         'creating' => 'Neu',
         'total' => 'Einträge insgesamt: :count',

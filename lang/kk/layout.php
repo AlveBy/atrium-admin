@@ -9,6 +9,7 @@ return [
     'brand_short' => 'Әкімші',
     'visit_site' => 'Сайтқа өту',
     'visit_site_hint' => 'Сайтты жаңа қойындыда ашу',
+    'site' => 'Сайт',
 
     'user_menu' => [
         'profile' => 'Профиль',

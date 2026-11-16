@@ -42,6 +42,10 @@ return [
             'password_confirmation' => 'Parolayı onaylayın',
             'is_active' => 'Etkin',
             'created_at' => 'Oluşturulma',
+            'sites' => 'Siteler',
+        ],
+        'hints' => [
+            'sites' => 'Bu yöneticinin çalışabileceği siteler. Hiçbiri işaretli değilse — hepsi.',
         ],
         'creating' => 'Yeni',
         'total' => 'Toplam kayıt: :count',

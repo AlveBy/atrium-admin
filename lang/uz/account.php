@@ -42,6 +42,10 @@ return [
             'password_confirmation' => 'Parolni tasdiqlang',
             'is_active' => 'Faol',
             'created_at' => 'Yaratilgan',
+            'sites' => 'Saytlar',
+        ],
+        'hints' => [
+            'sites' => 'Bu administrator ishlashi mumkin boʻlgan saytlar. Hech narsa belgilanmasa — barchasi.',
         ],
         'creating' => 'Yangi',
         'total' => 'Jami yozuvlar: :count',

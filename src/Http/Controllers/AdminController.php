@@ -10,6 +10,8 @@ use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\PublicUrl;
+use Atrium\Admin\Support\Sites;
+use Atrium\Admin\Traits\BelongsToSite;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -18,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -452,7 +455,7 @@ abstract class AdminController extends Controller
      */
     protected function ignoreCurrentRecord(array $rules, ?Model $record): array
     {
-        if ($record === null || ! $record->exists) {
+        if (($record === null || ! $record->exists) && ! $this->isPerSite()) {
             return $rules;
         }
 
@@ -482,8 +485,7 @@ abstract class AdminController extends Controller
                     $column = $attribute;
                 }
 
-                $normalized[$index] = Rule::unique($table, $column)
-                    ->ignore($record->getKey(), $record->getKeyName());
+                $normalized[$index] = $this->uniqueRule($table, $column, $record);
 
                 $changed = true;
             }
@@ -930,13 +932,37 @@ abstract class AdminController extends Controller
 
                 $parameters = explode(',', substr($rule, strlen('unique:')));
                 $column = ($parameters[1] ?? '') !== '' && strtoupper($parameters[1]) !== 'NULL' ? $parameters[1] : $name;
-                $unique = Rule::unique($parameters[0], "{$column}->{$code}");
 
-                return $record?->exists ? $unique->ignore($record->getKey(), $record->getKeyName()) : $unique;
+                return $this->uniqueRule($parameters[0], "{$column}->{$code}", $record);
             }, $fieldRules);
         }
 
         return $rules;
+    }
+
+    /**
+     * A unique rule that exempts the record being edited and, for a module
+     * whose records belong to sites, looks only at the current site: two
+     * sites may both have /about.
+     */
+    protected function uniqueRule(string $table, string $column, ?Model $record): Unique
+    {
+        $rule = Rule::unique($table, $column);
+
+        if ($record !== null && $record->exists) {
+            $rule->ignore($record->getKey(), $record->getKeyName());
+        }
+
+        if ($this->isPerSite() && $table === (new $this->model)->getTable()) {
+            $rule->where('site_id', app(Sites::class)->current()->id);
+        }
+
+        return $rule;
+    }
+
+    protected function isPerSite(): bool
+    {
+        return in_array(BelongsToSite::class, class_uses_recursive($this->model), true);
     }
 
     /**

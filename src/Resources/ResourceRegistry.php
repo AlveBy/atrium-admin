@@ -6,6 +6,7 @@ namespace Atrium\Admin\Resources;
 
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Models\Language;
+use Atrium\Admin\Models\Site;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
@@ -19,12 +20,12 @@ use InvalidArgumentException;
  * The key of a module is the model's getAdminRoutePrefix() ("articles"), so its
  * routes are named `admin.articles.index`, `admin.articles.edit`, …
  *
- * The panel's own modules (content languages) come first and need no config.
+ * The panel's own modules (sites, content languages) come first and need no config.
  */
 final class ResourceRegistry
 {
     /** @var array<int,class-string<Model&Administrable>> */
-    private const BUILT_IN = [Language::class];
+    private const BUILT_IN = [Site::class, Language::class];
 
     /** @var array<string,class-string<Model&Administrable>>|null */
     private ?array $resources = null;

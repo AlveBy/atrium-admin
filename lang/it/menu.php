@@ -9,4 +9,5 @@ return [
     'administrators' => 'Amministratori',
     'api_tokens' => 'Token API',
     'languages' => 'Lingue',
+    'sites' => 'Siti',
 ];

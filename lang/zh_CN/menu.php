@@ -9,4 +9,5 @@ return [
     'administrators' => '管理员',
     'api_tokens' => 'API 令牌',
     'languages' => '语言',
+    'sites' => '站点',
 ];

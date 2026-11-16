@@ -10,6 +10,7 @@ use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
 use Atrium\Admin\Http\Middleware\HandleAtriumRequests;
 use Atrium\Admin\Http\Middleware\RecordPageTiming;
 use Atrium\Admin\Http\Middleware\RedirectIfAdminAuthenticated;
+use Atrium\Admin\Http\Middleware\ResolveSite;
 use Atrium\Admin\Http\Middleware\SetContentLocale;
 use Atrium\Admin\Http\Middleware\SlugRedirectMiddleware;
 use Atrium\Admin\Models\AdminUser;
@@ -19,6 +20,7 @@ use Atrium\Admin\Services\SlugService;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
+use Atrium\Admin\Support\Sites;
 use Closure;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
@@ -61,6 +63,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(Menu::class);
         $this->app->singleton(Locales::class);
         $this->app->singleton(ContentLanguages::class);
+        $this->app->singleton(Sites::class);
     }
 
     public function boot(): void
@@ -100,6 +103,10 @@ final class AtriumServiceProvider extends ServiceProvider
         $router->aliasMiddleware('atrium.inertia', HandleAtriumRequests::class);
         $router->aliasMiddleware('slug.redirect', SlugRedirectMiddleware::class);
         $router->aliasMiddleware('atrium.content-locale', SetContentLocale::class);
+        $router->aliasMiddleware('atrium.site', ResolveSite::class);
+
+        // Every page of the app knows its site, picked by domain.
+        $router->pushMiddlewareToGroup('web', ResolveSite::class);
 
         // Page timings feed the dashboard gadgets. Pushed here so the gadgets
         // work right after install, without editing bootstrap/app.php.
@@ -169,11 +176,11 @@ final class AtriumServiceProvider extends ServiceProvider
     private function registerLocalizedRoutes(): void
     {
         Route::macro('localized', function (Closure $routes): void {
-            Route::middleware('atrium.content-locale')->group($routes);
+            Route::middleware(['atrium.site', 'atrium.content-locale'])->group($routes);
 
             Route::prefix('{locale}')
                 ->where(['locale' => Language::CODE_PATTERN])
-                ->middleware('atrium.content-locale')
+                ->middleware(['atrium.site', 'atrium.content-locale'])
                 ->name('localized.')
                 ->group($routes);
         });

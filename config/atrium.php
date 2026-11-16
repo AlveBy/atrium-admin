@@ -142,6 +142,11 @@ return [
             'icon' => 'users',
         ],
         [
+            'label' => 'atrium::menu.sites',
+            'route' => 'admin.sites.index',
+            'icon' => 'home',
+        ],
+        [
             'label' => 'atrium::menu.languages',
             'route' => 'admin.languages.index',
             'icon' => 'globe',

@@ -9,6 +9,7 @@ return [
     'brand_short' => 'Admin',
     'visit_site' => 'Saytga oʻtish',
     'visit_site_hint' => 'Saytni yangi varaqda ochish',
+    'site' => 'Sayt',
 
     'user_menu' => [
         'profile' => 'Profil',
