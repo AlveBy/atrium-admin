@@ -29,9 +29,9 @@ const emit = defineEmits(['toggle-sidebar', 'toggle-collapse'])
         transform-gpu gives the bar a layer of its own: WebKit otherwise
         paints sticky table cells inside a scrolling list above it.
     -->
-    <header class="sticky top-0 z-30 transform-gpu h-16 bg-surface border-b border-line flex items-center justify-between px-4 lg:px-6">
+    <header class="sticky top-0 z-30 transform-gpu h-16 bg-surface border-b border-line flex items-center justify-between gap-1 px-3 sm:gap-2 sm:px-4 lg:px-6">
         <!-- Left side -->
-        <div class="flex items-center space-x-4">
+        <div class="flex shrink-0 items-center gap-1 sm:gap-4">
             <!-- Mobile menu button -->
             <button
                 @click="$emit('toggle-sidebar')"
@@ -76,8 +76,11 @@ const emit = defineEmits(['toggle-sidebar', 'toggle-collapse'])
             </a>
         </div>
 
-        <!-- Right side -->
-        <div class="flex items-center space-x-4">
+        <!--
+            Right side. Narrow gaps on a phone: with the old ones the header was
+            wider than the screen and the browser zoomed the whole page out.
+        -->
+        <div class="flex min-w-0 items-center gap-1 sm:gap-2 lg:gap-3">
             <SiteSwitcher />
             <LocaleSwitcher />
 

@@ -15,6 +15,9 @@ return [
     'visit_site' => 'Siteye git',
     'visit_site_hint' => 'Siteyi yeni sekmede aç',
     'site' => 'Site',
+    'site_hint' => 'Kayıtlarını düzenlediğiniz site',
+    'admin_language' => 'Yönetim paneli dili',
+    'admin_language_hint' => 'Panelin menü ve düğmelerinin dili, her yönetici için ayrı. İçerik dili kayıt formunda seçilir.',
 
     'user_menu' => [
         'profile' => 'Profil',

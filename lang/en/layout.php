@@ -16,6 +16,9 @@ return [
     'visit_site' => 'Go to site',
     'visit_site_hint' => 'Open the site in a new tab',
     'site' => 'Site',
+    'site_hint' => 'The site whose records you are editing',
+    'admin_language' => 'Admin language',
+    'admin_language_hint' => 'The language of the panel menus and buttons, set for each administrator. The content language is chosen on the record form.',
 
     'user_menu' => [
         'profile' => 'Profile',

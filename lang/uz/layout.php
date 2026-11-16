@@ -15,6 +15,9 @@ return [
     'visit_site' => 'Saytga oʻtish',
     'visit_site_hint' => 'Saytni yangi varaqda ochish',
     'site' => 'Sayt',
+    'site_hint' => 'Yozuvlari hozir tahrirlanayotgan sayt',
+    'admin_language' => 'Admin panel tili',
+    'admin_language_hint' => 'Panel menyusi va tugmalarining tili, har bir administratorda oʻziniki. Kontent tili yozuv shaklida tanlanadi.',
 
     'user_menu' => [
         'profile' => 'Profil',

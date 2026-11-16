@@ -15,6 +15,9 @@ return [
     'visit_site' => 'サイトへ移動',
     'visit_site_hint' => '新しいタブでサイトを開く',
     'site' => 'サイト',
+    'site_hint' => '現在レコードを編集しているサイト',
+    'admin_language' => '管理画面の言語',
+    'admin_language_hint' => '管理画面のメニューとボタンの言語で、管理者ごとに設定されます。コンテンツの言語はレコードのフォームで選びます。',
 
     'user_menu' => [
         'profile' => 'プロフィール',

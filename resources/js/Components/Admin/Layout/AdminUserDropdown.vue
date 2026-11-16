@@ -66,7 +66,7 @@ onUnmounted(() => {
             data-action="user-menu"
             @click="toggle"
             :aria-expanded="isOpen ? 'true' : 'false'"
-            class="flex items-center space-x-3 p-2 rounded-lg hover:bg-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            class="flex items-center gap-3 p-2 rounded-lg hover:bg-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
         >
             <div class="w-8 h-8 rounded-full bg-accent-soft flex items-center justify-center text-accent-soft-fg font-semibold">
                 {{ user.name?.charAt(0)?.toUpperCase() || 'A' }}
@@ -75,7 +75,7 @@ onUnmounted(() => {
                 <p class="text-sm font-medium text-fg">{{ user.name }}</p>
                 <p class="text-xs text-muted">{{ user.email }}</p>
             </div>
-            <svg class="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="hidden sm:block w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
         </button>

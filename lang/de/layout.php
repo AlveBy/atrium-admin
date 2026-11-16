@@ -15,6 +15,9 @@ return [
     'visit_site' => 'Zur Website',
     'visit_site_hint' => 'Website in einem neuen Tab öffnen',
     'site' => 'Website',
+    'site_hint' => 'Die Website, deren Einträge Sie gerade bearbeiten',
+    'admin_language' => 'Admin-Sprache',
+    'admin_language_hint' => 'Sprache der Menüs und Schaltflächen des Panels, für jeden Administrator eigens. Die Sprache der Inhalte wählen Sie im Formular des Eintrags.',
 
     'user_menu' => [
         'profile' => 'Profil',

@@ -15,6 +15,9 @@ return [
     'visit_site' => 'Przejdź do witryny',
     'visit_site_hint' => 'Otwórz witrynę w nowej karcie',
     'site' => 'Witryna',
+    'site_hint' => 'Witryna, której wpisy teraz edytujesz',
+    'admin_language' => 'Język panelu',
+    'admin_language_hint' => 'Język menu i przycisków panelu, osobny dla każdego administratora. Język treści wybiera się w formularzu wpisu.',
 
     'user_menu' => [
         'profile' => 'Profil',

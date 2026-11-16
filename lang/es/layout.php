@@ -15,6 +15,9 @@ return [
     'visit_site' => 'Ir al sitio',
     'visit_site_hint' => 'Abrir el sitio en una pestaña nueva',
     'site' => 'Sitio',
+    'site_hint' => 'El sitio cuyos registros está editando',
+    'admin_language' => 'Idioma del panel',
+    'admin_language_hint' => 'Idioma de los menús y botones del panel, propio de cada administrador. El idioma de los contenidos se elige en el formulario del registro.',
 
     'user_menu' => [
         'profile' => 'Perfil',

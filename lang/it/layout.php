@@ -15,6 +15,9 @@ return [
     'visit_site' => 'Vai al sito',
     'visit_site_hint' => 'Apri il sito in una nuova scheda',
     'site' => 'Sito',
+    'site_hint' => 'Il sito di cui stai modificando i contenuti',
+    'admin_language' => 'Lingua del pannello',
+    'admin_language_hint' => 'Lingua di menu e pulsanti del pannello, propria di ogni amministratore. La lingua dei contenuti si sceglie nel modulo dell’elemento.',
 
     'user_menu' => [
         'profile' => 'Profilo',
