@@ -25,7 +25,11 @@ const emit = defineEmits(['toggle-sidebar', 'toggle-collapse'])
 </script>
 
 <template>
-    <header class="sticky top-0 z-30 h-16 bg-surface border-b border-line flex items-center justify-between px-4 lg:px-6">
+    <!--
+        transform-gpu gives the bar a layer of its own: WebKit otherwise
+        paints sticky table cells inside a scrolling list above it.
+    -->
+    <header class="sticky top-0 z-30 transform-gpu h-16 bg-surface border-b border-line flex items-center justify-between px-4 lg:px-6">
         <!-- Left side -->
         <div class="flex items-center space-x-4">
             <!-- Mobile menu button -->

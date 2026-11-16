@@ -95,7 +95,8 @@ const cellTitle = (item, column) => {
 </script>
 
 <template>
-    <div class="bg-surface rounded-lg shadow overflow-hidden">
+    <!-- isolate keeps the pinned actions column (z-10) inside the card, under the header bar. -->
+    <div class="isolate bg-surface rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
             <!--
                 border-separate is required: Tailwind collapses table borders

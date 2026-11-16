@@ -326,4 +326,36 @@
         color: var(--atrium-muted);
         opacity: 1;
     }
+
+    /*
+     * A drop-down list is drawn by the page, not by the system: Safari
+     * ignores the colours and the padding of a native one. The chevron is two
+     * gradients in the text colour, so it follows every theme.
+     */
+    select:not([multiple]):not([size]) {
+        appearance: none;
+        background-color: var(--atrium-surface);
+        color: var(--atrium-fg);
+        background-image:
+            linear-gradient(45deg, transparent 50%, currentColor 50%),
+            linear-gradient(135deg, currentColor 50%, transparent 50%);
+        background-position:
+            calc(100% - 1rem) 50%,
+            calc(100% - 0.6875rem) 50%;
+        background-size: 0.3125rem 0.3125rem;
+        background-repeat: no-repeat;
+    }
+
+    select option {
+        background-color: var(--atrium-surface);
+        color: var(--atrium-fg);
+    }
+}
+
+/*
+ * Room for the chevron. Outside the layers on purpose, so a select's own
+ * px-2 or px-3 cannot put its text under the chevron.
+ */
+select:not([multiple]):not([size]) {
+    padding-right: 2rem;
 }
