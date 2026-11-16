@@ -25,6 +25,27 @@ final class CommandsTest extends TestCase
             ->assertFailed();
     }
 
+    public function test_make_module_writes_a_translatable_model_and_its_migration(): void
+    {
+        $model = app_path('Models/Brochure.php');
+        $before = glob(database_path('migrations/*_create_brochures_table.php')) ?: [];
+
+        try {
+            $this->artisan('atrium:make-module', ['name' => 'Brochure'])->assertSuccessful();
+
+            $code = (string) file_get_contents($model);
+            $this->assertStringContainsString('use InteractsWithAdmin, Translatable;', $code);
+            $this->assertStringContainsString("protected array \$translatable = ['name', 'code', 'preview_text', 'detail_text'];", $code);
+            $this->assertStringContainsString("->unique('brochures', 'code')", $code);
+
+            $migrations = array_diff(glob(database_path('migrations/*_create_brochures_table.php')) ?: [], $before);
+            $this->assertCount(1, $migrations);
+            $this->assertStringContainsString("\$table->json('name');", (string) file_get_contents((string) reset($migrations)));
+        } finally {
+            File::delete([$model, ...array_diff(glob(database_path('migrations/*_create_brochures_table.php')) ?: [], $before)]);
+        }
+    }
+
     public function test_config_writer_adds_a_module_once(): void
     {
         $path = sys_get_temp_dir().'/atrium-config-'.uniqid().'.php';

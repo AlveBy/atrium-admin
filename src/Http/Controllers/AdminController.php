@@ -8,6 +8,7 @@ use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
+use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\PublicUrl;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -43,6 +44,9 @@ abstract class AdminController extends Controller
      * @var array<string,array<int,Field>>
      */
     protected array $contextFieldCache = [];
+
+    /** @var array<int,string>|null */
+    private ?array $translatableCache = null;
 
     /**
      * Get Inertia page path prefix.
@@ -86,9 +90,16 @@ abstract class AdminController extends Controller
                 ->toArray();
 
             if (! empty($searchable)) {
-                $query->where(function ($q) use ($searchable, $search) {
+                $codes = $this->contentLanguages()->codes();
+
+                $query->where(function ($q) use ($searchable, $search, $codes) {
                     foreach ($searchable as $column) {
-                        $q->orWhere($column, 'like', "%{$search}%");
+                        // A translatable column is JSON: search every language.
+                        if ($this->isTranslatable($column)) {
+                            $q->orWhere(fn ($w) => $w->whereTranslationLike($column, $search, $codes));
+                        } else {
+                            $q->orWhere($column, 'like', "%{$search}%");
+                        }
                     }
                 });
             }
@@ -97,9 +108,13 @@ abstract class AdminController extends Controller
         // Apply sorting
         $sortBy = $request->get('sort', $this->model::getDefaultSortColumn());
         $sortDir = $request->get('direction', $this->model::getDefaultSortDirection());
-        $query->orderBy($sortBy, $sortDir);
+        $query->orderBy($this->isTranslatable($sortBy) ? $sortBy.'->'.$this->contentLanguages()->default() : $sortBy, $sortDir);
 
         $items = $query->paginate($this->model::getAdminPerPage())->withQueryString();
+
+        if ($this->translatableAttributes() !== []) {
+            $items->through(fn (Model $item): array => $this->listRow($item));
+        }
 
         return Inertia::render($this->getPagePrefix().'/Index', [
             'items' => $items,
@@ -204,6 +219,8 @@ abstract class AdminController extends Controller
     {
         $record = $context === 'create' ? null : $item;
 
+        $this->normalizeTranslatableInput($request);
+
         $this->runValidation($request, $this->resolveRules($request, $context, $record), $context);
 
         $validated = $this->submittedData($request, $context, $item);
@@ -285,6 +302,12 @@ abstract class AdminController extends Controller
         foreach ($this->contextFields($context) as $field) {
             $name = $field->getName();
 
+            if ($this->isTranslatable($name)) {
+                $rules = [...$rules, ...$this->translatableRules($field, $request, $context, $record)];
+
+                continue;
+            }
+
             // input() does not see uploads, and ImageField/FileField need to
             // know whether this is a real file or the stored path.
             $value = $request->file($name) ?? $request->input($name);
@@ -309,10 +332,26 @@ abstract class AdminController extends Controller
             // which queries the database for belongsToMany / treeSelect fields.
             $label = $field->getLabel();
 
-            if ($label !== '') {
-                // "The name field is required." reads right in lower case; in
-                // German or Russian a label keeps its own case (nouns, quotes).
-                $attributes[$field->getName()] = str_starts_with(app()->getLocale(), 'en') ? mb_strtolower($label) : $label;
+            if ($label === '') {
+                continue;
+            }
+
+            // "The name field is required." reads right in lower case; in
+            // German or Russian a label keeps its own case (nouns, quotes).
+            $label = str_starts_with(app()->getLocale(), 'en') ? mb_strtolower($label) : $label;
+            $name = $field->getName();
+            $attributes[$name] = $label;
+
+            if ($this->isTranslatable($name)) {
+                $languages = $this->contentLanguages();
+
+                foreach ($languages->all() as $language) {
+                    // "Title (Deutsch)": with several languages the editor has
+                    // to know which tab the error is on.
+                    $attributes["{$name}.{$language->code}"] = $languages->isMultilingual()
+                        ? "{$label} ({$language->name})"
+                        : $label;
+                }
             }
         }
 
@@ -379,6 +418,22 @@ abstract class AdminController extends Controller
 
             if ($field instanceof CheckboxField && array_key_exists($name, $data)) {
                 $data[$name] = $field->transformValue($data[$name]);
+            }
+        }
+
+        // Translations of languages that are not active (or not there at all)
+        // are not taken from the request; the stored ones stay untouched.
+        $codes = array_flip($this->contentLanguages()->codes());
+
+        foreach ($this->translatableAttributes() as $name) {
+            if (! is_array($data[$name] ?? null)) {
+                continue;
+            }
+
+            $data[$name] = array_intersect_key($data[$name], $codes);
+
+            if ($data[$name] === []) {
+                unset($data[$name]);
             }
         }
 
@@ -601,6 +656,7 @@ abstract class AdminController extends Controller
                     $context
                 ), // For backward compatibility
                 'item' => $this->prepareItemData($item),
+                'itemTitle' => $item?->getAdminTitle(),
                 'title' => $title,
                 'adminLabel' => $adminLabel,
                 'useTabs' => true,
@@ -613,6 +669,7 @@ abstract class AdminController extends Controller
         return [
             'fields' => $this->serializeFields($fields, $context),
             'item' => $this->prepareItemData($item),
+            'itemTitle' => $item?->getAdminTitle(),
             'title' => $title,
             'adminLabel' => $adminLabel,
             'useTabs' => false,
@@ -782,8 +839,123 @@ abstract class AdminController extends Controller
             // /china. The field does not know its model, so the controller
             // supplies the address map.
             ->map(fn (array $field) => PublicUrl::decorateSlugField($field, $this->model))
+            // The form shows a language switch for these.
+            ->map(fn (array $field) => $this->isTranslatable((string) ($field['name'] ?? ''))
+                ? [...$field, 'translatable' => true]
+                : $field)
             ->values()
             ->toArray();
+    }
+
+    /**
+     * The model's translatable columns (Atrium\Admin\Traits\Translatable).
+     *
+     * @return array<int,string>
+     */
+    protected function translatableAttributes(): array
+    {
+        if ($this->translatableCache === null) {
+            $model = new $this->model;
+
+            $this->translatableCache = method_exists($model, 'getTranslatableAttributes')
+                ? $model->getTranslatableAttributes()
+                : [];
+        }
+
+        return $this->translatableCache;
+    }
+
+    protected function isTranslatable(string $name): bool
+    {
+        return in_array($name, $this->translatableAttributes(), true);
+    }
+
+    protected function contentLanguages(): ContentLanguages
+    {
+        return app(ContentLanguages::class);
+    }
+
+    /**
+     * The form sends a translatable field as {"en": "…", "de": "…"}. A plain
+     * value — from an API client that does not care about languages — is the
+     * default language's text.
+     */
+    protected function normalizeTranslatableInput(Request $request): void
+    {
+        $default = $this->contentLanguages()->default();
+
+        foreach ($this->translatableAttributes() as $name) {
+            if ($request->has($name) && ! is_array($request->input($name))) {
+                $request->merge([$name => [$default => $request->input($name)]]);
+            }
+        }
+    }
+
+    /**
+     * Rules for one translatable field, per language.
+     *
+     * The default language gets the field's rules as declared; it is what
+     * every other language falls back to, so a required field is required
+     * there. Other languages may stay empty. A unique rule is checked within
+     * its own language: "/de/news/hallo" and "/en/news/hallo" do not clash
+     * with each other, two German "hallo" do.
+     *
+     * @return array<string,mixed>
+     */
+    protected function translatableRules(Field $field, Request $request, string $context, ?Model $record): array
+    {
+        $name = $field->getName();
+        $languages = $this->contentLanguages();
+        $rules = [$name => ['nullable', 'array']];
+
+        foreach ($languages->codes() as $code) {
+            $key = "{$name}.{$code}";
+
+            $fieldRules = $field->getValidationRules(
+                new FieldContext($context, $record, $request->input($key), $request->has($key))
+            );
+
+            if ($code !== $languages->default()) {
+                $fieldRules = array_values(array_filter($fieldRules, static fn ($rule): bool => $rule !== 'required'));
+
+                if (! in_array('nullable', $fieldRules, true)) {
+                    array_unshift($fieldRules, 'nullable');
+                }
+            }
+
+            $rules[$key] = array_map(function ($rule) use ($name, $code, $record) {
+                if (! is_string($rule) || ! str_starts_with($rule, 'unique:')) {
+                    return $rule;
+                }
+
+                $parameters = explode(',', substr($rule, strlen('unique:')));
+                $column = ($parameters[1] ?? '') !== '' && strtoupper($parameters[1]) !== 'NULL' ? $parameters[1] : $name;
+                $unique = Rule::unique($parameters[0], "{$column}->{$code}");
+
+                return $record?->exists ? $unique->ignore($record->getKey(), $record->getKeyName()) : $unique;
+            }, $fieldRules);
+        }
+
+        return $rules;
+    }
+
+    /**
+     * A row of the list: translatable columns in the default language.
+     *
+     * @return array<string,mixed>
+     */
+    protected function listRow(Model $item): array
+    {
+        $row = $item->toArray();
+        $default = $this->contentLanguages()->default();
+
+        foreach ($this->translatableAttributes() as $name) {
+            if (array_key_exists($name, $row) && method_exists($item, 'getTranslation')) {
+                $row[$name] = $item->getTranslation($name, $default);
+            }
+        }
+
+        return $row;
     }
 
     /**

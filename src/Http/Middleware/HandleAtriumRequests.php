@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Http\Middleware;
 
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
 use Closure;
@@ -69,6 +70,12 @@ final class HandleAtriumRequests extends Middleware
             'branding' => fn () => config('atrium.branding'),
             'locale' => fn () => app()->getLocale(),
             'locales' => fn () => app(Locales::class)->available(),
+            // The languages the content is written in — for the switch on
+            // forms with translatable fields.
+            'contentLocales' => fn () => app(ContentLanguages::class)->all()
+                ->map(fn ($language) => ['code' => $language->code, 'name' => $language->name, 'default' => $language->is_default])
+                ->values()
+                ->all(),
             // Sent once per language and kept by the client across visits.
             'translations' => Inertia::once(fn () => app(Locales::class)->dictionary(app()->getLocale()))
                 ->as('atrium.translations.'.app()->getLocale()),

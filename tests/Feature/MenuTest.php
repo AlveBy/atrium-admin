@@ -28,8 +28,10 @@ final class MenuTest extends TestCase
         $this->actingAs($this->admin(), 'admin')
             ->get('/admin/posts')
             ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('menu', 1)
-                ->where('menu.0.children.0.label', 'Blog'));
+                ->has('menu', 2)
+                ->where('menu.0.children.0.label', 'Blog')
+                // The panel's own module, not in this menu config: added once.
+                ->where('menu.1.route', 'admin.languages.index'));
     }
 
     public function test_the_admin_page_ships_only_admin_routes_to_the_browser(): void

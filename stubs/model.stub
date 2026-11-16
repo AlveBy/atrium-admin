@@ -14,11 +14,20 @@ use Atrium\Admin\Fields\NumberField;
 use Atrium\Admin\Fields\SlugField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Traits\InteractsWithAdmin;
+use Atrium\Admin\Traits\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
 class {{ class }} extends Model implements Administrable
 {
-    use InteractsWithAdmin;
+    use InteractsWithAdmin, Translatable;
+
+    /**
+     * Columns written in every content language (Languages in the admin).
+     * With one language they behave like ordinary columns.
+     *
+     * @var array<int,string>
+     */
+    protected array $translatable = ['name', 'code', 'preview_text', 'detail_text'];
 
     protected $fillable = ['name', 'code', 'active', 'sort', 'preview_text', 'detail_text'];
 
@@ -39,7 +48,7 @@ class {{ class }} extends Model implements Administrable
     {
         return [
             TextField::make('name')->label('Name')->required(),
-            SlugField::make('code')->label('Code')->from('name'),
+            SlugField::make('code')->label('Code')->from('name')->unique('{{ table }}', 'code'),
             CheckboxField::make('active')->label('Active')->default(true),
             NumberField::make('sort')->label('Sort')->default(500),
             ContentField::make('preview_text')->label('Preview text'),

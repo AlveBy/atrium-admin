@@ -142,6 +142,11 @@ return [
             'icon' => 'users',
         ],
         [
+            'label' => 'atrium::menu.languages',
+            'route' => 'admin.languages.index',
+            'icon' => 'globe',
+        ],
+        [
             'label' => 'atrium::menu.api_tokens',
             'route' => 'admin.api-tokens.index',
             'icon' => 'settings',

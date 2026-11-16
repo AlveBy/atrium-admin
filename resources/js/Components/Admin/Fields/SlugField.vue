@@ -76,7 +76,19 @@ const emit = defineEmits(['update:modelValue']);
 // Get form data from parent (inject from form component)
 const formData = inject('formData', {});
 
-const sourceValue = computed(() => formData.value?.[props.fromField] || '');
+// On a multilingual form the name is {"en": "…", "de": "…"}: each language
+// gets its own code, from its own name.
+const contentLocale = inject('contentLocale', ref(null));
+
+const sourceValue = computed(() => {
+  const source = formData.value?.[props.fromField];
+
+  if (source && typeof source === 'object') {
+    return source[contentLocale.value] || '';
+  }
+
+  return source || '';
+});
 
 /**
  * Whether the code follows the name.
@@ -180,11 +192,14 @@ function transliterate(text) {
     'і': 'i', 'ў': 'u', 'ґ': 'g', 'є': 'ie', 'ї': 'i', '\u2019': '', "'": '',
   };
 
+  // Then accents: "über" → "uber", "café" → "cafe" instead of dashes.
   return text
     .toLowerCase()
     .split('')
     .map(char => map[char] ?? char)
-    .join('');
+    .join('')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 // Until the code is edited by hand, it follows the whole name — not just the first

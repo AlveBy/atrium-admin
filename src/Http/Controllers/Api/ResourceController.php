@@ -34,9 +34,21 @@ class ResourceController extends AdminController
 
         $query = $this->model::query()->with($this->eagerRelations());
         $columns = $this->filterableColumns();
+        $codes = $this->contentLanguages()->codes();
 
         foreach ((array) $request->query('filter', []) as $column => $value) {
-            if (in_array($column, $columns, true)) {
+            if (! in_array($column, $columns, true)) {
+                continue;
+            }
+
+            // filter[code]=hallo finds the record whatever language "hallo" is in.
+            if ($this->isTranslatable($column)) {
+                $query->where(function ($q) use ($column, $value, $codes) {
+                    foreach ($codes as $code) {
+                        $q->orWhere("{$column}->{$code}", $value);
+                    }
+                });
+            } else {
                 $query->where($column, $value);
             }
         }
@@ -48,16 +60,21 @@ class ResourceController extends AdminController
                 ->pluck('name')
                 ->all();
 
-            $query->where(function ($q) use ($searchable, $search) {
+            $query->where(function ($q) use ($searchable, $search, $codes) {
                 foreach ($searchable as $column) {
-                    $q->orWhere($column, 'like', "%{$search}%");
+                    if ($this->isTranslatable($column)) {
+                        $q->orWhere(fn ($w) => $w->whereTranslationLike($column, $search, $codes));
+                    } else {
+                        $q->orWhere($column, 'like', "%{$search}%");
+                    }
                 }
             });
         }
 
         $sort = (string) $request->query('sort', 'id');
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
-        $query->orderBy(in_array($sort, $columns, true) ? $sort : 'id', $direction);
+        $sort = in_array($sort, $columns, true) ? $sort : 'id';
+        $query->orderBy($this->isTranslatable($sort) ? $sort.'->'.$this->contentLanguages()->default() : $sort, $direction);
 
         $perPage = max(1, min(self::MAX_PER_PAGE, (int) $request->query('per_page', 20)));
         $page = $query->paginate($perPage)->withQueryString();

@@ -6,4 +6,5 @@ return [
     'dashboard' => 'Рабочий стол',
     'administrators' => 'Администраторы',
     'api_tokens' => 'API-токены',
+    'languages' => 'Языки',
 ];

@@ -45,6 +45,7 @@ final class MakeModuleCommand extends Command
             'namespace' => $namespace,
             'class' => $class,
             'label' => addcslashes($label, "'\\"),
+            'table' => $table,
         ]));
         $this->components->info("Model [{$modelPath}] created.");
 

@@ -8,4 +8,5 @@ return [
     'dashboard' => 'Boshqaruv paneli',
     'administrators' => 'Administratorlar',
     'api_tokens' => 'API tokenlari',
+    'languages' => 'Tillar',
 ];

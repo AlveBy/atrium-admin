@@ -8,4 +8,5 @@ return [
     'dashboard' => 'Робочий стіл',
     'administrators' => 'Адміністратори',
     'api_tokens' => 'Токени API',
+    'languages' => 'Мови',
 ];

@@ -8,4 +8,5 @@ return [
     'dashboard' => 'Tableau de bord',
     'administrators' => 'Administrateurs',
     'api_tokens' => 'Jetons API',
+    'languages' => 'Langues',
 ];

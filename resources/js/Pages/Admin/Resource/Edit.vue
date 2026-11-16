@@ -6,12 +6,15 @@ import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminCard from '../../../Components/Admin/UI/AdminCard.vue'
 import AdminTabs from '../../../Components/Admin/Tabs/AdminTabs.vue'
 import AdminTabPanel from '../../../Components/Admin/Tabs/AdminTabPanel.vue'
-import AdminFieldRenderer from '../../../Components/Admin/Fields/AdminFieldRenderer.vue'
+import FormField from '../../../Components/Admin/Fields/FormField.vue'
+import ContentLocaleSwitcher from '../../../Components/Admin/Fields/ContentLocaleSwitcher.vue'
+import { useContentLocale, initialValue, fieldHasError } from '../../../Support/contentLocale'
 
 const props = defineProps({
     routeName: String,
     createLabel: String,
     item: Object,
+    itemTitle: String,
     fields: Array,
     fieldsByTab: Object,
     tabs: Array,
@@ -27,15 +30,18 @@ const activeTab = ref(props.tabs?.[0]?.name || 'main')
 const initialData = {}
 if (props.useTabs && props.fieldsByTab) {
     Object.values(props.fieldsByTab).flat().forEach(field => {
-        initialData[field.name] = props.item[field.name] ?? field.default ?? ''
+        initialData[field.name] = initialValue(field, props.item[field.name])
     })
 } else {
     props.fields.forEach(field => {
-        initialData[field.name] = props.item[field.name] ?? field.default ?? ''
+        initialData[field.name] = initialValue(field, props.item[field.name])
     })
 }
 
 const form = useForm(initialData)
+
+const allFields = () => (props.useTabs && props.fieldsByTab ? Object.values(props.fieldsByTab).flat() : props.fields) || []
+const { locale: contentLocale, locales: contentLocales, showSwitcher } = useContentLocale(allFields)
 
 // Provide form data for child components (SlugField reads the name it
 // generates the code from, and the section the public address hangs on)
@@ -55,13 +61,13 @@ const submit = () => {
 // Check for errors in tab
 const hasTabErrors = (tabName) => {
     if (!props.fieldsByTab?.[tabName]) return false
-    return props.fieldsByTab[tabName].some(field => form.errors[field.name])
+    return props.fieldsByTab[tabName].some(field => fieldHasError(form.errors, field))
 }
 
 // Get error count for tab
 const getTabErrorCount = (tabName) => {
     if (!props.fieldsByTab?.[tabName]) return 0
-    return props.fieldsByTab[tabName].filter(field => form.errors[field.name]).length
+    return props.fieldsByTab[tabName].filter(field => fieldHasError(form.errors, field)).length
 }
 
 // Tabs with error badges
@@ -90,7 +96,7 @@ const tabsWithBadges = computed(() => {
                             <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="ml-1 text-gray-500">{{ item.name || '#' + item.id }}</span>
+                            <span class="ml-1 text-gray-500">{{ itemTitle || '#' + item.id }}</span>
                         </div>
                     </li>
                 </ol>
@@ -102,6 +108,14 @@ const tabsWithBadges = computed(() => {
 
             <AdminCard>
                 <form @submit.prevent="submit" data-admin-form="true" :data-resource="routeName" data-context="edit" :data-item-id="item.id">
+                    <ContentLocaleSwitcher
+                        v-if="showSwitcher"
+                        v-model="contentLocale"
+                        :locales="contentLocales"
+                        :fields="allFields()"
+                        :errors="form.errors"
+                    />
+
                     <!-- With Tabs -->
                     <template v-if="useTabs && tabs && fieldsByTab">
                         <AdminTabs :tabs="tabsWithBadges" v-model="activeTab">
@@ -113,12 +127,12 @@ const tabsWithBadges = computed(() => {
                                     :activeTab="currentTab"
                                 >
                                     <div class="space-y-6">
-                                        <AdminFieldRenderer
+                                        <FormField
                                             v-for="field in fieldsByTab[tab.name]"
                                             :key="field.name"
                                             :field="field"
                                             v-model="form[field.name]"
-                                            :error="form.errors[field.name]"
+                                            :errors="form.errors"
                                         />
 
                                         <!-- Empty tab message -->
@@ -137,12 +151,12 @@ const tabsWithBadges = computed(() => {
                     <!-- Without Tabs (backward compatibility) -->
                     <template v-else>
                         <div class="space-y-6">
-                            <AdminFieldRenderer
+                            <FormField
                                 v-for="field in fields"
                                 :key="field.name"
                                 :field="field"
                                 v-model="form[field.name]"
-                                :error="form.errors[field.name]"
+                                :errors="form.errors"
                             />
                         </div>
                     </template>

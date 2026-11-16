@@ -6,6 +6,7 @@ namespace Atrium\Admin\Api;
 
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Http\Controllers\AdminController;
+use Atrium\Admin\Support\ContentLanguages;
 
 /**
  * API documentation built from the admin field definitions.
@@ -45,9 +46,17 @@ final class ApiDocumentation
                 static fn (Field $field): bool => $field->shouldShowOnCreate() || $field->shouldShowOnEdit()
             );
 
+            $instance = new $model;
+            $translatable = method_exists($instance, 'getTranslatableAttributes') ? $instance->getTranslatableAttributes() : [];
+
             $modules[$key] = [
                 'label' => $this->resources->label($key),
-                'fields' => array_values(array_map(fn (Field $field): array => $this->describe($field), $fields)),
+                'fields' => array_values(array_map(
+                    fn (Field $field): array => in_array($field->getName(), $translatable, true)
+                        ? $this->translatable($this->describe($field))
+                        : $this->describe($field),
+                    $fields
+                )),
             ];
         }
 
@@ -108,6 +117,28 @@ final class ApiDocumentation
         if ($type === 'text' && ($props['maxLength'] ?? null)) {
             $doc['schema']['maxLength'] = $props['maxLength'];
         }
+
+        return $doc;
+    }
+
+    /**
+     * A field written in every content language: one value (the default
+     * language) or an object keyed by language code.
+     *
+     * @param  array<string,mixed>  $doc
+     * @return array<string,mixed>
+     */
+    private function translatable(array $doc): array
+    {
+        $languages = app(ContentLanguages::class);
+        $properties = [];
+
+        foreach ($languages->codes() as $code) {
+            $properties[$code] = $doc['schema'];
+        }
+
+        $doc['schema'] = ['oneOf' => [$doc['schema'], ['type' => 'object', 'properties' => $properties, 'additionalProperties' => false]]];
+        $doc['note'] = trim(($doc['note'] ?? '').' Translatable: a plain value sets the default language ('.$languages->default().'), an object {"'.implode('": …, "', $languages->codes()).'": …} sets several. Read back as that object.');
 
         return $doc;
     }
@@ -477,6 +508,10 @@ final class ApiDocumentation
 
     private function typeName(array $schema): string
     {
+        if (isset($schema['oneOf'][0])) {
+            return $this->typeName($schema['oneOf'][0]).' per language';
+        }
+
         $type = $schema['type'] ?? 'string';
 
         if ($type === 'array') {

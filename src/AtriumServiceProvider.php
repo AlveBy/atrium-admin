@@ -10,13 +10,19 @@ use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
 use Atrium\Admin\Http\Middleware\HandleAtriumRequests;
 use Atrium\Admin\Http\Middleware\RecordPageTiming;
 use Atrium\Admin\Http\Middleware\RedirectIfAdminAuthenticated;
+use Atrium\Admin\Http\Middleware\SetContentLocale;
 use Atrium\Admin\Http\Middleware\SlugRedirectMiddleware;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Models\Language;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Services\SlugService;
+use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
+use Closure;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 final class AtriumServiceProvider extends ServiceProvider
@@ -54,6 +60,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(ApiResources::class);
         $this->app->singleton(Menu::class);
         $this->app->singleton(Locales::class);
+        $this->app->singleton(ContentLanguages::class);
     }
 
     public function boot(): void
@@ -62,6 +69,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->registerMiddleware();
         $this->registerResources();
         $this->registerRoutes();
+        $this->registerLocalizedRoutes();
         $this->registerCommands();
     }
 
@@ -91,6 +99,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $router->aliasMiddleware('admin.api', AuthenticateApiToken::class);
         $router->aliasMiddleware('atrium.inertia', HandleAtriumRequests::class);
         $router->aliasMiddleware('slug.redirect', SlugRedirectMiddleware::class);
+        $router->aliasMiddleware('atrium.content-locale', SetContentLocale::class);
 
         // Page timings feed the dashboard gadgets. Pushed here so the gadgets
         // work right after install, without editing bootstrap/app.php.
@@ -104,6 +113,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'atrium');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'atrium');
+        Blade::anonymousComponentPath(__DIR__.'/../resources/views/components', 'atrium');
 
         if (! $this->app->runningInConsole()) {
             return;
@@ -145,6 +155,28 @@ final class AtriumServiceProvider extends ServiceProvider
                 ->middleware([...config('atrium.middleware', ['web']), 'atrium.inertia', 'admin.auth'])
                 ->group($custom);
         }
+    }
+
+    /**
+     * Route::localized(fn () => …) — the public routes of a multilingual site.
+     *
+     * Each route is registered twice: as is for the default content language
+     * (/articles/hello) and under a language prefix for the others
+     * (/de/articles/hallo, named "localized.{name}"). A site with one language
+     * keeps its addresses exactly as they were. Build links with
+     * ContentLanguages::route(), which picks the right one.
+     */
+    private function registerLocalizedRoutes(): void
+    {
+        Route::macro('localized', function (Closure $routes): void {
+            Route::middleware('atrium.content-locale')->group($routes);
+
+            Route::prefix('{locale}')
+                ->where(['locale' => Language::CODE_PATTERN])
+                ->middleware('atrium.content-locale')
+                ->name('localized.')
+                ->group($routes);
+        });
     }
 
     private function registerCommands(): void

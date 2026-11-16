@@ -8,4 +8,5 @@ return [
     'dashboard' => 'Pano',
     'administrators' => 'Yöneticiler',
     'api_tokens' => 'API tokenları',
+    'languages' => 'Diller',
 ];

@@ -8,4 +8,5 @@ return [
     'dashboard' => '仪表板',
     'administrators' => '管理员',
     'api_tokens' => 'API 令牌',
+    'languages' => '语言',
 ];
