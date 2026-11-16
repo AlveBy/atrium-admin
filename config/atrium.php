@@ -215,6 +215,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public addresses of the modules
+    |--------------------------------------------------------------------------
+    |
+    | Which modules have pages on the site and where. The slug field shows
+    | the address under the code, the API returns it as `public_url`, and the
+    | theme (alveby/atrium-theme) draws the pages themselves.
+    |
+    |   prefix         the first part of the address: /news/…
+    |   tree           the section model, for addresses with the section path
+    |   parent         the column holding the section (the parent section for
+    |                  the section model itself)
+    |   parent_column  the section model's own parent column, parent_id
+    |
+    |   App\Models\News::class => ['prefix' => 'news'],
+    |   App\Models\Product::class => ['prefix' => 'catalog', 'tree' => App\Models\ProductSection::class, 'parent' => 'section_id'],
+    |   App\Models\ProductSection::class => ['prefix' => 'catalog', 'tree' => App\Models\ProductSection::class, 'parent' => 'parent_id'],
+    |
+    | gives /news/{code}, /catalog/{section}/{subsection}/{code} and
+    | /catalog/{section}/{subsection}. A module missing here has no page.
+    |
+    */
+    'public_urls' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | robots.txt, sitemap.xml and counters
     |--------------------------------------------------------------------------
     |

@@ -37,6 +37,21 @@ class BelongsToField extends Field
         return $this;
     }
 
+    public function getModelClass(): ?string
+    {
+        return $this->modelClass;
+    }
+
+    public function getDisplayColumn(): string
+    {
+        return $this->displayColumn;
+    }
+
+    public function getValueColumn(): string
+    {
+        return $this->valueColumn;
+    }
+
     /**
      * Set display column
      */

@@ -8,6 +8,7 @@ use Atrium\Admin\Fields\ImageField;
 use Atrium\Admin\Fields\TextareaField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Models\SeoMeta;
+use Atrium\Admin\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Str;
 
@@ -161,19 +162,12 @@ trait HasAdminSeo
     public function getOgImage(): ?string
     {
         if ($this->seoMeta && $this->seoMeta->og_image) {
-            return asset('storage/'.$this->seoMeta->og_image);
+            return MediaUrl::to($this->seoMeta->og_image);
         }
 
-        // Fallback to preview_picture or detail_picture
-        if (isset($this->preview_picture) && $this->preview_picture) {
-            return asset('storage/'.$this->preview_picture);
-        }
-
-        if (isset($this->detail_picture) && $this->detail_picture) {
-            return asset('storage/'.$this->detail_picture);
-        }
-
-        return null;
+        // Fallback to preview_picture or detail_picture. Pictures moved from
+        // Bitrix keep their /upload/… path, so not everything is in storage/.
+        return MediaUrl::to($this->preview_picture ?? null) ?? MediaUrl::to($this->detail_picture ?? null);
     }
 
     /**

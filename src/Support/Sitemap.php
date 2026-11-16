@@ -6,6 +6,7 @@ namespace Atrium\Admin\Support;
 
 use Atrium\Admin\Contracts\Sitemapable;
 use Atrium\Admin\Resources\ResourceRegistry;
+use Closure;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -26,6 +27,9 @@ final class Sitemap
     public const PER_FILE = 50000;
 
     private const VERSION_KEY = 'atrium.sitemap.version';
+
+    /** @var array<int,array{0:Closure,1:Closure}> */
+    private array $sources = [];
 
     public function __construct(
         private readonly Sites $sites,
@@ -108,6 +112,18 @@ final class Sitemap
     }
 
     /**
+     * More public records from outside the modules' own Sitemapable, such as
+     * the pages a theme draws for any model.
+     *
+     * @param  Closure(): iterable<Model>  $records
+     * @param  Closure(Model, string): ?string  $url  the record's address in a language, or null
+     */
+    public function extend(Closure $records, Closure $url): void
+    {
+        $this->sources[] = [$records, $url];
+    }
+
+    /**
      * Called whenever a record, a site or a language is saved or deleted.
      * Old copies are left to expire: the version is part of the key.
      */
@@ -136,8 +152,14 @@ final class Sitemap
             // it has no sitemapUrl() to ask.
             foreach ($model::sitemapQuery()->lazy(500) as $record) {
                 if ($record instanceof Sitemapable) {
-                    array_push($entries, ...$this->entriesOf($record));
+                    array_push($entries, ...$this->entriesOf($record, $record->sitemapUrl(...)));
                 }
+            }
+        }
+
+        foreach ($this->sources as [$records, $url]) {
+            foreach ($records() as $record) {
+                array_push($entries, ...$this->entriesOf($record, static fn (string $language): ?string => $url($record, $language)));
             }
         }
 
@@ -147,14 +169,15 @@ final class Sitemap
     /**
      * One entry per language the record has a page in; each lists all of them.
      *
+     * @param  Closure(string): ?string  $urlIn
      * @return array<int,array{loc:string,lastmod:string|null,alternates:array<string,string>}>
      */
-    private function entriesOf(Model&Sitemapable $record): array
+    private function entriesOf(Model $record, Closure $urlIn): array
     {
         $urls = [];
 
         foreach ($this->languages->all() as $language) {
-            $url = $record->sitemapUrl($language->code);
+            $url = $urlIn($language->code);
 
             if ($url !== null && $url !== '') {
                 $urls[$language->hreflang()] = $url;
