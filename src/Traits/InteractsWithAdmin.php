@@ -134,6 +134,25 @@ trait InteractsWithAdmin
     }
 
     /**
+     * Whether the admin may add records of this module. False for records that
+     * come from elsewhere (form submissions, a log): no "Add" button, and the
+     * create and store routes answer 403, in the API too.
+     */
+    public static function isCreatableInAdmin(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Whether the admin may change records of this module. False opens a
+     * record read-only, with no "Save", whatever the role allows.
+     */
+    public static function isEditableInAdmin(): bool
+    {
+        return true;
+    }
+
+    /**
      * Can be edited in admin
      */
     public function canEdit(): bool

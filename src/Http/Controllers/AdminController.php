@@ -85,11 +85,29 @@ abstract class AdminController extends Controller
     {
         $user = auth()->guard(config('atrium.auth.guard', 'admin'))->user();
 
-        if (! $user instanceof AdminUser) {
-            return array_fill_keys(Permissions::ACTIONS, true);
+        $abilities = $user instanceof AdminUser
+            ? app(Permissions::class)->abilities($user, $this->model::getAdminRoutePrefix())
+            : array_fill_keys(Permissions::ACTIONS, true);
+
+        foreach ([Permissions::CREATE, Permissions::UPDATE] as $action) {
+            $abilities[$action] = $abilities[$action] && $this->moduleAllows($action);
         }
 
-        return app(Permissions::class)->abilities($user, $this->model::getAdminRoutePrefix());
+        return $abilities;
+    }
+
+    /**
+     * Whether the module itself lets records be created or edited here: a
+     * module whose records come from elsewhere (form submissions, a log) is
+     * only read and deleted. See InteractsWithAdmin::isCreatableInAdmin().
+     */
+    protected function moduleAllows(string $action): bool
+    {
+        if ($action === Permissions::CREATE) {
+            return ! method_exists($this->model, 'isCreatableInAdmin') || $this->model::isCreatableInAdmin();
+        }
+
+        return ! method_exists($this->model, 'isEditableInAdmin') || $this->model::isEditableInAdmin();
     }
 
     /**
@@ -168,6 +186,8 @@ abstract class AdminController extends Controller
      */
     public function create(Request $request): Response
     {
+        abort_unless($this->moduleAllows(Permissions::CREATE), 403);
+
         $data = $this->preselectSection($request, $this->prepareFormData('create'));
 
         return Inertia::render($this->getPagePrefix().'/Create', [...$data, ...$this->resourceProps()]);
@@ -251,6 +271,8 @@ abstract class AdminController extends Controller
      */
     protected function saveItem(Request $request, string $context, Model&Administrable $item): Model&Administrable
     {
+        abort_unless($this->moduleAllows($context === 'create' ? Permissions::CREATE : Permissions::UPDATE), 403);
+
         $record = $context === 'create' ? null : $item;
 
         $this->normalizeTranslatableInput($request);
