@@ -10,7 +10,10 @@ declare(strict_types=1);
 namespace Atrium\Admin\Console\Commands;
 
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\Models\AdminRole;
+use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * The second step after `composer require`: the module's tables, its entry in
@@ -56,6 +59,10 @@ final class ModuleInstallCommand extends ModuleCommand
             ]) === 0);
         }
 
+        if (! $already) {
+            $this->grantDeclaredPermissions($module);
+        }
+
         if ($this->option('demo') && $module->demo !== null) {
             $this->components->task('Filling it with demo content', fn (): bool => $modules->seedDemo($module) || true);
         }
@@ -69,5 +76,27 @@ final class ModuleInstallCommand extends ModuleCommand
             : "{$name} is installed. In the menu and the role form: ".implode(', ', $this->moduleKeys($module)).'.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * A permission the manifest says comes `with` another goes to every role
+     * that has that one.
+     */
+    private function grantDeclaredPermissions(Module $module): void
+    {
+        $with = array_filter(array_map(static fn (array $permission): ?string => $permission['with'], $module->declaredPermissions));
+
+        if ($with === [] || ! Schema::hasTable('admin_roles')) {
+            return;
+        }
+
+        foreach (AdminRole::query()->get() as $role) {
+            $permissions = (array) $role->permissions;
+            $granted = array_keys(array_filter($with, static fn (string $base): bool => in_array($base, $permissions, true)));
+
+            if (array_diff($granted, $permissions) !== []) {
+                $role->update(['permissions' => array_values(array_unique([...$permissions, ...$granted]))]);
+            }
+        }
     }
 }

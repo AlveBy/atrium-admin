@@ -12,6 +12,7 @@ namespace Atrium\Admin\Auth;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Modules\Modules;
+use Illuminate\Support\Str;
 
 /**
  * What an administrator may do in the panel.
@@ -71,9 +72,11 @@ final class Permissions
      * What a role can be given, in the order the role form shows it.
      *
      * A module package with settings adds "settings" to the row of the
-     * section named like its key, or a row of its own.
+     * section named like its key, or a row of its own; the permissions its
+     * manifest declares join their section's row the same way, with their
+     * labels in `labels`.
      *
-     * @return array<int,array{key:string,label:string,actions:array<int,string>}>
+     * @return array<int,array{key:string,label:string,actions:array<int,string>,labels?:array<string,string>}>
      */
     public function sections(): array
     {
@@ -84,13 +87,25 @@ final class Permissions
         }
 
         foreach ($this->modules->installed() as $module) {
-            if ($module->settings === null) {
-                continue;
+            $key = $module->key();
+
+            if ($module->settings !== null) {
+                $sections[$key] ??= ['key' => $key, 'label' => $module->label(), 'actions' => []];
+                $sections[$key]['actions'][] = self::SETTINGS;
             }
 
-            $key = $module->key();
-            $sections[$key] ??= ['key' => $key, 'label' => $module->label(), 'actions' => []];
-            $sections[$key]['actions'][] = self::SETTINGS;
+            foreach ($module->declaredPermissions as $name => $permission) {
+                [$section, $action] = explode('.', $name, 2);
+                $sections[$section] ??= ['key' => $section, 'label' => $section === $key ? $module->label() : Str::headline($section), 'actions' => []];
+
+                if (! in_array($action, $sections[$section]['actions'], true)) {
+                    $sections[$section]['actions'][] = $action;
+                }
+
+                if ($permission['label'] !== '') {
+                    $sections[$section]['labels'][$action] = (string) __($permission['label']);
+                }
+            }
         }
 
         $sections = array_values($sections);

@@ -21,7 +21,11 @@ use Illuminate\Support\Str;
  *             "public_urls": {"Vendor\\Reviews\\Review": {"prefix": "reviews"}},
  *             "migrations": "database/migrations",
  *             "demo": "Vendor\\Reviews\\Database\\ReviewsDemoSeeder",
- *             "settings": "Vendor\\Reviews\\ReviewsSettings"
+ *             "settings": "Vendor\\Reviews\\ReviewsSettings",
+ *             "permissions": {
+ *                 "moderate": "atrium-reviews::permissions.moderate",
+ *                 "reviews.export": {"label": "Export reviews", "with": "reviews.view"}
+ *             }
  *         }
  *     }
  *
@@ -32,6 +36,11 @@ use Illuminate\Support\Str;
  * its permissions; it is the package name without the vendor and the
  * "atrium-" prefix unless the manifest sets `key`. `title` is its name in
  * the panel, text or a translation key.
+ *
+ * `permissions` are what the module checks beyond view, create, update and
+ * delete: "{section}.{action}", or a bare action for "{key}.{action}". Each
+ * has a label (text or a translation key) and may name a permission it comes
+ * `with`: the roles that have that one get it when the module is installed.
  */
 final class Module
 {
@@ -42,6 +51,7 @@ final class Module
      * @param  class-string|null  $demo  a seeder that fills the module with demo content
      * @param  array<int,string>  $suggests  package names
      * @param  class-string<ModuleSettings>|null  $settings  what can be set for it in the panel
+     * @param  array<string,array{label:string,with:string|null}>  $declaredPermissions  its own permissions by name
      */
     public function __construct(
         public readonly string $name,
@@ -54,6 +64,7 @@ final class Module
         public readonly ?string $settings = null,
         public readonly string $key = '',
         public readonly string $title = '',
+        public readonly array $declaredPermissions = [],
     ) {}
 
     /**
@@ -77,13 +88,17 @@ final class Module
 
     /**
      * The permissions the module brings besides those of its models'
-     * sections: "{key}.settings" for a module with settings.
+     * sections: "{key}.settings" for a module with settings, and the ones
+     * its manifest declares.
      *
      * @return array<int,string>
      */
     public function permissions(): array
     {
-        return $this->settings === null ? [] : [$this->key().'.settings'];
+        return [
+            ...($this->settings === null ? [] : [$this->key().'.settings']),
+            ...array_keys($this->declaredPermissions),
+        ];
     }
 
     /**
@@ -116,9 +131,11 @@ final class Module
     {
         $manifest = (array) ($composer['extra']['atrium'] ?? []);
         $root = rtrim($path, '/');
+        $name = strtolower((string) $composer['name']);
+        $key = isset($manifest['key']) ? self::keyOf((string) $manifest['key']) : '';
 
         return new self(
-            name: strtolower((string) $composer['name']),
+            name: $name,
             description: (string) ($composer['description'] ?? ''),
             resources: array_values(array_map('strval', (array) ($manifest['resources'] ?? []))),
             publicUrls: (array) ($manifest['public_urls'] ?? []),
@@ -126,8 +143,37 @@ final class Module
             demo: isset($manifest['demo']) ? (string) $manifest['demo'] : null,
             suggests: array_map('strtolower', array_keys((array) ($composer['suggest'] ?? []))),
             settings: isset($manifest['settings']) ? (string) $manifest['settings'] : null,
-            key: isset($manifest['key']) ? self::keyOf((string) $manifest['key']) : '',
+            key: $key,
             title: (string) ($manifest['title'] ?? ''),
+            declaredPermissions: self::permissionsOf((array) ($manifest['permissions'] ?? []), $key !== '' ? $key : self::keyOf($name)),
         );
+    }
+
+    /**
+     * The manifest's `permissions`, by full name: a bare action belongs to
+     * the module's own key. Names that are not "section.action" are skipped.
+     *
+     * @param  array<array-key,mixed>  $declared
+     * @return array<string,array{label:string,with:string|null}>
+     */
+    private static function permissionsOf(array $declared, string $key): array
+    {
+        $permissions = [];
+
+        foreach ($declared as $name => $spec) {
+            $name = str_contains((string) $name, '.') ? (string) $name : $key.'.'.$name;
+
+            if (preg_match('/^[a-z0-9_-]+\.[a-z0-9_-]+$/', $name) !== 1) {
+                continue;
+            }
+
+            $spec = is_array($spec) ? $spec : ['label' => $spec];
+            $permissions[$name] = [
+                'label' => (string) ($spec['label'] ?? ''),
+                'with' => isset($spec['with']) ? (string) $spec['with'] : null,
+            ];
+        }
+
+        return $permissions;
     }
 }

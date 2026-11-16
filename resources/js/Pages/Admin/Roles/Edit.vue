@@ -15,6 +15,7 @@ import { useForm, Link } from '@inertiajs/vue3'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminCard from '../../../Components/Admin/UI/AdminCard.vue'
+import { t } from '@atrium/Support/i18n'
 
 const props = defineProps({
     role: { type: Object, default: null },
@@ -36,6 +37,9 @@ const isModule = (section) => ACTIONS.every((action) => section.actions.includes
 // Actions a module package adds to a row, such as "settings".
 const extras = (section) => isModule(section) ? section.actions.filter((action) => !ACTIONS.includes(action)) : []
 const hasExtras = props.sections.some((section) => extras(section).length > 0)
+
+// A module's own permission carries its label; the panel's are translated here.
+const actionLabel = (section, action) => section.labels?.[action] ?? t(`permissions.actions.${action}`)
 
 const toggle = (section, action) => {
     const set = new Set(form.permissions)
@@ -150,7 +154,7 @@ const submit = () => {
                                                         :checked="has(section, action)"
                                                         @change="toggle(section, action)"
                                                     />
-                                                    {{ $t(`permissions.actions.${action}`) }}
+                                                    {{ actionLabel(section, action) }}
                                                 </label>
                                             </td>
                                         </template>
@@ -163,7 +167,7 @@ const submit = () => {
                                                     :checked="has(section, action)"
                                                     @change="toggle(section, action)"
                                                 />
-                                                {{ $t(`permissions.actions.${action}`) }}
+                                                {{ actionLabel(section, action) }}
                                             </label>
                                         </td>
                                         <td class="px-3 py-1.5 text-center">

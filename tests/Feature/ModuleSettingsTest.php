@@ -60,7 +60,7 @@ final class ModuleSettingsTest extends TestCase
         $this->assertSame(LabelSettings::class, $module->settings);
         $this->assertSame('labels', $module->key());
         $this->assertSame('Labels', $module->label());
-        $this->assertSame(['labels.settings'], $module->permissions());
+        $this->assertSame(['labels.settings', 'labels.print', 'posts.label'], $module->permissions());
     }
 
     public function test_a_module_that_is_not_installed_has_no_settings(): void
@@ -157,7 +157,7 @@ final class ModuleSettingsTest extends TestCase
     {
         $section = collect($this->app->make(Permissions::class)->sections())->firstWhere('key', 'labels');
 
-        $this->assertSame(['view', 'create', 'update', 'delete', 'settings'], $section['actions']);
+        $this->assertSame(['view', 'create', 'update', 'delete', 'settings', 'print'], $section['actions']);
     }
 
     public function test_per_site_settings_are_kept_for_each_site(): void
