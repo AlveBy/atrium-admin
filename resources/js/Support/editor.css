@@ -1,0 +1,141 @@
+/*
+ * Как выглядит текст внутри редактора.
+ *
+ * Tailwind сбрасывает теги под ноль: `h1,h2,h3,h4,h5,h6{font-size:inherit;
+ * font-weight:inherit}`, `ol,ul{list-style:none}`, у абзацев и цитат
+ * `margin:0`. Класс `prose` в разметке полей это не чинил: плагин
+ * @tailwindcss/typography в проекте не стоит, и правил `.prose` в собранном
+ * CSS нет ни одного — класс висел мёртвым. Поэтому заголовок любого уровня
+ * выглядел в поле обычным абзацем: выбираешь «Заголовок 2», «Заголовок 6»,
+ * «Обычный текст» — на экране не меняется ничего (жалоба заказчика
+ * 04.09.2026: «день 1 не редактируется вне зависимости от того, что
+ * выбираешь»). Списки при этом теряли маркеры, а цитата — отбивку.
+ *
+ * Оформляем теги сами и по образцу публичной части сайта: поле-то показывает не «какой-то текст», а то, что
+ * увидит посетитель, и размеры заголовков должны совпадать.
+ *
+ * Стили общие для ContentField и WysiwygField — как и список расширений в
+ * соседнем editor.js. Разъехавшиеся копии мы уже проходили с CSRF.
+ */
+
+.ProseMirror {
+    outline: none;
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-wrap: break-word;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #adb5bd;
+    pointer-events: none;
+    height: 0;
+}
+
+.ProseMirror > :first-child {
+    margin-top: 0;
+}
+
+.ProseMirror > :last-child {
+    margin-bottom: 0;
+}
+
+.ProseMirror p,
+.ProseMirror ul,
+.ProseMirror ol,
+.ProseMirror blockquote {
+    margin: 0 0 16px;
+}
+
+/* Размеры — те же, что даёт `.ark-prose` на широком экране: clamp() там
+   упирается в верхнюю границу. h5 и h6 мельче основного текста, зато жирные:
+   иначе шесть уровней не различить, а редактор их предлагает все шесть. */
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+    color: #111827;
+    line-height: 1.25;
+    margin: 28px 0 14px;
+}
+
+.ProseMirror h1 { font-size: 32px; font-weight: 800; }
+.ProseMirror h2 { font-size: 27px; font-weight: 800; }
+.ProseMirror h3 { font-size: 20px; font-weight: 700; }
+.ProseMirror h4 { font-size: 17px; font-weight: 700; }
+.ProseMirror h5 { font-size: 15px; font-weight: 700; }
+.ProseMirror h6 { font-size: 13px; font-weight: 700; letter-spacing: .03em; }
+
+.ProseMirror ul,
+.ProseMirror ol {
+    padding-left: 22px;
+}
+
+.ProseMirror ul { list-style: disc; }
+.ProseMirror ol { list-style: decimal; }
+
+.ProseMirror li {
+    margin-bottom: 6px;
+}
+
+.ProseMirror blockquote {
+    border-left: 3px solid #dc2626;
+    padding: 4px 0 4px 18px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.ProseMirror hr {
+    border: 0;
+    border-top: 1px solid #d1d5db;
+    margin: 28px 0;
+}
+
+.ProseMirror img {
+    max-width: 100%;
+    height: auto;
+}
+
+.ProseMirror a {
+    color: #1d4ed8;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/*
+ * Таблицы. Границы рисуем принудительно: в контенте они заданы атрибутом
+ * border="1", который браузер к отдельным ячейкам не применяет, — без этого
+ * прайс тура выглядел бы в редакторе сплошным полотном текста. Прайсы бывают
+ * на 13 столбцов, поэтому таблица не растягивается на всю ширину, а поле
+ * прокручивается по горизонтали.
+ */
+.ProseMirror table {
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+    border: 1px solid #d1d5db;
+    padding: 0.35rem 0.5rem;
+    vertical-align: top;
+    position: relative;
+    min-width: 3rem;
+}
+
+.ProseMirror table th {
+    background: #f9fafb;
+    font-weight: 600;
+}
+
+/* Выделенные ячейки — иначе не видно, что объединяешь. */
+.ProseMirror .selectedCell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(59, 130, 246, 0.12);
+    pointer-events: none;
+}
