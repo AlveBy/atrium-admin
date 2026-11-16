@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Fields;
 
+use Atrium\Admin\Support\Sites;
+
 class SlugField extends Field
 {
     protected string $fromField = 'name';
@@ -65,7 +67,7 @@ class SlugField extends Field
             'fromField' => $this->fromField,
             'autoGenerate' => $this->autoGenerate,
             'showPreview' => $this->showPreview,
-            'baseUrl' => $this->baseUrl ?? config('app.url'),
+            'baseUrl' => $this->baseUrl ?? app(Sites::class)->current()->url(),
 
             // What the address under the field is built from. Filled in by the
             // controller from the `atrium.public_urls` map — the field doesn't know

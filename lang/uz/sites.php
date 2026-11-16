@@ -15,6 +15,7 @@ return [
         'name' => 'Nomi',
         'code' => 'Kod',
         'domains' => 'Domenlar',
+        'folder' => 'Papka',
         'languages' => 'Tillar',
         'default_language' => 'Standart til',
         'active' => 'Faol',
@@ -34,6 +35,7 @@ return [
     'hints' => [
         'code' => 'Kichik lotin harflari, raqamlar, defislar: main, shop, de. Keyin oʻzgartirib boʻlmaydi.',
         'domains' => 'Sayt shu domenlarda ochiladi: example.com, www.example.com. Birinchisi — asosiysi.',
+        'folder' => 'Bitta domendagi bir nechta sayt uchun: site2 bu saytni example.com/site2/ manzilida ochadi. Boʻsh — sayt oʻz domenlarining ildizida. Domeni yoʻq sayt istalgan domenda shu papkada boʻladi.',
         'languages' => 'Ushbu saytning kontent tillari. Hech narsa tanlanmasa — barcha faol tillar.',
         'default_language' => 'Bu til sahifalari manzilda til prefiksisiz ochiladi. Boʻsh qoldirilsa — butun panelning standart tili.',
         'is_default' => 'Boshqa sayt egallamagan har qanday domenda va localhostda ochiladi.',
@@ -49,5 +51,9 @@ return [
     'errors' => [
         'domain_invalid' => '“:domain” domen nomi emas.',
         'domain_taken' => ':domain domenidan “:site” sayti allaqachon foydalanmoqda.',
+        'folder_invalid' => '“:folder” papka emas: lotin harflari, raqamlar, chiziqcha va pastki chiziq, qismlar qiya chiziq bilan ajratiladi.',
+        'folder_reserved' => ':folder papkasi panelning oʻz manzili.',
+        'folder_default' => 'Asosiy sayt boshqa sayt egallamagan har qanday manzilga javob beradi, shuning uchun ildizda turadi. Papkani tozalang yoki boshqa saytni asosiy qiling.',
+        'folder_taken' => ':address manzili allaqachon “:site” sayti tomonidan ishlatilmoqda.',
     ],
 ];

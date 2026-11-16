@@ -15,6 +15,7 @@ return [
         'name' => '名称',
         'code' => '代码',
         'domains' => '域名',
+        'folder' => '目录',
         'languages' => '语言',
         'default_language' => '默认语言',
         'active' => '已启用',
@@ -34,6 +35,7 @@ return [
     'hints' => [
         'code' => '小写拉丁字母、数字、连字符：main, shop, de。之后无法更改。',
         'domains' => '站点可通过这些域名访问：example.com, www.example.com。第一个为主域名。',
+        'folder' => '用于一个域名下的多个站点：填写 site2，此站点将在 example.com/site2/ 打开。留空表示站点位于其域名的根目录。没有域名的站点在任何域名下都位于此目录。',
         'languages' => '此站点的内容语言。均不选择则表示所有已启用的语言。',
         'default_language' => '该语言的页面在 URL 中不带语言前缀。留空则使用整个面板的默认语言。',
         'is_default' => '在没有被其他站点占用的任何域名以及 localhost 上打开。',
@@ -49,5 +51,9 @@ return [
     'errors' => [
         'domain_invalid' => '“:domain”不是有效的域名。',
         'domain_taken' => '域名 :domain 已被站点“:site”使用。',
+        'folder_invalid' => '“:folder”不是有效的目录：只能使用拉丁字母、数字、连字符和下划线，各部分用斜杠分隔。',
+        'folder_reserved' => '目录 :folder 是面板自身的地址。',
+        'folder_default' => '默认站点响应所有未被其他站点占用的地址，因此必须位于根目录。请清空目录，或将其他站点设为默认站点。',
+        'folder_taken' => '地址 :address 已被站点“:site”使用。',
     ],
 ];

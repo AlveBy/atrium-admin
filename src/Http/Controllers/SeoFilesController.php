@@ -6,16 +6,23 @@ namespace Atrium\Admin\Http\Controllers;
 
 use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * robots.txt and sitemap.xml of the site the visitor came to.
+ * robots.txt and sitemap.xml of the site the visitor came to. A site in a
+ * folder has its sitemap there (/site2/sitemap.xml); robots.txt is one per
+ * domain, at its root, and lists the sitemaps of every site on it.
  */
 final class SeoFilesController extends Controller
 {
-    public function robots(Sites $sites): Response
+    public function robots(Request $request, Sites $sites): Response
     {
-        return response($sites->current()->robotsTxt(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+        abort_if($sites->current()->folder !== null, 404);
+
+        $text = $sites->current()->robotsTxt($sites->folderSites($request->getHost()));
+
+        return response($text, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 
     public function sitemap(Sitemap $sitemap): Response

@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Support;
 
+use Atrium\Admin\Http\Middleware\EnterSiteFolder;
 use Atrium\Admin\Models\Site;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
  * The sites of the panel and the one the current request is about.
  *
- * On the public side the site comes from the domain; in the admin it is the
+ * On the public side the site comes from the domain and the folder (see
+ * forRequest()); in the admin it is the
  * one picked in the header; an API client names it with ?site=code. Until
  * something sets it (a console command, a queued job) there is no current
  * site: records of every site are visible, new ones go to the default site.
@@ -51,13 +54,60 @@ final class Sites
     }
 
     /**
-     * The active site that claims the host; the default site otherwise, so
-     * localhost and a fresh server's IP open something.
+     * The active site at the root of the host: the one that claims it and
+     * sits in no folder; the default site otherwise, so localhost and a
+     * fresh server's IP open something.
      */
     public function forHost(string $host): Site
     {
-        return $this->all()->first(fn (Site $site): bool => $site->active && $site->hasDomain($host))
+        return $this->all()->first(fn (Site $site): bool => $site->active && $site->folder === null && $site->hasDomain($host))
             ?? $this->default();
+    }
+
+    /**
+     * The site a public address belongs to: the active site living on the
+     * host whose folder is the longest one the path starts with (/site2
+     * holds /site2/… but not /site22), else the site at the root of the
+     * host. A site lives on the domains it lists, one with no domains on
+     * every domain; at the same folder the one that names the host wins.
+     */
+    public function forRequest(string $host, string $path): Site
+    {
+        $site = $this->folderSites($host)->first(fn (Site $site): bool => $site->holdsPath($path));
+
+        return $site ?? $this->forHost($host);
+    }
+
+    /**
+     * The active sites in folders of a host, one per folder, the longest
+     * folder first — the order they are matched in.
+     *
+     * @return Collection<int,Site>
+     */
+    public function folderSites(string $host): Collection
+    {
+        return $this->all()
+            ->filter(fn (Site $site): bool => $site->active && $site->folder !== null && ($site->hasDomain($host) || (array) $site->domains === []))
+            ->sortBy([
+                fn (Site $a, Site $b): int => strlen((string) $b->folder) <=> strlen((string) $a->folder),
+                fn (Site $a, Site $b): int => (int) $b->hasDomain($host) <=> (int) $a->hasDomain($host),
+            ])
+            ->unique('folder')
+            ->values();
+    }
+
+    /**
+     * The root of the application on the request's host, without the folder
+     * of the site the request is in: http://example.com, not …/site2.
+     */
+    public static function rootUrl(Request $request): string
+    {
+        $root = $request->root();
+        $folder = $request->attributes->get(EnterSiteFolder::FOLDER);
+
+        return is_string($folder) && str_ends_with($root, '/'.$folder)
+            ? substr($root, 0, -strlen('/'.$folder))
+            : $root;
     }
 
     public function current(): Site

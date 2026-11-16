@@ -15,6 +15,7 @@ return [
         'name' => 'Name',
         'code' => 'Code',
         'domains' => 'Domains',
+        'folder' => 'Ordner',
         'languages' => 'Sprachen',
         'default_language' => 'Standardsprache',
         'active' => 'Aktiv',
@@ -34,6 +35,7 @@ return [
     'hints' => [
         'code' => 'Kleinbuchstaben, Ziffern und Bindestriche: main, shop, de. Lässt sich später nicht mehr ändern.',
         'domains' => 'Die Website öffnet sich unter diesen Domains: example.com, www.example.com. Die erste ist die Hauptdomain.',
+        'folder' => 'Für mehrere Websites auf einer Domain: site2 öffnet diese Website unter example.com/site2/. Leer – die Website liegt im Stamm ihrer Domains. Eine Website ohne Domains liegt in diesem Ordner auf jeder Domain.',
         'languages' => 'Die Inhaltssprachen dieser Website. Keine ausgewählt – alle aktiven Sprachen.',
         'default_language' => 'Ihre Seiten haben kein Sprachpräfix in der URL. Leer – die Standardsprache des gesamten Panels.',
         'is_default' => 'Wird unter jeder Domain geöffnet, die keine andere Website beansprucht, sowie unter localhost.',
@@ -49,5 +51,9 @@ return [
     'errors' => [
         'domain_invalid' => '„:domain“ ist kein Domainname.',
         'domain_taken' => 'Die Domain :domain wird bereits von der Website „:site“ verwendet.',
+        'folder_invalid' => '„:folder“ ist kein Ordner: lateinische Buchstaben, Ziffern, Binde- und Unterstriche, Teile durch Schrägstriche getrennt.',
+        'folder_reserved' => 'Der Ordner :folder ist eine Adresse des Panels selbst.',
+        'folder_default' => 'Die Standard-Website beantwortet jede Adresse, die keine andere Website beansprucht, und liegt deshalb im Stamm. Leeren Sie den Ordner oder machen Sie eine andere Website zum Standard.',
+        'folder_taken' => 'Die Adresse :address wird bereits von der Website „:site“ verwendet.',
     ],
 ];

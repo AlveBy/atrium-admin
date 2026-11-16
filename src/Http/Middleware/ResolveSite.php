@@ -17,7 +17,8 @@ use Symfony\Component\HttpFoundation\Response;
  * - The admin: the site picked in the header (kept in the session), out of
  *   the sites the administrator may work with.
  * - The API: ?site=code, if given; without it the client sees every site.
- * - Everything else: the domain.
+ * - Everything else: the domain and the folder, as EnterSiteFolder found
+ *   them before routing.
  */
 final class ResolveSite
 {
@@ -42,7 +43,8 @@ final class ResolveSite
         } elseif ($this->isAdmin($request)) {
             $this->sites->setCurrent($this->adminSite($request));
         } else {
-            $this->sites->setCurrent($this->sites->forHost($request->getHost()));
+            $site = $this->sites->find($request->attributes->get(EnterSiteFolder::SITE));
+            $this->sites->setCurrent($site ?? $this->sites->forHost($request->getHost()));
         }
 
         return $next($request);

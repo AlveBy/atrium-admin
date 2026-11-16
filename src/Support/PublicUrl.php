@@ -131,8 +131,8 @@ final class PublicUrl
 
     /**
      * Address of the record on the site — the same one the slug field preview
-     * shows: prefix, section path, code. Null if there is no public page or
-     * the code is empty.
+     * shows: the site's domain and folder, prefix, section path, code. Null
+     * if there is no public page or the code is empty.
      */
     public static function forRecord(Model $record): ?string
     {
@@ -147,7 +147,10 @@ final class PublicUrl
             ? ''
             : (self::sectionPaths($rule['tree'], $rule['parent_column'])[$record->getAttribute($rule['parent'])] ?? '');
 
-        return url(implode('/', array_filter([$rule['prefix'], $parentPath, $code], static fn (string $part): bool => $part !== '')));
+        $sites = app(Sites::class);
+        $site = $sites->find($record->getAttributes()['site_id'] ?? null) ?? $sites->current();
+
+        return $site->url(implode('/', array_filter([$rule['prefix'], $parentPath, $code], static fn (string $part): bool => $part !== '')));
     }
 
     /**

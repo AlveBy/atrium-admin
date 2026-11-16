@@ -13,6 +13,7 @@ return [
         'name' => 'Name',
         'code' => 'Code',
         'domains' => 'Domains',
+        'folder' => 'Folder',
         'languages' => 'Languages',
         'default_language' => 'Default language',
         'active' => 'Active',
@@ -32,6 +33,7 @@ return [
     'hints' => [
         'code' => 'Lowercase Latin letters, digits, dashes: main, shop, de. Cannot be changed later.',
         'domains' => 'The site opens on these domains: example.com, www.example.com. The first one is the main one.',
+        'folder' => 'For several sites on one domain: site2 opens this site at example.com/site2/. Empty — the site is at the root of its domains. A site with no domains sits in this folder on every domain.',
         'languages' => 'The content languages of this site. None selected — all active languages.',
         'default_language' => 'Its pages have no language prefix in the address. Empty — the panel-wide default language.',
         'is_default' => 'Opens on any domain no other site claims, and on localhost.',
@@ -47,5 +49,9 @@ return [
     'errors' => [
         'domain_invalid' => '":domain" is not a domain name.',
         'domain_taken' => 'The domain :domain is already used by the site ":site".',
+        'folder_invalid' => '":folder" is not a folder: Latin letters, digits, dashes and underscores, parts separated by slashes.',
+        'folder_reserved' => 'The folder :folder is the panel\'s own address.',
+        'folder_default' => 'The default site answers every address no other site claims, so it stays at the root. Clear the folder or make another site the default.',
+        'folder_taken' => 'The address :address is already used by the site ":site".',
     ],
 ];

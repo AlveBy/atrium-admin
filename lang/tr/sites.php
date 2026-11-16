@@ -15,6 +15,7 @@ return [
         'name' => 'Ad',
         'code' => 'Kod',
         'domains' => 'Alan adları',
+        'folder' => 'Klasör',
         'languages' => 'Diller',
         'default_language' => 'Varsayılan dil',
         'active' => 'Etkin',
@@ -34,6 +35,7 @@ return [
     'hints' => [
         'code' => 'Küçük Latin harfleri, rakamlar, tireler: main, shop, de. Daha sonra değiştirilemez.',
         'domains' => 'Site bu alan adlarında açılır: example.com, www.example.com. İlki ana alan adıdır.',
+        'folder' => 'Bir alan adında birden çok site için: site2 bu siteyi example.com/site2/ adresinde açar. Boş — site, alan adlarının kökündedir. Alan adı olmayan bir site her alan adında bu klasördedir.',
         'languages' => 'Bu sitenin içerik dilleri. Hiçbiri seçilmezse — tüm etkin diller.',
         'default_language' => 'Bu dilin sayfalarının adresinde dil öneki olmaz. Boşsa — tüm panelin varsayılan dili.',
         'is_default' => 'Başka bir sitenin sahiplenmediği her alan adında ve localhost\'ta açılır.',
@@ -49,5 +51,9 @@ return [
     'errors' => [
         'domain_invalid' => '“:domain” bir alan adı değil.',
         'domain_taken' => ':domain alan adı “:site” sitesi tarafından zaten kullanılıyor.',
+        'folder_invalid' => '“:folder” bir klasör değil: Latin harfleri, rakamlar, tire ve alt çizgiler, parçalar eğik çizgiyle ayrılır.',
+        'folder_reserved' => ':folder klasörü panelin kendi adresidir.',
+        'folder_default' => 'Varsayılan site, başka bir sitenin sahiplenmediği her adrese yanıt verir, bu yüzden kökte kalır. Klasörü boşaltın veya başka bir siteyi varsayılan yapın.',
+        'folder_taken' => ':address adresi zaten “:site” sitesi tarafından kullanılıyor.',
     ],
 ];

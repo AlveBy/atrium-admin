@@ -15,6 +15,7 @@ return [
         'name' => 'Nome',
         'code' => 'Código',
         'domains' => 'Domínios',
+        'folder' => 'Pasta',
         'languages' => 'Idiomas',
         'default_language' => 'Idioma padrão',
         'active' => 'Ativo',
@@ -34,6 +35,7 @@ return [
     'hints' => [
         'code' => 'Letras latinas minúsculas, dígitos e hifens: main, shop, de. Não pode ser alterado depois.',
         'domains' => 'O site abre nestes domínios: example.com, www.example.com. O primeiro é o principal.',
+        'folder' => 'Para vários sites em um domínio: site2 abre este site em example.com/site2/. Vazio — o site fica na raiz dos seus domínios. Um site sem domínios fica nesta pasta em qualquer domínio.',
         'languages' => 'Os idiomas de conteúdo deste site. Nenhum selecionado — todos os idiomas ativos.',
         'default_language' => 'As páginas dele não têm prefixo de idioma na URL. Vazio — o idioma padrão de todo o painel.',
         'is_default' => 'Abre em qualquer domínio que nenhum outro site reivindique, e em localhost.',
@@ -49,5 +51,9 @@ return [
     'errors' => [
         'domain_invalid' => '“:domain” não é um nome de domínio.',
         'domain_taken' => 'O domínio :domain já é usado pelo site “:site”.',
+        'folder_invalid' => '“:folder” não é uma pasta: letras latinas, dígitos, hífens e sublinhados, partes separadas por barras.',
+        'folder_reserved' => 'A pasta :folder é um endereço do próprio painel.',
+        'folder_default' => 'O site padrão responde a todo endereço que nenhum outro site reivindica, por isso fica na raiz. Limpe a pasta ou torne outro site o padrão.',
+        'folder_taken' => 'O endereço :address já é usado pelo site “:site”.',
     ],
 ];

@@ -15,6 +15,7 @@ return [
         'name' => 'Nom',
         'code' => 'Code',
         'domains' => 'Domaines',
+        'folder' => 'Dossier',
         'languages' => 'Langues',
         'default_language' => 'Langue par défaut',
         'active' => 'Actif',
@@ -34,6 +35,7 @@ return [
     'hints' => [
         'code' => 'Lettres latines minuscules, chiffres, tirets : main, shop, de. Ne peut pas être modifié par la suite.',
         'domains' => 'Le site s\'ouvre sur ces domaines : example.com, www.example.com. Le premier est le principal.',
+        'folder' => 'Pour plusieurs sites sur un domaine : site2 ouvre ce site à l\'adresse example.com/site2/. Vide : le site est à la racine de ses domaines. Un site sans domaine se trouve dans ce dossier sur tous les domaines.',
         'languages' => 'Les langues de contenu de ce site. Aucune sélectionnée : toutes les langues actives.',
         'default_language' => 'Ses pages n\'ont pas de préfixe de langue dans l\'URL. Vide : la langue par défaut de tout le panneau.',
         'is_default' => 'S\'ouvre sur tout domaine qu\'aucun autre site ne revendique, ainsi que sur localhost.',
@@ -49,5 +51,9 @@ return [
     'errors' => [
         'domain_invalid' => '« :domain » n\'est pas un nom de domaine.',
         'domain_taken' => 'Le domaine :domain est déjà utilisé par le site « :site ».',
+        'folder_invalid' => '« :folder » n\'est pas un dossier : lettres latines, chiffres, tirets et tirets bas, parties séparées par des barres obliques.',
+        'folder_reserved' => 'Le dossier :folder est une adresse du panneau lui-même.',
+        'folder_default' => 'Le site par défaut répond à toute adresse qu\'aucun autre site ne revendique, il reste donc à la racine. Videz le dossier ou faites d\'un autre site le site par défaut.',
+        'folder_taken' => 'L\'adresse :address est déjà utilisée par le site « :site ».',
     ],
 ];

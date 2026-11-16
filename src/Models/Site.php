@@ -25,14 +25,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 
 /**
- * A site served by the panel, picked by the domain a visitor came to — what
- * b_lang is in Bitrix. Records of modules that use BelongsToSite belong to
- * one site; other modules are shared by all of them.
+ * A site served by the panel, picked by the domain a visitor came to and,
+ * for several sites on one domain, by the folder it sits in
+ * (example.com/site2/) — what b_lang with its DIR is in Bitrix. Records of
+ * modules that use BelongsToSite belong to one site; other modules are
+ * shared by all of them.
  *
  * @property int|null $id
  * @property string $code
  * @property string $name
  * @property array<int,string>|null $domains
+ * @property string|null $folder
  * @property array<int,string>|null $languages
  * @property string|null $default_language
  * @property bool $active
@@ -58,10 +61,13 @@ class Site extends Model implements Administrable
 
     private const DOMAIN_PATTERN = '/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/';
 
+    /** One or more path segments: "site2", "en", "shop/b2b". */
+    private const FOLDER_PATTERN = '#^(?=.{1,255}$)[A-Za-z0-9][A-Za-z0-9_-]*(/[A-Za-z0-9][A-Za-z0-9_-]*)*$#';
+
     protected $table = 'admin_sites';
 
     protected $fillable = [
-        'code', 'name', 'domains', 'languages', 'default_language', 'active', 'is_default', 'sort',
+        'code', 'name', 'domains', 'folder', 'languages', 'default_language', 'active', 'is_default', 'sort',
         'google_tag_id', 'yandex_metrika_id', 'yandex_webvisor', 'counters_skip_admins',
         'google_verification', 'yandex_verification', 'bing_verification',
         'head_code', 'body_start_code', 'body_end_code', 'robots_txt',
@@ -105,6 +111,8 @@ class Site extends Model implements Administrable
             }
 
             $site->domains = $site->normalizedDomains();
+            $site->folder = self::normalizeFolder($site->folder);
+            $site->guardFolder();
             $site->guardDomains();
 
             $languages = array_values(array_unique(array_filter((array) $site->languages, static fn (string $code): bool => $code !== '')));
@@ -214,6 +222,12 @@ class Site extends Model implements Administrable
                 ->hint(__('atrium::sites.hints.domains'))
                 ->itemType('text')
                 ->addLabel(__('atrium::sites.add_domain')),
+
+            TextField::make('folder')
+                ->label(__('atrium::sites.fields.folder'))
+                ->hint(__('atrium::sites.hints.folder'))
+                ->placeholder('site2')
+                ->maxLength(255),
 
             MultiSelectField::make('languages')
                 ->label(__('atrium::sites.fields.languages'))
@@ -337,6 +351,7 @@ class Site extends Model implements Administrable
         return [
             TextColumn::make('name')->label(__('atrium::sites.fields.name'))->sortable()->searchable(),
             TextColumn::make('code')->label(__('atrium::sites.fields.code'))->sortable()->searchable(),
+            TextColumn::make('folder')->label(__('atrium::sites.fields.folder'))->sortable(),
             BooleanColumn::make('active')->label(__('atrium::sites.fields.active')),
             BooleanColumn::make('is_default')->label(__('atrium::sites.fields.is_default')),
             TextColumn::make('sort')->label(__('atrium::sites.fields.sort'))->sortable(),
@@ -352,30 +367,41 @@ class Site extends Model implements Administrable
     }
 
     /**
-     * The address of the site's front page: its first domain, on the port
-     * the panel itself is opened on (localhost:8000 in development).
+     * The address of a page of the site, its front page by default: the
+     * domain the request came to if the site claims it, else its first
+     * domain on the port the panel itself is opened on (localhost:8000 in
+     * development); then the site's folder.
      */
-    public function url(): string
+    public function url(string $path = ''): string
     {
+        $request = request();
         $domain = $this->domains[0] ?? null;
 
-        if ($domain === null) {
-            return url('/');
+        if ($domain === null || $this->hasDomain($request->getHost())) {
+            $root = Sites::rootUrl($request);
+        } else {
+            $port = $request->getPort();
+            $standard = ($request->isSecure() && $port === 443) || (! $request->isSecure() && $port === 80);
+            $root = $request->getScheme().'://'.$domain.($standard || $port === null ? '' : ':'.$port);
         }
 
-        $request = request();
-        $port = $request->getPort();
-        $standard = ($request->isSecure() && $port === 443) || (! $request->isSecure() && $port === 80);
+        $path = trim(implode('/', [(string) $this->folder, trim($path, '/')]), '/');
 
-        return $request->getScheme().'://'.$domain.($standard || $port === null ? '' : ':'.$port);
+        return $path === '' ? $root : $root.'/'.$path;
     }
 
     /**
-     * The robots.txt this site answers with. Off production every robot is
-     * turned away whatever the admin wrote: a staging copy must not get
-     * into search results even if nobody thought about it.
+     * The robots.txt this site answers with on the root of a domain. Off
+     * production every robot is turned away whatever the admin wrote: a
+     * staging copy must not get into search results even if nobody thought
+     * about it.
+     *
+     * robots.txt is one per domain, so it lists the sitemaps of the sites
+     * in folders of that domain as well.
+     *
+     * @param  iterable<Site>  $folderSites
      */
-    public function robotsTxt(): string
+    public function robotsTxt(iterable $folderSites = []): string
     {
         if (! app()->isProduction()) {
             return "User-agent: *\nDisallow: /\n";
@@ -389,6 +415,10 @@ class Site extends Model implements Administrable
 
         if (config('atrium.sitemap.enabled', true) && ! preg_match('/^\s*sitemap\s*:/mi', $text)) {
             $text .= "\n\nSitemap: ".url('sitemap.xml');
+
+            foreach ($folderSites as $site) {
+                $text .= "\nSitemap: ".url($site->folder.'/sitemap.xml');
+            }
         }
 
         return $text."\n";
@@ -397,6 +427,32 @@ class Site extends Model implements Administrable
     public function hasDomain(string $host): bool
     {
         return in_array(strtolower(rtrim($host, '.')), (array) $this->domains, true);
+    }
+
+    /**
+     * Whether a path (/site2/de/news) is inside the site's folder. "site2"
+     * holds /site2 and /site2/…, never /site22.
+     */
+    public function holdsPath(string $path): bool
+    {
+        if ($this->folder === null || $this->folder === '') {
+            return false;
+        }
+
+        return str_starts_with('/'.trim($path, '/').'/', '/'.$this->folder.'/');
+    }
+
+    /**
+     * "/site2/", "https://example.com/site2" → "site2"; nothing → null.
+     */
+    public static function normalizeFolder(mixed $folder): ?string
+    {
+        $folder = trim((string) $folder);
+        $folder = (string) preg_replace('#^[a-z][a-z0-9+.-]*://[^/]*#i', '', $folder);
+        $folder = (string) preg_replace('#[?\#].*$#', '', $folder);
+        $folder = trim((string) preg_replace('#/+#', '/', $folder), '/');
+
+        return $folder === '' ? null : $folder;
     }
 
     /**
@@ -449,8 +505,40 @@ class Site extends Model implements Administrable
     }
 
     /**
-     * A domain is a host name and belongs to one site only — otherwise which
-     * site opens would depend on the order of rows.
+     * A folder is a path, not one of the panel's own addresses; the default
+     * site answers every address nobody else claims, so it sits at the root.
+     */
+    private function guardFolder(): void
+    {
+        if ($this->folder === null) {
+            return;
+        }
+
+        if (! preg_match(self::FOLDER_PATTERN, $this->folder)) {
+            throw ValidationException::withMessages(['folder' => __('atrium::sites.errors.folder_invalid', ['folder' => $this->folder])]);
+        }
+
+        $first = strtolower(explode('/', $this->folder)[0]);
+        $reserved = array_filter([
+            strtolower(explode('/', trim((string) config('atrium.prefix', 'admin'), '/'))[0]),
+            strtolower(explode('/', trim((string) config('atrium.api.prefix', 'api/v1'), '/'))[0]),
+            strtolower(explode('/', trim((string) config('atrium.mcp.path', 'mcp'), '/'))[0]),
+        ]);
+
+        if (in_array($first, $reserved, true)) {
+            throw ValidationException::withMessages(['folder' => __('atrium::sites.errors.folder_reserved', ['folder' => $first])]);
+        }
+
+        if ($this->is_default) {
+            throw ValidationException::withMessages(['folder' => __('atrium::sites.errors.folder_default')]);
+        }
+    }
+
+    /**
+     * A domain is a host name, and a domain with a folder belongs to one
+     * site only — otherwise which site opens would depend on the order of
+     * rows. Sites in different folders may share a domain; sites without
+     * domains live on every domain, so their folders are unique too.
      */
     private function guardDomains(): void
     {
@@ -460,13 +548,23 @@ class Site extends Model implements Administrable
             }
         }
 
-        $taken = static::query()->whereKeyNot($this->getKey())->get(['name', 'domains']);
+        $taken = static::query()->whereKeyNot($this->getKey())->get(['name', 'domains', 'folder']);
 
         foreach ($taken as $other) {
+            if ($other->folder !== $this->folder) {
+                continue;
+            }
+
             $clash = array_intersect((array) $this->domains, (array) $other->domains);
 
-            if ($clash !== []) {
+            if ($clash !== [] && $this->folder === null) {
                 throw ValidationException::withMessages(['domains' => __('atrium::sites.errors.domain_taken', ['domain' => reset($clash), 'site' => $other->name])]);
+            }
+
+            if ($this->folder !== null && ($clash !== [] || ((array) $this->domains === [] && (array) $other->domains === []))) {
+                $address = ($clash === [] ? '' : reset($clash)).'/'.$this->folder.'/';
+
+                throw ValidationException::withMessages(['folder' => __('atrium::sites.errors.folder_taken', ['address' => $address, 'site' => $other->name])]);
             }
         }
     }

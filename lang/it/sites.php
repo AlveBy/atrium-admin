@@ -15,6 +15,7 @@ return [
         'name' => 'Nome',
         'code' => 'Codice',
         'domains' => 'Domini',
+        'folder' => 'Cartella',
         'languages' => 'Lingue',
         'default_language' => 'Lingua predefinita',
         'active' => 'Attivo',
@@ -34,6 +35,7 @@ return [
     'hints' => [
         'code' => 'Lettere latine minuscole, cifre, trattini: main, shop, de. In seguito non si può più modificare.',
         'domains' => 'Il sito si apre su questi domini: example.com, www.example.com. Il primo è quello principale.',
+        'folder' => 'Per più siti su un dominio: site2 apre questo sito all\'indirizzo example.com/site2/. Vuoto: il sito è nella radice dei suoi domini. Un sito senza domini sta in questa cartella su ogni dominio.',
         'languages' => 'Le lingue dei contenuti di questo sito. Nessuna selezionata: tutte le lingue attive.',
         'default_language' => 'Le sue pagine non hanno il prefisso della lingua nell\'URL. Vuoto: la lingua predefinita dell\'intero pannello.',
         'is_default' => 'Si apre su qualsiasi dominio che nessun altro sito rivendica e su localhost.',
@@ -49,5 +51,9 @@ return [
     'errors' => [
         'domain_invalid' => '«:domain» non è un nome di dominio.',
         'domain_taken' => 'Il dominio :domain è già usato dal sito «:site».',
+        'folder_invalid' => '«:folder» non è una cartella: lettere latine, cifre, trattini e trattini bassi, parti separate da barre.',
+        'folder_reserved' => 'La cartella :folder è un indirizzo del pannello stesso.',
+        'folder_default' => 'Il sito predefinito risponde a ogni indirizzo che nessun altro sito rivendica, quindi resta nella radice. Svuota la cartella o rendi predefinito un altro sito.',
+        'folder_taken' => 'L\'indirizzo :address è già usato dal sito «:site».',
     ],
 ];

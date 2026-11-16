@@ -15,6 +15,7 @@ return [
         'name' => 'Nazwa',
         'code' => 'Kod',
         'domains' => 'Domeny',
+        'folder' => 'Folder',
         'languages' => 'Języki',
         'default_language' => 'Język domyślny',
         'active' => 'Aktywna',
@@ -34,6 +35,7 @@ return [
     'hints' => [
         'code' => 'Małe litery łacińskie, cyfry, myślniki: main, shop, de. Później nie można tego zmienić.',
         'domains' => 'Witryna otwiera się pod tymi domenami: example.com, www.example.com. Pierwsza jest główną.',
+        'folder' => 'Dla kilku witryn w jednej domenie: site2 otwiera tę witrynę pod adresem example.com/site2/. Puste — witryna jest w katalogu głównym swoich domen. Witryna bez domen jest w tym folderze w każdej domenie.',
         'languages' => 'Języki treści tej witryny. Nic nie wybrano — wszystkie aktywne języki.',
         'default_language' => 'Strony tego języka nie mają prefiksu języka w adresie. Puste — domyślny język całego panelu.',
         'is_default' => 'Otwiera się pod każdą domeną, której nie zgłasza żadna inna witryna, oraz pod localhost.',
@@ -49,5 +51,9 @@ return [
     'errors' => [
         'domain_invalid' => '„:domain” nie jest nazwą domeny.',
         'domain_taken' => 'Domena :domain jest już używana przez witrynę „:site”.',
+        'folder_invalid' => '„:folder” nie jest folderem: litery łacińskie, cyfry, myślniki i podkreślenia, części oddzielone ukośnikami.',
+        'folder_reserved' => 'Folder :folder to adres samego panelu.',
+        'folder_default' => 'Domyślna witryna odpowiada na każdy adres, którego nie zajęła inna witryna, dlatego jest w katalogu głównym. Wyczyść folder albo ustaw inną witrynę jako domyślną.',
+        'folder_taken' => 'Adres :address jest już używany przez witrynę „:site”.',
     ],
 ];

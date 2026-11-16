@@ -11,6 +11,7 @@ use Atrium\Admin\Demo\Demo;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
 use Atrium\Admin\Http\Middleware\AuthorizeAdminRoute;
+use Atrium\Admin\Http\Middleware\EnterSiteFolder;
 use Atrium\Admin\Http\Middleware\HandleAtriumRequests;
 use Atrium\Admin\Http\Middleware\RecordPageTiming;
 use Atrium\Admin\Http\Middleware\RedirectIfAdminAuthenticated;
@@ -116,7 +117,9 @@ final class AtriumServiceProvider extends ServiceProvider
         $router->aliasMiddleware('atrium.content-locale', SetContentLocale::class);
         $router->aliasMiddleware('atrium.site', ResolveSite::class);
 
-        // Every page of the app knows its site, picked by domain.
+        // Every page of the app knows its site, picked by domain and folder.
+        // The folder goes before routing, so the kernel's global stack.
+        $this->app->make(HttpKernel::class)->pushMiddleware(EnterSiteFolder::class);
         $this->appendToWebGroup(ResolveSite::class);
 
         // Page timings feed the dashboard gadgets. Added here so the gadgets
