@@ -25,7 +25,8 @@ use Illuminate\Support\Str;
  *             "permissions": {
  *                 "moderate": "atrium-reviews::permissions.moderate",
  *                 "reviews.export": {"label": "Export reviews", "with": "reviews.view"}
- *             }
+ *             },
+ *             "submodules": ["vendor/atrium-reviews-import"]
  *         }
  *     }
  *
@@ -41,6 +42,10 @@ use Illuminate\Support\Str;
  * delete: "{section}.{action}", or a bare action for "{key}.{action}". Each
  * has a label (text or a translation key) and may name a permission it comes
  * `with`: the roles that have that one get it when the module is installed.
+ *
+ * Submodules are packages of their own, installed with their parent and
+ * listed under it: the parent names those it knows in `submodules`, and a
+ * submodule from elsewhere names its `parent`.
  */
 final class Module
 {
@@ -52,6 +57,8 @@ final class Module
      * @param  array<int,string>  $suggests  package names
      * @param  class-string<ModuleSettings>|null  $settings  what can be set for it in the panel
      * @param  array<string,array{label:string,with:string|null}>  $declaredPermissions  its own permissions by name
+     * @param  array<int,string>  $submodules  package names
+     * @param  string|null  $parent  the package it is a submodule of
      */
     public function __construct(
         public readonly string $name,
@@ -65,6 +72,8 @@ final class Module
         public readonly string $key = '',
         public readonly string $title = '',
         public readonly array $declaredPermissions = [],
+        public readonly array $submodules = [],
+        public readonly ?string $parent = null,
     ) {}
 
     /**
@@ -146,6 +155,8 @@ final class Module
             key: $key,
             title: (string) ($manifest['title'] ?? ''),
             declaredPermissions: self::permissionsOf((array) ($manifest['permissions'] ?? []), $key !== '' ? $key : self::keyOf($name)),
+            submodules: array_values(array_map(static fn ($submodule): string => strtolower((string) $submodule), (array) ($manifest['submodules'] ?? []))),
+            parent: isset($manifest['parent']) ? strtolower((string) $manifest['parent']) : null,
         );
     }
 

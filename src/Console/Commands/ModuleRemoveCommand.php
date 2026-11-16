@@ -52,6 +52,13 @@ final class ModuleRemoveCommand extends ModuleCommand
             default => $this->confirm("Keep the data of {$name} (its tables and records)? If not, they are dropped", true),
         };
 
+        // Its submodules go first, with the same answer about the data.
+        foreach ($module === null ? [] : $modules->childrenOf($module) as $child) {
+            if ($modules->isInstalled($child->name)) {
+                $this->call('atrium:module:remove', ['package' => $child->name, $keep ? '--keep-data' : '--delete-data' => true]);
+            }
+        }
+
         if (! $keep && $module->migrations !== []) {
             $this->components->task('Dropping its tables', fn (): bool => $this->callSilently('migrate:reset', [
                 '--path' => $module->migrations,

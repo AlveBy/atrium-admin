@@ -39,6 +39,14 @@ final class ModuleInstallCommand extends ModuleCommand
             return self::FAILURE;
         }
 
+        $parent = $modules->parentOf($module);
+
+        if ($parent !== null && ! $modules->isInstalled($parent->name)) {
+            $this->components->error("{$name} is a submodule of {$parent->name}. Install {$parent->name} first.");
+
+            return self::FAILURE;
+        }
+
         if (! is_file(config_path('atrium.php'))) {
             $this->callSilently('vendor:publish', ['--tag' => 'atrium-config']);
         }
@@ -70,6 +78,12 @@ final class ModuleInstallCommand extends ModuleCommand
         $this->refreshCaches();
 
         Hook::fire('atrium.module.installed', $module);
+
+        foreach ($modules->childrenOf($module) as $child) {
+            if (! $modules->isInstalled($child->name)) {
+                $this->call('atrium:module:install', ['package' => $child->name, '--demo' => (bool) $this->option('demo')]);
+            }
+        }
 
         $this->components->info($already
             ? "{$name} was installed already; its tables are up to date."

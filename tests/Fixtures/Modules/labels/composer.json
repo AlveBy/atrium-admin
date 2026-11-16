@@ -20,7 +20,10 @@
                     "label": "Label posts",
                     "with": "posts.update"
                 }
-            }
+            },
+            "submodules": [
+                "acme/atrium-labels-printing"
+            ]
         }
     }
 }

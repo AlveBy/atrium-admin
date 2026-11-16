@@ -6,7 +6,7 @@
 
 /**
  * The installed module packages, with a link to the settings of those that
- * have any.
+ * have any. Submodules come right under their parent, indented.
  */
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
@@ -35,9 +35,9 @@ defineProps({
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-line">
-                    <tr v-for="module in modules" :key="module.name" :data-module="module.name">
-                        <td class="px-4 py-2">
-                            <div class="font-medium text-fg">{{ module.label }}</div>
+                    <tr v-for="module in modules" :key="module.name" :data-module="module.name" :data-parent="module.parent">
+                        <td class="py-2 pr-4" :class="module.parent ? 'pl-10' : 'pl-4'">
+                            <div class="font-medium text-fg"><span v-if="module.parent" aria-hidden="true" class="mr-1 text-muted">↳</span>{{ module.label }}</div>
                             <div v-if="module.description" class="text-muted">{{ module.description }}</div>
                         </td>
                         <td class="px-4 py-2 font-mono text-xs text-muted">{{ module.name }}</td>

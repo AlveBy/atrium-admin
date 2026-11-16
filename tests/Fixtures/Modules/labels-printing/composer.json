@@ -1,0 +1,10 @@
+{
+    "name": "acme/atrium-labels-printing",
+    "description": "Printing labels: a submodule the labels module lists",
+    "type": "atrium-module",
+    "extra": {
+        "atrium": {
+            "permissions": {"print": "Print labels"}
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "name": "acme/atrium-labels-qr",
+    "description": "QR codes on labels: a submodule from another vendor that names its parent",
+    "type": "atrium-module",
+    "extra": {
+        "atrium": {
+            "parent": "acme/atrium-labels"
+        }
+    }
+}

@@ -120,6 +120,35 @@ final class Modules
     }
 
     /**
+     * The module this one is a submodule of: the one it names as its parent,
+     * or the one that lists it.
+     */
+    public function parentOf(Module $module): ?Module
+    {
+        if ($module->parent !== null) {
+            return $this->find($module->parent);
+        }
+
+        foreach ($this->all() as $candidate) {
+            if (in_array($module->name, $candidate->submodules, true)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The submodules of a module that Composer has, by name.
+     *
+     * @return array<string,Module>
+     */
+    public function childrenOf(Module $module): array
+    {
+        return array_filter($this->all(), fn (Module $candidate): bool => $candidate->name !== $module->name && $this->parentOf($candidate)?->name === $module->name);
+    }
+
+    /**
      * The module that lists this model, installed or not.
      */
     public function ownerOf(string $model): ?Module
@@ -227,8 +256,8 @@ final class Modules
     }
 
     /**
-     * Modules a module suggests come before it, so a product's demo content
-     * finds the brands it links to.
+     * Modules a module suggests, and its parent, come before it, so a
+     * product's demo content finds the brands it links to.
      *
      * @param  array<string,Module>  $modules
      * @return array<string,Module>
@@ -242,7 +271,7 @@ final class Modules
                 return;
             }
 
-            foreach ($module->suggests as $name) {
+            foreach ([...array_filter([$this->parentOf($module)?->name]), ...$module->suggests] as $name) {
                 if (isset($modules[$name])) {
                     $visit($modules[$name], [...$path, $module->name]);
                 }

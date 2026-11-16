@@ -54,10 +54,24 @@ class ModuleController extends Controller
                 'label' => $module->label(),
                 'description' => $module->description,
                 'settings' => $settings,
+                'parent' => $this->modules->parentOf($module)?->name,
             ];
         }
 
         usort($rows, static fn (array $a, array $b): int => strnatcasecmp($a['label'], $b['label']));
+
+        // Submodules right under their parent.
+        $listed = array_column($rows, 'name');
+        $ordered = [];
+
+        foreach ($rows as $row) {
+            if ($row['parent'] === null || ! in_array($row['parent'], $listed, true)) {
+                $ordered[] = $row;
+                array_push($ordered, ...array_filter($rows, static fn (array $child): bool => $child['parent'] === $row['name']));
+            }
+        }
+
+        $rows = $ordered;
 
         return Inertia::render('Admin/Modules/Index', [
             'modules' => $rows,
