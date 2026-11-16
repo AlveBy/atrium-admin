@@ -44,8 +44,13 @@ const imageSrc = (value) => {
     if (!first) return null
     // Gallery entries are path strings; older rows may hold the whole upload
     // response object, which would otherwise render as src="[object Object]".
-    if (typeof first === 'object') return first.url ?? first.path ?? null
-    return first
+    const raw = typeof first === 'object' ? (first.url ?? first.path ?? null) : first
+    if (typeof raw !== 'string' || raw === '') return null
+    // A path on the public disk (demo/laptop.svg) is stored without /storage/,
+    // the way the form and the site read it; as it is, it resolves against
+    // /admin/... and the picture is broken.
+    if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('/')) return raw
+    return '/storage/' + raw
 }
 
 const getSortIcon = (column) => {

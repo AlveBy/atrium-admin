@@ -13,8 +13,8 @@
       "_dist-C3nSn_Wb.js"
     ]
   },
-  "_AdminDataTable-CK75SQDP.js": {
-    "file": "assets/AdminDataTable-CK75SQDP.js",
+  "_AdminDataTable-CVUqyQcE.js": {
+    "file": "assets/AdminDataTable-CVUqyQcE.js",
     "name": "AdminDataTable",
     "imports": [
       "_dist-C3nSn_Wb.js"
@@ -35,12 +35,8 @@
       "_dist-C3nSn_Wb.js"
     ]
   },
-  "_FormField-CovwXIXj.css": {
-    "file": "assets/FormField-CovwXIXj.css",
-    "src": "_FormField-CovwXIXj.css"
-  },
-  "_FormField-WDd0MEmP.js": {
-    "file": "assets/FormField-WDd0MEmP.js",
+  "_FormField-B8TJl-V3.js": {
+    "file": "assets/FormField-B8TJl-V3.js",
     "name": "FormField",
     "imports": [
       "_dist-C3nSn_Wb.js",
@@ -49,6 +45,10 @@
     "css": [
       "assets/FormField-CovwXIXj.css"
     ]
+  },
+  "_FormField-CovwXIXj.css": {
+    "file": "assets/FormField-CovwXIXj.css",
+    "src": "_FormField-CovwXIXj.css"
   },
   "_LocaleSwitcher-CqxF2Wft.js": {
     "file": "assets/LocaleSwitcher-CqxF2Wft.js",
@@ -69,7 +69,7 @@
     "name": "dist"
   },
   "resources/js/Pages/Admin/ApiTokens/Index.vue": {
-    "file": "assets/Index-D3raJDx6.js",
+    "file": "assets/Index-Bq38IH1w.js",
     "name": "Index",
     "src": "resources/js/Pages/Admin/ApiTokens/Index.vue",
     "isDynamicEntry": true,
@@ -126,7 +126,7 @@
     ]
   },
   "resources/js/Pages/Admin/Resource/Create.vue": {
-    "file": "assets/Create-rBFDDfZS.js",
+    "file": "assets/Create-C3Ch6ZkB.js",
     "name": "Create",
     "src": "resources/js/Pages/Admin/Resource/Create.vue",
     "isDynamicEntry": true,
@@ -136,11 +136,11 @@
       "_AdminButton-DsGEMfMT.js",
       "_AdminCard-B2aTooRd.js",
       "_contentLocale-CUbP7sG-.js",
-      "_FormField-WDd0MEmP.js"
+      "_FormField-B8TJl-V3.js"
     ]
   },
   "resources/js/Pages/Admin/Resource/Edit.vue": {
-    "file": "assets/Edit-rw79WFHR.js",
+    "file": "assets/Edit-DDjIaclp.js",
     "name": "Edit",
     "src": "resources/js/Pages/Admin/Resource/Edit.vue",
     "isDynamicEntry": true,
@@ -150,11 +150,11 @@
       "_AdminButton-DsGEMfMT.js",
       "_AdminCard-B2aTooRd.js",
       "_contentLocale-CUbP7sG-.js",
-      "_FormField-WDd0MEmP.js"
+      "_FormField-B8TJl-V3.js"
     ]
   },
   "resources/js/Pages/Admin/Resource/Index.vue": {
-    "file": "assets/Index-GXpTM8Uo.js",
+    "file": "assets/Index-DIxkPtYO.js",
     "name": "Index",
     "src": "resources/js/Pages/Admin/Resource/Index.vue",
     "isDynamicEntry": true,
@@ -162,7 +162,7 @@
       "_dist-C3nSn_Wb.js",
       "_AdminLayout-Ul98AVvK.js",
       "_AdminButton-DsGEMfMT.js",
-      "_AdminDataTable-CK75SQDP.js",
+      "_AdminDataTable-CVUqyQcE.js",
       "_AdminModal-BZF0DwH4.js"
     ]
   },
@@ -191,7 +191,7 @@
     ]
   },
   "resources/js/Pages/Admin/Users/Create.vue": {
-    "file": "assets/Create-BoSnrIRv.js",
+    "file": "assets/Create-CTnFXhua.js",
     "name": "Create",
     "src": "resources/js/Pages/Admin/Users/Create.vue",
     "isDynamicEntry": true,
@@ -200,11 +200,11 @@
       "_AdminLayout-Ul98AVvK.js",
       "_AdminButton-DsGEMfMT.js",
       "_AdminCard-B2aTooRd.js",
-      "_FormField-WDd0MEmP.js"
+      "_FormField-B8TJl-V3.js"
     ]
   },
   "resources/js/Pages/Admin/Users/Edit.vue": {
-    "file": "assets/Edit-bD-ZYbVX.js",
+    "file": "assets/Edit-CxH_BcPJ.js",
     "name": "Edit",
     "src": "resources/js/Pages/Admin/Users/Edit.vue",
     "isDynamicEntry": true,
@@ -213,11 +213,11 @@
       "_AdminLayout-Ul98AVvK.js",
       "_AdminButton-DsGEMfMT.js",
       "_AdminCard-B2aTooRd.js",
-      "_FormField-WDd0MEmP.js"
+      "_FormField-B8TJl-V3.js"
     ]
   },
   "resources/js/Pages/Admin/Users/Index.vue": {
-    "file": "assets/Index-BFVShG9V.js",
+    "file": "assets/Index-_UihHHkt.js",
     "name": "Index",
     "src": "resources/js/Pages/Admin/Users/Index.vue",
     "isDynamicEntry": true,
@@ -225,12 +225,12 @@
       "_dist-C3nSn_Wb.js",
       "_AdminLayout-Ul98AVvK.js",
       "_AdminButton-DsGEMfMT.js",
-      "_AdminDataTable-CK75SQDP.js",
+      "_AdminDataTable-CVUqyQcE.js",
       "_AdminModal-BZF0DwH4.js"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CcyQJAAd.js",
+    "file": "assets/app-BysdOwvt.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
