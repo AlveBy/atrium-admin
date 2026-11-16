@@ -1,0 +1,43 @@
+{
+    "name": "alveby/atrium",
+    "description": "Atrium — multilingual, multi-site admin panel for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/AlveBy/atrium",
+    "keywords": [
+        "laravel",
+        "admin",
+        "cms",
+        "bitrix",
+        "migration",
+        "multisite",
+        "i18n"
+    ],
+    "require": {
+        "php": "^8.3",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Atrium\\Admin\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Atrium\\Admin\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Atrium\\Admin\\AtriumServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
