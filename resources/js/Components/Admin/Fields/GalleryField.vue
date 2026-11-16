@@ -1,8 +1,8 @@
 <template>
   <div class="gallery-field">
-    <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1">
+    <label v-if="label" class="block text-sm font-medium text-fg mb-1">
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span v-if="required" class="text-danger">*</span>
     </label>
 
     <div
@@ -13,7 +13,7 @@
       <div
         v-for="(image, index) in imageViews"
         :key="image.src || index"
-        class="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden"
+        class="relative group aspect-square bg-off rounded-lg overflow-hidden"
         draggable="true"
         @dragstart="handleDragStart(index)"
         @dragover.prevent
@@ -34,21 +34,21 @@
           :href="image.src"
           target="_blank"
           rel="noopener"
-          class="w-full h-full flex flex-col items-center justify-center p-2 text-center hover:bg-gray-200"
+          class="w-full h-full flex flex-col items-center justify-center p-2 text-center hover:bg-hover"
           :title="image.filename"
         >
-          <svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="h-8 w-8 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
-          <span class="mt-1 text-xs text-gray-600 break-all line-clamp-2">{{ image.filename }}</span>
+          <span class="mt-1 text-xs text-muted break-all line-clamp-2">{{ image.filename }}</span>
         </a>
 
-        <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <button
             type="button"
             @click="removeImage(index)"
             :title="$t('common.remove')"
-            class="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+            class="p-2 bg-danger text-on-danger rounded-full hover:bg-danger-hover"
           >
             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -58,7 +58,7 @@
 
         <div
           v-if="sortable"
-          class="absolute top-2 left-2 bg-white bg-opacity-75 rounded px-2 py-1 text-xs font-medium cursor-move"
+          class="absolute top-2 left-2 bg-surface/75 rounded px-2 py-1 text-xs font-medium cursor-move"
         >
           {{ index + 1 }}
         </div>
@@ -66,14 +66,14 @@
 
       <div
         v-if="canAddMore"
-        class="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-indigo-500 hover:bg-indigo-50 cursor-pointer transition-colors"
+        class="aspect-square border-2 border-dashed border-field rounded-lg flex items-center justify-center hover:border-focus hover:bg-accent-soft cursor-pointer transition-colors"
         @click="triggerUpload"
       >
         <div class="text-center">
-          <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="mx-auto h-8 w-8 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span class="mt-1 block text-sm text-gray-500">{{ $t('common.add') }}</span>
+          <span class="mt-1 block text-sm text-muted">{{ $t('common.add') }}</span>
         </div>
       </div>
     </div>
@@ -92,7 +92,7 @@
       type="button"
       @click="showLibrary = true"
       data-action="pick-from-library"
-      class="mt-3 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+      class="mt-3 px-3 py-2 text-sm font-medium text-fg bg-surface border border-field rounded-md hover:bg-hover"
     >
       {{ $t('fields.gallery.add_from_library') }}
     </button>
@@ -104,9 +104,9 @@
       @close="showLibrary = false"
     />
 
-    <p v-if="hint && !error" class="mt-2 text-sm text-gray-500">{{ hint }}</p>
-    <p v-if="error" class="mt-2 text-sm text-red-500">{{ error }}</p>
-    <p class="mt-2 text-sm text-gray-400">
+    <p v-if="hint && !error" class="mt-2 text-sm text-muted">{{ hint }}</p>
+    <p v-if="error" class="mt-2 text-sm text-danger">{{ error }}</p>
+    <p class="mt-2 text-sm text-muted">
       {{ $tc('fields.gallery.counter', maxFiles, { current: images.length }) }}
     </p>
   </div>

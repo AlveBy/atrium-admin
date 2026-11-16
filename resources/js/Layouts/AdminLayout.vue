@@ -41,11 +41,11 @@ const closeSidebar = () => {
 <template>
     <Head :title="title || ''" />
 
-    <div class="min-h-screen bg-gray-100">
+    <div class="min-h-screen bg-page">
         <!-- Mobile sidebar overlay -->
         <div
             v-if="sidebarOpen"
-            class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+            class="fixed inset-0 z-40 bg-black/50 lg:hidden"
             @click="closeSidebar"
         />
 
@@ -74,10 +74,10 @@ const closeSidebar = () => {
             <!-- Page content -->
             <main data-page-content="true" class="p-4 lg:p-6">
                 <!-- Flash messages -->
-                <div v-if="$page.props.flash?.success" data-flash="success" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                <div v-if="$page.props.flash?.success" data-flash="success" class="mb-4 p-4 bg-success-soft border border-success text-success-soft-fg rounded">
                     {{ $page.props.flash.success }}
                 </div>
-                <div v-if="$page.props.flash?.error" data-flash="error" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                <div v-if="$page.props.flash?.error" data-flash="error" class="mb-4 p-4 bg-danger-soft border border-danger text-danger-soft-fg rounded">
                     {{ $page.props.flash.error }}
                 </div>
 

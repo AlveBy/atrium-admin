@@ -20,4 +20,14 @@ return [
         'profile' => 'プロフィール',
         'logout' => 'ログアウト',
     ],
+
+    'theme' => [
+        'label' => 'テーマ',
+        'system' => 'システムに合わせる',
+        'graphite' => 'グラファイト',
+        'day' => '昼',
+        'night' => '夜',
+        'sand' => 'サンド',
+        'contrast' => 'ハイコントラスト',
+    ],
 ];

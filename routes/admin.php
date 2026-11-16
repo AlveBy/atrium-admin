@@ -19,6 +19,7 @@ use Atrium\Admin\Http\Controllers\ProfileController;
 use Atrium\Admin\Http\Controllers\ResourceController;
 use Atrium\Admin\Http\Controllers\RoleController;
 use Atrium\Admin\Http\Controllers\SiteController;
+use Atrium\Admin\Http\Controllers\ThemeController;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Illuminate\Support\Facades\Route;
 
@@ -64,6 +65,7 @@ Route::prefix(config('atrium.prefix', 'admin'))
             Route::get('profile', [ProfileController::class, 'edit'])->name('admin.profile.edit');
             Route::put('profile', [ProfileController::class, 'update'])->name('admin.profile.update');
             Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('admin.profile.password');
+            Route::put('profile/theme', [ThemeController::class, 'update'])->name('admin.profile.theme');
 
             // File Manager
             Route::post('upload', [FileManagerController::class, 'upload'])->name('admin.upload');

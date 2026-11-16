@@ -8,6 +8,7 @@ import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { ZiggyVue } from 'ziggy-js';
 import { i18n } from './Support/i18n';
+import { applyTheme } from './Support/theme';
 
 // The server sets <html lang> only on a full load; keep it right after an
 // Inertia visit too, so screen readers pronounce the new language. `navigate`
@@ -21,6 +22,12 @@ const syncLang = (event) => {
 };
 router.on('success', syncLang);
 router.on('navigate', syncLang);
+
+// The colour theme follows the account too: picked in another tab, or reset
+// to the default on the sign-in page.
+const syncTheme = (event) => applyTheme(event.detail.page.props.theme);
+router.on('success', syncTheme);
+router.on('navigate', syncTheme);
 
 const pages = import.meta.glob('./Pages/**/*.vue');
 
@@ -37,6 +44,7 @@ createInertiaApp({
         return page();
     },
     setup({ el, App, props, plugin }) {
+        applyTheme(props.initialPage.props.theme);
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
@@ -44,6 +52,6 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#4B5563',
+        color: 'var(--atrium-accent)',
     },
 });

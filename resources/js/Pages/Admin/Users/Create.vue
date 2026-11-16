@@ -38,16 +38,16 @@ const plain = (field) => ['text', 'email', 'password', 'checkbox'].includes(fiel
             <nav class="flex" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center space-x-1 md:space-x-3">
                     <li class="inline-flex items-center">
-                        <Link :href="route('admin.users.index')" class="text-gray-600 hover:text-blue-600">
+                        <Link :href="route('admin.users.index')" class="text-muted hover:text-accent">
                             {{ $t('menu.administrators') }}
                         </Link>
                     </li>
                     <li>
                         <div class="flex items-center">
-                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 text-muted" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="ml-1 text-gray-500">{{ $t('account.users.creating') }}</span>
+                            <span class="ml-1 text-muted">{{ $t('account.users.creating') }}</span>
                         </div>
                     </li>
                 </ol>
@@ -55,7 +55,7 @@ const plain = (field) => ['text', 'email', 'password', 'checkbox'].includes(fiel
         </div>
 
         <div class="max-w-2xl">
-            <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ title }}</h1>
+            <h1 class="text-2xl font-bold text-fg mb-6">{{ title }}</h1>
 
             <AdminCard>
                 <form @submit.prevent="submit" class="space-y-6">
@@ -73,18 +73,18 @@ const plain = (field) => ['text', 'email', 'password', 'checkbox'].includes(fiel
                                 :id="field.name"
                                 v-model="form[field.name]"
                                 type="checkbox"
-                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                class="h-4 w-4 text-accent focus:ring-focus border-field rounded"
                             />
-                            <label :for="field.name" class="ml-2 text-sm text-gray-700">
+                            <label :for="field.name" class="ml-2 text-sm text-fg">
                                 {{ field.label }}
                             </label>
                         </div>
 
                         <!-- Text/Email/Password input -->
                         <template v-else>
-                            <label :for="field.name" class="block text-sm font-medium text-gray-700 mb-1">
+                            <label :for="field.name" class="block text-sm font-medium text-fg mb-1">
                                 {{ field.label }}
-                                <span v-if="field.required" class="text-red-500">*</span>
+                                <span v-if="field.required" class="text-danger">*</span>
                             </label>
                             <input
                                 :id="field.name"
@@ -92,15 +92,15 @@ const plain = (field) => ['text', 'email', 'password', 'checkbox'].includes(fiel
                                 :type="field.type === 'password' ? 'password' : field.type === 'email' ? 'email' : 'text'"
                                 :placeholder="field.placeholder"
                                 :required="field.required"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                :class="{ 'border-red-500': form.errors[field.name] }"
+                                class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus"
+                                :class="{ 'border-danger': form.errors[field.name] }"
                             />
                         </template>
 
-                        <p v-if="field.hint" class="mt-1 text-sm text-gray-500">
+                        <p v-if="field.hint" class="mt-1 text-sm text-muted">
                             {{ field.hint }}
                         </p>
-                        <p v-if="form.errors[field.name]" class="mt-1 text-sm text-red-600">
+                        <p v-if="form.errors[field.name]" class="mt-1 text-sm text-danger">
                             {{ form.errors[field.name] }}
                         </p>
                     </div>

@@ -42,7 +42,7 @@ const getIconPath = (icon) => iconPaths[icon] || iconPaths['document-text']
 <template>
     <div class="admin-tabs">
         <!-- Tab Navigation -->
-        <div class="border-b border-gray-200">
+        <div class="border-b border-line">
             <nav class="-mb-px flex space-x-8" :aria-label="$t('fields.tabs.label')">
                 <button
                     v-for="tab in tabs"
@@ -53,8 +53,8 @@ const getIconPath = (icon) => iconPaths[icon] || iconPaths['document-text']
                     @click="activeTab = tab.name"
                     :class="[
                         activeTab === tab.name
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                            ? 'border-focus text-accent'
+                            : 'border-transparent text-muted hover:text-fg hover:border-field',
                         'group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-150'
                     ]"
                 >
@@ -62,7 +62,7 @@ const getIconPath = (icon) => iconPaths[icon] || iconPaths['document-text']
                     <svg
                         v-if="tab.icon"
                         :class="[
-                            activeTab === tab.name ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500',
+                            activeTab === tab.name ? 'text-accent' : 'text-muted group-hover:text-fg',
                             '-ml-0.5 mr-2 h-5 w-5 transition-colors duration-150'
                         ]"
                         xmlns="http://www.w3.org/2000/svg"
@@ -80,7 +80,7 @@ const getIconPath = (icon) => iconPaths[icon] || iconPaths['document-text']
                         v-if="tab.badge"
                         :data-tab-badge="tab.name"
                         :class="[
-                            activeTab === tab.name ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600',
+                            activeTab === tab.name ? 'bg-accent-soft text-accent' : 'bg-danger-soft text-danger',
                             'ml-2 py-0.5 px-2 rounded-full text-xs font-medium'
                         ]"
                     >

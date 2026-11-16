@@ -6,14 +6,14 @@
       @keydown.escape="close"
     >
       <!-- Backdrop -->
-      <div class="fixed inset-0 bg-black bg-opacity-50" @click="close" />
+      <div class="fixed inset-0 bg-black/50" @click="close" />
 
       <!-- Modal -->
-      <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col mx-4">
+      <div class="relative bg-surface rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col mx-4">
         <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">{{ $t('files.title') }}</h2>
-          <button type="button" @click="close" class="p-1 text-gray-400 hover:text-gray-600 rounded">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-line">
+          <h2 class="text-lg font-semibold text-fg">{{ $t('files.title') }}</h2>
+          <button type="button" @click="close" class="p-1 text-muted hover:text-fg rounded">
             <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
@@ -21,12 +21,12 @@
         </div>
 
         <!-- Toolbar -->
-        <div class="flex items-center gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50">
+        <div class="flex items-center gap-3 px-6 py-3 border-b border-line bg-surface-alt">
           <!-- Upload button -->
           <button
             type="button"
             @click="triggerUpload"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-on-accent text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -53,8 +53,8 @@
               @click="filterType = t.value"
               class="px-3 py-1.5 text-sm rounded-md transition-colors"
               :class="filterType === t.value
-                ? 'bg-indigo-100 text-indigo-700 font-medium'
-                : 'text-gray-600 hover:bg-gray-200'"
+                ? 'bg-accent-soft text-accent-soft-fg font-medium'
+                : 'text-muted hover:bg-hover'"
             >
               {{ $t(t.label) }}
             </button>
@@ -64,7 +64,7 @@
           <select
             v-if="collections.length"
             v-model="selectedCollection"
-            class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 max-w-56"
+            class="px-3 py-1.5 text-sm border border-field rounded-md focus:ring-focus focus:border-focus max-w-56"
           >
             <option :value="0">{{ $t('files.all_collections') }}</option>
             <option v-for="c in collections" :key="c.id" :value="c.id">
@@ -78,31 +78,31 @@
               v-model="searchQuery"
               type="text"
               :placeholder="$t('files.search_placeholder')"
-              class="w-56 pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              class="w-56 pl-8 pr-3 py-1.5 text-sm border border-field rounded-md focus:ring-focus focus:border-focus"
               @input="debouncedSearch"
             />
-            <svg class="absolute left-2.5 top-2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="absolute left-2.5 top-2 w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
         </div>
 
         <!-- Upload progress -->
-        <div v-if="uploading" class="px-6 py-2 bg-indigo-50 border-b border-indigo-100">
+        <div v-if="uploading" class="px-6 py-2 bg-accent-soft border-b border-accent-soft">
           <div class="flex items-center gap-3">
-            <svg class="animate-spin h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-4 w-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span class="text-sm text-indigo-700">{{ $t('files.uploading') }}</span>
+            <span class="text-sm text-accent-soft-fg">{{ $t('files.uploading') }}</span>
           </div>
         </div>
 
         <!-- Error message -->
-        <div v-if="errorMessage" class="px-6 py-2 bg-red-50 border-b border-red-100">
+        <div v-if="errorMessage" class="px-6 py-2 bg-danger-soft border-b border-danger-soft">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-red-700">{{ errorMessage }}</span>
-            <button type="button" @click="errorMessage = ''" class="text-red-400 hover:text-red-600">
+            <span class="text-sm text-danger-soft-fg">{{ errorMessage }}</span>
+            <button type="button" @click="errorMessage = ''" class="text-danger hover:text-danger">
               <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
               </svg>
@@ -113,13 +113,13 @@
         <!-- Files grid -->
         <div class="flex-1 overflow-y-auto p-6">
           <div v-if="loading && !files.length" class="flex items-center justify-center py-16">
-            <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-8 w-8 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
 
-          <div v-else-if="!files.length" class="flex flex-col items-center justify-center py-16 text-gray-400">
+          <div v-else-if="!files.length" class="flex flex-col items-center justify-center py-16 text-muted">
             <svg class="w-16 h-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
@@ -134,11 +134,11 @@
               @dblclick="insertFile(file)"
               class="group relative flex flex-col items-center p-2 rounded-lg border-2 cursor-pointer transition-all"
               :class="selectedFile?.id === file.id
-                ? 'border-indigo-500 bg-indigo-50'
-                : 'border-transparent hover:border-gray-300 hover:bg-gray-50'"
+                ? 'border-focus bg-accent-soft'
+                : 'border-transparent hover:border-field hover:bg-hover'"
             >
               <!-- Preview -->
-              <div class="w-full aspect-square rounded-md overflow-hidden bg-gray-100 flex items-center justify-center mb-2">
+              <div class="w-full aspect-square rounded-md overflow-hidden bg-off flex items-center justify-center mb-2">
                 <img
                   v-if="file.is_image"
                   :src="file.url"
@@ -146,16 +146,16 @@
                   class="w-full h-full object-cover"
                   loading="lazy"
                 />
-                <div v-else class="flex flex-col items-center justify-center text-gray-400">
-                  <svg v-if="isDocFile(file)" class="w-10 h-10 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                <div v-else class="flex flex-col items-center justify-center text-muted">
+                  <svg v-if="isDocFile(file)" class="w-10 h-10 text-accent" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
                     <path d="M8 12h8v2H8zm0 4h8v2H8zm0-8h3v2H8z"/>
                   </svg>
-                  <svg v-else-if="isPdfFile(file)" class="w-10 h-10 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                  <svg v-else-if="isPdfFile(file)" class="w-10 h-10 text-danger" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
                     <path d="M10.5 11c-.3 0-.5.2-.5.5v5c0 .3.2.5.5.5s.5-.2.5-.5V15h1.5c1.1 0 2-.9 2-2s-.9-2-2-2h-2zm2 3h-1.5v-2h1.5c.6 0 1 .4 1 1s-.4 1-1 1z"/>
                   </svg>
-                  <svg v-else-if="isExcelFile(file)" class="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                  <svg v-else-if="isExcelFile(file)" class="w-10 h-10 text-success" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
                     <path d="M8 12l2.5 3L8 18h1.5l1.75-2.25L13 18h1.5l-2.5-3 2.5-3H13l-1.75 2.25L9.5 12H8z"/>
                   </svg>
@@ -167,7 +167,7 @@
               </div>
 
               <!-- Filename -->
-              <p class="text-xs text-gray-600 text-center truncate w-full" :title="file.filename">
+              <p class="text-xs text-muted text-center truncate w-full" :title="file.filename">
                 {{ file.filename }}
               </p>
 
@@ -175,7 +175,7 @@
               <button
                 type="button"
                 @click.stop="deleteFile(file)"
-                class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                class="absolute top-1 right-1 p-1 bg-danger text-on-danger rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger-hover"
                 :title="$t('common.delete')"
               >
                 <svg class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
@@ -190,7 +190,7 @@
             <button
               type="button"
               @click="loadMore"
-              class="px-4 py-2 text-sm text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 transition-colors"
+              class="px-4 py-2 text-sm text-accent border border-accent rounded-lg hover:bg-accent-soft transition-colors"
               :disabled="loading"
             >
               {{ loading ? $t('common.loading') : $t('files.load_more') }}
@@ -199,13 +199,13 @@
         </div>
 
         <!-- Footer -->
-        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+        <div class="flex items-center justify-between px-6 py-4 border-t border-line bg-surface-alt rounded-b-xl">
           <!-- Selected file info -->
-          <div v-if="selectedFile" class="flex items-center gap-3 text-sm text-gray-600 min-w-0 flex-1 mr-4">
+          <div v-if="selectedFile" class="flex items-center gap-3 text-sm text-muted min-w-0 flex-1 mr-4">
             <span class="truncate">{{ selectedFile.filename }}</span>
-            <span class="text-gray-400 flex-shrink-0">{{ formatSize(selectedFile.size) }}</span>
+            <span class="text-muted flex-shrink-0">{{ formatSize(selectedFile.size) }}</span>
           </div>
-          <div v-else class="text-sm text-gray-400">
+          <div v-else class="text-sm text-muted">
             {{ $t('files.select_hint') }}
           </div>
 
@@ -213,7 +213,7 @@
             <button
               type="button"
               @click="close"
-              class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              class="px-4 py-2 text-sm text-fg border border-field rounded-lg hover:bg-hover transition-colors"
             >
               {{ $t('common.cancel') }}
             </button>
@@ -222,7 +222,7 @@
               data-action="library-insert"
               @click="insertSelected"
               :disabled="!selectedFile"
-              class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-4 py-2 text-sm text-on-accent bg-accent rounded-lg hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {{ $t('files.insert') }}
             </button>

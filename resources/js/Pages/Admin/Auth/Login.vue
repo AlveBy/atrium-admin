@@ -7,6 +7,7 @@
 import { useForm, Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import LocaleSwitcher from '../../../Components/Admin/Layout/LocaleSwitcher.vue'
+import AtriumLogo from '../../../Components/Admin/UI/AtriumLogo.vue'
 
 const props = defineProps({
     branding: {
@@ -33,7 +34,7 @@ const submit = () => {
 <template>
     <Head :title="$t('auth.login.title')" />
 
-    <div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="min-h-screen flex items-center justify-center bg-page py-12 px-4 sm:px-6 lg:px-8">
         <div class="absolute top-4 right-4">
             <LocaleSwitcher />
         </div>
@@ -47,20 +48,20 @@ const submit = () => {
                     :alt="branding.name"
                     class="mx-auto h-12 w-auto"
                 />
-                <h2 v-else class="text-3xl font-bold text-gray-900">
-                    {{ branding.name || $t('layout.panel_name') }}
+                <h2 v-else class="flex justify-center">
+                    <AtriumLogo on="surface" :size="48" :name="branding.name || 'Atrium'" />
                 </h2>
-                <p class="mt-2 text-sm text-gray-600">
+                <p class="mt-2 text-sm text-muted">
                     {{ $t('auth.login.subtitle') }}
                 </p>
             </div>
 
             <!-- Login Form -->
-            <div class="bg-white rounded-lg shadow-lg p-8">
+            <div class="bg-surface border border-line rounded-lg shadow-lg p-8">
                 <form @submit.prevent="submit" class="space-y-6">
                     <!-- Email -->
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">
+                        <label for="email" class="block text-sm font-medium text-fg">
                             {{ $t('auth.login.email') }}
                         </label>
                         <input
@@ -69,18 +70,18 @@ const submit = () => {
                             type="email"
                             autocomplete="email"
                             required
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            :class="{ 'border-red-500': form.errors.email }"
+                            class="mt-1 block w-full px-3 py-2 border border-field rounded-md shadow-sm placeholder-muted focus:outline-none focus:ring-focus focus:border-focus sm:text-sm"
+                            :class="{ 'border-danger': form.errors.email }"
                             placeholder="admin@example.com"
                         />
-                        <p v-if="form.errors.email" class="mt-1 text-sm text-red-600">
+                        <p v-if="form.errors.email" data-error class="mt-1 text-sm text-danger">
                             {{ form.errors.email }}
                         </p>
                     </div>
 
                     <!-- Password -->
                     <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">
+                        <label for="password" class="block text-sm font-medium text-fg">
                             {{ $t('auth.login.password') }}
                         </label>
                         <div class="mt-1 relative">
@@ -90,13 +91,13 @@ const submit = () => {
                                 :type="showPassword ? 'text' : 'password'"
                                 autocomplete="current-password"
                                 required
-                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10"
-                                :class="{ 'border-red-500': form.errors.password }"
+                                class="block w-full px-3 py-2 border border-field rounded-md shadow-sm placeholder-muted focus:outline-none focus:ring-focus focus:border-focus sm:text-sm pr-10"
+                                :class="{ 'border-danger': form.errors.password }"
                             />
                             <button
                                 type="button"
                                 @click="showPassword = !showPassword"
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-muted hover:text-fg"
                             >
                                 <svg v-if="!showPassword" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -107,7 +108,7 @@ const submit = () => {
                                 </svg>
                             </button>
                         </div>
-                        <p v-if="form.errors.password" class="mt-1 text-sm text-red-600">
+                        <p v-if="form.errors.password" data-error class="mt-1 text-sm text-danger">
                             {{ form.errors.password }}
                         </p>
                     </div>
@@ -118,9 +119,9 @@ const submit = () => {
                             id="remember"
                             v-model="form.remember"
                             type="checkbox"
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            class="h-4 w-4 text-accent focus:ring-focus border-field rounded"
                         />
-                        <label for="remember" class="ml-2 block text-sm text-gray-700">
+                        <label for="remember" class="ml-2 block text-sm text-fg">
                             {{ $t('auth.login.remember') }}
                         </label>
                     </div>
@@ -129,11 +130,11 @@ const submit = () => {
                     <button
                         type="submit"
                         :disabled="form.processing"
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-on-accent bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-focus disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <svg
                             v-if="form.processing"
-                            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            class="animate-spin -ml-1 mr-2 h-4 w-4"
                             fill="none"
                             viewBox="0 0 24 24"
                         >

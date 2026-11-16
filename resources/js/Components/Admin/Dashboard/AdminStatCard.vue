@@ -15,12 +15,12 @@ const props = defineProps({
 
 const colorClasses = computed(() => {
     const colors = {
-        blue: 'bg-blue-100 text-blue-600',
-        green: 'bg-green-100 text-green-600',
-        yellow: 'bg-yellow-100 text-yellow-600',
-        red: 'bg-red-100 text-red-600',
-        purple: 'bg-purple-100 text-purple-600',
-        gray: 'bg-gray-100 text-gray-600',
+        blue: 'bg-accent-soft text-accent',
+        green: 'bg-success-soft text-success',
+        yellow: 'bg-warning-soft text-warning-soft-fg',
+        red: 'bg-danger-soft text-danger',
+        purple: 'bg-accent-soft text-accent',
+        gray: 'bg-off text-muted',
     }
     return colors[props.stat.color] || colors.blue
 })
@@ -38,7 +38,7 @@ const iconPath = computed(() => {
 </script>
 
 <template>
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-surface rounded-lg shadow p-6">
         <div class="flex items-center">
             <div
                 class="w-12 h-12 rounded-lg flex items-center justify-center"
@@ -49,8 +49,8 @@ const iconPath = computed(() => {
                 </svg>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">{{ stat.label }}</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stat.value }}</p>
+                <p class="text-sm font-medium text-muted">{{ stat.label }}</p>
+                <p class="text-2xl font-bold text-fg">{{ stat.value }}</p>
             </div>
         </div>
     </div>

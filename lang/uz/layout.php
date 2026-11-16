@@ -20,4 +20,14 @@ return [
         'profile' => 'Profil',
         'logout' => 'Chiqish',
     ],
+
+    'theme' => [
+        'label' => 'Mavzu',
+        'system' => 'Tizimdagidek',
+        'graphite' => 'Grafit',
+        'day' => 'Kunduzgi',
+        'night' => 'Tungi',
+        'sand' => 'Qum',
+        'contrast' => 'Kontrast',
+    ],
 ];

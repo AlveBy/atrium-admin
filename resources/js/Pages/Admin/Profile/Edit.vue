@@ -42,50 +42,50 @@ const updatePassword = () => {
 <template>
     <AdminLayout :title="$t('account.profile.title')">
         <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">{{ $t('account.profile.title') }}</h1>
-            <p class="mt-1 text-sm text-gray-600">
+            <h1 class="text-2xl font-bold text-fg">{{ $t('account.profile.title') }}</h1>
+            <p class="mt-1 text-sm text-muted">
                 {{ $t('account.profile.subtitle') }}
             </p>
         </div>
 
         <div class="max-w-2xl space-y-6">
             <!-- Profile Information -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-medium text-gray-900">{{ $t('account.profile.info_title') }}</h2>
-                    <p class="mt-1 text-sm text-gray-600">
+            <div class="bg-surface rounded-lg shadow">
+                <div class="p-6 border-b border-line">
+                    <h2 class="text-lg font-medium text-fg">{{ $t('account.profile.info_title') }}</h2>
+                    <p class="mt-1 text-sm text-muted">
                         {{ $t('account.profile.info_subtitle') }}
                     </p>
                 </div>
                 <form @submit.prevent="updateProfile" class="p-6 space-y-4">
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">
+                        <label for="name" class="block text-sm font-medium text-fg">
                             {{ $t('account.profile.name') }}
                         </label>
                         <input
                             id="name"
                             v-model="profileForm.name"
                             type="text"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            :class="{ 'border-red-500': profileForm.errors.name }"
+                            class="mt-1 block w-full px-3 py-2 border border-field rounded-md shadow-sm focus:outline-none focus:ring-focus focus:border-focus sm:text-sm"
+                            :class="{ 'border-danger': profileForm.errors.name }"
                         />
-                        <p v-if="profileForm.errors.name" class="mt-1 text-sm text-red-600">
+                        <p v-if="profileForm.errors.name" class="mt-1 text-sm text-danger">
                             {{ profileForm.errors.name }}
                         </p>
                     </div>
 
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">
+                        <label for="email" class="block text-sm font-medium text-fg">
                             {{ $t('account.profile.email') }}
                         </label>
                         <input
                             id="email"
                             v-model="profileForm.email"
                             type="email"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            :class="{ 'border-red-500': profileForm.errors.email }"
+                            class="mt-1 block w-full px-3 py-2 border border-field rounded-md shadow-sm focus:outline-none focus:ring-focus focus:border-focus sm:text-sm"
+                            :class="{ 'border-danger': profileForm.errors.email }"
                         />
-                        <p v-if="profileForm.errors.email" class="mt-1 text-sm text-red-600">
+                        <p v-if="profileForm.errors.email" class="mt-1 text-sm text-danger">
                             {{ profileForm.errors.email }}
                         </p>
                     </div>
@@ -94,7 +94,7 @@ const updatePassword = () => {
                         <button
                             type="submit"
                             :disabled="profileForm.processing"
-                            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                            class="px-4 py-2 bg-accent text-on-accent text-sm font-medium rounded-md hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-focus disabled:opacity-50"
                         >
                             {{ profileForm.processing ? $t('common.saving') : $t('common.save') }}
                         </button>
@@ -103,55 +103,55 @@ const updatePassword = () => {
             </div>
 
             <!-- Update Password -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-medium text-gray-900">{{ $t('account.profile.password_title') }}</h2>
-                    <p class="mt-1 text-sm text-gray-600">
+            <div class="bg-surface rounded-lg shadow">
+                <div class="p-6 border-b border-line">
+                    <h2 class="text-lg font-medium text-fg">{{ $t('account.profile.password_title') }}</h2>
+                    <p class="mt-1 text-sm text-muted">
                         {{ $t('account.profile.password_subtitle') }}
                     </p>
                 </div>
                 <form @submit.prevent="updatePassword" class="p-6 space-y-4">
                     <div>
-                        <label for="current_password" class="block text-sm font-medium text-gray-700">
+                        <label for="current_password" class="block text-sm font-medium text-fg">
                             {{ $t('account.profile.current_password') }}
                         </label>
                         <input
                             id="current_password"
                             v-model="passwordForm.current_password"
                             type="password"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            :class="{ 'border-red-500': passwordForm.errors.current_password }"
+                            class="mt-1 block w-full px-3 py-2 border border-field rounded-md shadow-sm focus:outline-none focus:ring-focus focus:border-focus sm:text-sm"
+                            :class="{ 'border-danger': passwordForm.errors.current_password }"
                         />
-                        <p v-if="passwordForm.errors.current_password" class="mt-1 text-sm text-red-600">
+                        <p v-if="passwordForm.errors.current_password" class="mt-1 text-sm text-danger">
                             {{ passwordForm.errors.current_password }}
                         </p>
                     </div>
 
                     <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">
+                        <label for="password" class="block text-sm font-medium text-fg">
                             {{ $t('account.profile.new_password') }}
                         </label>
                         <input
                             id="password"
                             v-model="passwordForm.password"
                             type="password"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            :class="{ 'border-red-500': passwordForm.errors.password }"
+                            class="mt-1 block w-full px-3 py-2 border border-field rounded-md shadow-sm focus:outline-none focus:ring-focus focus:border-focus sm:text-sm"
+                            :class="{ 'border-danger': passwordForm.errors.password }"
                         />
-                        <p v-if="passwordForm.errors.password" class="mt-1 text-sm text-red-600">
+                        <p v-if="passwordForm.errors.password" class="mt-1 text-sm text-danger">
                             {{ passwordForm.errors.password }}
                         </p>
                     </div>
 
                     <div>
-                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700">
+                        <label for="password_confirmation" class="block text-sm font-medium text-fg">
                             {{ $t('account.profile.password_confirmation') }}
                         </label>
                         <input
                             id="password_confirmation"
                             v-model="passwordForm.password_confirmation"
                             type="password"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            class="mt-1 block w-full px-3 py-2 border border-field rounded-md shadow-sm focus:outline-none focus:ring-focus focus:border-focus sm:text-sm"
                         />
                     </div>
 
@@ -159,7 +159,7 @@ const updatePassword = () => {
                         <button
                             type="submit"
                             :disabled="passwordForm.processing"
-                            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                            class="px-4 py-2 bg-accent text-on-accent text-sm font-medium rounded-md hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-focus disabled:opacity-50"
                         >
                             {{ passwordForm.processing ? $t('common.saving') : $t('account.profile.change_password') }}
                         </button>

@@ -1,9 +1,9 @@
 <template>
   <div class="content-field" :data-content-field="name">
     <!-- Label -->
-    <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1">
+    <label v-if="label" class="block text-sm font-medium text-fg mb-1">
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span v-if="required" class="text-danger">*</span>
     </label>
 
     <!-- Mode Selector -->
@@ -15,9 +15,9 @@
           :value="m.value"
           :data-content-mode="m.value"
           v-model="currentMode"
-          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+          class="h-4 w-4 text-accent focus:ring-focus border-field"
         />
-        <span class="ml-1.5 text-sm text-gray-700">{{ m.label }}</span>
+        <span class="ml-1.5 text-sm text-fg">{{ m.label }}</span>
       </label>
     </div>
 
@@ -29,8 +29,8 @@
       :required="required"
       :disabled="disabled"
       :rows="rows"
-      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 resize-y"
-      :class="{ 'border-red-500': error }"
+      class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus resize-y"
+      :class="{ 'border-danger': error }"
     />
 
     <!-- HTML Mode (monospace textarea) -->
@@ -41,20 +41,20 @@
       :required="required"
       :disabled="disabled"
       :rows="rows"
-      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 resize-y font-mono text-sm bg-gray-50"
-      :class="{ 'border-red-500': error }"
+      class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus resize-y font-mono text-sm bg-surface-alt"
+      :class="{ 'border-danger': error }"
     />
 
     <!-- WYSIWYG Mode (TipTap) -->
     <div
       v-else-if="currentMode === 'wysiwyg'"
-      class="border border-gray-300 rounded-lg overflow-hidden"
-      :class="{ 'border-red-500': error, 'ring-2 ring-indigo-500': isFocused }"
+      class="border border-field rounded-lg overflow-hidden"
+      :class="{ 'border-danger': error, 'ring-2 ring-focus': isFocused }"
     >
       <!-- mousedown, not click: the browser takes focus away from the editor on
            press, and after that the caret can't be read — see caretPosition(). -->
       <div
-        class="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border-b border-gray-300"
+        class="flex flex-wrap items-center gap-1 p-2 bg-surface-alt border-b border-field"
         @mousedown="rememberCaret"
       >
         <!-- Paragraph style. A list rather than a single "H" button: that is how
@@ -62,7 +62,7 @@
         <select
           v-if="toolbar.includes('heading')"
           data-editor-format="true"
-          class="mr-1 h-8 rounded border border-gray-300 bg-white px-2 text-sm text-gray-700"
+          class="mr-1 h-8 rounded border border-field bg-surface px-2 text-sm text-fg"
           :value="currentFormat()"
           @change="applyFormat($event.target.value)"
           :title="$t('fields.editor.format')"
@@ -75,7 +75,7 @@
         <select
           v-if="toolbar.includes('fontSize')"
           data-editor-font-size="true"
-          class="mr-1 h-8 rounded border border-gray-300 bg-white px-2 text-sm text-gray-700"
+          class="mr-1 h-8 rounded border border-field bg-surface px-2 text-sm text-fg"
           :value="currentFontSize()"
           @change="applyFontSize($event.target.value)"
           :title="$t('fields.editor.font_size')"
@@ -87,10 +87,10 @@
              colour, and without this button there would be no way to set it. -->
         <label
           v-if="toolbar.includes('color')"
-          class="flex h-8 cursor-pointer items-center gap-1 rounded px-1.5 hover:bg-gray-200"
+          class="flex h-8 cursor-pointer items-center gap-1 rounded px-1.5 hover:bg-hover"
           :title="$t('fields.editor.text_color')"
         >
-          <span class="text-sm font-semibold text-gray-700">A</span>
+          <span class="text-sm font-semibold text-fg">A</span>
           <input
             type="color"
             data-editor-color="true"
@@ -106,8 +106,8 @@
             type="button"
             :data-editor-button="button.name"
             @click="button.action"
-            class="p-2 rounded hover:bg-gray-200"
-            :class="{ 'bg-gray-200': button.isActive?.() }"
+            class="p-2 rounded hover:bg-hover"
+            :class="{ 'bg-accent-soft text-accent-soft-fg': button.isActive?.() }"
             :title="button.title"
           >
             <span v-html="button.icon" class="w-4 h-4 block"></span>
@@ -123,9 +123,9 @@
     </div>
 
     <!-- Hint -->
-    <p v-if="hint && !error" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
+    <p v-if="hint && !error" class="mt-1 text-sm text-muted">{{ hint }}</p>
     <!-- Error -->
-    <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
+    <p v-if="error" class="mt-1 text-sm text-danger">{{ error }}</p>
 
     <!-- File Manager Modal -->
     <FileManager

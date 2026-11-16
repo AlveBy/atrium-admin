@@ -1,9 +1,9 @@
 <template>
   <div class="tree-node">
     <div
-      class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-100"
+      class="flex items-center px-3 py-2 cursor-pointer hover:bg-hover"
       :class="{
-        'bg-indigo-50': isSelected,
+        'bg-accent-soft': isSelected,
         'pl-6': depth === 1,
         'pl-9': depth === 2,
         'pl-12': depth >= 3,
@@ -15,7 +15,7 @@
       <button
         v-if="hasChildren"
         type="button"
-        class="mr-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+        class="mr-2 text-muted hover:text-fg focus:outline-none"
         @click.stop="toggle"
       >
         <svg
@@ -33,13 +33,13 @@
       </button>
       <span v-else class="w-6"></span>
 
-      <span class="flex-1 truncate" :class="{ 'font-medium text-indigo-600': isSelected }">
+      <span class="flex-1 truncate" :class="{ 'font-medium text-accent': isSelected }">
         {{ node.label }}
       </span>
 
       <svg
         v-if="isSelected"
-        class="h-5 w-5 text-indigo-600"
+        class="h-5 w-5 text-accent"
         viewBox="0 0 20 20"
         fill="currentColor"
       >

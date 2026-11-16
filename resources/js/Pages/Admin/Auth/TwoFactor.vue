@@ -7,6 +7,7 @@
 import { Head, useForm, usePage } from '@inertiajs/vue3'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import LocaleSwitcher from '../../../Components/Admin/Layout/LocaleSwitcher.vue'
+import AtriumLogo from '../../../Components/Admin/UI/AtriumLogo.vue'
 
 const props = defineProps({
     branding: {
@@ -69,7 +70,7 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
 <template>
     <Head :title="$t('auth.two_factor.title')" />
 
-    <div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="min-h-screen flex items-center justify-center bg-page py-12 px-4 sm:px-6 lg:px-8">
         <div class="absolute top-4 right-4">
             <LocaleSwitcher />
         </div>
@@ -82,22 +83,22 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                     :alt="branding.name"
                     class="mx-auto h-12 w-auto"
                 />
-                <h2 v-else class="text-3xl font-bold text-gray-900">
-                    {{ branding.name || $t('layout.panel_name') }}
+                <h2 v-else class="flex justify-center">
+                    <AtriumLogo on="surface" :size="48" :name="branding.name || 'Atrium'" />
                 </h2>
-                <p class="mt-2 text-sm text-gray-600">
+                <p class="mt-2 text-sm text-muted">
                     {{ $t('auth.two_factor.code_sent_to', { email }) }}
                 </p>
             </div>
 
-            <div class="bg-white rounded-lg shadow-lg p-8">
-                <p v-if="status" class="mb-4 text-sm text-green-700 bg-green-50 rounded-md px-3 py-2">
+            <div class="bg-surface border border-line rounded-lg shadow-lg p-8">
+                <p v-if="status" class="mb-4 text-sm text-success-soft-fg bg-success-soft rounded-md px-3 py-2">
                     {{ status }}
                 </p>
 
                 <form @submit.prevent="submit" class="space-y-6">
                     <div>
-                        <label for="code" class="block text-sm font-medium text-gray-700">
+                        <label for="code" class="block text-sm font-medium text-fg">
                             {{ $t('auth.two_factor.code') }}
                         </label>
                         <input
@@ -109,11 +110,11 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                             autocomplete="one-time-code"
                             maxlength="6"
                             required
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-center text-2xl tracking-[0.5em] font-semibold focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            :class="{ 'border-red-500': form.errors.code }"
+                            class="mt-1 block w-full px-3 py-2 border border-field rounded-md shadow-sm text-center text-2xl tracking-[0.5em] font-semibold focus:outline-none focus:ring-focus focus:border-focus"
+                            :class="{ 'border-danger': form.errors.code }"
                             placeholder="000000"
                         />
-                        <p v-if="form.errors.code" class="mt-1 text-sm text-red-600">
+                        <p v-if="form.errors.code" class="mt-1 text-sm text-danger">
                             {{ form.errors.code }}
                         </p>
                     </div>
@@ -121,11 +122,11 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                     <button
                         type="submit"
                         :disabled="form.processing"
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-on-accent bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-focus disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <svg
                             v-if="form.processing"
-                            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            class="animate-spin -ml-1 mr-2 h-4 w-4"
                             fill="none"
                             viewBox="0 0 24 24"
                         >
@@ -141,7 +142,7 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                         type="button"
                         :disabled="!canResend"
                         @click="resend"
-                        class="text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+                        class="text-accent hover:text-accent-hover disabled:text-muted disabled:cursor-not-allowed"
                     >
                         {{ canResend ? $t('auth.two_factor.resend') : $t('auth.two_factor.resend_in', { seconds }) }}
                     </button>
@@ -149,7 +150,7 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                     <button
                         type="button"
                         @click="cancel"
-                        class="text-gray-500 hover:text-gray-700"
+                        class="text-muted hover:text-fg"
                     >
                         {{ $t('auth.two_factor.switch_user') }}
                     </button>

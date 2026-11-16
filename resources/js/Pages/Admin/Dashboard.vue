@@ -37,7 +37,7 @@ const visible = computed(() => props.gadgets.filter((gadget) => COMPONENTS[gadge
 <template>
     <AdminLayout :title="$t('dashboard.title')">
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">{{ $t('dashboard.title') }}</h1>
+            <h1 class="text-2xl font-bold text-fg">{{ $t('dashboard.title') }}</h1>
         </div>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

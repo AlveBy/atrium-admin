@@ -77,8 +77,8 @@ const handleDelete = () => {
     <AdminLayout :title="title">
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 :data-page-title="routeName" class="text-2xl font-bold text-gray-900">{{ title }}</h1>
-                <p class="mt-1 text-sm text-gray-600">
+                <h1 :data-page-title="routeName" class="text-2xl font-bold text-fg">{{ title }}</h1>
+                <p class="mt-1 text-sm text-muted">
                     {{ $t('resource.index.total', { count: items.total }) }}
                 </p>
             </div>
@@ -98,7 +98,7 @@ const handleDelete = () => {
                         type="text"
                         :placeholder="$t('resource.index.search_placeholder')"
                         data-search-input="true"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-4 py-2 border border-field rounded-lg focus:ring-focus focus:border-focus"
                         @keyup.enter="handleSearch"
                     />
                 </div>
@@ -125,7 +125,7 @@ const handleDelete = () => {
             :title="$t('resource.delete.title')"
             @close="showDeleteModal = false"
         >
-            <p class="text-gray-600">
+            <p class="text-muted">
                 {{ $t('resource.delete.confirm') }}
             </p>
 

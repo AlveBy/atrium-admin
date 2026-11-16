@@ -1,13 +1,13 @@
 <template>
   <div class="color-field">
-    <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1">
+    <label v-if="label" class="block text-sm font-medium text-fg mb-1">
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span v-if="required" class="text-danger">*</span>
     </label>
 
     <div class="flex items-center gap-3">
       <div
-        class="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer"
+        class="w-10 h-10 rounded-lg border border-field cursor-pointer"
         :style="{ backgroundColor: modelValue || '#ffffff' }"
         @click="togglePicker"
       ></div>
@@ -17,8 +17,8 @@
         type="text"
         :value="modelValue"
         @input="$emit('update:modelValue', $event.target.value)"
-        class="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-        :class="{ 'border-red-500': error }"
+        class="flex-1 border border-field rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-focus focus:border-focus"
+        :class="{ 'border-danger': error }"
         placeholder="#000000"
       />
 
@@ -37,14 +37,14 @@
         :key="color"
         type="button"
         class="w-8 h-8 rounded-lg border-2 transition-all"
-        :class="modelValue === color ? 'border-indigo-500 scale-110' : 'border-transparent hover:scale-105'"
+        :class="modelValue === color ? 'border-focus scale-110' : 'border-transparent hover:scale-105'"
         :style="{ backgroundColor: color }"
         @click="$emit('update:modelValue', color)"
       ></button>
     </div>
 
-    <p v-if="hint && !error" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
-    <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
+    <p v-if="hint && !error" class="mt-1 text-sm text-muted">{{ hint }}</p>
+    <p v-if="error" class="mt-1 text-sm text-danger">{{ error }}</p>
   </div>
 </template>
 

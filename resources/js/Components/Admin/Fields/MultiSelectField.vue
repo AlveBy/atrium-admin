@@ -92,26 +92,29 @@ const isSelected = (option) => values.value.includes(String(option.value))
 </template>
 
 <style>
-/* Colours follow the other inputs; contrast is in the commit message. */
-.atrium-multiselect { color: #101828; font-size: 0.875rem; min-height: 42px; }
+/* Colours follow the other inputs and the theme (resources/css/atrium.css). */
+.atrium-multiselect { color: var(--atrium-fg); font-size: 0.875rem; min-height: 42px; }
 .atrium-multiselect .multiselect__tags {
-    border: 1px solid #d1d5dc;
+    border: 1px solid var(--atrium-field);
     border-radius: 0.375rem;
     min-height: 42px;
     padding: 7px 40px 0 8px;
+    background: var(--atrium-surface);
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
-.atrium-multiselect--error .multiselect__tags { border-color: #c10007; }
+.atrium-multiselect--error .multiselect__tags { border-color: var(--atrium-danger); }
 .atrium-multiselect.multiselect--active .multiselect__tags {
-    border-color: #155dfc;
-    box-shadow: 0 0 0 1px #155dfc;
+    border-color: var(--atrium-focus);
+    box-shadow: 0 0 0 1px var(--atrium-focus);
 }
-.atrium-multiselect .multiselect__placeholder { color: #4a5565; font-size: 0.875rem; padding-top: 1px; margin-bottom: 7px; }
+.atrium-multiselect .multiselect__placeholder { color: var(--atrium-muted); font-size: 0.875rem; padding-top: 1px; margin-bottom: 7px; }
 .atrium-multiselect .multiselect__input,
-.atrium-multiselect .multiselect__single { font-size: 0.875rem; color: #101828; }
+.atrium-multiselect .multiselect__single { font-size: 0.875rem; color: var(--atrium-fg); }
 .atrium-multiselect .multiselect__select { height: 40px; }
-.atrium-multiselect .multiselect__select::before { border-color: #4a5565 transparent transparent; }
-.atrium-multiselect .multiselect__content-wrapper { border-color: #d1d5dc; border-radius: 0 0 0.375rem 0.375rem; }
+.atrium-multiselect .multiselect__select::before { border-color: var(--atrium-muted) transparent transparent; }
+.atrium-multiselect .multiselect__input { background: transparent; }
+.atrium-multiselect .multiselect__single { background: transparent; }
+.atrium-multiselect .multiselect__content-wrapper { background: var(--atrium-surface); border-color: var(--atrium-field); border-radius: 0 0 0.375rem 0.375rem; }
 
 .atrium-multiselect__tag {
     display: inline-flex;
@@ -120,23 +123,23 @@ const isSelected = (option) => values.value.includes(String(option.value))
     margin: 0 0.25rem 6px 0;
     padding: 2px 4px 2px 8px;
     border-radius: 0.375rem;
-    background: #dbeafe;
-    color: #193cb8;
+    background: var(--atrium-accent-soft);
+    color: var(--atrium-accent-soft-fg);
     line-height: 1.25rem;
 }
 .atrium-multiselect__remove {
     display: inline-flex;
     padding: 2px;
     border-radius: 0.25rem;
-    color: #193cb8;
+    color: var(--atrium-accent-soft-fg);
 }
 .atrium-multiselect__remove:hover,
-.atrium-multiselect__remove:focus-visible { background: #193cb8; color: #ffffff; outline: none; }
+.atrium-multiselect__remove:focus-visible { background: var(--atrium-accent-soft-fg); color: var(--atrium-accent-soft); outline: none; }
 
-.atrium-multiselect .multiselect__option { padding: 8px 12px; min-height: 0; line-height: 1.25rem; font-size: 0.875rem; color: #101828; }
+.atrium-multiselect .multiselect__option { padding: 8px 12px; min-height: 0; line-height: 1.25rem; font-size: 0.875rem; color: var(--atrium-fg); }
 .atrium-multiselect .multiselect__option--highlight,
-.atrium-multiselect .multiselect__option--selected.multiselect__option--highlight { background: #dbeafe; color: #101828; }
-.atrium-multiselect .multiselect__option--selected { background: #ffffff; color: #101828; font-weight: 600; }
+.atrium-multiselect .multiselect__option--selected.multiselect__option--highlight { background: var(--atrium-accent-soft); color: var(--atrium-accent-soft-fg); }
+.atrium-multiselect .multiselect__option--selected { background: var(--atrium-surface); color: var(--atrium-fg); font-weight: 600; }
 .atrium-multiselect__option { display: inline-flex; align-items: center; gap: 0.5rem; }
-.atrium-multiselect__check { width: 1rem; height: 1rem; flex-shrink: 0; color: #193cb8; }
+.atrium-multiselect__check { width: 1rem; height: 1rem; flex-shrink: 0; color: var(--atrium-accent-soft-fg); }
 </style>

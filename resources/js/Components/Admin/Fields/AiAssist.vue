@@ -166,7 +166,7 @@ function accept() {
     <div v-if="canGenerate" class="mt-1 flex justify-end gap-3 text-xs" data-ai>
         <button
             type="button"
-            class="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+            class="inline-flex items-center gap-1 text-accent hover:text-accent-hover disabled:text-muted disabled:cursor-not-allowed"
             :data-ai-generate="field.name"
             @click="start(false)"
         >
@@ -178,7 +178,7 @@ function accept() {
         <button
             v-if="canTranslate"
             type="button"
-            class="text-blue-700 hover:text-blue-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+            class="text-accent hover:text-accent-hover disabled:text-muted disabled:cursor-not-allowed"
             :data-ai-translate="field.name"
             @click="start(true)"
         >
@@ -186,19 +186,19 @@ function accept() {
         </button>
 
         <AdminModal :show="open" :title="title" max-width="2xl" @close="close">
-            <p v-if="working" class="text-sm text-gray-700" data-ai-working>{{ labels.working }}</p>
+            <p v-if="working" class="text-sm text-fg" data-ai-working>{{ labels.working }}</p>
 
-            <div v-else-if="error" class="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800" data-ai-error>
+            <div v-else-if="error" class="rounded-md border border-danger bg-danger-soft px-4 py-3 text-sm text-danger-soft-fg" data-ai-error>
                 {{ error }}
             </div>
 
             <div v-else-if="translating" class="space-y-4">
                 <label v-for="item in others" :key="item.code" class="block text-sm">
-                    <span class="mb-1 block font-medium text-gray-900">{{ item.name }}</span>
+                    <span class="mb-1 block font-medium text-fg">{{ item.name }}</span>
                     <textarea
                         v-model="values[item.code]"
                         rows="4"
-                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        class="w-full rounded-md border border-field bg-surface px-3 py-2 text-sm text-fg focus:border-focus focus:outline-none focus:ring-1 focus:ring-focus"
                         :data-ai-result="item.code"
                     />
                 </label>
@@ -208,11 +208,11 @@ function accept() {
                 v-else
                 v-model="value"
                 rows="8"
-                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                class="w-full rounded-md border border-field bg-surface px-3 py-2 text-sm text-fg focus:border-focus focus:outline-none focus:ring-1 focus:ring-focus"
                 data-ai-result
             />
 
-            <p v-if="!working && !error" class="mt-2 text-xs text-gray-700">
+            <p v-if="!working && !error" class="mt-2 text-xs text-fg">
                 {{ note }}
             </p>
 

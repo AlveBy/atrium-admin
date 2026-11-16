@@ -352,10 +352,10 @@ function pickFromLibrary(file) {
         <label
             v-if="!isCheckbox && !hasSpecializedComponent"
             :for="field.name"
-            class="block text-sm font-medium text-gray-700 mb-1"
+            class="block text-sm font-medium text-fg mb-1"
         >
             {{ field.label }}
-            <span v-if="field.required" class="text-red-500">*</span>
+            <span v-if="field.required" class="text-danger">*</span>
         </label>
 
         <!-- Specialized Components (render their own labels) -->
@@ -381,11 +381,11 @@ function pickFromLibrary(file) {
                     :false-value="field.checkedValue ? null : false"
                     :disabled="field.disabled"
                     :readonly="field.readonly"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-4 w-4 text-accent focus:ring-focus border-field rounded"
                 />
-                <label :for="field.name" class="ml-2 text-sm text-gray-700">
+                <label :for="field.name" class="ml-2 text-sm text-fg">
                     {{ field.label }}
-                    <span v-if="field.required" class="text-red-500">*</span>
+                    <span v-if="field.required" class="text-danger">*</span>
                 </label>
             </div>
         </template>
@@ -394,7 +394,7 @@ function pickFromLibrary(file) {
         <div
             v-else-if="isDisplay"
             :id="field.name"
-            class="admin-display text-sm text-gray-800"
+            class="admin-display text-sm text-fg"
             v-html="value"
         />
 
@@ -408,8 +408,8 @@ function pickFromLibrary(file) {
                 :disabled="field.disabled"
                 :readonly="field.readonly"
                 :rows="field.rows || 4"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 resize-y"
-                :class="{ 'border-red-500': error }"
+                class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus resize-y"
+                :class="{ 'border-danger': error }"
             />
         </template>
 
@@ -432,8 +432,8 @@ function pickFromLibrary(file) {
                 v-model="value"
                 :required="field.required"
                 :disabled="field.disabled"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
-                :class="{ 'border-red-500': error }"
+                class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus bg-surface"
+                :class="{ 'border-danger': error }"
             >
                 <option v-if="!field.required" value="">
                     {{ field.placeholder || $t('common.select') }}
@@ -453,7 +453,7 @@ function pickFromLibrary(file) {
             <div class="flex items-center space-x-4" :data-upload-state="uploadState">
                 <div
                     v-if="imageUrl"
-                    class="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 shrink-0"
+                    class="relative w-24 h-24 rounded-lg overflow-hidden border border-line shrink-0"
                 >
                     <img :src="imageUrl" class="w-full h-full object-cover" />
                     <button
@@ -462,7 +462,7 @@ function pickFromLibrary(file) {
                         :disabled="uploading"
                         data-action="remove-upload"
                         :title="$t('common.delete')"
-                        class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 disabled:opacity-50"
+                        class="absolute top-1 right-1 p-1 bg-danger text-on-danger rounded-full hover:bg-danger-hover disabled:opacity-50"
                     >
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -475,7 +475,7 @@ function pickFromLibrary(file) {
                     :accept="field.accept || 'image/*'"
                     :disabled="field.disabled || uploading"
                     @change="handleUpload"
-                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                    class="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-accent-soft file:text-accent-hover hover:file:bg-accent-soft disabled:opacity-50"
                 />
 
                 <button
@@ -483,24 +483,24 @@ function pickFromLibrary(file) {
                     @click="showLibrary = true"
                     :disabled="field.disabled || uploading"
                     data-action="pick-from-library"
-                    class="shrink-0 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
+                    class="shrink-0 px-3 py-2 text-sm font-medium text-fg bg-surface border border-field rounded-md hover:bg-hover disabled:opacity-50 whitespace-nowrap"
                 >
                     {{ $t('fields.upload.from_library') }}
                 </button>
             </div>
 
             <div v-if="uploading" class="mt-2">
-                <div class="h-1.5 w-full bg-gray-200 rounded overflow-hidden">
+                <div class="h-1.5 w-full bg-off rounded overflow-hidden">
                     <div
-                        class="h-full bg-blue-600 transition-all"
+                        class="h-full bg-accent transition-all"
                         :style="{ width: uploadProgress + '%' }"
                         :data-upload-progress="uploadProgress"
                     />
                 </div>
-                <p class="mt-1 text-xs text-gray-500">{{ $t('fields.upload.progress', { percent: uploadProgress }) }}</p>
+                <p class="mt-1 text-xs text-muted">{{ $t('fields.upload.progress', { percent: uploadProgress }) }}</p>
             </div>
 
-            <p v-if="uploadError" data-upload-error class="mt-1 text-sm text-red-600">
+            <p v-if="uploadError" data-upload-error class="mt-1 text-sm text-danger">
                 {{ uploadError }}
             </p>
         </template>
@@ -514,7 +514,7 @@ function pickFromLibrary(file) {
                         target="_blank"
                         rel="noopener"
                         :title="value"
-                        class="text-sm text-blue-600 hover:underline break-all"
+                        class="text-sm text-accent hover:underline break-all"
                     >{{ fileName }}</a>
                     <button
                         type="button"
@@ -522,7 +522,7 @@ function pickFromLibrary(file) {
                         :disabled="uploading"
                         data-action="remove-upload"
                         :title="$t('common.delete')"
-                        class="p-1 text-red-500 hover:text-red-600 disabled:opacity-50"
+                        class="p-1 text-danger hover:text-danger disabled:opacity-50"
                     >
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -535,7 +535,7 @@ function pickFromLibrary(file) {
                     :accept="field.accept || undefined"
                     :disabled="field.disabled || uploading"
                     @change="handleUpload"
-                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                    class="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-accent-soft file:text-accent-hover hover:file:bg-accent-soft disabled:opacity-50"
                 />
 
                 <button
@@ -543,24 +543,24 @@ function pickFromLibrary(file) {
                     @click="showLibrary = true"
                     :disabled="field.disabled || uploading"
                     data-action="pick-from-library"
-                    class="shrink-0 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
+                    class="shrink-0 px-3 py-2 text-sm font-medium text-fg bg-surface border border-field rounded-md hover:bg-hover disabled:opacity-50 whitespace-nowrap"
                 >
                     {{ $t('fields.upload.from_library') }}
                 </button>
             </div>
 
             <div v-if="uploading" class="mt-2">
-                <div class="h-1.5 w-full bg-gray-200 rounded overflow-hidden">
+                <div class="h-1.5 w-full bg-off rounded overflow-hidden">
                     <div
-                        class="h-full bg-blue-600 transition-all"
+                        class="h-full bg-accent transition-all"
                         :style="{ width: uploadProgress + '%' }"
                         :data-upload-progress="uploadProgress"
                     />
                 </div>
-                <p class="mt-1 text-xs text-gray-500">{{ $t('fields.upload.progress', { percent: uploadProgress }) }}</p>
+                <p class="mt-1 text-xs text-muted">{{ $t('fields.upload.progress', { percent: uploadProgress }) }}</p>
             </div>
 
-            <p v-if="uploadError" data-upload-error class="mt-1 text-sm text-red-600">
+            <p v-if="uploadError" data-upload-error class="mt-1 text-sm text-danger">
                 {{ uploadError }}
             </p>
         </template>
@@ -578,18 +578,18 @@ function pickFromLibrary(file) {
                 :min="field.min"
                 :max="field.max"
                 :step="field.step"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                :class="{ 'border-red-500': error }"
+                class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus"
+                :class="{ 'border-danger': error }"
             />
         </template>
 
         <!-- Hint -->
-        <p v-if="field.hint && !error && !ownsHint" class="mt-1 text-sm text-gray-500">
+        <p v-if="field.hint && !error && !ownsHint" class="mt-1 text-sm text-muted">
             {{ field.hint }}
         </p>
 
         <!-- Error -->
-        <p v-if="error && !ownsHint" class="mt-1 text-sm text-red-600">
+        <p v-if="error && !ownsHint" data-error class="mt-1 text-sm text-danger">
             {{ error }}
         </p>
 

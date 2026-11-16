@@ -4,11 +4,326 @@
  */
 
 @import 'tailwindcss';
+@import '@fontsource/space-grotesk/latin-600.css';
 
 @source '../js';
 @source '../views';
+/* The committed bundle is output, not source: scanning it made a rebuild differ from the first build. */
+@source not '../../dist';
 
 @theme {
     --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
+    --font-brand: 'Space Grotesk', var(--font-sans);
+}
+
+/*
+ * Colours. Only the semantic names below exist: Tailwind's palette is
+ * switched off, so `bg-gray-100` or `text-blue-600` render nothing and
+ * every screen follows the theme. White and black stay for photos and
+ * overlays.
+ */
+@theme inline {
+    --color-*: initial;
+    --color-white: #ffffff;
+    --color-black: #000000;
+
+    --color-sidebar: var(--atrium-sidebar);
+    --color-sidebar-fg: var(--atrium-sidebar-fg);
+    --color-sidebar-muted: var(--atrium-sidebar-muted);
+    --color-sidebar-hover: var(--atrium-sidebar-hover);
+    --color-sidebar-active: var(--atrium-sidebar-active);
+    --color-sidebar-active-fg: var(--atrium-sidebar-active-fg);
+    --color-sidebar-accent: var(--atrium-sidebar-accent);
+    --color-sidebar-line: var(--atrium-sidebar-line);
+
+    --color-page: var(--atrium-page);
+    --color-surface: var(--atrium-surface);
+    --color-surface-alt: var(--atrium-surface-alt);
+    --color-hover: var(--atrium-hover);
+    --color-fg: var(--atrium-fg);
+    --color-muted: var(--atrium-muted);
+    --color-line: var(--atrium-line);
+    --color-field: var(--atrium-field);
+
+    --color-accent: var(--atrium-accent);
+    --color-accent-hover: var(--atrium-accent-hover);
+    --color-on-accent: var(--atrium-on-accent);
+    --color-accent-soft: var(--atrium-accent-soft);
+    --color-accent-soft-fg: var(--atrium-accent-soft-fg);
+    --color-focus: var(--atrium-focus);
+
+    --color-off: var(--atrium-off);
+    --color-off-fg: var(--atrium-off-fg);
+    --color-badge-line: var(--atrium-badge-line);
+
+    --color-danger: var(--atrium-danger);
+    --color-danger-hover: var(--atrium-danger-hover);
+    --color-on-danger: var(--atrium-on-danger);
+    --color-danger-soft: var(--atrium-danger-soft);
+    --color-danger-soft-fg: var(--atrium-danger-soft-fg);
+
+    --color-success: var(--atrium-success);
+    --color-success-soft: var(--atrium-success-soft);
+    --color-success-soft-fg: var(--atrium-success-soft-fg);
+    --color-warning-soft: var(--atrium-warning-soft);
+    --color-warning-soft-fg: var(--atrium-warning-soft-fg);
+
+    --color-mark: var(--atrium-mark);
+    --color-mark-accent: var(--atrium-mark-accent);
+}
+
+/*
+ * The five themes. These blocks are the only place the colours are written
+ * down: tests/Unit/ThemeContrastTest.php reads this file and checks every
+ * text pair for 4.5:1 and every border, bar and focus ring for 3:1 (WCAG AA).
+ *
+ * Sidebar, page, text, accent, badge and logo values are the approved
+ * designs. Hover, field borders, focus, danger, success and warning are
+ * derived here and held to the same numbers.
+ */
+:root,
+[data-theme='graphite'] {
+    color-scheme: light;
+    --atrium-sidebar: #111827;
+    --atrium-sidebar-fg: #f9fafb;
+    --atrium-sidebar-muted: #9ca3af;
+    --atrium-sidebar-hover: #1f2937;
+    --atrium-sidebar-active: #1f2937;
+    --atrium-sidebar-active-fg: #ffffff;
+    --atrium-sidebar-accent: #60a5fa;
+    --atrium-sidebar-line: #1f2937;
+    --atrium-page: #f3f4f6;
+    --atrium-surface: #ffffff;
+    --atrium-surface-alt: #f9fafb;
+    --atrium-hover: #f3f4f6;
+    --atrium-fg: #111827;
+    --atrium-muted: #4b5563;
+    --atrium-line: #e5e7eb;
+    --atrium-field: #7e8691;
+    --atrium-accent: #2563eb;
+    --atrium-accent-hover: #1d4ed8;
+    --atrium-on-accent: #ffffff;
+    --atrium-accent-soft: #dbeafe;
+    --atrium-accent-soft-fg: #1e40af;
+    --atrium-focus: #2563eb;
+    --atrium-off: #f3f4f6;
+    --atrium-off-fg: #374151;
+    --atrium-badge-line: transparent;
+    --atrium-danger: #c81e1e;
+    --atrium-danger-hover: #991b1b;
+    --atrium-on-danger: #ffffff;
+    --atrium-danger-soft: #fee2e2;
+    --atrium-danger-soft-fg: #991b1b;
+    --atrium-success: #15803d;
+    --atrium-success-soft: #dcfce7;
+    --atrium-success-soft-fg: #166534;
+    --atrium-warning-soft: #fef3c7;
+    --atrium-warning-soft-fg: #92400e;
+    --atrium-mark: #ffffff;
+    --atrium-mark-accent: #60a5fa;
+}
+
+[data-theme='day'] {
+    color-scheme: light;
+    --atrium-sidebar: #ffffff;
+    --atrium-sidebar-fg: #1f2937;
+    --atrium-sidebar-muted: #64748b;
+    --atrium-sidebar-hover: #f1f5f9;
+    --atrium-sidebar-active: #eef2ff;
+    --atrium-sidebar-active-fg: #3730a3;
+    --atrium-sidebar-accent: #4f46e5;
+    --atrium-sidebar-line: #e2e8f0;
+    --atrium-page: #f8fafc;
+    --atrium-surface: #ffffff;
+    --atrium-surface-alt: #f8fafc;
+    --atrium-hover: #f1f5f9;
+    --atrium-fg: #0f172a;
+    --atrium-muted: #475569;
+    --atrium-line: #e2e8f0;
+    --atrium-field: #8391a5;
+    --atrium-accent: #4f46e5;
+    --atrium-accent-hover: #4338ca;
+    --atrium-on-accent: #ffffff;
+    --atrium-accent-soft: #e0e7ff;
+    --atrium-accent-soft-fg: #3730a3;
+    --atrium-focus: #4f46e5;
+    --atrium-off: #f1f5f9;
+    --atrium-off-fg: #334155;
+    --atrium-badge-line: transparent;
+    --atrium-danger: #c81e1e;
+    --atrium-danger-hover: #991b1b;
+    --atrium-on-danger: #ffffff;
+    --atrium-danger-soft: #fee2e2;
+    --atrium-danger-soft-fg: #991b1b;
+    --atrium-success: #15803d;
+    --atrium-success-soft: #dcfce7;
+    --atrium-success-soft-fg: #166534;
+    --atrium-warning-soft: #fef3c7;
+    --atrium-warning-soft-fg: #92400e;
+    --atrium-mark: #0f172a;
+    --atrium-mark-accent: #4f46e5;
+}
+
+[data-theme='night'] {
+    color-scheme: dark;
+    --atrium-sidebar: #0a0e14;
+    --atrium-sidebar-fg: #e6eaf0;
+    --atrium-sidebar-muted: #8b95a5;
+    --atrium-sidebar-hover: #141b26;
+    --atrium-sidebar-active: #1a2230;
+    --atrium-sidebar-active-fg: #ffffff;
+    --atrium-sidebar-accent: #8ab4ff;
+    --atrium-sidebar-line: #1a2230;
+    --atrium-page: #0f141b;
+    --atrium-surface: #161d27;
+    --atrium-surface-alt: #121821;
+    --atrium-hover: #1f2733;
+    --atrium-fg: #e6eaf0;
+    --atrium-muted: #a0aaba;
+    --atrium-line: #253041;
+    --atrium-field: #5f6d82;
+    --atrium-accent: #8ab4ff;
+    --atrium-accent-hover: #b0ccff;
+    --atrium-on-accent: #0a0e14;
+    --atrium-accent-soft: #1e2f4d;
+    --atrium-accent-soft-fg: #b9d1ff;
+    --atrium-focus: #8ab4ff;
+    --atrium-off: #222b38;
+    --atrium-off-fg: #c3cbd6;
+    --atrium-badge-line: transparent;
+    --atrium-danger: #ff8a8a;
+    --atrium-danger-hover: #ffb0b0;
+    --atrium-on-danger: #0a0e14;
+    --atrium-danger-soft: #3d1c22;
+    --atrium-danger-soft-fg: #ffc2c2;
+    --atrium-success: #5fd38d;
+    --atrium-success-soft: #173524;
+    --atrium-success-soft-fg: #a6ebc0;
+    --atrium-warning-soft: #3a2e12;
+    --atrium-warning-soft-fg: #fcd98a;
+    --atrium-mark: #ffffff;
+    --atrium-mark-accent: #8ab4ff;
+}
+
+[data-theme='sand'] {
+    color-scheme: light;
+    --atrium-sidebar: #1f1a14;
+    --atrium-sidebar-fg: #f5efe6;
+    --atrium-sidebar-muted: #b3a796;
+    --atrium-sidebar-hover: #2b241c;
+    --atrium-sidebar-active: #342b21;
+    --atrium-sidebar-active-fg: #ffffff;
+    --atrium-sidebar-accent: #f2a65a;
+    --atrium-sidebar-line: #342b21;
+    --atrium-page: #f7f3ec;
+    --atrium-surface: #ffffff;
+    --atrium-surface-alt: #fbf8f3;
+    --atrium-hover: #f1ece4;
+    --atrium-fg: #1f1a14;
+    --atrium-muted: #5c5246;
+    --atrium-line: #e7dfd2;
+    --atrium-field: #958672;
+    --atrium-accent: #a6490a;
+    --atrium-accent-hover: #853a07;
+    --atrium-on-accent: #ffffff;
+    --atrium-accent-soft: #fce7d2;
+    --atrium-accent-soft-fg: #7a3506;
+    --atrium-focus: #a6490a;
+    --atrium-off: #f1ece4;
+    --atrium-off-fg: #4a4137;
+    --atrium-badge-line: transparent;
+    --atrium-danger: #b42318;
+    --atrium-danger-hover: #912018;
+    --atrium-on-danger: #ffffff;
+    --atrium-danger-soft: #fde4e1;
+    --atrium-danger-soft-fg: #8a1c12;
+    --atrium-success: #2e7d32;
+    --atrium-success-soft: #e3f2df;
+    --atrium-success-soft-fg: #1f5a23;
+    --atrium-warning-soft: #fbefc5;
+    --atrium-warning-soft-fg: #7a4a06;
+    --atrium-mark: #f5efe6;
+    --atrium-mark-accent: #f2a65a;
+}
+
+[data-theme='contrast'] {
+    color-scheme: light;
+    --atrium-sidebar: #000000;
+    --atrium-sidebar-fg: #ffffff;
+    --atrium-sidebar-muted: #d4d4d4;
+    --atrium-sidebar-hover: #262626;
+    --atrium-sidebar-active: #ffd400;
+    --atrium-sidebar-active-fg: #000000;
+    --atrium-sidebar-accent: #ffd400;
+    --atrium-sidebar-line: #ffffff;
+    --atrium-page: #ffffff;
+    --atrium-surface: #ffffff;
+    --atrium-surface-alt: #ffffff;
+    --atrium-hover: #fff2a8;
+    --atrium-fg: #000000;
+    --atrium-muted: #262626;
+    --atrium-line: #000000;
+    --atrium-field: #000000;
+    --atrium-accent: #0033a0;
+    --atrium-accent-hover: #001f66;
+    --atrium-on-accent: #ffffff;
+    --atrium-accent-soft: #ffd400;
+    --atrium-accent-soft-fg: #000000;
+    --atrium-focus: #0033a0;
+    --atrium-off: #ffffff;
+    --atrium-off-fg: #000000;
+    --atrium-badge-line: #000000;
+    --atrium-danger: #b00020;
+    --atrium-danger-hover: #7a0016;
+    --atrium-on-danger: #ffffff;
+    --atrium-danger-soft: #ffe0e0;
+    --atrium-danger-soft-fg: #7a0016;
+    --atrium-success: #006b2d;
+    --atrium-success-soft: #d9f5e3;
+    --atrium-success-soft-fg: #003d1a;
+    --atrium-warning-soft: #ffd400;
+    --atrium-warning-soft-fg: #000000;
+    --atrium-mark: #ffffff;
+    --atrium-mark-accent: #ffd400;
+}
+
+/* Contrast: every border is 2px, as in the design. */
+[data-theme='contrast'] {
+    .border {
+        border-width: 2px;
+    }
+    .border-t {
+        border-top-width: 2px;
+    }
+    .border-b {
+        border-bottom-width: 2px;
+    }
+    .border-l {
+        border-left-width: 2px;
+    }
+    .border-r {
+        border-right-width: 2px;
+    }
+    .divide-y > :not(:last-child) {
+        border-bottom-width: 2px;
+    }
+}
+
+@layer base {
+    html {
+        accent-color: var(--atrium-accent);
+        background-color: var(--atrium-page);
+        color: var(--atrium-fg);
+    }
+
+    /* A ring drawn with an offset leaves a gap in the surface colour, not white. */
+    * {
+        --tw-ring-offset-color: var(--atrium-surface);
+    }
+
+    ::placeholder {
+        color: var(--atrium-muted);
+        opacity: 1;
+    }
 }

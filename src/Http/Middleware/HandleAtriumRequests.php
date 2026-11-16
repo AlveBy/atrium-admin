@@ -14,6 +14,7 @@ use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
 use Atrium\Admin\Support\Sites;
+use Atrium\Admin\Support\Themes;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -75,6 +76,9 @@ final class HandleAtriumRequests extends Middleware
                 ];
             },
             'branding' => fn () => config('atrium.branding'),
+            // The colour theme the admin picked (or "system"); the page head applies it.
+            'theme' => fn () => app(Themes::class)->choiceFor($this->admin($request)),
+            'themes' => fn () => app(Themes::class)->choices(),
             'locale' => fn () => app()->getLocale(),
             'locales' => fn () => app(Locales::class)->available(),
             // The languages the content is written in — for the switch on

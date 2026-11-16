@@ -20,4 +20,14 @@ return [
         'profile' => '个人资料',
         'logout' => '退出登录',
     ],
+
+    'theme' => [
+        'label' => '主题',
+        'system' => '跟随系统',
+        'graphite' => '石墨',
+        'day' => '日间',
+        'night' => '夜间',
+        'sand' => '沙色',
+        'contrast' => '高对比度',
+    ],
 ];

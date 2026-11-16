@@ -22,21 +22,21 @@ const hasChildren = computed(() => {
     return props.item.children && props.item.children.length > 0
 })
 
-const isActive = computed(() => {
-    if (!props.item.route) return false
-    const currentUrl = page.url
-    const itemUrl = route(props.item.route)
-    return currentUrl.startsWith(itemUrl) || currentUrl === itemUrl
-})
+// route() gives an absolute URL and page.url is a path, so compare paths.
+// The dashboard sits at the panel root and is selected only there; any
+// other entry also covers its sub-pages (/admin/news/5/edit → News).
+const matches = (name) => {
+    const path = route(name, undefined, false)
+    const url = page.url.split('?')[0]
+    if (url === path) return true
+    return path !== route('admin.dashboard', undefined, false) && url.startsWith(path + '/')
+}
+
+const isActive = computed(() => Boolean(props.item.route) && matches(props.item.route))
 
 const isChildActive = computed(() => {
     if (!hasChildren.value) return false
-    return props.item.children.some(child => {
-        if (!child.route) return false
-        const currentUrl = page.url
-        const childUrl = route(child.route)
-        return currentUrl.startsWith(childUrl) || currentUrl === childUrl
-    })
+    return props.item.children.some(child => child.route && matches(child.route))
 })
 
 const toggleOpen = () => {
@@ -73,6 +73,14 @@ const icons = {
     default: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />`
 }
 
+// The selected entry differs by weight and a 3px bar on the left, not by
+// colour alone; its icon takes the text colour, the others stay muted.
+const linkBase = 'flex items-center px-3 py-2 text-sm rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-accent'
+const activeClass = 'bg-sidebar-active text-sidebar-active-fg font-semibold shadow-[inset_3px_0_0_var(--atrium-sidebar-accent)]'
+const idleClass = 'text-sidebar-fg font-medium hover:bg-sidebar-hover'
+
+const childActive = (child) => matches(child.route)
+
 const iconComponent = computed(() => {
     return icons[props.item.icon] || icons.default
 })
@@ -84,29 +92,30 @@ const iconComponent = computed(() => {
         <template v-if="hasChildren">
             <button
                 @click="toggleOpen"
-                class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
+                class="w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors duration-200 hover:bg-sidebar-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-accent"
                 :class="[
-                    isChildActive
-                        ? 'bg-gray-800 text-white'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white',
+                    isChildActive ? 'text-sidebar-fg font-semibold' : 'text-sidebar-fg font-medium',
                     collapsed ? 'justify-center' : 'justify-between'
                 ]"
+                :aria-expanded="isOpen ? 'true' : 'false'"
                 :title="collapsed ? item.label : ''"
             >
                 <span class="flex items-center">
                     <svg
-                        class="w-5 h-5 flex-shrink-0"
+                        class="w-5 h-5 flex-shrink-0 text-sidebar-muted"
                         :class="collapsed ? '' : 'mr-3'"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
+                        aria-hidden="true"
                         v-html="iconComponent"
                     />
                     <span v-if="!collapsed">{{ item.label }}</span>
                 </span>
                 <svg
                     v-if="!collapsed"
-                    class="w-4 h-4 transition-transform duration-200"
+                    class="w-4 h-4 text-sidebar-muted transition-transform duration-200"
+                    aria-hidden="true"
                     :class="{ 'rotate-180': isOpen }"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -119,18 +128,14 @@ const iconComponent = computed(() => {
             <ul
                 v-if="!collapsed"
                 v-show="isOpen"
-                class="mt-1 ml-4 space-y-1 border-l border-gray-700 pl-3"
+                class="mt-1 ml-4 space-y-1 border-l border-sidebar-line pl-3"
             >
                 <li v-for="child in item.children" :key="child.route">
                     <Link
                         :data-menu-route="child.route"
                         :href="route(child.route)"
-                        class="flex items-center px-3 py-2 text-sm rounded-lg transition-colors duration-200"
-                        :class="[
-                            page.url.startsWith(route(child.route))
-                                ? 'bg-gray-800 text-white'
-                                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                        ]"
+                        :class="[linkBase, childActive(child) ? activeClass : idleClass]"
+                        :aria-current="childActive(child) ? 'page' : undefined"
                     >
                         {{ child.label }}
                     </Link>
@@ -143,21 +148,17 @@ const iconComponent = computed(() => {
             <Link
                 :data-menu-route="item.route"
                 :href="route(item.route)"
-                class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
-                :class="[
-                    isActive
-                        ? 'bg-gray-800 text-white'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white',
-                    collapsed ? 'justify-center' : ''
-                ]"
+                :class="[linkBase, isActive ? activeClass : idleClass, collapsed ? 'justify-center' : '']"
+                :aria-current="isActive ? 'page' : undefined"
                 :title="collapsed ? item.label : ''"
             >
                 <svg
                     class="w-5 h-5 flex-shrink-0"
-                    :class="collapsed ? '' : 'mr-3'"
+                    :class="[collapsed ? '' : 'mr-3', isActive ? '' : 'text-sidebar-muted']"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    aria-hidden="true"
                     v-html="iconComponent"
                 />
                 <span v-if="!collapsed">{{ item.label }}</span>

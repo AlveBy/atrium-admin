@@ -101,10 +101,10 @@ const clearAll = () => {
         <!-- Label -->
         <label
             :for="name"
-            class="block text-sm font-medium text-gray-700 mb-1"
+            class="block text-sm font-medium text-fg mb-1"
         >
             {{ label }}
-            <span v-if="required" class="text-red-500">*</span>
+            <span v-if="required" class="text-danger">*</span>
         </label>
 
         <!-- Selected items display -->
@@ -112,13 +112,13 @@ const clearAll = () => {
             <span
                 v-for="(label, index) in selectedLabels"
                 :key="index"
-                class="inline-flex items-center px-2 py-1 rounded-md text-sm bg-blue-100 text-blue-800"
+                class="inline-flex items-center px-2 py-1 rounded-md text-sm bg-accent-soft text-accent-hover"
             >
                 {{ label }}
                 <button
                     type="button"
                     @click="toggleOption(value[index])"
-                    class="ml-1 text-blue-600 hover:text-blue-800"
+                    class="ml-1 text-accent hover:text-accent-hover"
                     :disabled="disabled"
                 >
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +130,7 @@ const clearAll = () => {
                 v-if="value.length > 1"
                 type="button"
                 @click="clearAll"
-                class="text-xs text-gray-500 hover:text-red-600"
+                class="text-xs text-muted hover:text-danger"
                 :disabled="disabled"
             >
                 {{ $t('fields.belongs_to_many.clear_all') }}
@@ -140,43 +140,43 @@ const clearAll = () => {
         <!-- Options list -->
         <div
             v-if="options.length > 0"
-            class="border border-gray-300 rounded-md max-h-64 overflow-y-auto"
-            :class="{ 'border-red-500': error, 'opacity-50': disabled }"
+            class="border border-field rounded-md max-h-64 overflow-y-auto"
+            :class="{ 'border-danger': error, 'opacity-50': disabled }"
         >
             <label
                 v-for="option in options"
                 :key="option.value"
                 :data-option-value="option.value"
                 :data-option-selected="isSelected(option.value) ? 'true' : 'false'"
-                class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                :class="{ 'bg-blue-50': isSelected(option.value) }"
+                class="flex items-center px-3 py-2 hover:bg-hover cursor-pointer border-b border-line last:border-b-0"
+                :class="{ 'bg-accent-soft': isSelected(option.value) }"
             >
                 <input
                     type="checkbox"
                     :checked="isSelected(option.value)"
                     @change="toggleOption(option.value)"
                     :disabled="disabled"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-4 w-4 text-accent focus:ring-focus border-field rounded"
                 />
-                <span class="ml-2 text-sm text-gray-700">{{ option.label }}</span>
+                <span class="ml-2 text-sm text-fg">{{ option.label }}</span>
             </label>
         </div>
 
         <!-- Empty state -->
         <div
             v-else
-            class="border border-gray-300 rounded-md px-3 py-4 text-center text-gray-500 text-sm"
+            class="border border-field rounded-md px-3 py-4 text-center text-muted text-sm"
         >
             {{ $t('fields.belongs_to_many.no_options') }}
         </div>
 
         <!-- Hint -->
-        <p v-if="hint && !error" class="mt-1 text-sm text-gray-500">
+        <p v-if="hint && !error" class="mt-1 text-sm text-muted">
             {{ hint }}
         </p>
 
         <!-- Error -->
-        <p v-if="error" class="mt-1 text-sm text-red-600">
+        <p v-if="error" class="mt-1 text-sm text-danger">
             {{ error }}
         </p>
     </div>

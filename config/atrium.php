@@ -141,6 +141,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin colour theme
+    |--------------------------------------------------------------------------
+    |
+    | The theme an administrator gets until they pick their own in the profile
+    | menu, and the theme of the sign-in page: graphite, day, night, sand,
+    | contrast, or system (graphite or night, as the operating system is set).
+    |
+    */
+    'admin' => [
+        'theme' => env('ATRIUM_ADMIN_THEME', 'graphite'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Menu Items
     |--------------------------------------------------------------------------
     |

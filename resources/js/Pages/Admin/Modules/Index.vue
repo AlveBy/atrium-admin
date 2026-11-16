@@ -20,27 +20,27 @@ defineProps({
 <template>
     <AdminLayout :title="title">
         <div class="mb-6">
-            <h1 data-page-title="admin.modules" class="text-2xl font-bold text-gray-900">{{ title }}</h1>
-            <p class="mt-1 text-sm text-gray-600">{{ $t('modules.index_hint') }}</p>
+            <h1 data-page-title="admin.modules" class="text-2xl font-bold text-fg">{{ title }}</h1>
+            <p class="mt-1 text-sm text-muted">{{ $t('modules.index_hint') }}</p>
         </div>
 
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <p v-if="modules.length === 0" class="p-6 text-sm text-gray-600">{{ $t('modules.empty') }}</p>
+        <div class="bg-surface rounded-lg shadow overflow-hidden">
+            <p v-if="modules.length === 0" class="p-6 text-sm text-muted">{{ $t('modules.empty') }}</p>
             <table v-else class="min-w-full text-sm">
-                <thead class="bg-gray-50">
+                <thead class="bg-surface-alt">
                     <tr>
-                        <th class="px-4 py-2 text-left font-medium text-gray-700">{{ $t('modules.module') }}</th>
-                        <th class="px-4 py-2 text-left font-medium text-gray-700">{{ $t('modules.package') }}</th>
+                        <th class="px-4 py-2 text-left font-medium text-fg">{{ $t('modules.module') }}</th>
+                        <th class="px-4 py-2 text-left font-medium text-fg">{{ $t('modules.package') }}</th>
                         <th class="px-4 py-2"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-line">
                     <tr v-for="module in modules" :key="module.name" :data-module="module.name">
                         <td class="px-4 py-2">
-                            <div class="font-medium text-gray-900">{{ module.label }}</div>
-                            <div v-if="module.description" class="text-gray-600">{{ module.description }}</div>
+                            <div class="font-medium text-fg">{{ module.label }}</div>
+                            <div v-if="module.description" class="text-muted">{{ module.description }}</div>
                         </td>
-                        <td class="px-4 py-2 font-mono text-xs text-gray-600">{{ module.name }}</td>
+                        <td class="px-4 py-2 font-mono text-xs text-muted">{{ module.name }}</td>
                         <td class="px-4 py-2 text-right whitespace-nowrap">
                             <AdminButton
                                 v-if="module.settings"

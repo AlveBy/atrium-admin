@@ -20,4 +20,14 @@ return [
         'profile' => 'Profil',
         'logout' => 'Abmelden',
     ],
+
+    'theme' => [
+        'label' => 'Design',
+        'system' => 'Wie im System',
+        'graphite' => 'Graphit',
+        'day' => 'Tag',
+        'night' => 'Nacht',
+        'sand' => 'Sand',
+        'contrast' => 'Kontrast',
+    ],
 ];

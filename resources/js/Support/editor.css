@@ -32,7 +32,7 @@
 .ProseMirror p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     float: left;
-    color: #adb5bd;
+    color: var(--atrium-muted);
     pointer-events: none;
     height: 0;
 }
@@ -61,7 +61,7 @@
 .ProseMirror h4,
 .ProseMirror h5,
 .ProseMirror h6 {
-    color: #111827;
+    color: var(--atrium-fg);
     line-height: 1.25;
     margin: 28px 0 14px;
 }
@@ -86,15 +86,15 @@
 }
 
 .ProseMirror blockquote {
-    border-left: 3px solid #dc2626;
+    border-left: 3px solid var(--atrium-accent);
     padding: 4px 0 4px 18px;
-    color: #6b7280;
+    color: var(--atrium-muted);
     font-style: italic;
 }
 
 .ProseMirror hr {
     border: 0;
-    border-top: 1px solid #d1d5db;
+    border-top: 1px solid var(--atrium-field);
     margin: 28px 0;
 }
 
@@ -104,7 +104,7 @@
 }
 
 .ProseMirror a {
-    color: #1d4ed8;
+    color: var(--atrium-accent);
     text-decoration: underline;
     text-underline-offset: 3px;
 }
@@ -123,7 +123,7 @@
 
 .ProseMirror table td,
 .ProseMirror table th {
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--atrium-field);
     padding: 0.35rem 0.5rem;
     vertical-align: top;
     position: relative;
@@ -131,7 +131,7 @@
 }
 
 .ProseMirror table th {
-    background: #f9fafb;
+    background: var(--atrium-surface-alt);
     font-weight: 600;
 }
 
@@ -140,6 +140,6 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(59, 130, 246, 0.12);
+    background: color-mix(in srgb, var(--atrium-accent) 18%, transparent);
     pointer-events: none;
 }

@@ -79,56 +79,56 @@ const submit = () => {
 <template>
     <AdminLayout :title="title">
         <div class="mb-6">
-            <Link :href="route('admin.roles.index')" class="text-gray-600 hover:text-blue-600">{{ $t('menu.roles') }}</Link>
+            <Link :href="route('admin.roles.index')" class="text-muted hover:text-accent">{{ $t('menu.roles') }}</Link>
         </div>
 
         <div class="max-w-4xl">
-            <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ title }}</h1>
+            <h1 class="text-2xl font-bold text-fg mb-6">{{ title }}</h1>
 
             <AdminCard>
                 <form class="space-y-6" data-role-form @submit.prevent="submit">
                     <div>
-                        <label for="role-name" class="block text-sm font-medium text-gray-700 mb-1">
-                            {{ $t('permissions.name') }} <span class="text-red-500">*</span>
+                        <label for="role-name" class="block text-sm font-medium text-fg mb-1">
+                            {{ $t('permissions.name') }} <span class="text-danger">*</span>
                         </label>
                         <input
                             id="role-name"
                             v-model="form.name"
                             type="text"
                             required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus"
                         />
-                        <p v-if="form.errors.name" class="mt-1 text-sm text-red-600">{{ form.errors.name }}</p>
+                        <p v-if="form.errors.name" class="mt-1 text-sm text-danger">{{ form.errors.name }}</p>
                     </div>
 
                     <div>
                         <div class="flex flex-wrap items-center justify-between gap-2">
-                            <span class="text-sm font-medium text-gray-700">{{ $t('permissions.permissions') }}</span>
+                            <span class="text-sm font-medium text-fg">{{ $t('permissions.permissions') }}</span>
                             <div class="flex gap-2">
                                 <AdminButton type="button" size="sm" variant="outline" @click="selectAll">{{ $t('permissions.select_all') }}</AdminButton>
                                 <AdminButton type="button" size="sm" variant="outline" @click="form.permissions = []">{{ $t('permissions.clear') }}</AdminButton>
                             </div>
                         </div>
-                        <p class="mt-1 text-sm text-gray-600">{{ $t('permissions.matrix_hint') }}</p>
-                        <p v-if="form.errors.permissions" class="mt-1 text-sm text-red-600">{{ form.errors.permissions }}</p>
+                        <p class="mt-1 text-sm text-muted">{{ $t('permissions.matrix_hint') }}</p>
+                        <p v-if="form.errors.permissions" class="mt-1 text-sm text-danger">{{ form.errors.permissions }}</p>
 
-                        <div class="mt-2 overflow-x-auto border border-gray-200 rounded-md">
+                        <div class="mt-2 overflow-x-auto border border-line rounded-md">
                             <table class="min-w-full text-sm">
-                                <thead class="bg-gray-50">
+                                <thead class="bg-surface-alt">
                                     <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-700">{{ $t('permissions.section') }}</th>
-                                        <th v-for="action in ACTIONS" :key="action" class="px-3 py-2 w-24 text-center font-medium text-gray-700">
+                                        <th class="px-3 py-2 text-left font-medium text-fg">{{ $t('permissions.section') }}</th>
+                                        <th v-for="action in ACTIONS" :key="action" class="px-3 py-2 w-24 text-center font-medium text-fg">
                                             {{ $t(`permissions.actions.${action}`) }}
                                         </th>
-                                        <th v-if="hasExtras" class="px-3 py-2 text-left font-medium text-gray-700">{{ $t('permissions.other') }}</th>
-                                        <th class="px-3 py-2 w-20 text-center font-medium text-gray-700">{{ $t('permissions.all') }}</th>
+                                        <th v-if="hasExtras" class="px-3 py-2 text-left font-medium text-fg">{{ $t('permissions.other') }}</th>
+                                        <th class="px-3 py-2 w-20 text-center font-medium text-fg">{{ $t('permissions.all') }}</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100">
+                                <tbody class="divide-y divide-line">
                                     <tr v-for="section in sections" :key="section.key" :data-section="section.key">
                                         <td class="px-3 py-1.5">
                                             {{ section.label }}
-                                            <span class="ml-1 text-xs text-gray-500 font-mono">{{ section.key }}</span>
+                                            <span class="ml-1 text-xs text-muted font-mono">{{ section.key }}</span>
                                         </td>
                                         <template v-if="isModule(section)">
                                             <td v-for="action in ACTIONS" :key="action" class="px-3 py-1.5 text-center">

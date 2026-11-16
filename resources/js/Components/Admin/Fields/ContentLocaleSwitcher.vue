@@ -31,7 +31,7 @@ function errorCount(code) {
 
 <template>
     <div class="flex flex-wrap items-center gap-2 mb-6" role="group" :aria-label="$t('languages.switch')">
-        <span class="text-sm text-gray-600 mr-1">{{ $t('languages.switch') }}:</span>
+        <span class="text-sm text-muted mr-1">{{ $t('languages.switch') }}:</span>
         <button
             v-for="language in locales"
             :key="language.code"
@@ -40,14 +40,14 @@ function errorCount(code) {
             :aria-pressed="modelValue === language.code ? 'true' : 'false'"
             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors"
             :class="modelValue === language.code
-                ? 'bg-blue-700 border-blue-700 text-white'
-                : 'bg-white border-gray-300 text-gray-800 hover:bg-gray-50'"
+                ? 'bg-accent-hover border-accent-hover text-on-accent'
+                : 'bg-surface border-field text-fg hover:bg-hover'"
             @click="emit('update:modelValue', language.code)"
         >
             {{ language.name }}
             <span
                 v-if="errorCount(language.code) > 0"
-                class="inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-semibold rounded-full bg-red-700 text-white"
+                class="inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-semibold rounded-full bg-danger-hover text-on-danger"
             >{{ errorCount(language.code) }}</span>
         </button>
     </div>

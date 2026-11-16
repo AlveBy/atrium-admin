@@ -20,4 +20,14 @@ return [
         'profile' => 'Profil',
         'logout' => 'Çıkış yap',
     ],
+
+    'theme' => [
+        'label' => 'Tema',
+        'system' => 'Sistemdeki gibi',
+        'graphite' => 'Grafit',
+        'day' => 'Gündüz',
+        'night' => 'Gece',
+        'sand' => 'Kum',
+        'contrast' => 'Kontrast',
+    ],
 ];

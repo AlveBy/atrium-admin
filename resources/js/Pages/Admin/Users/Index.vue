@@ -67,8 +67,8 @@ const handleDelete = () => {
         <!-- Header -->
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
-                <p class="mt-1 text-sm text-gray-600">
+                <h1 class="text-2xl font-bold text-fg">{{ title }}</h1>
+                <p class="mt-1 text-sm text-muted">
                     {{ $t('account.users.total', { count: items.total }) }}
                 </p>
             </div>
@@ -88,7 +88,7 @@ const handleDelete = () => {
                         v-model="search"
                         type="text"
                         :placeholder="$t('account.users.search_placeholder')"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-4 py-2 border border-field rounded-lg focus:ring-focus focus:border-focus"
                         @keyup.enter="handleSearch"
                     />
                 </div>
@@ -116,11 +116,11 @@ const handleDelete = () => {
             :title="$t('account.users.delete_title')"
             @close="showDeleteModal = false"
         >
-            <p class="text-gray-600">
+            <p class="text-muted">
                 {{ $t('account.users.delete_confirm') }}
                 <strong v-if="itemToDelete">{{ itemToDelete.name }}</strong>
             </p>
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-danger">
                 {{ $t('account.users.delete_irreversible') }}
             </p>
 

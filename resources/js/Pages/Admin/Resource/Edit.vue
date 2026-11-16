@@ -102,16 +102,16 @@ const tabsWithBadges = computed(() => {
             <nav class="flex" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center space-x-1 md:space-x-3">
                     <li class="inline-flex items-center">
-                        <Link :href="route(`${props.routeName}.index`)" class="text-gray-600 hover:text-blue-600">
+                        <Link :href="route(`${props.routeName}.index`)" class="text-muted hover:text-accent">
                             {{ adminLabel }}
                         </Link>
                     </li>
                     <li>
                         <div class="flex items-center">
-                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 text-muted" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="ml-1 text-gray-500">{{ itemTitle || '#' + item.id }}</span>
+                            <span class="ml-1 text-muted">{{ itemTitle || '#' + item.id }}</span>
                         </div>
                     </li>
                 </ol>
@@ -120,7 +120,7 @@ const tabsWithBadges = computed(() => {
 
         <div class="max-w-4xl">
             <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-                <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+                <h1 class="text-2xl font-bold text-fg">{{ title }}</h1>
                 <div v-if="actions.length" class="flex gap-2">
                     <AdminButton
                         v-for="action in actions"
@@ -135,7 +135,7 @@ const tabsWithBadges = computed(() => {
             </div>
 
             <AdminCard>
-                <p v-if="readOnly" data-read-only class="mb-6 rounded-md border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-800">
+                <p v-if="readOnly" data-read-only class="mb-6 rounded-md border border-field bg-surface-alt px-4 py-3 text-sm text-fg">
                     {{ $t('resource.form.read_only') }}
                 </p>
 
@@ -171,7 +171,7 @@ const tabsWithBadges = computed(() => {
                                         <!-- Empty tab message -->
                                         <div
                                             v-if="!fieldsByTab[tab.name]?.length"
-                                            class="text-center py-12 text-gray-500"
+                                            class="text-center py-12 text-muted"
                                         >
                                             <p>{{ $t('resource.form.empty_tab') }}</p>
                                         </div>

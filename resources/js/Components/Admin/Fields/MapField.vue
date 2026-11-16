@@ -1,8 +1,8 @@
 <template>
   <div class="map-field">
-    <label v-if="label" :for="name" class="block text-sm font-medium text-gray-700 mb-1">
+    <label v-if="label" :for="name" class="block text-sm font-medium text-fg mb-1">
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span v-if="required" class="text-danger">*</span>
     </label>
 
     <!--
@@ -19,15 +19,15 @@
       :placeholder="placeholder || combinedPlaceholder"
       :disabled="disabled"
       :readonly="readonly"
-      class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-      :class="{ 'border-red-500': error }"
+      class="w-full border border-field rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-focus focus:border-focus"
+      :class="{ 'border-danger': error }"
       @input="onCombinedInput"
       @change="onCombinedChange"
     />
 
     <div class="grid grid-cols-2 gap-2 mt-2">
       <div>
-        <span class="block text-xs text-gray-500 mb-1">{{ $t('fields.map.latitude') }}</span>
+        <span class="block text-xs text-muted mb-1">{{ $t('fields.map.latitude') }}</span>
         <!-- step="any" is required: the form has no novalidate, and the default
              step=1 would make 61.79862 invalid and block the whole submit. -->
         <input
@@ -38,14 +38,14 @@
           :placeholder="latPlaceholder"
           :disabled="disabled"
           :readonly="readonly"
-          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-          :class="{ 'border-red-500': error }"
+          class="w-full border border-field rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-focus focus:border-focus"
+          :class="{ 'border-danger': error }"
           @input="onLatInput"
         />
       </div>
 
       <div>
-        <span class="block text-xs text-gray-500 mb-1">{{ $t('fields.map.longitude') }}</span>
+        <span class="block text-xs text-muted mb-1">{{ $t('fields.map.longitude') }}</span>
         <input
           type="number"
           data-map-lng
@@ -54,8 +54,8 @@
           :placeholder="lngPlaceholder"
           :disabled="disabled"
           :readonly="readonly"
-          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-          :class="{ 'border-red-500': error }"
+          class="w-full border border-field rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-focus focus:border-focus"
+          :class="{ 'border-danger': error }"
           @input="onLngInput"
         />
       </div>
@@ -68,7 +68,7 @@
         target="_blank"
         rel="noopener noreferrer"
         data-map-link
-        class="text-sm text-indigo-600 hover:text-indigo-800"
+        class="text-sm text-accent hover:text-accent-soft-fg"
       >
         {{ $t('fields.map.open_on_map') }}
       </a>
@@ -77,19 +77,19 @@
         v-if="hasValue && !disabled && !readonly"
         type="button"
         data-map-clear
-        class="text-sm text-gray-400 hover:text-red-500"
+        class="text-sm text-muted hover:text-danger"
         @click="clear"
       >
         {{ $t('fields.clear') }}
       </button>
     </div>
 
-    <p v-if="showParseWarning" class="mt-1 text-sm text-amber-600">
+    <p v-if="showParseWarning" class="mt-1 text-sm text-warning-soft-fg">
       {{ $t('fields.map.parse_error', { example: '55.7558,37.6173' }) }}
     </p>
 
-    <p v-if="hint && !error" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
-    <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
+    <p v-if="hint && !error" class="mt-1 text-sm text-muted">{{ hint }}</p>
+    <p v-if="error" class="mt-1 text-sm text-danger">{{ error }}</p>
   </div>
 </template>
 

@@ -1,24 +1,24 @@
 <template>
   <div class="wysiwyg-field">
-    <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1">
+    <label v-if="label" class="block text-sm font-medium text-fg mb-1">
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span v-if="required" class="text-danger">*</span>
     </label>
 
     <div
-      class="border border-gray-300 rounded-lg overflow-hidden"
-      :class="{ 'border-red-500': error, 'ring-2 ring-indigo-500': isFocused }"
+      class="border border-field rounded-lg overflow-hidden"
+      :class="{ 'border-danger': error, 'ring-2 ring-focus': isFocused }"
     >
       <!-- mousedown, not click: the browser takes focus away from the editor on
            press, and after that the caret can't be read — see caretPosition(). -->
-      <div class="flex flex-wrap gap-1 p-2 bg-gray-50 border-b border-gray-300" @mousedown="rememberCaret">
+      <div class="flex flex-wrap gap-1 p-2 bg-surface-alt border-b border-field" @mousedown="rememberCaret">
         <button
           v-for="button in toolbarButtons"
           :key="button.name"
           type="button"
           @click="button.action"
-          class="p-2 rounded hover:bg-gray-200"
-          :class="{ 'bg-gray-200': button.isActive?.() }"
+          class="p-2 rounded hover:bg-hover"
+          :class="{ 'bg-accent-soft text-accent-soft-fg': button.isActive?.() }"
           :title="button.title"
         >
           <component :is="button.icon" class="h-4 w-4" />
@@ -31,13 +31,13 @@
         :style="{ minHeight: minHeight + 'px', maxHeight: maxHeight ? maxHeight + 'px' : 'auto' }"
       />
 
-      <div v-if="maxLength" class="flex justify-end p-2 bg-gray-50 border-t border-gray-300 text-sm text-gray-500">
+      <div v-if="maxLength" class="flex justify-end p-2 bg-surface-alt border-t border-field text-sm text-muted">
         {{ characterCount }} / {{ maxLength }}
       </div>
     </div>
 
-    <p v-if="hint && !error" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
-    <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
+    <p v-if="hint && !error" class="mt-1 text-sm text-muted">{{ hint }}</p>
+    <p v-if="error" class="mt-1 text-sm text-danger">{{ error }}</p>
 
     <!-- File Manager Modal -->
     <FileManager

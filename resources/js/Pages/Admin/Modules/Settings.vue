@@ -43,13 +43,13 @@ const submit = () => {
 <template>
     <AdminLayout :title="title">
         <div class="mb-6">
-            <Link :href="route('admin.modules.index')" class="text-gray-600 hover:text-blue-600">{{ $t('menu.modules') }}</Link>
+            <Link :href="route('admin.modules.index')" class="text-muted hover:text-accent">{{ $t('menu.modules') }}</Link>
         </div>
 
         <div class="max-w-4xl">
-            <h1 data-page-title="admin.modules.settings" class="text-2xl font-bold text-gray-900">{{ title }}</h1>
-            <p v-if="description" class="mt-1 text-sm text-gray-600">{{ description }}</p>
-            <p v-if="site" data-settings-site class="mt-1 text-sm text-gray-600">{{ $t('modules.per_site', { site: site.name }) }}</p>
+            <h1 data-page-title="admin.modules.settings" class="text-2xl font-bold text-fg">{{ title }}</h1>
+            <p v-if="description" class="mt-1 text-sm text-muted">{{ description }}</p>
+            <p v-if="site" data-settings-site class="mt-1 text-sm text-muted">{{ $t('modules.per_site', { site: site.name }) }}</p>
 
             <AdminCard class="mt-6">
                 <form data-settings-form :data-module="module.key" @submit.prevent="submit">

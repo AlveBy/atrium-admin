@@ -57,7 +57,7 @@ watch(() => props.show, (show) => {
             <div v-if="show" data-modal="true" class="fixed inset-0 z-50 overflow-y-auto">
                 <!-- Backdrop -->
                 <div
-                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                    class="fixed inset-0 bg-black/50 transition-opacity"
                     @click="close"
                 />
 
@@ -73,18 +73,18 @@ watch(() => props.show, (show) => {
                     >
                         <div
                             v-if="show"
-                            class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:my-8 sm:w-full"
+                            class="relative transform overflow-hidden rounded-lg bg-surface shadow-xl transition-all sm:my-8 sm:w-full"
                             :class="maxWidthClass[maxWidth]"
                         >
                             <!-- Header -->
-                            <div v-if="title || $slots.header" class="px-6 py-4 border-b border-gray-200">
+                            <div v-if="title || $slots.header" class="px-6 py-4 border-b border-line">
                                 <slot name="header">
-                                    <h3 class="text-lg font-medium text-gray-900">{{ title }}</h3>
+                                    <h3 class="text-lg font-medium text-fg">{{ title }}</h3>
                                 </slot>
                                 <button
                                     v-if="closeable"
                                     @click="close"
-                                    class="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+                                    class="absolute top-4 right-4 text-muted hover:text-fg"
                                 >
                                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -98,7 +98,7 @@ watch(() => props.show, (show) => {
                             </div>
 
                             <!-- Footer -->
-                            <div v-if="$slots.footer" class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+                            <div v-if="$slots.footer" class="px-6 py-4 border-t border-line bg-surface-alt flex justify-end space-x-3">
                                 <slot name="footer" />
                             </div>
                         </div>

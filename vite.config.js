@@ -14,6 +14,8 @@ import { fileURLToPath } from 'node:url';
 // `npm run dev` drops a hot file there so the demo app loads from Vite.
 export default defineConfig({
     base: '/vendor/atrium/',
+    // Favicons are copied as they are to dist/, next to the bundle.
+    publicDir: 'public',
     plugins: [
         laravel({
             input: ['resources/js/app.js'],

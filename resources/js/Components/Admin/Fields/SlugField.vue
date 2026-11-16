@@ -1,8 +1,8 @@
 <template>
   <div class="slug-field">
-    <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1">
+    <label v-if="label" class="block text-sm font-medium text-fg mb-1">
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span v-if="required" class="text-danger">*</span>
     </label>
 
     <div class="flex gap-2">
@@ -12,8 +12,8 @@
           :value="modelValue"
           @input="handleInput"
           @blur="handleBlur"
-          class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-          :class="{ 'border-red-500': error }"
+          class="w-full border border-field rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-focus focus:border-focus"
+          :class="{ 'border-danger': error }"
           :placeholder="placeholder || $t('fields.slug.placeholder')"
           :disabled="disabled"
         />
@@ -22,7 +22,7 @@
           v-if="autoGenerate && sourceValue"
           type="button"
           @click="generateSlug"
-          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-500"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-accent"
           :title="$t('fields.slug.generate')"
         >
           <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -32,19 +32,19 @@
       </div>
     </div>
 
-    <div v-if="showPreview && modelValue" class="mt-2 text-sm text-gray-500">
+    <div v-if="showPreview && modelValue" class="mt-2 text-sm text-muted">
       <span class="font-medium">{{ $t('fields.slug.url_label') }}</span>
       <a
         :href="previewUrl"
         target="_blank"
-        class="text-indigo-600 hover:text-indigo-800 break-all"
+        class="text-accent hover:text-accent-soft-fg break-all"
       >
         {{ previewUrl }}
       </a>
     </div>
 
-    <p v-if="hint && !error" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
-    <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
+    <p v-if="hint && !error" class="mt-1 text-sm text-muted">{{ hint }}</p>
+    <p v-if="error" class="mt-1 text-sm text-danger">{{ error }}</p>
   </div>
 </template>
 

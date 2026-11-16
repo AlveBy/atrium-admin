@@ -141,9 +141,9 @@ function moveItem(fromIndex, toIndex) {
 <template>
     <div class="repeatable-field">
         <!-- Label -->
-        <label v-if="label" class="block text-sm font-medium text-gray-700 mb-2">
+        <label v-if="label" class="block text-sm font-medium text-fg mb-2">
             {{ label }}
-            <span v-if="required" class="text-red-500">*</span>
+            <span v-if="required" class="text-danger">*</span>
         </label>
 
         <!-- Multi-line values: each has its own editor, like a multiple HTML property in Bitrix -->
@@ -152,17 +152,17 @@ function moveItem(fromIndex, toIndex) {
                 v-for="(item, index) in items"
                 :key="index"
                 :data-repeatable-item="index"
-                class="border border-gray-200 rounded-lg p-3 bg-white"
+                class="border border-line rounded-lg p-3 bg-surface"
             >
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-700">{{ itemTitle(index) }}</span>
+                    <span class="text-sm font-medium text-fg">{{ itemTitle(index) }}</span>
 
                     <div class="flex items-center gap-1">
                         <button
                             type="button"
                             @click="moveItem(index, index - 1)"
                             :disabled="disabled || index === 0"
-                            class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                            class="p-1 text-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
                             :title="$t('fields.repeatable.move_up')"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@ function moveItem(fromIndex, toIndex) {
                             type="button"
                             @click="moveItem(index, index + 1)"
                             :disabled="disabled || index === items.length - 1"
-                            class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                            class="p-1 text-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
                             :title="$t('fields.repeatable.move_down')"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,7 +184,7 @@ function moveItem(fromIndex, toIndex) {
                             v-if="canRemove"
                             type="button"
                             @click="removeItem(index)"
-                            class="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                            class="p-1 text-danger hover:text-danger-soft-fg hover:bg-danger-soft rounded"
                             :title="$t('common.delete')"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +222,7 @@ function moveItem(fromIndex, toIndex) {
                         type="button"
                         @click="moveItem(index, index - 1)"
                         :disabled="disabled || index === 0"
-                        class="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        class="p-0.5 text-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
                         :title="$t('fields.repeatable.move_up')"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@ function moveItem(fromIndex, toIndex) {
                         type="button"
                         @click="moveItem(index, index + 1)"
                         :disabled="disabled || index === items.length - 1"
-                        class="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        class="p-0.5 text-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
                         :title="$t('fields.repeatable.move_down')"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,8 +249,8 @@ function moveItem(fromIndex, toIndex) {
                     @input="updateItem(index, $event.target.value)"
                     :placeholder="placeholder || $t('fields.repeatable.item_title', { label, number: index + 1 })"
                     :disabled="disabled"
-                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    :class="{ 'border-red-500': error }"
+                    class="flex-1 px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus disabled:bg-off disabled:cursor-not-allowed"
+                    :class="{ 'border-danger': error }"
                 />
 
                 <!-- Remove button -->
@@ -259,7 +259,7 @@ function moveItem(fromIndex, toIndex) {
                     type="button"
                     @click="removeItem(index)"
                     :disabled="!canRemove"
-                    class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md disabled:opacity-30 disabled:cursor-not-allowed"
+                    class="p-2 text-danger hover:text-danger-soft-fg hover:bg-danger-soft rounded-md disabled:opacity-30 disabled:cursor-not-allowed"
                     :title="$t('common.delete')"
                 >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -270,7 +270,7 @@ function moveItem(fromIndex, toIndex) {
         </div>
 
         <!-- Empty state -->
-        <div v-if="items.length === 0" class="text-gray-500 text-sm py-2">
+        <div v-if="items.length === 0" class="text-muted text-sm py-2">
             {{ $t('fields.repeatable.empty', { add: addText }) }}
         </div>
 
@@ -279,7 +279,7 @@ function moveItem(fromIndex, toIndex) {
             v-if="canAdd"
             type="button"
             @click="addItem"
-            class="mt-2 inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition-colors"
+            class="mt-2 inline-flex items-center px-3 py-2 text-sm font-medium text-accent bg-accent-soft hover:bg-accent-soft rounded-md border border-accent-soft transition-colors"
         >
             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -288,7 +288,7 @@ function moveItem(fromIndex, toIndex) {
         </button>
 
         <!-- Counter -->
-        <div v-if="maxItems > 0" class="mt-1 text-xs text-gray-500">
+        <div v-if="maxItems > 0" class="mt-1 text-xs text-muted">
             {{ items.length }} / {{ maxItems }}
         </div>
     </div>

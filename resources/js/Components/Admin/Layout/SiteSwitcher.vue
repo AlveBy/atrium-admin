@@ -28,7 +28,7 @@ const change = (event) => {
         name="site_id"
         :aria-label="$t('layout.site')"
         :value="current"
-        class="rounded-md border border-gray-300 bg-white py-1.5 pl-2 pr-8 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        class="rounded-md border border-field bg-surface py-1.5 pl-2 pr-8 text-sm text-fg hover:bg-hover focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus"
         @change="change"
     >
         <option v-for="site in sites" :key="site.id" :value="site.id">
