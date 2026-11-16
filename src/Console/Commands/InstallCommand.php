@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Console\Commands;
 
-use Atrium\Admin\Demo\Demo;
-use Atrium\Admin\Demo\DemoSeeder;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Modules\Modules;
 use Illuminate\Console\Command;
 
 /**
@@ -19,7 +18,7 @@ final class InstallCommand extends Command
                             {--email= : Email of the first administrator}
                             {--password= : Password of the first administrator}
                             {--no-migrate : Do not run migrations}
-                            {--demo : Turn on the demo modules and fill them with a small shop}';
+                            {--demo : Install every module package Composer has and fill them with a small shop}';
 
     protected $description = 'Install Atrium: config, assets, migrations and the first administrator';
 
@@ -34,7 +33,7 @@ final class InstallCommand extends Command
         }
 
         if ($this->option('demo')) {
-            $this->components->task('Turning on the demo (ATRIUM_DEMO=true)', fn () => $this->enableDemo());
+            $this->installModules();
         }
 
         if (! $this->option('no-migrate')) {
@@ -58,7 +57,7 @@ final class InstallCommand extends Command
 
         if ($this->option('demo')) {
             if ($this->option('no-migrate')) {
-                $this->components->warn('The demo needs its tables: run `php artisan migrate` and `php artisan atrium:install --demo` again.');
+                $this->components->warn('The demo needs the modules\' tables: run `php artisan migrate` and `php artisan atrium:install --demo` again.');
             } else {
                 $this->seedDemo();
             }
@@ -79,38 +78,44 @@ final class InstallCommand extends Command
     }
 
     /**
-     * On for this run, and in .env for the next ones. Without a .env (the
-     * variables come from the server) the flag has to be set there.
+     * The demo shop is what the module packages bring: every one Composer
+     * has is installed (`atrium:module:install`), so its migrations run next.
      */
-    private function enableDemo(): bool
+    private function installModules(): void
     {
-        Demo::register($this->laravel);
+        $modules = $this->laravel->make(Modules::class);
 
-        $env = $this->laravel->environmentFilePath();
+        if ($modules->all() === []) {
+            $this->components->warn('No module packages to fill: `composer require alveby/atrium-catalog alveby/atrium-brands alveby/atrium-stores alveby/atrium-news` and run this command again.');
 
-        if (! is_file($env)) {
-            $this->components->warn('No .env file: set ATRIUM_DEMO=true where the environment is configured.');
-
-            return true;
+            return;
         }
 
-        $contents = (string) file_get_contents($env);
-
-        $contents = preg_match('/^ATRIUM_DEMO=.*$/m', $contents)
-            ? (string) preg_replace('/^ATRIUM_DEMO=.*$/m', 'ATRIUM_DEMO=true', $contents)
-            : rtrim($contents, "\n")."\n\nATRIUM_DEMO=true\n";
-
-        return file_put_contents($env, $contents) !== false;
+        foreach ($modules->all() as $module) {
+            if (! $modules->isInstalled($module->name)) {
+                $this->components->task("Installing {$module->name}", fn (): bool => $modules->install($module));
+            }
+        }
     }
 
+    /**
+     * The modules' demo content, the modules a module suggests first: the
+     * brands are there before the products that link to them.
+     */
     private function seedDemo(): void
     {
+        $modules = $this->laravel->make(Modules::class);
         $seeded = false;
-        $this->components->task('Filling the demo', function () use (&$seeded): bool {
-            $seeded = (new DemoSeeder)->run();
 
-            return true;
-        });
+        foreach ($modules->dependencyOrder($modules->installed()) as $module) {
+            if ($module->demo !== null) {
+                $this->components->task("Filling {$module->name}", function () use ($modules, $module, &$seeded): bool {
+                    $seeded = $modules->seedDemo($module) || $seeded;
+
+                    return true;
+                });
+            }
+        }
 
         if (! $seeded) {
             $this->components->info('The demo already has content; nothing was added.');

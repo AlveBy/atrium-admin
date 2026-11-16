@@ -7,7 +7,6 @@ namespace Atrium\Admin;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Contracts\Sitemapable;
-use Atrium\Admin\Demo\Demo;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
 use Atrium\Admin\Http\Middleware\AuthorizeAdminRoute;
@@ -145,10 +144,6 @@ final class AtriumServiceProvider extends ServiceProvider
     private function registerResources(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-
-        if (Demo::enabled()) {
-            Demo::register($this->app);
-        }
 
         $modules = $this->app->make(Modules::class);
 

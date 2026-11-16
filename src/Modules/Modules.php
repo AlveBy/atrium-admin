@@ -199,7 +199,12 @@ final class Modules
             return false;
         }
 
-        return $seeder->setContainer($this->app)->__invoke() !== false;
+        $seeded = $seeder->setContainer($this->app)->__invoke() !== false;
+
+        // New sections and records: the addresses of the site are built again.
+        PublicUrl::forgetPaths();
+
+        return $seeded;
     }
 
     /**

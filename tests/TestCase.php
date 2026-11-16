@@ -34,9 +34,6 @@ abstract class TestCase extends Orchestra
         $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
         $app['config']->set('database.default', 'testing');
         $app['config']->set('atrium.resources', [Post::class]);
-        // The repository's .env.example turns the demo on; the package tests
-        // decide for themselves.
-        $app['config']->set('atrium.demo', false);
         $app['config']->set('atrium.auth.two_factor.enabled', false);
         $app['config']->set('atrium.dashboard.timings.enabled', false);
     }
