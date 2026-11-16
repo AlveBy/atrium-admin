@@ -5,6 +5,7 @@ import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminDataTable from '../../../Components/Admin/Table/AdminDataTable.vue'
 import AdminModal from '../../../Components/Admin/UI/AdminModal.vue'
+import { recordActionHref } from '../../../Support/recordActions'
 
 const props = defineProps({
     routeName: String,
@@ -15,7 +16,14 @@ const props = defineProps({
     title: String,
     // view / create / update / delete — what the administrator's roles allow here.
     can: { type: Object, default: () => ({}) },
+    // Buttons on a record that open the create form filled from it.
+    actions: { type: Array, default: () => [] },
 })
+
+const rowActions = props.actions.map((action) => ({
+    ...action,
+    href: (item) => recordActionHref(props.routeName, action, item),
+}))
 
 const search = ref(props.filters.search || '')
 const showDeleteModal = ref(false)
@@ -101,6 +109,7 @@ const handleDelete = () => {
             :sort-by="filters.sort"
             :sort-direction="filters.direction"
             :can-delete="can.delete !== false"
+            :row-actions="rowActions"
             @sort="handleSort"
             @edit="handleEdit"
             @delete="confirmDelete"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Http\Controllers;
 
+use Atrium\Admin\Actions\CreateFromRecord;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\CheckboxField;
@@ -68,11 +69,34 @@ abstract class AdminController extends Controller
      */
     protected function resourceProps(): array
     {
+        $can = $this->abilities();
+
         return [
             'routeName' => $this->model::getAdminRouteName(),
             'createLabel' => $this->model::getAdminCreateLabel(),
-            'can' => $this->abilities(),
+            'can' => $can,
+            // Buttons on a record that open the create form filled from it.
+            'actions' => $can[Permissions::CREATE]
+                ? array_map(static fn (CreateFromRecord $action): array => $action->toArray(), $this->createActions())
+                : [],
         ];
+    }
+
+    /**
+     * The module's CreateFromRecord actions (InteractsWithAdmin::getAdministrationActions()).
+     *
+     * @return array<int,CreateFromRecord>
+     */
+    protected function createActions(): array
+    {
+        if (! method_exists($this->model, 'getAdministrationActions')) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            (array) $this->model::getAdministrationActions(),
+            static fn (mixed $action): bool => $action instanceof CreateFromRecord,
+        ));
     }
 
     /**
@@ -188,7 +212,7 @@ abstract class AdminController extends Controller
     {
         abort_unless($this->moduleAllows(Permissions::CREATE), 403);
 
-        $data = $this->preselectSection($request, $this->prepareFormData('create'));
+        $data = $this->prefillFromActions($request, $this->preselectSection($request, $this->prepareFormData('create')));
 
         return Inertia::render($this->getPagePrefix().'/Create', [...$data, ...$this->resourceProps()]);
     }
@@ -212,21 +236,60 @@ abstract class AdminController extends Controller
             return $data;
         }
 
-        $preselect = static function (array $field) use ($sectionId): array {
-            if (($field['name'] ?? null) === self::SECTION_QUERY) {
-                $field['default'] = $sectionId;
+        return $this->withFieldDefaults($data, [self::SECTION_QUERY => $sectionId]);
+    }
+
+    /**
+     * The fields a CreateFromRecord action fills, from the link it opened
+     * (`?parent_id=12`). Only those fields: the query string sets nothing
+     * else on the form.
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    protected function prefillFromActions(Request $request, array $data): array
+    {
+        $defaults = [];
+
+        foreach ($this->createActions() as $action) {
+            foreach (array_keys($action->getFill()) as $field) {
+                $value = $request->query($field);
+
+                if (is_string($value) && $value !== '') {
+                    $defaults[$field] = ctype_digit($value) ? (int) $value : $value;
+                }
+            }
+        }
+
+        return $this->withFieldDefaults($data, $defaults);
+    }
+
+    /**
+     * @param  array<string,mixed>  $data
+     * @param  array<string,mixed>  $defaults  field name => value
+     * @return array<string,mixed>
+     */
+    private function withFieldDefaults(array $data, array $defaults): array
+    {
+        if ($defaults === []) {
+            return $data;
+        }
+
+        $preset = static function (array $field) use ($defaults): array {
+            if (array_key_exists($field['name'] ?? '', $defaults)) {
+                $field['default'] = $defaults[$field['name']];
             }
 
             return $field;
         };
 
         if (isset($data['fields']) && is_array($data['fields'])) {
-            $data['fields'] = array_map($preselect, $data['fields']);
+            $data['fields'] = array_map($preset, $data['fields']);
         }
 
         if (isset($data['fieldsByTab']) && is_array($data['fieldsByTab'])) {
             $data['fieldsByTab'] = array_map(
-                static fn (array $fields): array => array_map($preselect, $fields),
+                static fn (array $fields): array => array_map($preset, $fields),
                 $data['fieldsByTab']
             );
         }

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, Link } from '@inertiajs/vue3'
 import AdminPagination from './AdminPagination.vue'
 
 const props = defineProps({
@@ -25,6 +25,11 @@ const props = defineProps({
     canDelete: {
         type: Boolean,
         default: true
+    },
+    // [{ name, label, href(item) }]: links shown before the edit button.
+    rowActions: {
+        type: Array,
+        default: () => []
     },
 })
 
@@ -192,6 +197,18 @@ const cellTitle = (item, column) => {
                         </td>
                         <td class="sticky right-0 z-10 border-b border-l border-gray-200 bg-inherit px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
                             <slot name="actions" :item="item">
+                                <Link
+                                    v-for="action in rowActions"
+                                    :key="action.name"
+                                    :href="action.href(item)"
+                                    :data-action="action.name"
+                                    class="mr-1 inline-flex items-center rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-900"
+                                >
+                                    <svg class="mr-1 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    {{ action.label }}
+                                </Link>
                                 <button
                                     data-action="edit"
                                     @click="$emit('edit', item)"

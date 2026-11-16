@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Traits;
 
+use Atrium\Admin\Actions\CreateFromRecord;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
@@ -46,7 +47,10 @@ trait InteractsWithAdmin
     }
 
     /**
-     * Get actions for admin list
+     * Buttons on a record, in the list and on its form: CreateFromRecord
+     * opens the create form filled from the record (a subpage, a copy).
+     *
+     * @return array<int,CreateFromRecord>
      */
     public static function getAdministrationActions(): array
     {

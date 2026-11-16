@@ -9,6 +9,7 @@ import AdminTabPanel from '../../../Components/Admin/Tabs/AdminTabPanel.vue'
 import FormField from '../../../Components/Admin/Fields/FormField.vue'
 import ContentLocaleSwitcher from '../../../Components/Admin/Fields/ContentLocaleSwitcher.vue'
 import { useContentLocale, initialValue, fieldHasError } from '../../../Support/contentLocale'
+import { recordActionHref } from '../../../Support/recordActions'
 
 const props = defineProps({
     routeName: String,
@@ -22,6 +23,8 @@ const props = defineProps({
     title: String,
     adminLabel: String,
     can: { type: Object, default: () => ({}) },
+    // Buttons on a record that open the create form filled from it.
+    actions: { type: Array, default: () => [] },
 })
 
 // With "view" but not "update" the record opens read-only: no Save, and the
@@ -109,7 +112,20 @@ const tabsWithBadges = computed(() => {
         </div>
 
         <div class="max-w-4xl">
-            <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ title }}</h1>
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+                <div v-if="actions.length" class="flex gap-2">
+                    <AdminButton
+                        v-for="action in actions"
+                        :key="action.name"
+                        :data-action="action.name"
+                        variant="secondary"
+                        :href="recordActionHref(routeName, action, item)"
+                    >
+                        {{ action.label }}
+                    </AdminButton>
+                </div>
+            </div>
 
             <AdminCard>
                 <p v-if="readOnly" data-read-only class="mb-6 rounded-md border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-800">
