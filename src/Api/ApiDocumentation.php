@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Api;
 
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Http\Controllers\AdminController;
@@ -53,7 +54,11 @@ final class ApiDocumentation
             );
 
             $instance = new $model;
-            $translatable = method_exists($instance, 'getTranslatableAttributes') ? $instance->getTranslatableAttributes() : [];
+            $translatable = Hook::apply(
+                'atrium.module.translatable',
+                method_exists($instance, 'getTranslatableAttributes') ? $instance->getTranslatableAttributes() : [],
+                $model,
+            );
 
             $modules[$key] = [
                 'label' => $this->resources->label($key),

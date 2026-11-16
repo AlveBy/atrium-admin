@@ -11,6 +11,7 @@ namespace Atrium\Admin\Http\Controllers\Api;
 
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Models\AdminUser;
@@ -45,6 +46,11 @@ class ResourceController extends AdminController
         $codes = $this->contentLanguages()->codes();
 
         foreach ((array) $request->query('filter', []) as $column => $value) {
+            // A field added by a package (custom fields) filters itself.
+            if (Hook::apply('atrium.query.filter', false, $query, (string) $column, $value)) {
+                continue;
+            }
+
             if (! in_array($column, $columns, true)) {
                 continue;
             }
@@ -62,7 +68,7 @@ class ResourceController extends AdminController
         }
 
         if (($search = (string) $request->query('search', '')) !== '') {
-            $searchable = collect($this->model::getAdministrationListColumns())
+            $searchable = collect(Hook::apply('atrium.module.columns', $this->model::getAdministrationListColumns(), $this->model))
                 ->map(fn ($column) => $column->toArray())
                 ->filter(fn (array $column): bool => (bool) ($column['searchable'] ?? false))
                 ->pluck('name')
@@ -70,6 +76,10 @@ class ResourceController extends AdminController
 
             $query->where(function ($q) use ($searchable, $search, $codes) {
                 foreach ($searchable as $column) {
+                    if (Hook::apply('atrium.query.search', false, $q, $column, $search)) {
+                        continue;
+                    }
+
                     if ($this->isTranslatable($column)) {
                         $q->orWhere(fn ($w) => $w->whereTranslationLike($column, $search, $codes));
                     } else {
@@ -81,8 +91,11 @@ class ResourceController extends AdminController
 
         $sort = (string) $request->query('sort', 'id');
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
-        $sort = in_array($sort, $columns, true) ? $sort : 'id';
-        $query->orderBy($this->isTranslatable($sort) ? $sort.'->'.$this->contentLanguages()->default() : $sort, $direction);
+
+        if (! Hook::apply('atrium.query.sort', false, $query, $sort, $direction)) {
+            $sort = in_array($sort, $columns, true) ? $sort : 'id';
+            $query->orderBy($this->isTranslatable($sort) ? $sort.'->'.$this->contentLanguages()->default() : $sort, $direction);
+        }
 
         $perPage = max(1, min(self::MAX_PER_PAGE, (int) $request->query('per_page', 20)));
         $page = $query->paginate($perPage)->withQueryString();

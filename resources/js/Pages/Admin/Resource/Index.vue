@@ -23,7 +23,15 @@ const props = defineProps({
     can: { type: Object, default: () => ({}) },
     // Buttons on a record that open the create form filled from it.
     actions: { type: Array, default: () => [] },
+    // Buttons above the list added by packages ("Fields" of custom fields).
+    links: { type: Array, default: () => [] },
 })
+
+// Filters from the address (?module=…) that the module declared: kept on
+// search and sort, and passed on to the create form.
+const listFilters = Object.fromEntries(
+    Object.entries(props.filters || {}).filter(([key]) => !['search', 'sort', 'direction'].includes(key))
+)
 
 const rowActions = props.actions.map((action) => ({
     ...action,
@@ -35,7 +43,7 @@ const showDeleteModal = ref(false)
 const itemToDelete = ref(null)
 
 const handleSearch = () => {
-    router.get(route(`${props.routeName}.index`), { search: search.value }, {
+    router.get(route(`${props.routeName}.index`), { ...listFilters, search: search.value }, {
         preserveState: true,
         preserveScroll: true,
     })
@@ -82,12 +90,23 @@ const handleDelete = () => {
                     {{ $t('resource.index.total', { count: items.total }) }}
                 </p>
             </div>
-            <AdminButton v-if="can.create !== false" data-action="create" :href="route(`${props.routeName}.create`)">
-                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                {{ $t('common.create') }}
-            </AdminButton>
+            <div class="flex flex-wrap items-center gap-2">
+                <AdminButton
+                    v-for="link in links"
+                    :key="link.name"
+                    :data-link="link.name"
+                    :href="link.href"
+                    variant="secondary"
+                >
+                    {{ link.label }}
+                </AdminButton>
+                <AdminButton v-if="can.create !== false" data-action="create" :href="route(`${props.routeName}.create`, listFilters)">
+                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    {{ $t('common.create') }}
+                </AdminButton>
+            </div>
         </div>
 
         <div class="mb-6">

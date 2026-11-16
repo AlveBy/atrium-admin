@@ -149,8 +149,15 @@ abstract class AdminController extends Controller
     public function index(Request $request): Response
     {
         $query = (new $this->model)->scopeAdminList($this->model::query());
-        $columns = $this->model::getAdministrationListColumns();
+        $columns = Hook::apply('atrium.module.columns', $this->model::getAdministrationListColumns(), $this->model);
         $related = $this->relatedColumns($columns);
+        $listFilters = $this->listFilters($request);
+
+        foreach ($listFilters as $name => $value) {
+            if (! Hook::apply('atrium.query.filter', false, $query, $name, $value)) {
+                $query->where($name, $value);
+            }
+        }
 
         // A column like `brand.name` shows a related record's attribute.
         if ($related !== []) {
@@ -175,6 +182,10 @@ abstract class AdminController extends Controller
 
                 $query->where(function ($q) use ($searchable, $search, $codes) {
                     foreach ($searchable as $column) {
+                        if (Hook::apply('atrium.query.search', false, $q, $column, $search)) {
+                            continue;
+                        }
+
                         // A translatable column is JSON: search every language.
                         if ($this->isTranslatable($column)) {
                             $q->orWhere(fn ($w) => $w->whereTranslationLike($column, $search, $codes));
@@ -193,13 +204,15 @@ abstract class AdminController extends Controller
             $sortBy = $this->model::getDefaultSortColumn();
         }
         $sortDir = $request->get('direction', $this->model::getDefaultSortDirection());
-        $query->orderBy($this->isTranslatable($sortBy) ? $sortBy.'->'.$this->contentLanguages()->default() : $sortBy, $sortDir);
+
+        if (! Hook::apply('atrium.query.sort', false, $query, $sortBy, $sortDir === 'desc' ? 'desc' : 'asc')) {
+            $query->orderBy($this->isTranslatable($sortBy) ? $sortBy.'->'.$this->contentLanguages()->default() : $sortBy, $sortDir);
+        }
 
         $items = $query->paginate($this->model::getAdminPerPage())->withQueryString();
 
-        if ($this->translatableAttributes() !== [] || $related !== []) {
-            $items->through(fn (Model $item): array => $this->listRow($item, $related));
-        }
+        // Every row goes through listRow(): a package may present any of them.
+        $items->through(fn (Model $item): array => $this->listRow($item, $related));
 
         return Inertia::render($this->getPagePrefix().'/Index', [
             'items' => $items,
@@ -208,8 +221,10 @@ abstract class AdminController extends Controller
                 'search' => $request->get('search', ''),
                 'sort' => $sortBy,
                 'direction' => $sortDir,
+                ...$listFilters,
             ],
             'title' => $this->model::getAdminLabel(),
+            'links' => Hook::apply('atrium.module.links', [], $this->model),
             ...$this->resourceProps(),
         ]);
     }
@@ -222,8 +237,31 @@ abstract class AdminController extends Controller
         abort_unless($this->moduleAllows(Permissions::CREATE), 403);
 
         $data = $this->prefillFromActions($request, $this->preselectSection($request, $this->prepareFormData('create')));
+        $data = $this->withFieldDefaults($data, $this->listFilters($request));
 
         return Inertia::render($this->getPagePrefix().'/Create', [...$data, ...$this->resourceProps()]);
+    }
+
+    /**
+     * The list filters in the query string (`?module=…`): only the columns
+     * the module names in getAdministrationFilters(). The list is narrowed by
+     * them and the create form opened from it starts with the same values.
+     *
+     * @return array<string,string>
+     */
+    protected function listFilters(Request $request): array
+    {
+        $filters = [];
+
+        foreach ($this->model::getAdministrationFilters() as $name) {
+            $value = $request->query($name);
+
+            if (is_string($value) && $value !== '') {
+                $filters[$name] = $value;
+            }
+        }
+
+        return $filters;
     }
 
     /**
@@ -894,7 +932,7 @@ abstract class AdminController extends Controller
             }
         }
 
-        return $fields;
+        return Hook::apply('atrium.module.fields', $fields, $model);
     }
 
     /**
@@ -988,7 +1026,7 @@ abstract class AdminController extends Controller
             }
         }
 
-        return $data;
+        return Hook::apply('atrium.record.present', $data, $item, 'form');
     }
 
     /**
@@ -1042,9 +1080,11 @@ abstract class AdminController extends Controller
         if ($this->translatableCache === null) {
             $model = new $this->model;
 
-            $this->translatableCache = method_exists($model, 'getTranslatableAttributes')
-                ? $model->getTranslatableAttributes()
-                : [];
+            $this->translatableCache = Hook::apply(
+                'atrium.module.translatable',
+                method_exists($model, 'getTranslatableAttributes') ? $model->getTranslatableAttributes() : [],
+                $this->model,
+            );
         }
 
         return $this->translatableCache;
@@ -1159,7 +1199,8 @@ abstract class AdminController extends Controller
         $default = $this->contentLanguages()->default();
 
         foreach ($this->translatableAttributes() as $name) {
-            if (array_key_exists($name, $row) && method_exists($item, 'getTranslation')) {
+            // A package may add names that are not the model's own translations.
+            if (array_key_exists($name, $row) && method_exists($item, 'isTranslatableAttribute') && method_exists($item, 'getTranslation') && $item->isTranslatableAttribute($name)) {
                 $row[$name] = $item->getTranslation($name, $default);
             }
         }
@@ -1173,7 +1214,7 @@ abstract class AdminController extends Controller
                 : data_get($record, $attribute);
         }
 
-        return $row;
+        return Hook::apply('atrium.record.present', $row, $item, 'list');
     }
 
     /**

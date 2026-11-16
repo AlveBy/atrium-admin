@@ -44,7 +44,11 @@ trait InteractsWithAdmin
     }
 
     /**
-     * Get filters for admin list
+     * Columns the list can be narrowed by from the address: `['module']`
+     * lets `?module=…` show only those records, and the create form opened
+     * from that list starts with the same value.
+     *
+     * @return array<int,string>
      */
     public static function getAdministrationFilters(): array
     {

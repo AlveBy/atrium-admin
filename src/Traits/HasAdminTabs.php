@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Traits;
 
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Tabs\Tab;
 use Atrium\Admin\Tabs\TabRegistry;
 
@@ -25,7 +26,8 @@ trait HasAdminTabs
 
     /**
      * Get all fields including SEO fields with tabs
-     * Automatically adds SEO fields if model uses HasAdminSeo trait
+     * Automatically adds SEO fields if model uses HasAdminSeo trait, and the
+     * fields other modules add through the `atrium.module.fields` hook
      */
     public static function getAdminFieldsWithTabs(): array
     {
@@ -43,7 +45,8 @@ trait HasAdminTabs
             $fields = array_merge($fields, $seoFields);
         }
 
-        return $fields;
+        // Fields added by packages (custom fields), on the tabs they chose.
+        return Hook::apply('atrium.module.fields', $fields, static::class);
     }
 
     /**

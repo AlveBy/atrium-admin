@@ -48,6 +48,13 @@ interface Administrable
 
     public static function getAdminPerPage(): int;
 
+    /**
+     * Columns the list can be narrowed by from the address (`?module=…`).
+     *
+     * @return array<int,string>
+     */
+    public static function getAdministrationFilters(): array;
+
     /** @return array<string, mixed> */
     public static function getCreateValidationRules(): array;
 
