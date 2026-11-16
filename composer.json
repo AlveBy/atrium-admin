@@ -4,6 +4,10 @@
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/AlveBy/atrium",
+    "support": {
+        "issues": "https://github.com/AlveBy/atrium/issues",
+        "source": "https://github.com/AlveBy/atrium"
+    },
     "keywords": [
         "laravel",
         "admin",
@@ -43,6 +47,9 @@
             "providers": [
                 "Atrium\\Admin\\AtriumServiceProvider"
             ]
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
         }
     },
     "minimum-stability": "dev",
