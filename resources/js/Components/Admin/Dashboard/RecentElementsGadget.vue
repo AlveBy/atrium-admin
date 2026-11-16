@@ -1,10 +1,7 @@
 <script setup>
 /**
- * "Recent items" — the most recently changed items of one module.
- *
- * The row layout follows the Bitrix gadget
- * (bitrix/gadgets/bitrix/admin_iblock_elements): a grey date, the preview
- * picture on the left, the title linking to the edit form, "All items" below.
+ * "Recent items" — the most recently changed items of one module: the
+ * picture, the date and the name linking to the edit form, "All items" below.
  */
 defineProps({
     title: { type: String, default: '' },
@@ -13,8 +10,8 @@ defineProps({
 </script>
 
 <template>
-    <div class="bg-white rounded-lg shadow px-5 py-4">
-        <h2 class="text-sm font-bold text-gray-900">{{ title || $t('dashboard.recent.title') }}</h2>
+    <div class="bg-white rounded-lg shadow px-5 py-4" data-gadget="recent">
+        <h2 class="text-sm font-semibold text-gray-900">{{ title || $t('dashboard.recent.title') }}</h2>
 
         <ul v-if="data.items.length" class="mt-3 divide-y divide-gray-100">
             <li v-for="item in data.items" :key="item.id" class="flex gap-3 py-2">
@@ -27,7 +24,7 @@ defineProps({
                 <div v-else class="h-12 w-12 flex-none rounded bg-gray-100" />
 
                 <div class="min-w-0">
-                    <div v-if="item.date" class="text-xs text-gray-400">{{ item.date }}</div>
+                    <div v-if="item.date" class="text-xs text-gray-600">{{ item.date }}</div>
                     <a
                         v-if="item.url"
                         :href="item.url"
