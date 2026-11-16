@@ -29,6 +29,7 @@ return [
     'select_all' => 'Marcar tudo',
     'clear' => 'Desmarcar tudo',
     'all' => 'Tudo',
+    'other' => 'Outros',
     'matrix_hint' => '“Ver” abre a lista e os registros somente para leitura. Criar, editar e excluir também precisam dele, por isso é marcado junto.',
     'index_hint' => 'Um papel é um conjunto de permissões; os papéis são dados aos administradores na página deles. Um superadmin não precisa de papel: pode tudo.',
     'empty' => 'Ainda não há papéis.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Editar',
         'delete' => 'Excluir',
         'use' => 'Emitir e usar tokens',
+        'settings' => 'Configurações',
     ],
 ];

@@ -11,6 +11,7 @@ namespace Atrium\Admin\Support;
 
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Resources\ResourceRegistry;
 
 /**
@@ -19,6 +20,9 @@ use Atrium\Admin\Resources\ResourceRegistry;
  * A module added to `atrium.resources` shows up in the menu without touching
  * the menu config; listing it in `atrium.menu` only decides where and under
  * which label.
+ *
+ * The "Modules" entry (installed packages and their settings) comes last
+ * when a module package is installed.
  *
  * Given an administrator, it leaves out what their roles do not open, and a
  * group whose entries are all gone.
@@ -55,6 +59,11 @@ final class Menu
         // Modules go right after the first item (the dashboard), above the
         // system entries such as administrators and API tokens.
         array_splice($menu, min(1, count($menu)), 0, $modules);
+
+        // The installed module packages and their settings, last.
+        if (! in_array('admin.modules.index', $listed, true) && app(Modules::class)->installed() !== []) {
+            $menu[] = ['label' => 'atrium::menu.modules', 'route' => 'admin.modules.index', 'icon' => 'settings'];
+        }
 
         if ($user !== null) {
             $menu = $this->visibleTo($user, $menu);

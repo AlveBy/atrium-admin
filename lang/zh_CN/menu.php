@@ -16,4 +16,5 @@ return [
     'api_tokens' => 'API 令牌',
     'languages' => '语言',
     'sites' => '站点',
+    'modules' => '模块',
 ];

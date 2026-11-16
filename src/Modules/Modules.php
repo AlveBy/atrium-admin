@@ -82,6 +82,20 @@ final class Modules
         return $this->all()[strtolower($name)] ?? null;
     }
 
+    /**
+     * A module by its key (`shop`), installed or not.
+     */
+    public function findByKey(string $key): ?Module
+    {
+        foreach ($this->all() as $module) {
+            if ($module->key() === $key) {
+                return $module;
+            }
+        }
+
+        return null;
+    }
+
     public function isInstalled(string $name): bool
     {
         return in_array(strtolower($name), $this->installedNames(), true);
@@ -261,6 +275,10 @@ final class Modules
 
         if ($this->app->resolved(ResourceRegistry::class)) {
             $this->app->make(ResourceRegistry::class)->flush();
+        }
+
+        if ($this->app->resolved(Settings::class)) {
+            $this->app->make(Settings::class)->flush();
         }
     }
 }

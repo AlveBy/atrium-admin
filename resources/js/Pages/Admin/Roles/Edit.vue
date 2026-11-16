@@ -33,6 +33,10 @@ const has = (section, action) => form.permissions.includes(`${section.key}.${act
 
 const isModule = (section) => ACTIONS.every((action) => section.actions.includes(action))
 
+// Actions a module package adds to a row, such as "settings".
+const extras = (section) => isModule(section) ? section.actions.filter((action) => !ACTIONS.includes(action)) : []
+const hasExtras = props.sections.some((section) => extras(section).length > 0)
+
 const toggle = (section, action) => {
     const set = new Set(form.permissions)
     const permission = `${section.key}.${action}`
@@ -42,7 +46,7 @@ const toggle = (section, action) => {
         if (action === 'view') ACTIONS.forEach((other) => set.delete(`${section.key}.${other}`))
     } else {
         set.add(permission)
-        if (isModule(section) && action !== 'view') set.add(`${section.key}.view`)
+        if (isModule(section) && ACTIONS.includes(action) && action !== 'view') set.add(`${section.key}.view`)
     }
 
     form.permissions = [...set]
@@ -116,6 +120,7 @@ const submit = () => {
                                         <th v-for="action in ACTIONS" :key="action" class="px-3 py-2 w-24 text-center font-medium text-gray-700">
                                             {{ $t(`permissions.actions.${action}`) }}
                                         </th>
+                                        <th v-if="hasExtras" class="px-3 py-2 text-left font-medium text-gray-700">{{ $t('permissions.other') }}</th>
                                         <th class="px-3 py-2 w-20 text-center font-medium text-gray-700">{{ $t('permissions.all') }}</th>
                                     </tr>
                                 </thead>
@@ -136,9 +141,21 @@ const submit = () => {
                                                     @change="toggle(section, action)"
                                                 />
                                             </td>
+                                            <td v-if="hasExtras" class="px-3 py-1.5">
+                                                <label v-for="action in extras(section)" :key="action" class="inline-flex items-center gap-2 mr-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        class="h-4 w-4"
+                                                        :data-permission="`${section.key}.${action}`"
+                                                        :checked="has(section, action)"
+                                                        @change="toggle(section, action)"
+                                                    />
+                                                    {{ $t(`permissions.actions.${action}`) }}
+                                                </label>
+                                            </td>
                                         </template>
-                                        <td v-else colspan="4" class="px-3 py-1.5">
-                                            <label v-for="action in section.actions" :key="action" class="inline-flex items-center gap-2">
+                                        <td v-else :colspan="hasExtras ? 5 : 4" class="px-3 py-1.5">
+                                            <label v-for="action in section.actions" :key="action" class="inline-flex items-center gap-2 mr-3">
                                                 <input
                                                     type="checkbox"
                                                     class="h-4 w-4"

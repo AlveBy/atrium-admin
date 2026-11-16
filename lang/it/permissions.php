@@ -29,6 +29,7 @@ return [
     'select_all' => 'Seleziona tutto',
     'clear' => 'Deseleziona tutto',
     'all' => 'Tutti',
+    'other' => 'Altro',
     'matrix_hint' => '«Visualizza» apre l’elenco e i record in sola lettura. Creare, modificare ed eliminare ne hanno bisogno, quindi viene selezionato insieme a loro.',
     'index_hint' => 'Un ruolo è un insieme di permessi; i ruoli si assegnano agli amministratori nella loro pagina. A un superadmin non serve alcun ruolo: può fare tutto.',
     'empty' => 'Ancora nessun ruolo.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Modifica',
         'delete' => 'Elimina',
         'use' => 'Emettere e usare token',
+        'settings' => 'Impostazioni',
     ],
 ];

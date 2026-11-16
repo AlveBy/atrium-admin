@@ -29,6 +29,7 @@ return [
     'select_all' => 'Tout cocher',
     'clear' => 'Tout décocher',
     'all' => 'Tous',
+    'other' => 'Autre',
     'matrix_hint' => '« Voir » ouvre la liste et les fiches en lecture seule. Créer, modifier et supprimer en ont besoin aussi, il est donc coché avec eux.',
     'index_hint' => 'Un rôle est un ensemble de droits ; on attribue les rôles aux administrateurs sur leur page. Un superadmin n’a besoin d’aucun rôle : il peut tout faire.',
     'empty' => 'Aucun rôle pour l’instant.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Modifier',
         'delete' => 'Supprimer',
         'use' => 'Émettre et utiliser des jetons',
+        'settings' => 'Réglages',
     ],
 ];

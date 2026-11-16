@@ -35,12 +35,19 @@
       "_dist-C3nSn_Wb.js"
     ]
   },
+  "_ContentLocaleSwitcher-D-dp1BT6.js": {
+    "file": "assets/ContentLocaleSwitcher-D-dp1BT6.js",
+    "name": "ContentLocaleSwitcher",
+    "imports": [
+      "_dist-C3nSn_Wb.js"
+    ]
+  },
   "_FormField-D63xlR3s.css": {
     "file": "assets/FormField-D63xlR3s.css",
     "src": "_FormField-D63xlR3s.css"
   },
-  "_FormField-DPl5CgeR.js": {
-    "file": "assets/FormField-DPl5CgeR.js",
+  "_FormField-DO8st6SG.js": {
+    "file": "assets/FormField-DO8st6SG.js",
     "name": "FormField",
     "imports": [
       "_dist-C3nSn_Wb.js",
@@ -59,8 +66,8 @@
       "_dist-C3nSn_Wb.js"
     ]
   },
-  "_contentLocale-CUbP7sG-.js": {
-    "file": "assets/contentLocale-CUbP7sG-.js",
+  "_contentLocale-C31v2ew7.js": {
+    "file": "assets/contentLocale-C31v2ew7.js",
     "name": "contentLocale",
     "imports": [
       "_dist-C3nSn_Wb.js"
@@ -75,7 +82,7 @@
     "name": "recordActions"
   },
   "resources/js/Pages/Admin/ApiTokens/Index.vue": {
-    "file": "assets/Index-CfoGhHNR.js",
+    "file": "assets/Index-Ba9tuIei.js",
     "name": "Index",
     "src": "resources/js/Pages/Admin/ApiTokens/Index.vue",
     "isDynamicEntry": true,
@@ -118,6 +125,31 @@
       "_AdminLayout-Ul98AVvK.js"
     ]
   },
+  "resources/js/Pages/Admin/Modules/Index.vue": {
+    "file": "assets/Index-5e_au4r8.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Admin/Modules/Index.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_dist-C3nSn_Wb.js",
+      "_AdminLayout-Ul98AVvK.js",
+      "_AdminButton-DsGEMfMT.js"
+    ]
+  },
+  "resources/js/Pages/Admin/Modules/Settings.vue": {
+    "file": "assets/Settings-C_1LoJk8.js",
+    "name": "Settings",
+    "src": "resources/js/Pages/Admin/Modules/Settings.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_dist-C3nSn_Wb.js",
+      "_AdminLayout-Ul98AVvK.js",
+      "_AdminButton-DsGEMfMT.js",
+      "_AdminCard-B2aTooRd.js",
+      "_FormField-DO8st6SG.js",
+      "_contentLocale-C31v2ew7.js"
+    ]
+  },
   "resources/js/Pages/Admin/Profile/Edit.vue": {
     "file": "assets/Edit-BAt9oqb1.js",
     "name": "Edit",
@@ -129,7 +161,7 @@
     ]
   },
   "resources/js/Pages/Admin/Resource/Create.vue": {
-    "file": "assets/Create-DD_QyG5-.js",
+    "file": "assets/Create-B5xnihpZ.js",
     "name": "Create",
     "src": "resources/js/Pages/Admin/Resource/Create.vue",
     "isDynamicEntry": true,
@@ -138,12 +170,13 @@
       "_AdminLayout-Ul98AVvK.js",
       "_AdminButton-DsGEMfMT.js",
       "_AdminCard-B2aTooRd.js",
-      "_contentLocale-CUbP7sG-.js",
-      "_FormField-DPl5CgeR.js"
+      "_ContentLocaleSwitcher-D-dp1BT6.js",
+      "_FormField-DO8st6SG.js",
+      "_contentLocale-C31v2ew7.js"
     ]
   },
   "resources/js/Pages/Admin/Resource/Edit.vue": {
-    "file": "assets/Edit-PahbDD0m.js",
+    "file": "assets/Edit-CRcOY902.js",
     "name": "Edit",
     "src": "resources/js/Pages/Admin/Resource/Edit.vue",
     "isDynamicEntry": true,
@@ -152,8 +185,9 @@
       "_AdminLayout-Ul98AVvK.js",
       "_AdminButton-DsGEMfMT.js",
       "_AdminCard-B2aTooRd.js",
-      "_contentLocale-CUbP7sG-.js",
-      "_FormField-DPl5CgeR.js",
+      "_ContentLocaleSwitcher-D-dp1BT6.js",
+      "_FormField-DO8st6SG.js",
+      "_contentLocale-C31v2ew7.js",
       "_recordActions-CtRs42tG.js"
     ]
   },
@@ -172,7 +206,7 @@
     ]
   },
   "resources/js/Pages/Admin/Roles/Edit.vue": {
-    "file": "assets/Edit-ithgpLx7.js",
+    "file": "assets/Edit-C_ASFOwW.js",
     "name": "Edit",
     "src": "resources/js/Pages/Admin/Roles/Edit.vue",
     "isDynamicEntry": true,
@@ -196,7 +230,7 @@
     ]
   },
   "resources/js/Pages/Admin/Users/Create.vue": {
-    "file": "assets/Create-PspC6faC.js",
+    "file": "assets/Create-CmMatJXM.js",
     "name": "Create",
     "src": "resources/js/Pages/Admin/Users/Create.vue",
     "isDynamicEntry": true,
@@ -205,11 +239,11 @@
       "_AdminLayout-Ul98AVvK.js",
       "_AdminButton-DsGEMfMT.js",
       "_AdminCard-B2aTooRd.js",
-      "_FormField-DPl5CgeR.js"
+      "_FormField-DO8st6SG.js"
     ]
   },
   "resources/js/Pages/Admin/Users/Edit.vue": {
-    "file": "assets/Edit-HPZ545p0.js",
+    "file": "assets/Edit-BK8ADJTB.js",
     "name": "Edit",
     "src": "resources/js/Pages/Admin/Users/Edit.vue",
     "isDynamicEntry": true,
@@ -218,7 +252,7 @@
       "_AdminLayout-Ul98AVvK.js",
       "_AdminButton-DsGEMfMT.js",
       "_AdminCard-B2aTooRd.js",
-      "_FormField-DPl5CgeR.js"
+      "_FormField-DO8st6SG.js"
     ]
   },
   "resources/js/Pages/Admin/Users/Index.vue": {
@@ -235,7 +269,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CfUvkcPW.js",
+    "file": "assets/app-7PUV-DxB.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -247,6 +281,8 @@
       "resources/js/Pages/Admin/Auth/Login.vue",
       "resources/js/Pages/Admin/Auth/TwoFactor.vue",
       "resources/js/Pages/Admin/Dashboard.vue",
+      "resources/js/Pages/Admin/Modules/Index.vue",
+      "resources/js/Pages/Admin/Modules/Settings.vue",
       "resources/js/Pages/Admin/Profile/Edit.vue",
       "resources/js/Pages/Admin/Resource/Create.vue",
       "resources/js/Pages/Admin/Resource/Edit.vue",

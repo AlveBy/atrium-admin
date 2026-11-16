@@ -29,6 +29,7 @@ return [
     'select_all' => 'Select all',
     'clear' => 'Clear',
     'all' => 'All',
+    'other' => 'Other',
     'matrix_hint' => '"View" opens the list and the records, read-only. Creating, editing and deleting need it too, so it is ticked along with them.',
     'index_hint' => 'A role is a set of permissions; give roles to administrators on their page. Superadmins need no role: they may do everything.',
     'empty' => 'No roles yet.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Edit',
         'delete' => 'Delete',
         'use' => 'Issue and use tokens',
+        'settings' => 'Settings',
     ],
 ];

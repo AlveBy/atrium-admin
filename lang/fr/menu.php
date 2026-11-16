@@ -16,4 +16,5 @@ return [
     'api_tokens' => 'Jetons API',
     'languages' => 'Langues',
     'sites' => 'Sites',
+    'modules' => 'Modules',
 ];

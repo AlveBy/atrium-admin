@@ -29,6 +29,7 @@ return [
     'select_all' => 'Marcar todo',
     'clear' => 'Desmarcar todo',
     'all' => 'Todo',
+    'other' => 'Otros',
     'matrix_hint' => '«Ver» abre la lista y los registros en solo lectura. Crear, editar y eliminar también lo necesitan, así que se marca junto con ellos.',
     'index_hint' => 'Un rol es un conjunto de permisos; los roles se asignan a los administradores en su página. Un superadmin no necesita rol: puede hacerlo todo.',
     'empty' => 'Todavía no hay roles.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Editar',
         'delete' => 'Eliminar',
         'use' => 'Emitir y usar tokens',
+        'settings' => 'Ajustes',
     ],
 ];

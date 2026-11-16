@@ -6,7 +6,8 @@
         "atrium": {
             "resources": ["Atrium\\Admin\\Tests\\Fixtures\\Modules\\Label"],
             "public_urls": {"Atrium\\Admin\\Tests\\Fixtures\\Modules\\Label": {"prefix": "labels"}},
-            "migrations": "database/migrations"
+            "migrations": "database/migrations",
+            "settings": "Atrium\\Admin\\Tests\\Fixtures\\Modules\\LabelSettings"
         }
     }
 }

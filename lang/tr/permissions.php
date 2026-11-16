@@ -29,6 +29,7 @@ return [
     'select_all' => 'Tümünü seç',
     'clear' => 'Tümünü kaldır',
     'all' => 'Tümü',
+    'other' => 'Diğer',
     'matrix_hint' => '“Görüntüle” listeyi ve kayıtları salt okunur açar. Oluşturma, düzenleme ve silme onsuz işe yaramaz, bu yüzden onlarla birlikte işaretlenir.',
     'index_hint' => 'Rol bir izinler kümesidir; roller yöneticilere kendi sayfalarında verilir. Süper yöneticinin role ihtiyacı yoktur: her şeyi yapabilir.',
     'empty' => 'Henüz rol yok.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Düzenle',
         'delete' => 'Sil',
         'use' => 'Token oluşturma ve kullanma',
+        'settings' => 'Ayarlar',
     ],
 ];

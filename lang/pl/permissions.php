@@ -29,6 +29,7 @@ return [
     'select_all' => 'Zaznacz wszystko',
     'clear' => 'Odznacz wszystko',
     'all' => 'Wszystko',
+    'other' => 'Inne',
     'matrix_hint' => '„Podgląd” otwiera listę i rekordy tylko do odczytu. Tworzenie, edycja i usuwanie bez niego są bezużyteczne, więc zaznacza się razem z nimi.',
     'index_hint' => 'Rola to zestaw uprawnień; role nadaje się administratorom na ich stronie. Superadmin nie potrzebuje roli: może wszystko.',
     'empty' => 'Nie ma jeszcze ról.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Edycja',
         'delete' => 'Usuwanie',
         'use' => 'Wydawanie i używanie tokenów',
+        'settings' => 'Ustawienia',
     ],
 ];

@@ -11,6 +11,7 @@ namespace Atrium\Admin\Auth;
 
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Modules\Modules;
 
 /**
  * What an administrator may do in the panel.
@@ -41,10 +42,15 @@ final class Permissions
 
     public const API_TOKENS = 'api-tokens.use';
 
+    /** Opening and saving a module's settings: "{module key}.settings". */
+    public const SETTINGS = 'settings';
+
     /** Route markers that are not a single permission. */
     private const SUPERADMIN = '*superadmin';
 
     private const ANY_WRITE = '*write';
+
+    private const ANY_SETTINGS = '*settings';
 
     /** Admin route action => permission action. */
     private const ROUTE_ACTIONS = [
@@ -56,10 +62,16 @@ final class Permissions
         'destroy' => self::DELETE,
     ];
 
-    public function __construct(private readonly ApiResources $resources) {}
+    public function __construct(
+        private readonly ApiResources $resources,
+        private readonly Modules $modules,
+    ) {}
 
     /**
      * What a role can be given, in the order the role form shows it.
+     *
+     * A module package with settings adds "settings" to the row of the
+     * section named like its key, or a row of its own.
      *
      * @return array<int,array{key:string,label:string,actions:array<int,string>}>
      */
@@ -68,8 +80,20 @@ final class Permissions
         $sections = [];
 
         foreach (array_keys($this->resources->modules()) as $key) {
-            $sections[] = ['key' => $key, 'label' => $this->resources->label($key), 'actions' => self::ACTIONS];
+            $sections[$key] = ['key' => $key, 'label' => $this->resources->label($key), 'actions' => self::ACTIONS];
         }
+
+        foreach ($this->modules->installed() as $module) {
+            if ($module->settings === null) {
+                continue;
+            }
+
+            $key = $module->key();
+            $sections[$key] ??= ['key' => $key, 'label' => $module->label(), 'actions' => []];
+            $sections[$key]['actions'][] = self::SETTINGS;
+        }
+
+        $sections = array_values($sections);
 
         usort($sections, static fn (array $a, array $b): int => strnatcasecmp($a['label'], $b['label']));
 
@@ -106,6 +130,7 @@ final class Permissions
             null => true,
             self::SUPERADMIN => $user->isSuperadmin(),
             self::ANY_WRITE => $this->canWriteAnything($user),
+            self::ANY_SETTINGS => $this->canSetUpAnything($user),
             default => $user->hasAdminPermission($permission),
         };
     }
@@ -126,7 +151,34 @@ final class Permissions
     }
 
     /**
-     * Uploading files is part of creating and editing records, in any module.
+     * Whether the administrator may open and save a module's settings.
+     */
+    public function canSetUp(AdminUser $user, string $moduleKey): bool
+    {
+        return $user->hasAdminPermission($moduleKey.'.'.self::SETTINGS);
+    }
+
+    /**
+     * Whether the administrator may set up any module: the "Modules" entry.
+     */
+    public function canSetUpAnything(AdminUser $user): bool
+    {
+        if ($user->isSuperadmin()) {
+            return true;
+        }
+
+        foreach ($user->adminPermissions() as $permission) {
+            if (str_ends_with($permission, '.'.self::SETTINGS)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Uploading files is part of creating and editing records, in any module,
+     * and of a module's settings.
      */
     public function canWriteAnything(AdminUser $user): bool
     {
@@ -135,7 +187,7 @@ final class Permissions
         }
 
         foreach ($user->adminPermissions() as $permission) {
-            if (str_ends_with($permission, '.'.self::CREATE) || str_ends_with($permission, '.'.self::UPDATE)) {
+            if (str_ends_with($permission, '.'.self::CREATE) || str_ends_with($permission, '.'.self::UPDATE) || str_ends_with($permission, '.'.self::SETTINGS)) {
                 return true;
             }
         }
@@ -184,6 +236,11 @@ final class Permissions
 
         if ($routeName === 'admin.upload' || str_starts_with($routeName, 'admin.filemanager.')) {
             return self::ANY_WRITE;
+        }
+
+        // The settings screens check the module's own permission.
+        if (str_starts_with($routeName, 'admin.modules.')) {
+            return self::ANY_SETTINGS;
         }
 
         if (preg_match('/^admin\.([a-z0-9_]+)\.([a-z]+)$/', $routeName, $match)

@@ -25,6 +25,7 @@ use Atrium\Admin\Http\Middleware\SlugRedirectMiddleware;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Modules\Modules;
+use Atrium\Admin\Modules\Settings;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Services\SlugService;
 use Atrium\Admin\Support\ContentLanguages;
@@ -72,6 +73,7 @@ final class AtriumServiceProvider extends ServiceProvider
 
         $this->app->singleton(SlugService::class);
         $this->app->singleton(Modules::class);
+        $this->app->singleton(Settings::class);
         $this->app->singleton(ResourceRegistry::class);
         $this->app->singleton(ApiResources::class);
         $this->app->singleton(Permissions::class);

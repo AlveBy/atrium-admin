@@ -11,6 +11,8 @@ namespace Atrium\Admin\Console\Commands;
 
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Modules\Modules;
+use Atrium\Admin\Modules\Settings;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -40,7 +42,8 @@ final class ModuleRemoveCommand extends ModuleCommand
         // Gone from Composer already: only the config entry is left.
         $module = $modules->find($name);
         $keys = $module === null ? [] : $this->moduleKeys($module);
-        $hasData = $module !== null && $module->migrations !== [];
+        $own = $module === null ? [] : $module->permissions();
+        $hasData = $module !== null && ($module->migrations !== [] || $module->settings !== null);
 
         $keep = match (true) {
             ! $hasData, (bool) $this->option('keep-data') => true,
@@ -48,7 +51,7 @@ final class ModuleRemoveCommand extends ModuleCommand
             default => $this->confirm("Keep the data of {$name} (its tables and records)? If not, they are dropped", true),
         };
 
-        if (! $keep) {
+        if (! $keep && $module->migrations !== []) {
             $this->components->task('Dropping its tables', fn (): bool => $this->callSilently('migrate:reset', [
                 '--path' => $module->migrations,
                 '--realpath' => true,
@@ -56,12 +59,16 @@ final class ModuleRemoveCommand extends ModuleCommand
             ]) === 0);
         }
 
-        if ($keys !== [] && Schema::hasTable('admin_roles')) {
-            $this->components->task('Taking it out of the roles', function () use ($keys): void {
+        if (! $keep && Schema::hasTable(Settings::TABLE)) {
+            DB::table(Settings::TABLE)->where('module', $module->key())->delete();
+        }
+
+        if (($keys !== [] || $own !== []) && Schema::hasTable('admin_roles')) {
+            $this->components->task('Taking it out of the roles', function () use ($keys, $own): void {
                 foreach (AdminRole::query()->get() as $role) {
                     $permissions = array_values(array_filter(
                         (array) $role->permissions,
-                        static fn (string $permission): bool => ! in_array(Str::before($permission, '.'), $keys, true),
+                        static fn (string $permission): bool => ! in_array(Str::before($permission, '.'), $keys, true) && ! in_array($permission, $own, true),
                     ));
 
                     if ($permissions !== $role->permissions) {

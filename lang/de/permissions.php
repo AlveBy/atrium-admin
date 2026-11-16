@@ -29,6 +29,7 @@ return [
     'select_all' => 'Alle auswählen',
     'clear' => 'Alle abwählen',
     'all' => 'Alle',
+    'other' => 'Sonstiges',
     'matrix_hint' => '„Ansehen“ öffnet die Liste und die Einträge schreibgeschützt. Anlegen, Bearbeiten und Löschen brauchen es auch, daher wird es mit angekreuzt.',
     'index_hint' => 'Eine Rolle ist ein Satz von Rechten; Rollen bekommen Administratoren auf ihrer Seite. Superadmins brauchen keine Rolle: Sie dürfen alles.',
     'empty' => 'Noch keine Rollen.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Bearbeiten',
         'delete' => 'Löschen',
         'use' => 'Tokens ausstellen und nutzen',
+        'settings' => 'Einstellungen',
     ],
 ];

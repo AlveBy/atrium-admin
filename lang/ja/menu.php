@@ -16,4 +16,5 @@ return [
     'api_tokens' => 'API トークン',
     'languages' => '言語',
     'sites' => 'サイト',
+    'modules' => 'モジュール',
 ];

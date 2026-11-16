@@ -14,6 +14,7 @@ use Atrium\Admin\Http\Controllers\Auth\TwoFactorController;
 use Atrium\Admin\Http\Controllers\DashboardController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Http\Controllers\LocaleController;
+use Atrium\Admin\Http\Controllers\ModuleController;
 use Atrium\Admin\Http\Controllers\ProfileController;
 use Atrium\Admin\Http\Controllers\ResourceController;
 use Atrium\Admin\Http\Controllers\RoleController;
@@ -89,6 +90,11 @@ Route::prefix(config('atrium.prefix', 'admin'))
 
             // Roles of administrators — superadmins only
             Route::resource('roles', RoleController::class)->except(['show'])->names('admin.roles');
+
+            // Installed module packages and their settings
+            Route::get('modules', [ModuleController::class, 'index'])->name('admin.modules.index');
+            Route::get('modules/{module}/settings', [ModuleController::class, 'settings'])->name('admin.modules.settings');
+            Route::put('modules/{module}/settings', [ModuleController::class, 'update'])->name('admin.modules.settings.update');
 
             // Modules from config('atrium.resources') — one generic controller.
             foreach (app(ResourceRegistry::class)->all() as $key => $model) {

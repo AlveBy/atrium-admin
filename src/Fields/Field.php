@@ -287,6 +287,14 @@ abstract class Field implements Arrayable, JsonSerializable
     }
 
     /**
+     * The value before anything is saved.
+     */
+    public function getDefault(): mixed
+    {
+        return $this->default;
+    }
+
+    /**
      * Get the field label.
      *
      * Cheap accessor on purpose: reading the label off toArray() would run

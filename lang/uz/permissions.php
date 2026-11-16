@@ -29,6 +29,7 @@ return [
     'select_all' => 'Hammasini belgilash',
     'clear' => 'Hammasini olib tashlash',
     'all' => 'Hammasi',
+    'other' => 'Boshqa',
     'matrix_hint' => '“Koʻrish” roʻyxat va yozuvlarni faqat oʻqish uchun ochadi. Yaratish, tahrirlash va oʻchirish usiz foydasiz, shuning uchun u ular bilan birga belgilanadi.',
     'index_hint' => 'Rol — huquqlar toʻplami. Rollar administratorlarga ularning sahifasida beriladi. Superadminga rol kerak emas: unga hamma narsa mumkin.',
     'empty' => 'Hozircha rollar yoʻq.',
@@ -41,5 +42,6 @@ return [
         'update' => 'Tahrirlash',
         'delete' => 'Oʻchirish',
         'use' => 'Tokenlar chiqarish va ishlatish',
+        'settings' => 'Sozlamalar',
     ],
 ];

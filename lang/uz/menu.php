@@ -16,4 +16,5 @@ return [
     'api_tokens' => 'API tokenlari',
     'languages' => 'Tillar',
     'sites' => 'Saytlar',
+    'modules' => 'Modullar',
 ];
