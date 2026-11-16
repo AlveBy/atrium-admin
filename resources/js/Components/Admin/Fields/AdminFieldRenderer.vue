@@ -111,6 +111,9 @@ const temporalValue = computed({
 // Check if field is a checkbox
 const isCheckbox = computed(() => props.field.type === 'checkbox')
 
+// Read-only HTML the server drew from the record (DisplayField)
+const isDisplay = computed(() => props.field.type === 'display')
+
 // Check if field is a textarea
 const isTextarea = computed(() => props.field.type === 'textarea')
 
@@ -381,6 +384,14 @@ function pickFromLibrary(file) {
                 </label>
             </div>
         </template>
+
+        <!-- Read-only HTML from the server; escaped there by its Blade view -->
+        <div
+            v-else-if="isDisplay"
+            :id="field.name"
+            class="admin-display text-sm text-gray-800"
+            v-html="value"
+        />
 
         <!-- Textarea -->
         <template v-else-if="isTextarea">

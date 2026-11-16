@@ -8,6 +8,7 @@ use Atrium\Admin\Actions\CreateFromRecord;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\CheckboxField;
+use Atrium\Admin\Fields\DisplayField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
 use Atrium\Admin\Models\AdminUser;
@@ -517,7 +518,10 @@ abstract class AdminController extends Controller
         $keys = $item->getFillable();
 
         foreach ($this->contextFields($context) as $field) {
-            $keys[] = $field->getName();
+            // Read-only HTML drawn from the record: nothing to take back.
+            if (! $field instanceof DisplayField) {
+                $keys[] = $field->getName();
+            }
         }
 
         $data = $request->only(array_values(array_unique($keys)));
@@ -904,6 +908,13 @@ abstract class AdminController extends Controller
         foreach ($item->getRelations() as $name => $relation) {
             if ($relation instanceof Collection) {
                 $data[$name] = $relation->pluck('id')->toArray();
+            }
+        }
+
+        // Read-only HTML fields are drawn from the record here.
+        foreach ($this->allAdminFields() as $field) {
+            if ($field instanceof DisplayField) {
+                $data[$field->getName()] = $field->render($item);
             }
         }
 
