@@ -7,6 +7,7 @@ declare(strict_types=1);
 return [
     'dashboard' => 'Pano',
     'administrators' => 'Yöneticiler',
+    'roles' => 'Roller',
     'api_tokens' => 'API tokenları',
     'languages' => 'Diller',
     'sites' => 'Siteler',

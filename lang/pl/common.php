@@ -8,6 +8,7 @@ return [
     'save' => 'Zapisz',
     'saving' => 'Zapisywanie…',
     'cancel' => 'Anuluj',
+    'back' => 'Wstecz',
     'create' => 'Utwórz',
     'edit' => 'Edytuj',
     'delete' => 'Usuń',

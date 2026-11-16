@@ -28,6 +28,7 @@ return [
     'form' => [
         'breadcrumb_create' => 'New',
         'empty_tab' => 'No fields to show',
+        'read_only' => 'Read-only: your role lets you view this record but not change it.',
     ],
 
     'delete' => [

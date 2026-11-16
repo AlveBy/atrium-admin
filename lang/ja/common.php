@@ -8,6 +8,7 @@ return [
     'save' => '保存',
     'saving' => '保存中…',
     'cancel' => 'キャンセル',
+    'back' => '戻る',
     'create' => '作成',
     'edit' => '編集',
     'delete' => '削除',

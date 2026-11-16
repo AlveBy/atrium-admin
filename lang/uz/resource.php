@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => 'Yangi',
         'empty_tab' => 'Koʻrsatiladigan maydonlar yoʻq',
+        'read_only' => 'Faqat koʻrish: rolingiz bu yozuvni koʻrishga ruxsat beradi, lekin oʻzgartirishga emas.',
     ],
 
     'delete' => [

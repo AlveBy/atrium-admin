@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Dashboard\Gadgets;
 
+use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Dashboard\Gadget;
+use Atrium\Admin\Models\AdminUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -50,7 +52,26 @@ final class RecentElementsGadget extends Gadget
 
     public function isVisible(): bool
     {
-        return parent::isVisible() && $this->modelClass() !== null;
+        $model = $this->modelClass();
+
+        return parent::isVisible() && $model !== null && $this->viewable($model);
+    }
+
+    /**
+     * Records of a module the administrator may not open stay off their
+     * dashboard too.
+     *
+     * @param  class-string<Model>  $model
+     */
+    private function viewable(string $model): bool
+    {
+        $user = auth()->guard(config('atrium.auth.guard', 'admin'))->user();
+
+        if (! $user instanceof AdminUser || ! method_exists($model, 'getAdminRouteName')) {
+            return true;
+        }
+
+        return app(Permissions::class)->allowsRoute($user, $model::getAdminRouteName().'.index');
     }
 
     public function data(): array

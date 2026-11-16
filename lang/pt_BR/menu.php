@@ -7,6 +7,7 @@ declare(strict_types=1);
 return [
     'dashboard' => 'Painel',
     'administrators' => 'Administradores',
+    'roles' => 'Papéis',
     'api_tokens' => 'Tokens de API',
     'languages' => 'Idiomas',
     'sites' => 'Sites',

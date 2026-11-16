@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Roles and permissions of administrators.
+ */
+return [
+    'superadmin' => 'Superadmin',
+    'superadmin_hint' => 'Puede hacerlo todo sin roles y es el único que gestiona los roles y a otros superadmins.',
+    'roles' => 'Roles',
+    'roles_hint' => 'El administrador puede hacer todo lo que permita cualquiera de los roles marcados.',
+    'forbidden' => 'Su rol no lo permite.',
+    'last_superadmin' => 'Es el último superadmin activo. Alguien tiene que quedar para gestionar los roles.',
+    'saved' => 'Rol guardado.',
+    'deleted' => 'Rol eliminado.',
+    'create_title' => 'Nuevo rol',
+    'edit_title' => 'Rol: :name',
+    'name' => 'Nombre',
+    'permissions' => 'Permisos',
+    'section' => 'Sección',
+    'permissions_count' => 'Permisos',
+    'users_count' => 'Administradores',
+    'select_all' => 'Marcar todo',
+    'clear' => 'Desmarcar todo',
+    'all' => 'Todo',
+    'matrix_hint' => '«Ver» abre la lista y los registros en solo lectura. Crear, editar y eliminar también lo necesitan, así que se marca junto con ellos.',
+    'index_hint' => 'Un rol es un conjunto de permisos; los roles se asignan a los administradores en su página. Un superadmin no necesita rol: puede hacerlo todo.',
+    'empty' => 'Todavía no hay roles.',
+    'delete_title' => '¿Eliminar el rol?',
+    'delete_confirm' => 'los administradores con este rol perderán lo que permitía.',
+
+    'actions' => [
+        'view' => 'Ver',
+        'create' => 'Crear',
+        'update' => 'Editar',
+        'delete' => 'Eliminar',
+        'use' => 'Emitir y usar tokens',
+    ],
+];

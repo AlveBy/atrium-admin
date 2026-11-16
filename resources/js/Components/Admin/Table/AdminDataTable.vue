@@ -21,6 +21,11 @@ const props = defineProps({
         default: 'asc'
     },
     loading: Boolean,
+    // Without the right to delete there is no delete button.
+    canDelete: {
+        type: Boolean,
+        default: true
+    },
 })
 
 const emit = defineEmits(['sort', 'edit', 'delete'])
@@ -194,6 +199,7 @@ const cellTitle = (item, column) => {
                                     </svg>
                                 </button>
                                 <button
+                                    v-if="canDelete"
                                     data-action="delete"
                                     @click="$emit('delete', item)"
                                     class="ml-1 inline-flex items-center rounded p-1.5 text-red-600 hover:bg-red-50 hover:text-red-900"

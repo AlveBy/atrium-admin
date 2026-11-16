@@ -8,6 +8,7 @@ return [
     'save' => 'Saqlash',
     'saving' => 'Saqlanmoqda…',
     'cancel' => 'Bekor qilish',
+    'back' => 'Orqaga',
     'create' => 'Yaratish',
     'edit' => 'Tahrirlash',
     'delete' => 'Oʻchirish',

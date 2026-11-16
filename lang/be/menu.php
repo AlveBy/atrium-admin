@@ -7,6 +7,7 @@ declare(strict_types=1);
 return [
     'dashboard' => 'Працоўны стол',
     'administrators' => 'Адміністратары',
+    'roles' => 'Ролі',
     'api_tokens' => 'Токены API',
     'languages' => 'Мовы',
     'sites' => 'Сайты',

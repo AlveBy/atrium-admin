@@ -8,6 +8,7 @@ return [
     'save' => 'Speichern',
     'saving' => 'Wird gespeichert…',
     'cancel' => 'Abbrechen',
+    'back' => 'Zurück',
     'create' => 'Erstellen',
     'edit' => 'Bearbeiten',
     'delete' => 'Löschen',

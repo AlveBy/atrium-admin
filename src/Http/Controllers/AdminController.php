@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Http\Controllers;
 
+use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
+use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\PublicUrl;
 use Atrium\Admin\Support\Sites;
@@ -69,7 +71,25 @@ abstract class AdminController extends Controller
         return [
             'routeName' => $this->model::getAdminRouteName(),
             'createLabel' => $this->model::getAdminCreateLabel(),
+            'can' => $this->abilities(),
         ];
+    }
+
+    /**
+     * Which buttons the page shows: "Create", "Save", "Delete". The routes
+     * check the same permissions; this only keeps dead buttons off the page.
+     *
+     * @return array{view:bool,create:bool,update:bool,delete:bool}
+     */
+    protected function abilities(): array
+    {
+        $user = auth()->guard(config('atrium.auth.guard', 'admin'))->user();
+
+        if (! $user instanceof AdminUser) {
+            return array_fill_keys(Permissions::ACTIONS, true);
+        }
+
+        return app(Permissions::class)->abilities($user, $this->model::getAdminRoutePrefix());
     }
 
     /**

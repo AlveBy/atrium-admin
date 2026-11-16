@@ -11,6 +11,7 @@ use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Http\Controllers\LocaleController;
 use Atrium\Admin\Http\Controllers\ProfileController;
 use Atrium\Admin\Http\Controllers\ResourceController;
+use Atrium\Admin\Http\Controllers\RoleController;
 use Atrium\Admin\Http\Controllers\SiteController;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Illuminate\Support\Facades\Route;
@@ -45,8 +46,8 @@ Route::prefix(config('atrium.prefix', 'admin'))
             Route::post('two-factor/cancel', [TwoFactorController::class, 'cancel'])->name('admin.two-factor.cancel');
         });
 
-        // Authenticated routes
-        Route::middleware('admin.auth')->group(function () {
+        // Authenticated routes; admin.can checks the administrator's roles.
+        Route::middleware(['admin.auth', 'admin.can'])->group(function () {
             // Logout
             Route::post('logout', [LoginController::class, 'logout'])->name('admin.logout');
 
@@ -80,6 +81,9 @@ Route::prefix(config('atrium.prefix', 'admin'))
                 'update' => 'admin.users.update',
                 'destroy' => 'admin.users.destroy',
             ]);
+
+            // Roles of administrators — superadmins only
+            Route::resource('roles', RoleController::class)->except(['show'])->names('admin.roles');
 
             // Modules from config('atrium.resources') — one generic controller.
             foreach (app(ResourceRegistry::class)->all() as $key => $model) {

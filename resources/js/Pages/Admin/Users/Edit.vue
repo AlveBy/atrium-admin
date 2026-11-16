@@ -4,12 +4,19 @@ import { useForm, Link } from '@inertiajs/vue3'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminCard from '../../../Components/Admin/UI/AdminCard.vue'
+import FormField from '../../../Components/Admin/Fields/FormField.vue'
 
 const props = defineProps({
     item: Object,
     fields: Array,
     title: String,
+    can: { type: Object, default: () => ({}) },
 })
+
+// Inputs drawn right here; anything else (sites, roles) by the shared field component.
+const plain = (field) => ['text', 'email', 'password', 'checkbox'].includes(field.type)
+
+const readOnly = computed(() => props.can.update === false)
 
 // Initialize form with item values
 const initialData = {}
@@ -61,8 +68,20 @@ const submit = () => {
             <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ title }}</h1>
 
             <AdminCard>
+                <p v-if="readOnly" data-read-only class="mb-6 rounded-md border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-800">
+                    {{ $t('resource.form.read_only') }}
+                </p>
+
                 <form @submit.prevent="submit" class="space-y-6">
-                    <div v-for="field in fields" :key="field.name">
+                    <fieldset :disabled="readOnly" class="space-y-6">
+                    <template v-for="field in fields" :key="field.name">
+                    <FormField
+                        v-if="!plain(field)"
+                        :field="field"
+                        v-model="form[field.name]"
+                        :errors="form.errors"
+                    />
+                    <div v-else>
                         <label :for="field.name" class="block text-sm font-medium text-gray-700 mb-1">
                             {{ field.label }}
                             <span v-if="field.required && field.type !== 'password'" class="text-red-500">*</span>
@@ -106,15 +125,19 @@ const submit = () => {
                             {{ form.errors[field.name] }}
                         </p>
                     </div>
+                    </template>
+                    </fieldset>
 
                     <div class="flex items-center justify-end space-x-3 pt-4 border-t">
                         <AdminButton
                             :href="route('admin.users.index')"
                             variant="secondary"
                         >
-                            {{ $t('common.cancel') }}
+                            {{ readOnly ? $t('common.back') : $t('common.cancel') }}
                         </AdminButton>
                         <AdminButton
+                            v-if="!readOnly"
+                            data-action="save"
                             type="submit"
                             :loading="form.processing"
                         >

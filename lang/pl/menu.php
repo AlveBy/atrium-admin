@@ -7,6 +7,7 @@ declare(strict_types=1);
 return [
     'dashboard' => 'Pulpit',
     'administrators' => 'Administratorzy',
+    'roles' => 'Role',
     'api_tokens' => 'Tokeny API',
     'languages' => 'Języki',
     'sites' => 'Witryny',

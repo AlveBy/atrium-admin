@@ -7,6 +7,7 @@ declare(strict_types=1);
 return [
     'dashboard' => 'Басқару тақтасы',
     'administrators' => 'Әкімшілер',
+    'roles' => 'Рөлдер',
     'api_tokens' => 'API токендері',
     'languages' => 'Тілдер',
     'sites' => 'Сайттар',

@@ -8,12 +8,14 @@ use Atrium\Admin\Columns\BooleanColumn;
 use Atrium\Admin\Columns\DateColumn;
 use Atrium\Admin\Columns\TextColumn;
 use Atrium\Admin\Contracts\Administrable;
+use Atrium\Admin\Fields\BelongsToManyField;
 use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\MultiSelectField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Traits\InteractsWithAdmin;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
@@ -47,6 +49,7 @@ class AdminUser extends Authenticatable implements Administrable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'is_superadmin' => 'boolean',
             'two_factor_sent_at' => 'datetime',
             'site_ids' => 'array',
             'two_factor_expires_at' => 'datetime',
@@ -110,6 +113,20 @@ class AdminUser extends Authenticatable implements Administrable
                     ->hint(__('atrium::account.users.hints.sites'))
                     ->options(app(Sites::class)->all()->mapWithKeys(fn ($site) => [(string) $site->id => $site->name])->all()),
             ] : []),
+
+            // Only a superadmin hands out rights: anyone else could give
+            // themselves everything. The controller enforces it as well.
+            ...(static::actingSuperadmin() ? [
+                CheckboxField::make('is_superadmin')
+                    ->label(__('atrium::permissions.superadmin'))
+                    ->hint(__('atrium::permissions.superadmin_hint')),
+
+                BelongsToManyField::make('roles')
+                    ->label(__('atrium::permissions.roles'))
+                    ->hint(__('atrium::permissions.roles_hint'))
+                    ->model(AdminRole::class)
+                    ->displayColumn('name'),
+            ] : []),
         ];
     }
 
@@ -138,6 +155,10 @@ class AdminUser extends Authenticatable implements Administrable
                 ->label(__('atrium::account.users.fields.is_active'))
                 ->sortable(),
 
+            BooleanColumn::make('is_superadmin')
+                ->label(__('atrium::permissions.superadmin'))
+                ->sortable(),
+
             DateColumn::make('created_at')
                 ->label(__('atrium::account.users.fields.created_at'))
                 ->sortable()
@@ -155,6 +176,9 @@ class AdminUser extends Authenticatable implements Administrable
             'email' => ['required', 'string', 'email', 'max:255', 'unique:admin_users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'is_active' => ['boolean'],
+            'is_superadmin' => ['boolean'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['integer', Rule::exists('admin_roles', 'id')],
             'site_ids' => ['nullable', 'array'],
             'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->map(fn ($id) => (string) $id)->all())],
         ];
@@ -170,6 +194,9 @@ class AdminUser extends Authenticatable implements Administrable
             'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'is_active' => ['boolean'],
+            'is_superadmin' => ['boolean'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['integer', Rule::exists('admin_roles', 'id')],
             'site_ids' => ['nullable', 'array'],
             'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->map(fn ($id) => (string) $id)->all())],
         ];
@@ -199,5 +226,53 @@ class AdminUser extends Authenticatable implements Administrable
         }
 
         return $all->filter(fn (Site $site): bool => in_array((string) $site->id, $ids, true))->values();
+    }
+
+    /**
+     * @return BelongsToMany<AdminRole, $this>
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(AdminRole::class, 'admin_role_user', 'admin_user_id', 'admin_role_id');
+    }
+
+    /**
+     * A superadmin may do everything, roles or not.
+     */
+    public function isSuperadmin(): bool
+    {
+        return (bool) $this->is_superadmin;
+    }
+
+    /**
+     * "articles.update" — see Atrium\Admin\Auth\Permissions.
+     */
+    public function hasAdminPermission(string $permission): bool
+    {
+        return $this->isSuperadmin() || in_array($permission, $this->adminPermissions(), true);
+    }
+
+    /**
+     * The permissions of all the administrator's roles together.
+     *
+     * @return array<int,string>
+     */
+    public function adminPermissions(): array
+    {
+        return $this->roles
+            ->flatMap(fn (AdminRole $role): array => (array) $role->permissions)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Whether the administrator signed in to the panel right now is a superadmin.
+     */
+    protected static function actingSuperadmin(): bool
+    {
+        $user = auth()->guard(config('atrium.auth.guard', 'admin'))->user();
+
+        return $user instanceof self && $user->isSuperadmin();
     }
 }

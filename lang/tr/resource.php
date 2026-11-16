@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => 'Yeni',
         'empty_tab' => 'Gösterilecek alan yok',
+        'read_only' => 'Salt okunur: rolünüz bu kaydı görmenize izin veriyor ama değiştirmenize değil.',
     ],
 
     'delete' => [

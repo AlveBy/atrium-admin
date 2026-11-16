@@ -13,6 +13,8 @@ const props = defineProps({
     columns: Array,
     filters: Object,
     title: String,
+    // view / create / update / delete — what the administrator's roles allow here.
+    can: { type: Object, default: () => ({}) },
 })
 
 const search = ref(props.filters.search || '')
@@ -67,7 +69,7 @@ const handleDelete = () => {
                     {{ $t('resource.index.total', { count: items.total }) }}
                 </p>
             </div>
-            <AdminButton data-action="create" :href="route(`${props.routeName}.create`)">
+            <AdminButton v-if="can.create !== false" data-action="create" :href="route(`${props.routeName}.create`)">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -98,6 +100,7 @@ const handleDelete = () => {
             :items="items"
             :sort-by="filters.sort"
             :sort-direction="filters.direction"
+            :can-delete="can.delete !== false"
             @sort="handleSort"
             @edit="handleEdit"
             @delete="confirmDelete"

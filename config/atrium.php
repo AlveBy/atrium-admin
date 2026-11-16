@@ -156,6 +156,11 @@ return [
             'icon' => 'users',
         ],
         [
+            'label' => 'atrium::menu.roles',
+            'route' => 'admin.roles.index',
+            'icon' => 'shield',
+        ],
+        [
             'label' => 'atrium::menu.sites',
             'route' => 'admin.sites.index',
             'icon' => 'home',

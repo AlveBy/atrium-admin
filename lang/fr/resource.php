@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => 'Nouveau',
         'empty_tab' => 'Aucun champ à afficher',
+        'read_only' => 'Lecture seule : votre rôle permet de consulter cette fiche, pas de la modifier.',
     ],
 
     'delete' => [

@@ -27,6 +27,9 @@ final class ApiResources
     /** @var array<string,class-string>|null */
     private ?array $resources = null;
 
+    /** @var array<string,class-string>|null */
+    private ?array $modules = null;
+
     public function __construct(private readonly Router $router, private readonly ResourceRegistry $registry) {}
 
     /**
@@ -34,15 +37,28 @@ final class ApiResources
      */
     public function all(): array
     {
-        if ($this->resources !== null) {
-            return $this->resources;
+        return $this->resources ??= array_diff_key(
+            $this->modules(),
+            array_flip((array) config('atrium.api.except', ['users'])),
+        );
+    }
+
+    /**
+     * Every module of the panel, the API exceptions included — the list
+     * permissions are given for (Atrium\Admin\Auth\Permissions).
+     *
+     * @return array<string,class-string> key => model class
+     */
+    public function modules(): array
+    {
+        if ($this->modules !== null) {
+            return $this->modules;
         }
 
-        $except = config('atrium.api.except', ['users']);
-        $resources = [];
+        $modules = [];
 
         foreach ($this->router->getRoutes()->getRoutesByName() as $name => $route) {
-            if (! preg_match('/^admin\.([a-z0-9_]+)\.index$/', $name, $match) || in_array($match[1], $except, true)) {
+            if (! preg_match('/^admin\.([a-z0-9_]+)\.index$/', $name, $match)) {
                 continue;
             }
 
@@ -58,13 +74,13 @@ final class ApiResources
                 : (new ReflectionClass($controller))->getProperty('model')->getDefaultValue();
 
             if (is_string($model) && class_exists($model)) {
-                $resources[$match[1]] = $model;
+                $modules[$match[1]] = $model;
             }
         }
 
-        ksort($resources);
+        ksort($modules);
 
-        return $this->resources = $resources;
+        return $this->modules = $modules;
     }
 
     /**
@@ -98,7 +114,7 @@ final class ApiResources
             }
         }
 
-        return $this->model($key)::getAdminLabel();
+        return $this->modules()[$key]::getAdminLabel();
     }
 
     /**

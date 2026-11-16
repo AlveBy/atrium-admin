@@ -7,6 +7,7 @@ declare(strict_types=1);
 return [
     'dashboard' => 'Boshqaruv paneli',
     'administrators' => 'Administratorlar',
+    'roles' => 'Rollar',
     'api_tokens' => 'API tokenlari',
     'languages' => 'Tillar',
     'sites' => 'Saytlar',

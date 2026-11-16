@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => 'Neu',
         'empty_tab' => 'Keine Felder vorhanden',
+        'read_only' => 'Nur Ansicht: Ihre Rolle erlaubt, diesen Eintrag anzusehen, aber nicht zu ändern.',
     ],
 
     'delete' => [

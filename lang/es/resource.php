@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => 'Nuevo',
         'empty_tab' => 'No hay campos que mostrar',
+        'read_only' => 'Solo lectura: su rol permite ver este registro, pero no cambiarlo.',
     ],
 
     'delete' => [

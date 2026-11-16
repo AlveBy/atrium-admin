@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => 'Nowy',
         'empty_tab' => 'Brak pól do wyświetlenia',
+        'read_only' => 'Tylko podgląd: twoja rola pozwala oglądać ten rekord, ale nie zmieniać go.',
     ],
 
     'delete' => [

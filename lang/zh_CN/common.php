@@ -8,6 +8,7 @@ return [
     'save' => '保存',
     'saving' => '正在保存…',
     'cancel' => '取消',
+    'back' => '返回',
     'create' => '创建',
     'edit' => '编辑',
     'delete' => '删除',

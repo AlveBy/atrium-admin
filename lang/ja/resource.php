@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => '新規',
         'empty_tab' => '表示するフィールドがありません',
+        'read_only' => '読み取り専用: あなたのロールではこのレコードを閲覧できますが、変更はできません。',
     ],
 
     'delete' => [

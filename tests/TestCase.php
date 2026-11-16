@@ -57,13 +57,20 @@ abstract class TestCase extends Orchestra
         });
     }
 
+    /**
+     * A superadmin: may do everything, like every administrator before roles.
+     */
     protected function admin(): AdminUser
     {
-        return AdminUser::query()->create([
+        $admin = AdminUser::query()->create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => 'secret-password',
             'is_active' => true,
         ]);
+
+        $admin->forceFill(['is_superadmin' => true])->save();
+
+        return $admin;
     }
 }

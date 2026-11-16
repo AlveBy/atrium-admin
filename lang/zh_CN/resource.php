@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => '新建',
         'empty_tab' => '没有可显示的字段',
+        'read_only' => '只读：您的角色允许查看此记录，但不能修改。',
     ],
 
     'delete' => [

@@ -21,7 +21,12 @@ const props = defineProps({
     useTabs: Boolean,
     title: String,
     adminLabel: String,
+    can: { type: Object, default: () => ({}) },
 })
+
+// With "view" but not "update" the record opens read-only: no Save, and the
+// inputs are switched off (the server refuses the save anyway).
+const readOnly = computed(() => props.can.update === false)
 
 // Active tab
 const activeTab = ref(props.tabs?.[0]?.name || 'main')
@@ -107,7 +112,12 @@ const tabsWithBadges = computed(() => {
             <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ title }}</h1>
 
             <AdminCard>
+                <p v-if="readOnly" data-read-only class="mb-6 rounded-md border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-800">
+                    {{ $t('resource.form.read_only') }}
+                </p>
+
                 <form @submit.prevent="submit" data-admin-form="true" :data-resource="routeName" data-context="edit" :data-item-id="item.id">
+                    <fieldset :disabled="readOnly" class="contents">
                     <ContentLocaleSwitcher
                         v-if="showSwitcher"
                         v-model="contentLocale"
@@ -161,12 +171,14 @@ const tabsWithBadges = computed(() => {
                         </div>
                     </template>
 
+                    </fieldset>
+
                     <!-- Form buttons -->
                     <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t">
                         <AdminButton data-action="cancel" :href="route(`${props.routeName}.index`)" variant="secondary">
-                            {{ $t('common.cancel') }}
+                            {{ readOnly ? $t('common.back') : $t('common.cancel') }}
                         </AdminButton>
-                        <AdminButton data-action="save" type="submit" :loading="form.processing">
+                        <AdminButton v-if="!readOnly" data-action="save" type="submit" :loading="form.processing">
                             {{ $t('common.save') }}
                         </AdminButton>
                     </div>

@@ -19,6 +19,28 @@ final class CommandsTest extends TestCase
         $this->assertTrue(AdminUser::query()->where('email', 'ann@example.com')->exists());
     }
 
+    public function test_the_first_administrator_is_a_superadmin_and_the_next_ones_are_not(): void
+    {
+        $this->artisan('atrium:user', ['--name' => 'Ann', '--email' => 'ann@example.com', '--password' => 'long-enough'])->assertSuccessful();
+        $this->artisan('atrium:user', ['--name' => 'Bob', '--email' => 'bob@example.com', '--password' => 'long-enough'])->assertSuccessful();
+        $this->artisan('atrium:user', ['--name' => 'Cid', '--email' => 'cid@example.com', '--password' => 'long-enough', '--superadmin' => true])->assertSuccessful();
+
+        $this->assertTrue(AdminUser::query()->where('email', 'ann@example.com')->sole()->isSuperadmin());
+        $this->assertFalse(AdminUser::query()->where('email', 'bob@example.com')->sole()->isSuperadmin());
+        $this->assertTrue(AdminUser::query()->where('email', 'cid@example.com')->sole()->isSuperadmin());
+    }
+
+    public function test_atrium_user_superadmin_promotes_an_existing_administrator(): void
+    {
+        $this->admin();
+        $this->artisan('atrium:user', ['--name' => 'Bob', '--email' => 'bob@example.com', '--password' => 'long-enough'])->assertSuccessful();
+
+        $this->artisan('atrium:user', ['--email' => 'bob@example.com', '--superadmin' => true])->assertSuccessful();
+
+        $this->assertTrue(AdminUser::query()->where('email', 'bob@example.com')->sole()->isSuperadmin());
+        $this->assertSame(2, AdminUser::query()->count());
+    }
+
     public function test_atrium_user_refuses_a_short_password(): void
     {
         $this->artisan('atrium:user', ['--name' => 'Ann', '--email' => 'ann@example.com', '--password' => 'short'])

@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Roles and permissions of administrators.
+ */
+return [
+    'superadmin' => 'Süper yönetici',
+    'superadmin_hint' => 'Rol olmadan her şeyi yapabilir; rolleri ve diğer süper yöneticileri yalnızca o yönetir.',
+    'roles' => 'Roller',
+    'roles_hint' => 'Yönetici, işaretli rollerden herhangi birinin izin verdiği her şeyi yapabilir.',
+    'forbidden' => 'Rolünüz buna izin vermiyor.',
+    'last_superadmin' => 'Bu son etkin süper yönetici. Rolleri yönetmek için birinin kalması gerekir.',
+    'saved' => 'Rol kaydedildi.',
+    'deleted' => 'Rol silindi.',
+    'create_title' => 'Yeni rol',
+    'edit_title' => 'Rol: :name',
+    'name' => 'Ad',
+    'permissions' => 'İzinler',
+    'section' => 'Bölüm',
+    'permissions_count' => 'İzinler',
+    'users_count' => 'Yöneticiler',
+    'select_all' => 'Tümünü seç',
+    'clear' => 'Tümünü kaldır',
+    'all' => 'Tümü',
+    'matrix_hint' => '“Görüntüle” listeyi ve kayıtları salt okunur açar. Oluşturma, düzenleme ve silme onsuz işe yaramaz, bu yüzden onlarla birlikte işaretlenir.',
+    'index_hint' => 'Rol bir izinler kümesidir; roller yöneticilere kendi sayfalarında verilir. Süper yöneticinin role ihtiyacı yoktur: her şeyi yapabilir.',
+    'empty' => 'Henüz rol yok.',
+    'delete_title' => 'Rol silinsin mi?',
+    'delete_confirm' => 'bu role sahip yöneticiler onun izin verdiklerini kaybeder.',
+
+    'actions' => [
+        'view' => 'Görüntüle',
+        'create' => 'Oluştur',
+        'update' => 'Düzenle',
+        'delete' => 'Sil',
+        'use' => 'Token oluşturma ve kullanma',
+    ],
+];

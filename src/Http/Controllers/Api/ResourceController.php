@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Atrium\Admin\Http\Controllers\Api;
 
 use Atrium\Admin\Api\ApiResources;
+use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
+use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\PublicUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -30,7 +32,7 @@ class ResourceController extends AdminController
 
     public function listItems(Request $request, string $resource = ''): JsonResponse
     {
-        $this->useResource($request, $resource, 'read');
+        $this->useResource($request, $resource, 'read', Permissions::VIEW);
 
         $query = $this->model::query()->with($this->eagerRelations());
         $columns = $this->filterableColumns();
@@ -92,14 +94,14 @@ class ResourceController extends AdminController
 
     public function showItem(Request $request, string $resource = '', int $id = 0): JsonResponse
     {
-        $this->useResource($request, $resource, 'read');
+        $this->useResource($request, $resource, 'read', Permissions::VIEW);
 
         return response()->json(['data' => $this->present($this->model::with($this->eagerRelations())->findOrFail($id))]);
     }
 
     public function storeItem(Request $request, string $resource = ''): JsonResponse
     {
-        $this->useResource($request, $resource, 'write');
+        $this->useResource($request, $resource, 'write', Permissions::CREATE);
 
         $item = $this->saveItem($request, 'create', new $this->model);
 
@@ -111,7 +113,7 @@ class ResourceController extends AdminController
      */
     public function updateItem(Request $request, string $resource = '', int $id = 0): JsonResponse
     {
-        $this->useResource($request, $resource, 'write');
+        $this->useResource($request, $resource, 'write', Permissions::UPDATE);
 
         $item = $this->saveItem($request, 'edit', $this->findItem($id));
 
@@ -120,7 +122,7 @@ class ResourceController extends AdminController
 
     public function destroyItem(Request $request, string $resource = '', int $id = 0): JsonResponse
     {
-        $this->useResource($request, $resource, 'write');
+        $this->useResource($request, $resource, 'write', Permissions::DELETE);
 
         $item = $this->findItem($id);
 
@@ -144,6 +146,9 @@ class ResourceController extends AdminController
 
         abort_unless($canWrite, 403, 'The token is not allowed to change anything.');
 
+        $owner = $request->user();
+        abort_unless($owner instanceof AdminUser && app(Permissions::class)->canWriteAnything($owner), 403, 'The token owner may not create or edit anything.');
+
         return $files->upload($request);
     }
 
@@ -163,12 +168,20 @@ class ResourceController extends AdminController
         return $rules;
     }
 
-    private function useResource(Request $request, string $resource, string $mode): void
+    /**
+     * Two checks: the token was issued for this, and its owner may still do
+     * it — a token never gives more than the administrator behind it has
+     * today, whatever was ticked when it was issued.
+     */
+    private function useResource(Request $request, string $resource, string $mode, string $action): void
     {
         $model = $this->resources->model($resource);
 
         abort_if($model === null, 404, 'No such module. See the list in the documentation: /'.config('atrium.api.prefix', 'api/v1'));
         abort_unless($request->user()->tokenCan("{$resource}:{$mode}"), 403, "The token lacks the {$resource}:{$mode} ability.");
+
+        $owner = $request->user();
+        abort_unless($owner instanceof AdminUser && $owner->hasAdminPermission("{$resource}.{$action}"), 403, "The token owner lacks the {$resource}.{$action} permission.");
 
         $this->model = $model;
     }

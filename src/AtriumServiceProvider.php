@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Atrium\Admin;
 
 use Atrium\Admin\Api\ApiResources;
+use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Contracts\Sitemapable;
 use Atrium\Admin\Demo\Demo;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
+use Atrium\Admin\Http\Middleware\AuthorizeAdminRoute;
 use Atrium\Admin\Http\Middleware\HandleAtriumRequests;
 use Atrium\Admin\Http\Middleware\RecordPageTiming;
 use Atrium\Admin\Http\Middleware\RedirectIfAdminAuthenticated;
@@ -65,6 +67,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(SlugService::class);
         $this->app->singleton(ResourceRegistry::class);
         $this->app->singleton(ApiResources::class);
+        $this->app->singleton(Permissions::class);
         $this->app->singleton(Menu::class);
         $this->app->singleton(Locales::class);
         $this->app->singleton(ContentLanguages::class);
@@ -105,6 +108,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $router = $this->app['router'];
 
         $router->aliasMiddleware('admin.auth', AdminAuthenticate::class);
+        $router->aliasMiddleware('admin.can', AuthorizeAdminRoute::class);
         $router->aliasMiddleware('admin.guest', RedirectIfAdminAuthenticated::class);
         $router->aliasMiddleware('admin.api', AuthenticateApiToken::class);
         $router->aliasMiddleware('atrium.inertia', HandleAtriumRequests::class);
@@ -182,7 +186,7 @@ final class AtriumServiceProvider extends ServiceProvider
         if (is_file($custom)) {
             $this->app['router']
                 ->prefix(config('atrium.prefix', 'admin'))
-                ->middleware([...config('atrium.middleware', ['web']), 'atrium.inertia', 'admin.auth'])
+                ->middleware([...config('atrium.middleware', ['web']), 'atrium.inertia', 'admin.auth', 'admin.can'])
                 ->group($custom);
         }
     }

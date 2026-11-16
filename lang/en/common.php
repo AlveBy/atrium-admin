@@ -9,6 +9,7 @@ return [
     'save' => 'Save',
     'saving' => 'Saving…',
     'cancel' => 'Cancel',
+    'back' => 'Back',
     'create' => 'Create',
     'edit' => 'Edit',
     'delete' => 'Delete',

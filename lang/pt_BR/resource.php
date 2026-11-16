@@ -26,6 +26,7 @@ return [
     'form' => [
         'breadcrumb_create' => 'Novo',
         'empty_tab' => 'Nenhum campo para exibir',
+        'read_only' => 'Somente leitura: seu papel permite ver este registro, mas não alterá-lo.',
     ],
 
     'delete' => [

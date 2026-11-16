@@ -65,6 +65,7 @@ final class HandleAtriumRequests extends Middleware
                         'id' => $user->getKey(),
                         'name' => $user->name,
                         'email' => $user->email,
+                        'is_superadmin' => $user instanceof AdminUser && $user->isSuperadmin(),
                     ] : null,
                 ];
             },
@@ -87,7 +88,8 @@ final class HandleAtriumRequests extends Middleware
             // Sent once per language and kept by the client across visits.
             'translations' => Inertia::once(fn () => app(Locales::class)->dictionary(app()->getLocale()))
                 ->as('atrium.translations.'.app()->getLocale()),
-            'menu' => fn () => app(Menu::class)->items(),
+            // Only what the administrator's roles open.
+            'menu' => fn () => app(Menu::class)->items($this->admin($request)),
             'flash' => fn () => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
@@ -97,13 +99,20 @@ final class HandleAtriumRequests extends Middleware
         ];
     }
 
+    private function admin(Request $request): ?AdminUser
+    {
+        $user = $request->user(config('atrium.auth.guard', 'admin'));
+
+        return $user instanceof AdminUser ? $user : null;
+    }
+
     /**
      * @return array<int,array{id:int|null,name:string}>
      */
     private function sites(Request $request): array
     {
-        $user = $request->user(config('atrium.auth.guard', 'admin'));
-        $sites = $user instanceof AdminUser ? $user->allowedSites() : app(Sites::class)->all();
+        $user = $this->admin($request);
+        $sites = $user !== null ? $user->allowedSites() : app(Sites::class)->all();
 
         return $sites->map(fn ($site) => ['id' => $site->id, 'name' => $site->name])->values()->all();
     }

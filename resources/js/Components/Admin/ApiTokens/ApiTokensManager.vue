@@ -4,7 +4,8 @@
  *
  * Permissions are granted per module: "read" and "change". "Change" without
  * "read" is useless to an agent (it cannot find what it is editing), so
- * ticking the second ticks the first too.
+ * ticking the second ticks the first too. Only the modules the administrator
+ * may open are listed, and "change" only where they may change something.
  */
 import { ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
@@ -51,7 +52,7 @@ const selectAll = (mode) => {
     const set = new Set(form.abilities)
     for (const module of props.modules) {
         set.add(`${module.key}:read`)
-        if (mode === 'write') set.add(`${module.key}:write`)
+        if (mode === 'write' && module.writable) set.add(`${module.key}:write`)
     }
     form.abilities = [...set]
 }
@@ -156,7 +157,7 @@ const moduleLabel = (ability) => {
                                         <input type="checkbox" class="h-4 w-4" :aria-label="$t('account.api_tokens.ability_read', { module: module.label })" :checked="has(`${module.key}:read`)" @change="toggle(module.key, 'read')" />
                                     </td>
                                     <td class="px-3 py-1.5 text-center">
-                                        <input type="checkbox" class="h-4 w-4" :aria-label="$t('account.api_tokens.ability_write', { module: module.label })" :checked="has(`${module.key}:write`)" @change="toggle(module.key, 'write')" />
+                                        <input v-if="module.writable" type="checkbox" class="h-4 w-4" :aria-label="$t('account.api_tokens.ability_write', { module: module.label })" :checked="has(`${module.key}:write`)" @change="toggle(module.key, 'write')" />
                                     </td>
                                 </tr>
                             </tbody>

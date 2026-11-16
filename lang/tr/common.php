@@ -8,6 +8,7 @@ return [
     'save' => 'Kaydet',
     'saving' => 'Kaydediliyor…',
     'cancel' => 'İptal',
+    'back' => 'Geri',
     'create' => 'Oluştur',
     'edit' => 'Düzenle',
     'delete' => 'Sil',

@@ -16,7 +16,8 @@ class CreateAdminCommand extends Command
     protected $signature = 'atrium:user
                             {--name= : The name of the admin user}
                             {--email= : The email of the admin user}
-                            {--password= : The password of the admin user}';
+                            {--password= : The password of the admin user}
+                            {--superadmin : Make the user a superadmin (the first user always is); for an existing email, promote that user}';
 
     /**
      * The console command description.
@@ -28,6 +29,18 @@ class CreateAdminCommand extends Command
      */
     public function handle(): int
     {
+        // A way back in when nobody is left who may manage roles.
+        if ($this->option('superadmin') && is_string($this->option('email'))) {
+            $existing = AdminUser::query()->where('email', $this->option('email'))->first();
+
+            if ($existing !== null) {
+                $existing->forceFill(['is_superadmin' => true])->save();
+                $this->info("'{$existing->name}' is a superadmin now.");
+
+                return self::SUCCESS;
+            }
+        }
+
         $name = $this->option('name') ?? $this->ask('Enter admin name');
         $email = $this->option('email') ?? $this->ask('Enter admin email');
         $password = $this->option('password') ?? $this->secret('Enter admin password');
@@ -60,6 +73,9 @@ class CreateAdminCommand extends Command
             return self::FAILURE;
         }
 
+        // The first administrator manages everything else, roles included.
+        $superadmin = $this->option('superadmin') || ! AdminUser::query()->exists();
+
         // Create the user
         $user = AdminUser::create([
             'name' => $name,
@@ -67,8 +83,11 @@ class CreateAdminCommand extends Command
             'password' => Hash::make($password),
             'is_active' => true,
         ]);
+        $user->forceFill(['is_superadmin' => $superadmin])->save();
 
-        $this->info("Admin user '{$user->name}' created successfully!");
+        $this->info($superadmin
+            ? "Superadmin '{$user->name}' created successfully!"
+            : "Admin user '{$user->name}' created successfully! Give them a role in the panel: Roles, Administrators.");
         $this->table(
             ['ID', 'Name', 'Email'],
             [[$user->id, $user->name, $user->email]]
