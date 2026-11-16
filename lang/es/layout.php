@@ -34,4 +34,8 @@ return [
         'sand' => 'Arena',
         'contrast' => 'Contraste',
     ],
+
+    'search_everywhere' => 'Buscar en todos los módulos',
+    'search_nothing' => 'No se encontró nada.',
+    'search_failed' => 'La búsqueda falló. Inténtelo de nuevo.',
 ];

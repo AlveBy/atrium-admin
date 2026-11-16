@@ -285,13 +285,15 @@ final class Modules
     }
 
     /**
-     * Hook an installed module in: its migrations and its pages on the site.
-     * A rule the application sets for the same model wins.
+     * Hook an installed module in: its migrations, its pages on the site and
+     * what site search reads of it. A rule the application sets for the same
+     * model wins.
      */
     public function wire(Module $module): void
     {
         $config = $this->app['config'];
         $config->set('atrium.public_urls', (array) $config->get('atrium.public_urls', []) + $module->publicUrls);
+        $config->set('atrium.search', (array) $config->get('atrium.search', []) + $module->search);
 
         foreach ($module->migrations as $path) {
             $this->app->afterResolving('migrator', static fn ($migrator) => $migrator->path($path));

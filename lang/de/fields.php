@@ -111,11 +111,6 @@ return [
         'url_label' => 'URL:',
     ],
 
-    'tree' => [
-        'search_placeholder' => 'Suchen…',
-        'top_level' => 'Oberste Ebene',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -154,5 +149,36 @@ return [
 
     'validation' => [
         'own_ancestor' => 'Ein Bereich kann nicht in sich selbst oder in einem eigenen Unterbereich platziert werden.',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Suchen…',
+        'top_level' => 'Oberste Ebene',
+        'add' => 'Eintrag hinzufügen',
+        'empty' => 'Noch keine Einträge. Klicken Sie auf „:add“, um den ersten anzulegen.',
+        'untitled' => 'Ohne Titel',
+        'drag' => 'Zum Verschieben ziehen',
+        'move_up' => 'Nach oben',
+        'move_down' => 'Nach unten',
+        'indent' => 'Unter den Eintrag darüber verschieben',
+        'outdent' => 'Aus dem übergeordneten Eintrag herausnehmen',
+        'add_child' => 'Untereintrag hinzufügen',
+        'invalid' => 'Die Liste der Einträge ist beschädigt. Laden Sie die Seite neu und versuchen Sie es erneut.',
+        'too_many' => 'Insgesamt höchstens :max Einträge.',
+        'too_deep' => 'Einträge können höchstens :max Ebenen tief verschachtelt werden.',
+        'item_error' => 'Eintrag „:item“: :message',
+    ],
+
+    'link' => [
+        'none' => 'Kein Link',
+        'url' => 'Adresse',
+        'record' => 'Seite eines Moduls',
+        'module' => 'Modul',
+        'search' => 'Nach Name oder ID suchen…',
+        'nothing' => 'Nichts gefunden.',
+        'failed' => 'Die Liste konnte nicht geladen werden. Versuchen Sie es erneut.',
+        'change' => 'Ändern',
+        'invalid_url' => 'Geben Sie eine Adresse ein, die mit /, http://, https://, mailto: oder tel: beginnt.',
+        'invalid_record' => 'Wählen Sie einen Datensatz, der noch existiert.',
     ],
 ];

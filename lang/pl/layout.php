@@ -34,4 +34,8 @@ return [
         'sand' => 'Piasek',
         'contrast' => 'Kontrast',
     ],
+
+    'search_everywhere' => 'Szukaj we wszystkich modułach',
+    'search_nothing' => 'Nic nie znaleziono.',
+    'search_failed' => 'Wyszukiwanie nie powiodło się. Spróbuj ponownie.',
 ];

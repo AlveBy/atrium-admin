@@ -12,6 +12,11 @@
                     "prefix": "labels"
                 }
             },
+            "search": {
+                "Atrium\\Admin\\Tests\\Fixtures\\Modules\\Label": {
+                    "title": "name"
+                }
+            },
             "migrations": "database/migrations",
             "settings": "Atrium\\Admin\\Tests\\Fixtures\\Modules\\LabelSettings",
             "permissions": {

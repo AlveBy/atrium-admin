@@ -111,11 +111,6 @@ return [
         'url_label' => 'URL：',
     ],
 
-    'tree' => [
-        'search_placeholder' => '搜索…',
-        'top_level' => '顶级',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -154,5 +149,36 @@ return [
 
     'validation' => [
         'own_ancestor' => '分类不能放在其自身或其子分类之下。',
+    ],
+
+    'tree' => [
+        'search_placeholder' => '搜索…',
+        'top_level' => '顶级',
+        'add' => '添加项',
+        'empty' => '还没有项。点击“:add”创建第一项。',
+        'untitled' => '无标题',
+        'drag' => '拖动以移动',
+        'move_up' => '上移',
+        'move_down' => '下移',
+        'indent' => '移入上方的项',
+        'outdent' => '移出父项',
+        'add_child' => '添加子项',
+        'invalid' => '项列表已损坏。请刷新页面后重试。',
+        'too_many' => '总共最多 :max 项。',
+        'too_deep' => '最多嵌套 :max 层。',
+        'item_error' => '项“:item”：:message',
+    ],
+
+    'link' => [
+        'none' => '无链接',
+        'url' => '地址',
+        'record' => '模块页面',
+        'module' => '模块',
+        'search' => '按名称或 ID 查找…',
+        'nothing' => '未找到任何内容。',
+        'failed' => '无法加载列表，请重试。',
+        'change' => '更改',
+        'invalid_url' => '请输入以 /、http://、https://、mailto: 或 tel: 开头的地址。',
+        'invalid_record' => '请选择仍然存在的记录。',
     ],
 ];

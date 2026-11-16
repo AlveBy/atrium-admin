@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
  *         "atrium": {
  *             "resources": ["Vendor\\Reviews\\Review"],
  *             "public_urls": {"Vendor\\Reviews\\Review": {"prefix": "reviews"}},
+ *             "search": {"Vendor\\Reviews\\Review": {"title": "author_name", "content": ["text"]}},
  *             "migrations": "database/migrations",
  *             "demo": "Vendor\\Reviews\\Database\\ReviewsDemoSeeder",
  *             "settings": "Vendor\\Reviews\\ReviewsSettings",
@@ -52,6 +53,7 @@ final class Module
     /**
      * @param  array<int,class-string>  $resources  models the panel shows
      * @param  array<class-string,array<string,string>>  $publicUrls  pages on the site, as in `atrium.public_urls`
+     * @param  array<class-string,array<string,mixed>|false>  $search  what site search reads, as in `atrium.search`
      * @param  array<int,string>  $migrations  absolute paths
      * @param  class-string|null  $demo  a seeder that fills the module with demo content
      * @param  array<int,string>  $suggests  package names
@@ -65,6 +67,7 @@ final class Module
         public readonly string $description = '',
         public readonly array $resources = [],
         public readonly array $publicUrls = [],
+        public readonly array $search = [],
         public readonly array $migrations = [],
         public readonly ?string $demo = null,
         public readonly array $suggests = [],
@@ -148,6 +151,7 @@ final class Module
             description: (string) ($composer['description'] ?? ''),
             resources: array_values(array_map('strval', (array) ($manifest['resources'] ?? []))),
             publicUrls: (array) ($manifest['public_urls'] ?? []),
+            search: (array) ($manifest['search'] ?? []),
             migrations: array_map(static fn (string $dir): string => $root.'/'.trim($dir, '/'), array_map('strval', (array) ($manifest['migrations'] ?? []))),
             demo: isset($manifest['demo']) ? (string) $manifest['demo'] : null,
             suggests: array_map('strtolower', array_keys((array) ($composer['suggest'] ?? []))),

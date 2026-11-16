@@ -9,6 +9,7 @@ import { Link, router } from '@inertiajs/vue3'
 import AdminUserDropdown from './AdminUserDropdown.vue'
 import LocaleSwitcher from './LocaleSwitcher.vue'
 import SiteSwitcher from './SiteSwitcher.vue'
+import GlobalSearch from './GlobalSearch.vue'
 
 const props = defineProps({
     user: {
@@ -82,6 +83,7 @@ const emit = defineEmits(['toggle-sidebar', 'toggle-collapse'])
             wider than the screen and the browser zoomed the whole page out.
         -->
         <div class="flex min-w-0 items-center gap-1 sm:gap-2 lg:gap-3">
+            <GlobalSearch />
             <SiteSwitcher />
             <LocaleSwitcher />
 

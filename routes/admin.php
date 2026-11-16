@@ -13,6 +13,7 @@ use Atrium\Admin\Http\Controllers\Auth\LoginController;
 use Atrium\Admin\Http\Controllers\CacheController;
 use Atrium\Admin\Http\Controllers\DashboardController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
+use Atrium\Admin\Http\Controllers\LinkController;
 use Atrium\Admin\Http\Controllers\LocaleController;
 use Atrium\Admin\Http\Controllers\ModuleController;
 use Atrium\Admin\Http\Controllers\ProfileController;
@@ -64,6 +65,9 @@ Route::prefix(config('atrium.prefix', 'admin'))
             Route::post('upload', [FileManagerController::class, 'upload'])->name('admin.upload');
             Route::get('filemanager', [FileManagerController::class, 'index'])->name('admin.filemanager.index');
             Route::delete('filemanager', [FileManagerController::class, 'destroy'])->name('admin.filemanager.destroy');
+
+            // The record picker of link fields (menus and the like)
+            Route::get('links/records', [LinkController::class, 'records'])->name('admin.links.records');
 
             // The site the panel works with (header switch)
             Route::post('site', [SiteController::class, 'update'])->name('admin.site');

@@ -57,8 +57,35 @@ final class ModulesTest extends TestCase
         $this->assertNotNull($module);
         $this->assertSame([Label::class], $module->resources);
         $this->assertSame([Label::class => ['prefix' => 'labels']], $module->publicUrls);
+        $this->assertSame([Label::class => ['title' => 'name']], $module->search);
         $this->assertSame([realpath(dirname(__DIR__)).'/Fixtures/Modules/labels/database/migrations'], array_map(static fn (string $path): string => (string) realpath($path), $module->migrations));
         $this->assertNull(Module::fromPath(dirname(__DIR__, 2)));
+    }
+
+    public function test_a_module_says_what_site_search_reads_of_it_and_the_application_has_the_last_word(): void
+    {
+        $modules = $this->app->make(Modules::class);
+        $module = $modules->find('acme/atrium-labels');
+        $this->assertNotNull($module);
+
+        config(['atrium.search' => ['App\\Models\\Post' => false]]);
+        $modules->wire($module);
+        $this->assertSame(['App\\Models\\Post' => false, Label::class => ['title' => 'name']], config('atrium.search'));
+
+        config(['atrium.search' => [Label::class => false]]);
+        $modules->wire($module);
+        $this->assertSame([Label::class => false], config('atrium.search'));
+
+        config(['atrium.search' => null]);
+        $modules->wire($module);
+        $this->assertSame([Label::class => ['title' => 'name']], config('atrium.search'));
+    }
+
+    public function test_a_module_without_a_word_on_search_leaves_it_alone(): void
+    {
+        $module = Module::fromPath(dirname(__DIR__).'/Fixtures/Modules/labels-printing');
+        $this->assertNotNull($module);
+        $this->assertSame([], $module->search);
     }
 
     public function test_a_required_module_stays_out_of_the_panel_until_it_is_installed(): void

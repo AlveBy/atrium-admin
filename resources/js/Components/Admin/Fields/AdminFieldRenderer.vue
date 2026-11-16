@@ -17,6 +17,8 @@ import ContentField from './ContentField.vue'
 import BelongsToManyField from './BelongsToManyField.vue'
 import MultiSelectField from './MultiSelectField.vue'
 import MapField from './MapField.vue'
+import TreeField from './TreeField.vue'
+import LinkField from './LinkField.vue'
 import FileManager from '../FileManager.vue'
 import { ajaxHeaders, sessionExpiredMessage } from '../../../Support/csrf'
 import { t } from '@atrium/Support/i18n'
@@ -49,6 +51,8 @@ const fieldComponents = {
     content: markRaw(ContentField),
     belongsToMany: markRaw(BelongsToManyField),
     map: markRaw(MapField),
+    tree: markRaw(TreeField),
+    link: markRaw(LinkField),
 }
 
 // Check if field has a specialized component

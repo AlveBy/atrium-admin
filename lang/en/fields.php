@@ -112,11 +112,6 @@ return [
         'url_label' => 'URL:',
     ],
 
-    'tree' => [
-        'search_placeholder' => 'Search…',
-        'top_level' => 'Top level',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -155,5 +150,36 @@ return [
 
     'validation' => [
         'own_ancestor' => 'A section cannot be placed inside itself or its own subsection.',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Search…',
+        'top_level' => 'Top level',
+        'add' => 'Add item',
+        'empty' => 'No items yet. Press “:add” to create the first one.',
+        'untitled' => 'Untitled',
+        'drag' => 'Drag to move',
+        'move_up' => 'Move up',
+        'move_down' => 'Move down',
+        'indent' => 'Move into the item above',
+        'outdent' => 'Move out of the parent item',
+        'add_child' => 'Add a nested item',
+        'invalid' => 'The list of items is broken. Reload the page and try again.',
+        'too_many' => 'No more than :max items in total.',
+        'too_deep' => 'Items can be nested no deeper than :max levels.',
+        'item_error' => 'Item “:item”: :message',
+    ],
+
+    'link' => [
+        'none' => 'No link',
+        'url' => 'Address',
+        'record' => 'Page of a module',
+        'module' => 'Module',
+        'search' => 'Find by name or ID…',
+        'nothing' => 'Nothing found.',
+        'failed' => 'Could not load the list. Try again.',
+        'change' => 'Change',
+        'invalid_url' => 'Enter an address starting with /, http://, https://, mailto: or tel:.',
+        'invalid_record' => 'Choose a record that still exists.',
     ],
 ];

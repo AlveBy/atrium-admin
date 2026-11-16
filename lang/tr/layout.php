@@ -34,4 +34,8 @@ return [
         'sand' => 'Kum',
         'contrast' => 'Kontrast',
     ],
+
+    'search_everywhere' => 'Tüm modüllerde ara',
+    'search_nothing' => 'Hiçbir şey bulunamadı.',
+    'search_failed' => 'Arama başarısız oldu. Tekrar deneyin.',
 ];

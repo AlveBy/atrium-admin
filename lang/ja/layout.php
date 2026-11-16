@@ -34,4 +34,8 @@ return [
         'sand' => 'サンド',
         'contrast' => 'ハイコントラスト',
     ],
+
+    'search_everywhere' => 'すべてのモジュールを検索',
+    'search_nothing' => '見つかりませんでした。',
+    'search_failed' => '検索に失敗しました。もう一度お試しください。',
 ];

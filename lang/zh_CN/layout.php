@@ -34,4 +34,8 @@ return [
         'sand' => '沙色',
         'contrast' => '高对比度',
     ],
+
+    'search_everywhere' => '在所有模块中搜索',
+    'search_nothing' => '未找到任何内容。',
+    'search_failed' => '搜索失败，请重试。',
 ];

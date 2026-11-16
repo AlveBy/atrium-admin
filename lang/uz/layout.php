@@ -34,4 +34,8 @@ return [
         'sand' => 'Qum',
         'contrast' => 'Kontrast',
     ],
+
+    'search_everywhere' => 'Barcha modullardan qidirish',
+    'search_nothing' => 'Hech narsa topilmadi.',
+    'search_failed' => 'Qidiruv amalga oshmadi. Qayta urinib ko‘ring.',
 ];

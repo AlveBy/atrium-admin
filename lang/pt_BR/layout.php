@@ -34,4 +34,8 @@ return [
         'sand' => 'Areia',
         'contrast' => 'Contraste',
     ],
+
+    'search_everywhere' => 'Buscar em todos os módulos',
+    'search_nothing' => 'Nada encontrado.',
+    'search_failed' => 'A busca falhou. Tente novamente.',
 ];

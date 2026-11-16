@@ -111,11 +111,6 @@ return [
         'url_label' => 'URL:',
     ],
 
-    'tree' => [
-        'search_placeholder' => 'Buscar…',
-        'top_level' => 'Nivel superior',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -154,5 +149,36 @@ return [
 
     'validation' => [
         'own_ancestor' => 'Una sección no puede colocarse dentro de sí misma ni de una de sus subsecciones.',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Buscar…',
+        'top_level' => 'Nivel superior',
+        'add' => 'Añadir elemento',
+        'empty' => 'Aún no hay elementos. Pulse «:add» para crear el primero.',
+        'untitled' => 'Sin título',
+        'drag' => 'Arrastre para mover',
+        'move_up' => 'Subir',
+        'move_down' => 'Bajar',
+        'indent' => 'Meter dentro del elemento de arriba',
+        'outdent' => 'Sacar del elemento padre',
+        'add_child' => 'Añadir un elemento anidado',
+        'invalid' => 'La lista de elementos está dañada. Recargue la página e inténtelo de nuevo.',
+        'too_many' => 'No más de :max elementos en total.',
+        'too_deep' => 'Los elementos no pueden anidarse a más de :max niveles.',
+        'item_error' => 'Elemento «:item»: :message',
+    ],
+
+    'link' => [
+        'none' => 'Sin enlace',
+        'url' => 'Dirección',
+        'record' => 'Página de un módulo',
+        'module' => 'Módulo',
+        'search' => 'Buscar por nombre o ID…',
+        'nothing' => 'No se encontró nada.',
+        'failed' => 'No se pudo cargar la lista. Inténtelo de nuevo.',
+        'change' => 'Cambiar',
+        'invalid_url' => 'Introduzca una dirección que empiece por /, http://, https://, mailto: o tel:.',
+        'invalid_record' => 'Elija un registro que todavía exista.',
     ],
 ];

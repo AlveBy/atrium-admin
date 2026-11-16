@@ -34,4 +34,8 @@ return [
         'sand' => 'Sand',
         'contrast' => 'Kontrast',
     ],
+
+    'search_everywhere' => 'In allen Modulen suchen',
+    'search_nothing' => 'Nichts gefunden.',
+    'search_failed' => 'Die Suche ist fehlgeschlagen. Versuchen Sie es erneut.',
 ];

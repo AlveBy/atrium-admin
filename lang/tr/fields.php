@@ -111,11 +111,6 @@ return [
         'url_label' => 'URL:',
     ],
 
-    'tree' => [
-        'search_placeholder' => 'Ara…',
-        'top_level' => 'Üst düzey',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -154,5 +149,36 @@ return [
 
     'validation' => [
         'own_ancestor' => 'Bir bölüm kendi içine veya kendi alt bölümüne yerleştirilemez.',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Ara…',
+        'top_level' => 'Üst düzey',
+        'add' => 'Öğe ekle',
+        'empty' => 'Henüz öğe yok. İlkini oluşturmak için “:add” düğmesine basın.',
+        'untitled' => 'Başlıksız',
+        'drag' => 'Taşımak için sürükleyin',
+        'move_up' => 'Yukarı taşı',
+        'move_down' => 'Aşağı taşı',
+        'indent' => 'Üstteki öğenin içine taşı',
+        'outdent' => 'Üst öğeden çıkar',
+        'add_child' => 'İç içe öğe ekle',
+        'invalid' => 'Öğe listesi bozuk. Sayfayı yenileyip tekrar deneyin.',
+        'too_many' => 'Toplamda en fazla :max öğe.',
+        'too_deep' => 'Öğeler en fazla :max düzey iç içe olabilir.',
+        'item_error' => '“:item” öğesi: :message',
+    ],
+
+    'link' => [
+        'none' => 'Bağlantı yok',
+        'url' => 'Adres',
+        'record' => 'Bir modülün sayfası',
+        'module' => 'Modül',
+        'search' => 'Ada veya ID’ye göre bul…',
+        'nothing' => 'Hiçbir şey bulunamadı.',
+        'failed' => 'Liste yüklenemedi. Tekrar deneyin.',
+        'change' => 'Değiştir',
+        'invalid_url' => '/, http://, https://, mailto: veya tel: ile başlayan bir adres girin.',
+        'invalid_record' => 'Hâlâ var olan bir kayıt seçin.',
     ],
 ];

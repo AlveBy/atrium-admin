@@ -39,6 +39,7 @@ use Atrium\Admin\Services\SlugService;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
+use Atrium\Admin\Support\RecordUrls;
 use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
 use Closure;
@@ -110,6 +111,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(CacheStore::class, fn (): CacheStore => CacheStore::fromConfig());
         $this->app->singleton(Versions::class, fn ($app): Versions => new Versions($app->make(CacheStore::class)->repository()));
         $this->app->singleton(RecordCache::class);
+        $this->app->singleton(RecordUrls::class);
     }
 
     public function boot(): void

@@ -111,11 +111,6 @@ return [
         'url_label' => 'URL:',
     ],
 
-    'tree' => [
-        'search_placeholder' => 'Cerca…',
-        'top_level' => 'Livello principale',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -154,5 +149,36 @@ return [
 
     'validation' => [
         'own_ancestor' => 'Una sezione non può essere inserita in se stessa o in una propria sottosezione.',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Cerca…',
+        'top_level' => 'Livello principale',
+        'add' => 'Aggiungi voce',
+        'empty' => 'Ancora nessuna voce. Premi «:add» per creare la prima.',
+        'untitled' => 'Senza titolo',
+        'drag' => 'Trascina per spostare',
+        'move_up' => 'Sposta su',
+        'move_down' => 'Sposta giù',
+        'indent' => 'Sposta dentro la voce sopra',
+        'outdent' => 'Sposta fuori dalla voce superiore',
+        'add_child' => 'Aggiungi una voce annidata',
+        'invalid' => 'L’elenco delle voci è danneggiato. Ricarica la pagina e riprova.',
+        'too_many' => 'Non più di :max voci in totale.',
+        'too_deep' => 'Le voci possono essere annidate al massimo per :max livelli.',
+        'item_error' => 'Voce «:item»: :message',
+    ],
+
+    'link' => [
+        'none' => 'Nessun link',
+        'url' => 'Indirizzo',
+        'record' => 'Pagina di un modulo',
+        'module' => 'Modulo',
+        'search' => 'Cerca per nome o ID…',
+        'nothing' => 'Nessun risultato.',
+        'failed' => 'Impossibile caricare l’elenco. Riprova.',
+        'change' => 'Cambia',
+        'invalid_url' => 'Inserisci un indirizzo che inizi con /, http://, https://, mailto: o tel:.',
+        'invalid_record' => 'Scegli un record che esiste ancora.',
     ],
 ];

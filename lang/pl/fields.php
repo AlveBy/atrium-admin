@@ -111,11 +111,6 @@ return [
         'url_label' => 'URL:',
     ],
 
-    'tree' => [
-        'search_placeholder' => 'Szukaj…',
-        'top_level' => 'Najwyższy poziom',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -154,5 +149,36 @@ return [
 
     'validation' => [
         'own_ancestor' => 'Sekcji nie można umieścić w niej samej ani w jej podsekcji.',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Szukaj…',
+        'top_level' => 'Najwyższy poziom',
+        'add' => 'Dodaj pozycję',
+        'empty' => 'Nie ma jeszcze pozycji. Kliknij „:add”, aby utworzyć pierwszą.',
+        'untitled' => 'Bez tytułu',
+        'drag' => 'Przeciągnij, aby przenieść',
+        'move_up' => 'W górę',
+        'move_down' => 'W dół',
+        'indent' => 'Przenieś do pozycji powyżej',
+        'outdent' => 'Wyjmij z pozycji nadrzędnej',
+        'add_child' => 'Dodaj pozycję zagnieżdżoną',
+        'invalid' => 'Lista pozycji jest uszkodzona. Odśwież stronę i spróbuj ponownie.',
+        'too_many' => 'Łącznie nie więcej niż :max pozycji.',
+        'too_deep' => 'Głębokość zagnieżdżenia: najwyżej :max.',
+        'item_error' => 'Pozycja „:item”: :message',
+    ],
+
+    'link' => [
+        'none' => 'Bez linku',
+        'url' => 'Adres',
+        'record' => 'Strona modułu',
+        'module' => 'Moduł',
+        'search' => 'Szukaj po nazwie lub ID…',
+        'nothing' => 'Nic nie znaleziono.',
+        'failed' => 'Nie udało się wczytać listy. Spróbuj ponownie.',
+        'change' => 'Zmień',
+        'invalid_url' => 'Podaj adres zaczynający się od /, http://, https://, mailto: lub tel:.',
+        'invalid_record' => 'Wybierz rekord, który wciąż istnieje.',
     ],
 ];

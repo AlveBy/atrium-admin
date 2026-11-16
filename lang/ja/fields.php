@@ -111,11 +111,6 @@ return [
         'url_label' => 'URL:',
     ],
 
-    'tree' => [
-        'search_placeholder' => '検索…',
-        'top_level' => '最上位',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -154,5 +149,36 @@ return [
 
     'validation' => [
         'own_ancestor' => 'セクションをそれ自身またはその下位セクションの中に配置することはできません。',
+    ],
+
+    'tree' => [
+        'search_placeholder' => '検索…',
+        'top_level' => '最上位',
+        'add' => '項目を追加',
+        'empty' => '項目はまだありません。「:add」を押して最初の項目を作成してください。',
+        'untitled' => '無題',
+        'drag' => 'ドラッグして移動',
+        'move_up' => '上へ',
+        'move_down' => '下へ',
+        'indent' => '上の項目の中へ移動',
+        'outdent' => '親項目の外へ移動',
+        'add_child' => '子項目を追加',
+        'invalid' => '項目の一覧が壊れています。ページを再読み込みして、もう一度お試しください。',
+        'too_many' => '項目は合計 :max 件までです。',
+        'too_deep' => '入れ子は :max 階層までです。',
+        'item_error' => '項目「:item」: :message',
+    ],
+
+    'link' => [
+        'none' => 'リンクなし',
+        'url' => 'アドレス',
+        'record' => 'モジュールのページ',
+        'module' => 'モジュール',
+        'search' => '名前または ID で検索…',
+        'nothing' => '見つかりませんでした。',
+        'failed' => '一覧を読み込めませんでした。もう一度お試しください。',
+        'change' => '変更',
+        'invalid_url' => '/、http://、https://、mailto: または tel: で始まるアドレスを入力してください。',
+        'invalid_record' => '現在も存在するレコードを選んでください。',
     ],
 ];

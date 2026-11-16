@@ -111,11 +111,6 @@ return [
         'url_label' => 'URL:',
     ],
 
-    'tree' => [
-        'search_placeholder' => 'Qidirish…',
-        'top_level' => 'Yuqori daraja',
-    ],
-
     // The standard fields every Bitrix iblock has; the migrator labels
     // generated models with them.
     'standard' => [
@@ -154,5 +149,36 @@ return [
 
     'validation' => [
         'own_ancestor' => 'Boʻlimni oʻzining ichiga yoki oʻz quyi boʻlimiga joylashtirib boʻlmaydi.',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Qidirish…',
+        'top_level' => 'Yuqori daraja',
+        'add' => 'Band qo‘shish',
+        'empty' => 'Hozircha bandlar yo‘q. Birinchisini yaratish uchun “:add” tugmasini bosing.',
+        'untitled' => 'Nomsiz',
+        'drag' => 'Ko‘chirish uchun torting',
+        'move_up' => 'Yuqoriga',
+        'move_down' => 'Pastga',
+        'indent' => 'Yuqoridagi band ichiga joylash',
+        'outdent' => 'Ota banddan chiqarish',
+        'add_child' => 'Ichki band qo‘shish',
+        'invalid' => 'Bandlar ro‘yxati buzilgan. Sahifani yangilab, qayta urinib ko‘ring.',
+        'too_many' => 'Jami :max tadan ortiq band bo‘lmasin.',
+        'too_deep' => 'Ichma-ich joylash chuqurligi :max darajadan oshmasin.',
+        'item_error' => '“:item” bandi: :message',
+    ],
+
+    'link' => [
+        'none' => 'Havolasiz',
+        'url' => 'Manzil',
+        'record' => 'Modul sahifasi',
+        'module' => 'Modul',
+        'search' => 'Nomi yoki ID bo‘yicha topish…',
+        'nothing' => 'Hech narsa topilmadi.',
+        'failed' => 'Ro‘yxatni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
+        'change' => 'O‘zgartirish',
+        'invalid_url' => '/, http://, https://, mailto: yoki tel: bilan boshlanadigan manzilni kiriting.',
+        'invalid_record' => 'Hali mavjud bo‘lgan yozuvni tanlang.',
     ],
 ];
