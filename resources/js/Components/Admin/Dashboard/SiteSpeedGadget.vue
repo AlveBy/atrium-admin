@@ -1,4 +1,9 @@
 <script setup>
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 /**
  * "Site speed" dashboard tile: the median page time, and where it falls on
  * a 0…2.5 s scale split into five named bands. The band is told by its name

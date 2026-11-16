@@ -1,3 +1,8 @@
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 /**
  * CSRF for the admin's "manual" fetch requests (file uploads, media library).
  *

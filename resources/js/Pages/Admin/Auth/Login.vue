@@ -1,4 +1,9 @@
 <script setup>
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 import { useForm, Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import LocaleSwitcher from '../../../Components/Admin/Layout/LocaleSwitcher.vue'

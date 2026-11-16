@@ -1,4 +1,9 @@
 <script setup>
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 /**
  * "Recent items" — the most recently changed items of one module: the
  * picture, the date and the name linking to the edit form, "All items" below.

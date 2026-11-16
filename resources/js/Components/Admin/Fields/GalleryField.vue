@@ -113,6 +113,11 @@
 </template>
 
 <script setup>
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 import { ref, computed } from 'vue';
 import FileManager from '../FileManager.vue';
 import { ajaxHeaders, responseErrorMessage } from '../../../Support/csrf';

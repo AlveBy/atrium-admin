@@ -1,4 +1,8 @@
 {{--
+    This file is part of Atrium (https://github.com/AlveBy/atrium).
+    Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+--}}
+{{--
     Counters and verification codes of the current site, set in the admin
     (Sites → Counters and codes). Put it once inside <head> of the layout,
     together with <x-atrium::body-start /> and <x-atrium::body-end />.

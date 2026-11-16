@@ -1,4 +1,8 @@
 {{--
+    This file is part of Atrium (https://github.com/AlveBy/atrium).
+    Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+--}}
+{{--
     Right after <body>: the no-JavaScript parts of the counters and the
     site's own code for the start of the page. See <x-atrium::head />.
 --}}

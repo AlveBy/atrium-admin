@@ -1,4 +1,9 @@
 <script setup>
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 import { ref, computed } from 'vue'
 import { usePage, Head } from '@inertiajs/vue3'
 import AdminSidebar from '../Components/Admin/Layout/AdminSidebar.vue'

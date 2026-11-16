@@ -1,3 +1,8 @@
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 import { computed, provide, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 

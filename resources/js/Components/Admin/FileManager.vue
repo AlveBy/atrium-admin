@@ -234,6 +234,11 @@
 </template>
 
 <script setup>
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { ajaxHeaders, responseErrorMessage } from '../../Support/csrf'
 import { t } from '@atrium/Support/i18n'

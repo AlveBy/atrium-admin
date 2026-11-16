@@ -1,3 +1,8 @@
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 /**
  * Which "a|b|c" form to take — the same rules Laravel's MessageSelector uses
  * for these languages, so a string reads the same from PHP and from Vue.

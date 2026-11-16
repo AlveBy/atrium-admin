@@ -1,4 +1,9 @@
 <script setup>
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 import { useForm, Link } from '@inertiajs/vue3'
 import { ref, computed, provide } from 'vue'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'

@@ -1,4 +1,9 @@
 <script setup>
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
 /**
  * "Performance monitor" dashboard tile: how many pages a second the site
  * renders, and on request the heaviest pages.
