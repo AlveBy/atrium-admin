@@ -11,6 +11,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Inertia\ServiceProvider as InertiaServiceProvider;
+use Laravel\Mcp\Server\McpServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Tighten\Ziggy\ZiggyServiceProvider;
 
@@ -23,6 +24,7 @@ abstract class TestCase extends Orchestra
         return [
             InertiaServiceProvider::class,
             ZiggyServiceProvider::class,
+            McpServiceProvider::class,
             AtriumServiceProvider::class,
         ];
     }

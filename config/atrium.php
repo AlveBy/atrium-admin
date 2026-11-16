@@ -363,4 +363,19 @@ return [
         'prefix' => 'api/v1',
         'except' => ['users'],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | MCP
+    |--------------------------------------------------------------------------
+    |
+    | The API's modules for AI assistants (Claude, ChatGPT, Cursor…) at
+    | `path`, with the same tokens: an assistant may do exactly what its token
+    | allows. Every tool call goes through the API, so the rules are the same.
+    |
+    */
+    'mcp' => [
+        'enabled' => (bool) env('ATRIUM_MCP_ENABLED', true),
+        'path' => 'mcp',
+    ],
 ];

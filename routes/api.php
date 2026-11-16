@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use Atrium\Admin\Http\Controllers\Api\DocsController;
 use Atrium\Admin\Http\Controllers\Api\ResourceController;
+use Atrium\Admin\Mcp\AtriumServer;
 use Illuminate\Support\Facades\Route;
+use Laravel\Mcp\Facades\Mcp;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,3 +35,12 @@ Route::prefix(config('atrium.api.prefix', 'api/v1'))
             Route::delete('{resource}/{id}', [ResourceController::class, 'destroyItem'])->name('admin.api.destroy');
         });
     });
+
+/*
+| The same modules for AI assistants over MCP, with the same tokens: every
+| tool call goes through the API above.
+*/
+if (config('atrium.mcp.enabled', true)) {
+    Mcp::web('/'.trim((string) config('atrium.mcp.path', 'mcp'), '/'), AtriumServer::class)
+        ->middleware(['api', 'atrium.site', 'admin.api']);
+}
