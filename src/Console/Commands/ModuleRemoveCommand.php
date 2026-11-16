@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Console\Commands;
 
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Modules\Settings;
@@ -85,6 +86,8 @@ final class ModuleRemoveCommand extends ModuleCommand
         }
 
         $this->refreshCaches();
+
+        Hook::fire('atrium.module.removed', $name, ! $keep);
 
         $this->components->info(($keep && $hasData ? "{$name} is removed; its data is kept." : "{$name} is removed.")
             .($module !== null ? " Run `composer remove {$name}` if the package is no longer needed." : ''));

@@ -12,6 +12,7 @@ namespace Atrium\Admin\Http\Controllers;
 use Atrium\Admin\Actions\CreateFromRecord;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Contracts\Administrable;
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\DisplayField;
 use Atrium\Admin\Fields\Field;
@@ -358,6 +359,7 @@ abstract class AdminController extends Controller
         }
 
         $validated = $item->transformAdminData($validated);
+        $validated = Hook::apply('atrium.record.data', $validated, $item, $context);
 
         // BelongsToMany values live in a pivot table, not a column. They must
         // be pulled out before fill(), or the insert fails with
@@ -373,6 +375,8 @@ abstract class AdminController extends Controller
         $this->persistSeoValues($item, $seo);
 
         $item->afterAdminSave($validated);
+
+        Hook::fire('atrium.record.saved', $item, $context);
 
         return $item;
     }
@@ -754,6 +758,8 @@ abstract class AdminController extends Controller
         }
 
         $item->delete();
+
+        Hook::fire('atrium.record.deleted', $item);
 
         return redirect()
             ->route($this->model::getAdminRouteName().'.index')

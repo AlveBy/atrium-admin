@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Support;
 
 use Atrium\Admin\Auth\Permissions;
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Resources\ResourceRegistry;
@@ -64,6 +65,9 @@ final class Menu
         if (! in_array('admin.modules.index', $listed, true) && app(Modules::class)->installed() !== []) {
             $menu[] = ['label' => 'atrium::menu.modules', 'route' => 'admin.modules.index', 'icon' => 'settings'];
         }
+
+        // Modules add, move or drop items here; permissions still apply.
+        $menu = Hook::apply('atrium.admin.menu', $menu, $user);
 
         if ($user !== null) {
             $menu = $this->visibleTo($user, $menu);

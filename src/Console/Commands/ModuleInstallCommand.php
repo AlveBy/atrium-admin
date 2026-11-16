@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Console\Commands;
 
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Modules\Modules;
 
 /**
@@ -60,6 +61,8 @@ final class ModuleInstallCommand extends ModuleCommand
         }
 
         $this->refreshCaches();
+
+        Hook::fire('atrium.module.installed', $module);
 
         $this->components->info($already
             ? "{$name} was installed already; its tables are up to date."
