@@ -33,7 +33,7 @@ class AtriumServer extends Server
         - `update_record` changes only the fields you send.
         - With several sites, pass `site` (the site code) to work with another site than the one this address belongs to.
         - When a call is refused, the message says why: a missing token ability, a missing permission of the token owner, or the invalid fields.
-    MARKDOWN;
+        MARKDOWN;
 
     protected array $tools = [
         ListModules::class,
