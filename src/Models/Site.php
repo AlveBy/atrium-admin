@@ -8,13 +8,18 @@ use Atrium\Admin\Columns\BooleanColumn;
 use Atrium\Admin\Columns\TextColumn;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\CheckboxField;
+use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\MultiSelectField;
 use Atrium\Admin\Fields\NumberField;
 use Atrium\Admin\Fields\RepeatableField;
 use Atrium\Admin\Fields\SelectField;
+use Atrium\Admin\Fields\TextareaField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Support\ContentLanguages;
+use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
+use Atrium\Admin\Tabs\Tab;
+use Atrium\Admin\Traits\HasAdminTabs;
 use Atrium\Admin\Traits\InteractsWithAdmin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
@@ -33,10 +38,21 @@ use Illuminate\Validation\ValidationException;
  * @property bool $active
  * @property bool $is_default
  * @property int $sort
+ * @property string|null $google_tag_id
+ * @property string|null $yandex_metrika_id
+ * @property bool $yandex_webvisor
+ * @property bool $counters_skip_admins
+ * @property string|null $google_verification
+ * @property string|null $yandex_verification
+ * @property string|null $bing_verification
+ * @property string|null $head_code
+ * @property string|null $body_start_code
+ * @property string|null $body_end_code
+ * @property string|null $robots_txt
  */
 class Site extends Model implements Administrable
 {
-    use InteractsWithAdmin;
+    use HasAdminTabs, InteractsWithAdmin;
 
     public const CODE_PATTERN = '[a-z0-9][a-z0-9_-]{0,31}';
 
@@ -44,7 +60,19 @@ class Site extends Model implements Administrable
 
     protected $table = 'admin_sites';
 
-    protected $fillable = ['code', 'name', 'domains', 'languages', 'default_language', 'active', 'is_default', 'sort'];
+    protected $fillable = [
+        'code', 'name', 'domains', 'languages', 'default_language', 'active', 'is_default', 'sort',
+        'google_tag_id', 'yandex_metrika_id', 'yandex_webvisor', 'counters_skip_admins',
+        'google_verification', 'yandex_verification', 'bing_verification',
+        'head_code', 'body_start_code', 'body_end_code', 'robots_txt',
+    ];
+
+    /** Google Analytics 4, Ads, Floodlight, a Google tag or a Tag Manager container. */
+    private const GOOGLE_TAG_PATTERN = '/^(G|GT|AW|DC|GTM)-[A-Z0-9]{4,}$/i';
+
+    private const CODE_COLUMNS = ['head_code', 'body_start_code', 'body_end_code', 'robots_txt'];
+
+    private const VERIFICATION_COLUMNS = ['google_verification', 'yandex_verification', 'bing_verification'];
 
     protected function casts(): array
     {
@@ -54,6 +82,8 @@ class Site extends Model implements Administrable
             'active' => 'boolean',
             'is_default' => 'boolean',
             'sort' => 'integer',
+            'yandex_webvisor' => 'boolean',
+            'counters_skip_admins' => 'boolean',
         ];
     }
 
@@ -88,6 +118,8 @@ class Site extends Model implements Administrable
             if ($languages !== [] && ! in_array($site->default_language, $languages, true)) {
                 $site->default_language = $languages[0];
             }
+
+            $site->normalizeCodes();
         });
 
         static::saved(function (Site $site): void {
@@ -97,11 +129,13 @@ class Site extends Model implements Administrable
 
             app(Sites::class)->flush();
             app(ContentLanguages::class)->flush();
+            app(Sitemap::class)->flush();
         });
 
         static::deleted(static function (): void {
             app(Sites::class)->flush();
             app(ContentLanguages::class)->flush();
+            app(Sitemap::class)->flush();
         });
     }
 
@@ -130,10 +164,32 @@ class Site extends Model implements Administrable
         return 'asc';
     }
 
+    public static function getAdminTabs(): array
+    {
+        return [
+            Tab::make('params')->label(__('atrium::sites.tabs.site'))->order(0),
+            Tab::make('codes')->label(__('atrium::sites.tabs.codes'))->order(10),
+            Tab::make('robots')->label('robots.txt')->order(20),
+        ];
+    }
+
     public static function getAdministrationFields(): array
     {
         $languages = Language::query()->orderBy('sort')->orderBy('id')->pluck('name', 'code')->all();
 
+        return [
+            ...self::siteFields($languages),
+            ...self::codeFields(),
+            ...(config('atrium.robots', true) ? [self::robotsField()] : []),
+        ];
+    }
+
+    /**
+     * @param  array<string,string>  $languages
+     * @return array<int,Field>
+     */
+    private static function siteFields(array $languages): array
+    {
         return [
             TextField::make('name')
                 ->label(__('atrium::sites.fields.name'))
@@ -184,6 +240,98 @@ class Site extends Model implements Administrable
         ];
     }
 
+    /**
+     * Counters and verification: the editor gives an ID, the core writes the
+     * snippet (see the head, body-start and body-end components).
+     *
+     * @return array<int,Field>
+     */
+    private static function codeFields(): array
+    {
+        $fields = [
+            TextField::make('google_tag_id')
+                ->label(__('atrium::sites.fields.google_tag_id'))
+                ->hint(__('atrium::sites.hints.google_tag_id'))
+                ->placeholder('G-XXXXXXXXXX')
+                ->rules(['string', 'max:32', 'regex:'.self::GOOGLE_TAG_PATTERN]),
+
+            TextField::make('yandex_metrika_id')
+                ->label(__('atrium::sites.fields.yandex_metrika_id'))
+                ->hint(__('atrium::sites.hints.yandex_metrika_id'))
+                ->placeholder('12345678')
+                ->rules(['string', 'max:20', 'regex:/^\\s*\\d+\\s*$/']),
+
+            CheckboxField::make('yandex_webvisor')
+                ->label(__('atrium::sites.fields.yandex_webvisor'))
+                ->default(false),
+
+            CheckboxField::make('counters_skip_admins')
+                ->label(__('atrium::sites.fields.counters_skip_admins'))
+                ->hint(__('atrium::sites.hints.counters_skip_admins'))
+                ->default(true),
+
+            TextField::make('google_verification')
+                ->label(__('atrium::sites.fields.google_verification'))
+                ->hint(__('atrium::sites.hints.verification', ['name' => 'google-site-verification']))
+                ->rules(['string', 'max:1000']),
+
+            TextField::make('yandex_verification')
+                ->label(__('atrium::sites.fields.yandex_verification'))
+                ->hint(__('atrium::sites.hints.verification', ['name' => 'yandex-verification']))
+                ->rules(['string', 'max:1000']),
+
+            TextField::make('bing_verification')
+                ->label(__('atrium::sites.fields.bing_verification'))
+                ->hint(__('atrium::sites.hints.verification', ['name' => 'msvalidate.01']))
+                ->rules(['string', 'max:1000']),
+
+            TextareaField::make('head_code')
+                ->label(__('atrium::sites.fields.head_code'))
+                ->hint(__('atrium::sites.hints.snippet'))
+                ->rows(6),
+
+            TextareaField::make('body_start_code')
+                ->label(__('atrium::sites.fields.body_start_code'))
+                ->hint(__('atrium::sites.hints.snippet'))
+                ->rows(6),
+
+            TextareaField::make('body_end_code')
+                ->label(__('atrium::sites.fields.body_end_code'))
+                ->hint(__('atrium::sites.hints.snippet'))
+                ->rows(6),
+        ];
+
+        foreach ($fields as $field) {
+            $field->tab('codes');
+        }
+
+        return $fields;
+    }
+
+    /**
+     * The hint also says when the text will not be served: off production,
+     * or when public/robots.txt is there and the web server answers first.
+     */
+    private static function robotsField(): TextareaField
+    {
+        $hint = [__('atrium::sites.hints.robots_txt')];
+
+        if (! app()->isProduction()) {
+            $hint[] = __('atrium::sites.hints.robots_not_production', ['env' => app()->environment()]);
+        }
+
+        if (is_file(public_path('robots.txt'))) {
+            $hint[] = __('atrium::sites.hints.robots_file_exists');
+        }
+
+        return TextareaField::make('robots_txt')
+            ->label('robots.txt')
+            ->hint(implode(' ', $hint))
+            ->placeholder("User-agent: *\nDisallow:")
+            ->rows(12)
+            ->tab('robots');
+    }
+
     public static function getAdministrationListColumns(): array
     {
         return [
@@ -222,6 +370,30 @@ class Site extends Model implements Administrable
         return $request->getScheme().'://'.$domain.($standard || $port === null ? '' : ':'.$port);
     }
 
+    /**
+     * The robots.txt this site answers with. Off production every robot is
+     * turned away whatever the admin wrote: a staging copy must not get
+     * into search results even if nobody thought about it.
+     */
+    public function robotsTxt(): string
+    {
+        if (! app()->isProduction()) {
+            return "User-agent: *\nDisallow: /\n";
+        }
+
+        $text = trim(str_replace("\r\n", "\n", (string) $this->robots_txt));
+
+        if ($text === '') {
+            $text = "User-agent: *\nDisallow:";
+        }
+
+        if (config('atrium.sitemap.enabled', true) && ! preg_match('/^\s*sitemap\s*:/mi', $text)) {
+            $text .= "\n\nSitemap: ".url('sitemap.xml');
+        }
+
+        return $text."\n";
+    }
+
     public function hasDomain(string $host): bool
     {
         return in_array(strtolower(rtrim($host, '.')), (array) $this->domains, true);
@@ -249,6 +421,31 @@ class Site extends Model implements Administrable
         }
 
         return $domains;
+    }
+
+    /**
+     * Editors paste what the search console shows them: the whole
+     * <meta name="…" content="token"> tag, or just the token. Keep the token.
+     */
+    private function normalizeCodes(): void
+    {
+        $this->google_tag_id = strtoupper(trim((string) $this->google_tag_id)) ?: null;
+        $this->yandex_metrika_id = trim((string) $this->yandex_metrika_id) ?: null;
+
+        foreach (self::VERIFICATION_COLUMNS as $column) {
+            $value = trim((string) $this->getAttribute($column));
+
+            if (preg_match('/content\s*=\s*["\']([^"\']*)["\']/i', $value, $match)) {
+                $value = trim($match[1]);
+            }
+
+            $this->setAttribute($column, $value === '' ? null : $value);
+        }
+
+        foreach (self::CODE_COLUMNS as $column) {
+            $value = trim((string) $this->getAttribute($column));
+            $this->setAttribute($column, $value === '' ? null : $value);
+        }
     }
 
     /**

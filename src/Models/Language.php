@@ -11,6 +11,7 @@ use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\NumberField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Support\ContentLanguages;
+use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Traits\InteractsWithAdmin;
 use Illuminate\Database\Eloquent\Model;
 
@@ -73,9 +74,13 @@ class Language extends Model implements Administrable
             }
 
             app(ContentLanguages::class)->flush();
+            app(Sitemap::class)->flush();
         });
 
-        static::deleted(static fn () => app(ContentLanguages::class)->flush());
+        static::deleted(static function (): void {
+            app(ContentLanguages::class)->flush();
+            app(Sitemap::class)->flush();
+        });
     }
 
     public static function getAdminLabel(): string

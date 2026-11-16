@@ -49,9 +49,35 @@ final class InstallCommand extends Command
             }
         }
 
+        $this->removeStockRobotsTxt();
+
         $this->newLine();
         $this->components->info('Atrium is ready: '.url(config('atrium.prefix', 'admin')));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The web server returns public/robots.txt before Laravel is asked, so
+     * the one a fresh Laravel ships with would hide the text set in the
+     * admin. Laravel's own file goes; one somebody wrote stays, with a warning.
+     */
+    private function removeStockRobotsTxt(): void
+    {
+        $file = public_path('robots.txt');
+
+        if (! config('atrium.robots', true) || ! is_file($file)) {
+            return;
+        }
+
+        $stock = preg_replace('/\s+/', ' ', trim((string) file_get_contents($file))) === 'User-agent: * Disallow:';
+
+        if ($stock) {
+            $this->components->task('Removing public/robots.txt (robots.txt is set in the admin now)', fn () => unlink($file));
+
+            return;
+        }
+
+        $this->components->warn('public/robots.txt is served instead of the robots.txt set in the admin. Move its text to Sites → robots.txt and delete the file, or set atrium.robots to false.');
     }
 }

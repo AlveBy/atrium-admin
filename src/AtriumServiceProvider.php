@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Atrium\Admin;
 
 use Atrium\Admin\Api\ApiResources;
+use Atrium\Admin\Contracts\Sitemapable;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
 use Atrium\Admin\Http\Middleware\HandleAtriumRequests;
@@ -20,10 +21,13 @@ use Atrium\Admin\Services\SlugService;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
+use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
 use Closure;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -64,6 +68,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(Locales::class);
         $this->app->singleton(ContentLanguages::class);
         $this->app->singleton(Sites::class);
+        $this->app->singleton(Sitemap::class);
     }
 
     public function boot(): void
@@ -73,6 +78,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->registerResources();
         $this->registerRoutes();
         $this->registerLocalizedRoutes();
+        $this->registerSitemapFlush();
         $this->registerCommands();
     }
 
@@ -106,13 +112,24 @@ final class AtriumServiceProvider extends ServiceProvider
         $router->aliasMiddleware('atrium.site', ResolveSite::class);
 
         // Every page of the app knows its site, picked by domain.
-        $router->pushMiddlewareToGroup('web', ResolveSite::class);
+        $this->appendToWebGroup(ResolveSite::class);
 
-        // Page timings feed the dashboard gadgets. Pushed here so the gadgets
+        // Page timings feed the dashboard gadgets. Added here so the gadgets
         // work right after install, without editing bootstrap/app.php.
         if (config('atrium.dashboard.timings.enabled', true)) {
-            $router->pushMiddlewareToGroup('web', RecordPageTiming::class);
+            $this->appendToWebGroup(RecordPageTiming::class);
         }
+    }
+
+    /**
+     * Through the HTTP kernel, not the router: the kernel copies its own
+     * groups over the router's whenever anyone changes its middleware
+     * (Sanctum does, while booting), and a group pushed to the router alone
+     * silently disappears.
+     */
+    private function appendToWebGroup(string $middleware): void
+    {
+        $this->app->make(HttpKernel::class)->appendMiddlewareToGroup('web', $middleware);
     }
 
     private function registerResources(): void
@@ -151,6 +168,7 @@ final class AtriumServiceProvider extends ServiceProvider
     {
         $this->loadRoutesFrom(__DIR__.'/../routes/admin.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         // Optional: modules with hand-written controllers live in the
         // application's routes/atrium.php, inside the admin prefix and auth.
@@ -184,6 +202,22 @@ final class AtriumServiceProvider extends ServiceProvider
                 ->name('localized.')
                 ->group($routes);
         });
+    }
+
+    /**
+     * sitemap.xml is cached: any saved or deleted record with a public page
+     * makes it build anew. Languages and sites flush it themselves.
+     */
+    private function registerSitemapFlush(): void
+    {
+        $flush = function (string $event, array $payload): void {
+            if (($payload[0] ?? null) instanceof Sitemapable) {
+                $this->app->make(Sitemap::class)->flush();
+            }
+        };
+
+        Event::listen('eloquent.saved: *', $flush);
+        Event::listen('eloquent.deleted: *', $flush);
     }
 
     private function registerCommands(): void

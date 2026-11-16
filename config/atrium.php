@@ -215,6 +215,38 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | robots.txt, sitemap.xml and counters
+    |--------------------------------------------------------------------------
+    |
+    | robots — the core answers /robots.txt of every site with the text set
+    | in the admin (Sites → robots.txt). Off production it always says
+    | "Disallow: /". Set to false to serve your own public/robots.txt; while
+    | it is on, that file must not exist: the web server would return it
+    | before Laravel is asked.
+    |
+    | sitemap — /sitemap.xml of every site: the `paths` below plus the public
+    | records of modules that implement Atrium\Admin\Contracts\Sitemapable,
+    | in all the site's languages. Past `per_file` addresses it becomes an
+    | index of /sitemap-1.xml, /sitemap-2.xml, …
+    |
+    | counters.consent — Google Tag and Yandex Metrica start only after the
+    | visitor agrees: the site's cookie banner calls window.atriumConsent().
+    |
+    */
+    'robots' => (bool) env('ATRIUM_ROBOTS', true),
+
+    'sitemap' => [
+        'enabled' => (bool) env('ATRIUM_SITEMAP', true),
+        'paths' => ['/'],
+        'per_file' => 50000,
+    ],
+
+    'counters' => [
+        'consent' => (bool) env('ATRIUM_COUNTERS_CONSENT', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Map Settings
     |--------------------------------------------------------------------------
     |
