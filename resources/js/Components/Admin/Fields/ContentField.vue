@@ -51,45 +51,44 @@
       class="border border-gray-300 rounded-lg overflow-hidden"
       :class="{ 'border-red-500': error, 'ring-2 ring-indigo-500': isFocused }"
     >
-      <!-- mousedown, а не click: браузер уводит фокус из редактора нажатием, и
-           после него каретку уже не спросить — см. caretPosition(). -->
+      <!-- mousedown, not click: the browser takes focus away from the editor on
+           press, and after that the caret can't be read — see caretPosition(). -->
       <div
         class="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border-b border-gray-300"
         @mousedown="rememberCaret"
       >
-        <!-- Стиль абзаца. Список, а не одна кнопка «H»: в Битриксе заголовки
-             выбирались именно так, и уровень был виден без угадывания. -->
+        <!-- Paragraph style. A list rather than a single "H" button: that is how
+             headings were picked in Bitrix, and the level is visible without guessing. -->
         <select
           v-if="toolbar.includes('heading')"
           data-editor-format="true"
           class="mr-1 h-8 rounded border border-gray-300 bg-white px-2 text-sm text-gray-700"
           :value="currentFormat()"
           @change="applyFormat($event.target.value)"
-          title="Стиль текста"
+          :title="$t('fields.editor.format')"
         >
-          <option v-for="format in formats" :key="format.value" :value="format.value">{{ format.label }}</option>
+          <option v-for="format in formats" :key="format.value" :value="format.value">{{ $t(format.label) }}</option>
         </select>
 
-        <!-- Размер шрифта — как в Ворде, в пунктах. Отдельно от стиля абзаца:
-             заголовок задаёт смысл, размер — только вид, и заказчик просил
-             и то и другое (переписка 04.09.2026). -->
+        <!-- Font size — in points, like in Word. Separate from the paragraph style:
+             a heading sets meaning, a size only looks; users asked for both. -->
         <select
           v-if="toolbar.includes('fontSize')"
           data-editor-font-size="true"
           class="mr-1 h-8 rounded border border-gray-300 bg-white px-2 text-sm text-gray-700"
           :value="currentFontSize()"
           @change="applyFontSize($event.target.value)"
-          title="Размер шрифта"
+          :title="$t('fields.editor.font_size')"
         >
           <option v-for="size in fontSizes()" :key="size.value" :value="size.value">{{ size.label }}</option>
         </select>
 
-        <!-- Цвет текста. В перенесённых из Битрикса прайсах цветом помечено
-             «мест нет», и без этой кнопки пометку нечем было бы поставить. -->
+        <!-- Text colour. Price tables migrated from Bitrix mark "sold out" with
+             colour, and without this button there would be no way to set it. -->
         <label
           v-if="toolbar.includes('color')"
           class="flex h-8 cursor-pointer items-center gap-1 rounded px-1.5 hover:bg-gray-200"
-          title="Цвет текста"
+          :title="$t('fields.editor.text_color')"
         >
           <span class="text-sm font-semibold text-gray-700">A</span>
           <input
@@ -149,6 +148,7 @@ import {
   tableToolbarButtons,
 } from '../../../Support/editor'
 import FileManager from '../FileManager.vue'
+import { t } from '@atrium/Support/i18n'
 
 const props = defineProps({
   modelValue: String,
@@ -162,9 +162,9 @@ const props = defineProps({
   defaultMode: { type: String, default: 'wysiwyg' },
   modes: { type: Array, default: () => ['text', 'html', 'wysiwyg'] },
   rows: { type: Number, default: 6 },
-  // Набор по умолчанию держим тем же, что у ContentField в PHP: он приходит
-  // пропсом почти всегда, но «Описание дней» рисуется из RepeatableField, и
-  // там поле долго оставалось без картинок именно из-за разошедшихся списков.
+  // The default set matches ContentField in PHP: it almost always arrives as a
+  // prop, but a ContentField rendered inside RepeatableField does not get it, and
+  // there the field went without images for a long time because the lists diverged.
   toolbar: {
     type: Array,
     default: () => ['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table'],
@@ -175,13 +175,13 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const modeLabels = {
-  text: 'Текст',
-  html: 'HTML',
-  wysiwyg: 'Визуальный редактор'
+  text: 'fields.content.mode_text',
+  html: 'fields.content.mode_html',
+  wysiwyg: 'fields.content.mode_wysiwyg'
 }
 
 const availableModes = computed(() =>
-  props.modes.map(m => ({ value: m, label: modeLabels[m] || m }))
+  props.modes.map(m => ({ value: m, label: modeLabels[m] ? t(modeLabels[m]) : m }))
 )
 
 // Load saved mode from localStorage or use default
@@ -202,8 +202,8 @@ const isFocused = ref(false)
 const showFileManager = ref(false)
 const fileManagerType = ref('all')
 const fileManagerCallback = ref(null)
-// Куда вставлять файл. Запоминаем при нажатии на панель: к моменту, когда
-// файл выбран, редактор давно без фокуса и своей позиции может не знать.
+// Where to insert a file. Remembered when the toolbar is pressed: by the time
+// a file is picked, the editor has long lost focus and may not know its position.
 const caret = ref(null)
 
 function rememberCaret() {
@@ -229,7 +229,7 @@ function handleFileSelected(file) {
 // TipTap editor
 const editor = useEditor({
   content: props.modelValue || '',
-  extensions: editorExtensions({ placeholder: props.placeholder || 'Начните вводить текст...' }),
+  extensions: editorExtensions({ placeholder: props.placeholder || t('fields.editor.placeholder') }),
   onUpdate: ({ editor }) => {
     if (currentMode.value === 'wysiwyg') {
       emit('update:modelValue', editor.getHTML())
@@ -240,9 +240,9 @@ const editor = useEditor({
 })
 
 // Sync editor content when switching to wysiwyg mode.
-// Вторым аргументом идут настройки: в TipTap 2 там был флаг «сообщать об
-// изменении», и голый false означал «молча». В третьей версии это объект, а
-// голый false читается как «настроек нет» — то есть наоборот, с уведомлением.
+// The second argument is options: in TipTap 2 it was an "emit update" flag, and a
+// bare false meant "silently". In v3 it is an object, and a bare false reads as
+// "no options" — i.e. the opposite, with the update emitted.
 watch(currentMode, (mode) => {
   if (mode === 'wysiwyg' && editor.value) {
     editor.value.commands.setContent(props.modelValue || '', { emitUpdate: false })
@@ -256,21 +256,22 @@ watch(() => props.modelValue, (val) => {
   }
 })
 
-// Стили абзаца — как в списке «Стиль» редактора Битрикса.
+// Paragraph styles — as in the "Style" list of the Bitrix editor.
+// Labels are lang keys, translated in the template.
 const formats = [
-  { value: 'paragraph', label: 'Обычный текст' },
-  { value: 'h1', label: 'Заголовок 1' },
-  { value: 'h2', label: 'Заголовок 2' },
-  { value: 'h3', label: 'Заголовок 3' },
-  { value: 'h4', label: 'Заголовок 4' },
-  { value: 'h5', label: 'Заголовок 5' },
-  { value: 'h6', label: 'Заголовок 6' },
-  { value: 'blockquote', label: 'Цитата' },
+  { value: 'paragraph', label: 'fields.editor.format_paragraph' },
+  { value: 'h1', label: 'fields.editor.format_h1' },
+  { value: 'h2', label: 'fields.editor.format_h2' },
+  { value: 'h3', label: 'fields.editor.format_h3' },
+  { value: 'h4', label: 'fields.editor.format_h4' },
+  { value: 'h5', label: 'fields.editor.format_h5' },
+  { value: 'h6', label: 'fields.editor.format_h6' },
+  { value: 'blockquote', label: 'fields.editor.format_blockquote' },
 ]
 
-// Функции, а не computed: isActive() и getAttributes() не реактивны, зато
-// @tiptap/vue-3 перерисовывает компонент на каждой транзакции — значит
-// вызов из шаблона возвращает состояние текущей позиции курсора.
+// Functions, not computed: isActive() and getAttributes() are not reactive, but
+// @tiptap/vue-3 re-renders the component on every transaction — so a call from
+// the template returns the state at the current cursor position.
 function currentFormat() {
   if (!editor.value) return 'paragraph'
 
@@ -288,8 +289,8 @@ function applyFormat(format) {
 
   const chain = editor.value.chain().focus()
 
-  // Цитата — обёртка вокруг абзаца, заголовок — сам абзац: снимаем обёртку
-  // отдельно, иначе «Заголовок 2» внутри цитаты остался бы цитатой.
+  // A quote wraps a paragraph, a heading is the paragraph itself: remove the
+  // wrapper separately, otherwise "Heading 2" inside a quote would stay a quote.
   if (editor.value.isActive('blockquote') && format !== 'blockquote') {
     chain.unsetBlockquote()
   }
@@ -311,24 +312,23 @@ function currentColor() {
   return editor.value?.getAttributes('textStyle')?.color || '#000000'
 }
 
-// Размеры шрифта — набор Ворда, в пунктах: заказчик сравнивал именно с ним.
-// Пункт, а не пиксель, ещё и потому, что «12 пт» у него на слуху как обычный
-// текст, тогда как «16 px» ни о чём не говорит.
+// Font sizes — Word's set, in points: that is what users compare with.
+// Points rather than pixels also because "12 pt" is familiar as normal text,
+// while "16 px" means nothing to most people.
 const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48, 72]
 
 /**
- * Что показывать в списке размеров.
+ * What to show in the size list.
  *
- * Перенесённый из Битрикса текст размечен пикселями (`font-size: 20px` —
- * так, например, сделан «ДЕНЬ 2» в описании дней тура). Своего пункта у
- * такого размера в списке нет, и select показал бы первый вариант, то есть
- * соврал. Поэтому текущее значение, если оно чужое, добавляем в список как
- * есть — пусть будет видно, что там на самом деле стоит.
+ * Text migrated from Bitrix is marked up in pixels (`font-size: 20px`, e.g. on
+ * sub-headings). Such a size has no entry of its own in the list, and the select
+ * would show the first option — that is, lie. So if the current value is foreign,
+ * it is added to the list as is — let it show what is really there.
  */
 function fontSizes() {
   const sizes = [
-    { value: '', label: 'Размер' },
-    ...FONT_SIZES.map((size) => ({ value: `${size}pt`, label: `${size} пт` })),
+    { value: '', label: t('fields.editor.font_size_default') },
+    ...FONT_SIZES.map((size) => ({ value: `${size}pt`, label: t('fields.editor.font_size_pt', { size }) })),
   ]
   const current = currentFontSize()
 
@@ -348,7 +348,7 @@ function applyFontSize(size) {
 
   const chain = editor.value.chain().focus()
 
-  // Пустой пункт — «как обычно»: снимаем размер, а не пишем нулевой.
+  // The empty option means "as usual": remove the size instead of writing zero.
   if (size) {
     chain.setFontSize(size).run()
   } else {
@@ -387,7 +387,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('bold')) {
     buttons.push({
       name: 'bold',
-      title: 'Жирный (Ctrl+B)',
+      title: t('fields.editor.bold_shortcut'),
       icon: icons.bold,
       action: () => editor.value?.chain().focus().toggleBold().run(),
       isActive: () => editor.value?.isActive('bold'),
@@ -397,7 +397,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('italic')) {
     buttons.push({
       name: 'italic',
-      title: 'Курсив (Ctrl+I)',
+      title: t('fields.editor.italic_shortcut'),
       icon: icons.italic,
       action: () => editor.value?.chain().focus().toggleItalic().run(),
       isActive: () => editor.value?.isActive('italic'),
@@ -407,7 +407,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('underline')) {
     buttons.push({
       name: 'underline',
-      title: 'Подчеркнутый (Ctrl+U)',
+      title: t('fields.editor.underline_shortcut'),
       icon: icons.underline,
       action: () => editor.value?.chain().focus().toggleUnderline().run(),
       isActive: () => editor.value?.isActive('underline'),
@@ -417,7 +417,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('strike')) {
     buttons.push({
       name: 'strike',
-      title: 'Зачеркнутый',
+      title: t('fields.editor.strike'),
       icon: icons.strike,
       action: () => editor.value?.chain().focus().toggleStrike().run(),
       isActive: () => editor.value?.isActive('strike'),
@@ -427,10 +427,10 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('link')) {
     buttons.push({
       name: 'link',
-      title: 'Ссылка',
+      title: t('fields.editor.link'),
       icon: icons.link,
       action: () => {
-        const url = prompt('URL ссылки:')
+        const url = prompt(t('fields.editor.link_prompt'))
         if (url) {
           editor.value?.chain().focus().setLink({ href: url }).run()
         }
@@ -442,7 +442,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('bulletList')) {
     buttons.push({
       name: 'bulletList',
-      title: 'Маркированный список',
+      title: t('fields.editor.bullet_list'),
       icon: icons.bulletList,
       action: () => editor.value?.chain().focus().toggleBulletList().run(),
       isActive: () => editor.value?.isActive('bulletList'),
@@ -452,7 +452,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('orderedList')) {
     buttons.push({
       name: 'orderedList',
-      title: 'Нумерованный список',
+      title: t('fields.editor.ordered_list'),
       icon: icons.orderedList,
       action: () => editor.value?.chain().focus().toggleOrderedList().run(),
       isActive: () => editor.value?.isActive('orderedList'),
@@ -463,13 +463,13 @@ const toolbarButtons = computed(() => {
     buttons.push(...alignToolbarButtons(editor, icons))
   }
 
-  // 'heading' рисуется списком стилей слева от кнопок — одной кнопкой «H»
-  // был доступен только второй уровень, а заказчик просил выбор заголовков.
+  // 'heading' is drawn as the style list left of the buttons — a single "H"
+  // button only gave level 2, and users asked to choose the heading level.
 
   if (props.toolbar.includes('image')) {
     buttons.push({
       name: 'image',
-      title: 'Изображение',
+      title: t('fields.editor.image'),
       icon: icons.image,
       action: () => openFileManager('image'),
     })
@@ -478,7 +478,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('file')) {
     buttons.push({
       name: 'file',
-      title: 'Файл (PDF, DOC, XLS)',
+      title: t('fields.editor.file'),
       icon: icons.file,
       action: () => openFileManager('all'),
     })

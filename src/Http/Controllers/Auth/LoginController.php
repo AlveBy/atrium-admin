@@ -32,23 +32,23 @@ class LoginController extends Controller
      */
     public function login(LoginRequest $request): RedirectResponse
     {
-        // Пароль сходится — но внутрь пока не пускаем: сначала код с почты.
+        // The password matches, but nobody gets in yet: the e-mailed code comes first.
         if (TwoFactorCode::enabled()) {
             $user = $request->validateCredentials();
 
             try {
                 TwoFactorCode::send($user, force: true);
             } catch (\Throwable $e) {
-                Log::error('Не удалось отправить код входа в админку: '.$e->getMessage());
+                Log::error('Could not send the admin sign-in code: '.$e->getMessage());
 
                 throw ValidationException::withMessages([
-                    'email' => TwoFactorCode::MAIL_FAILED_MESSAGE,
+                    'email' => TwoFactorCode::mailFailedMessage(),
                 ]);
             }
 
-            // В сессии — только идентификатор ожидающего: сама авторизация
-            // произойдёт после кода. Идентификатор сессии меняем здесь же,
-            // чтобы шаг с кодом не проходил по чужому, заранее подсунутому.
+            // The session holds only the pending user's id: the actual sign-in
+            // happens after the code. The session id is regenerated right here
+            // so the code step cannot run on a session id planted in advance.
             $request->session()->regenerate();
             $request->session()->put('admin.two_factor', [
                 'id' => $user->getAuthIdentifier(),

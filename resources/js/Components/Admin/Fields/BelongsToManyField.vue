@@ -28,7 +28,7 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Выберите...'
+        default: null
     },
     error: {
         type: String,
@@ -128,7 +128,7 @@ const clearAll = () => {
                 class="text-xs text-gray-500 hover:text-red-600"
                 :disabled="disabled"
             >
-                Очистить все
+                {{ $t('fields.belongs_to_many.clear_all') }}
             </button>
         </div>
 
@@ -162,7 +162,7 @@ const clearAll = () => {
             v-else
             class="border border-gray-300 rounded-md px-3 py-4 text-center text-gray-500 text-sm"
         >
-            Нет доступных вариантов
+            {{ $t('fields.belongs_to_many.no_options') }}
         </div>
 
         <!-- Hint -->

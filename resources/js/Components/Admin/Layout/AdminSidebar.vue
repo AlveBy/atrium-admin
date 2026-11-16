@@ -49,7 +49,7 @@ const currentRoute = computed(() => page.url)
                     v-if="!collapsed"
                     class="text-xl font-bold truncate"
                 >
-                    {{ branding.name || 'Admin' }}
+                    {{ branding.name || $t('layout.brand_short') }}
                 </span>
             </Link>
 

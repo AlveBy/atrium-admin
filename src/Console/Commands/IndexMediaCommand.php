@@ -10,23 +10,23 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Занести в медиабиблиотеку файлы, которые уже лежат на диске.
+ * Register files that already sit on disk in the media library.
  *
- * Нужна один раз при переходе на библиотеку: до неё загрузки просто падали в
- * каталог, минуя базу, и в списке их теперь не видно. Дальше регистрация идёт
- * сама, при загрузке через админку.
+ * Needed once when switching to the library: before it, uploads just landed in
+ * a directory, bypassing the database, so the list does not show them. From
+ * then on registration happens by itself on upload through the panel.
  *
- * Можно натравить и на произвольную папку внутри public — например, чтобы
- * добавить в библиотеку картинки, приехавшие вместе с контентом.
+ * It can also be pointed at any folder inside public — for example, to add
+ * images that came along with migrated content.
  */
 class IndexMediaCommand extends Command
 {
     protected $signature = 'atrium:media:index
-                            {--path= : Папка внутри public/ (по умолчанию — каталог загрузок)}
-                            {--collection= : В какую коллекцию сложить}
-                            {--dry-run : Показать, что будет добавлено}';
+                            {--path= : Folder inside public/ (defaults to the uploads directory)}
+                            {--collection= : Collection to put the files in}
+                            {--dry-run : Show what would be added}';
 
-    protected $description = 'Добавить в медиабиблиотеку файлы, уже лежащие на диске';
+    protected $description = 'Add files already on disk to the media library';
 
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
 
@@ -40,7 +40,7 @@ class IndexMediaCommand extends Command
             : $this->publicFiles($relative);
 
         if ($files === []) {
-            $this->warn('Файлов не найдено.');
+            $this->warn('No files found.');
 
             return self::SUCCESS;
         }
@@ -80,7 +80,7 @@ class IndexMediaCommand extends Command
             $added++;
         }
 
-        $this->info(sprintf('%s: %d', $dryRun ? 'Будет добавлено' : 'Добавлено', $added));
+        $this->info(sprintf('%s: %d', $dryRun ? 'Would be added' : 'Added', $added));
 
         return self::SUCCESS;
     }
@@ -125,7 +125,7 @@ class IndexMediaCommand extends Command
         $root = public_path($relative);
 
         if (! is_dir($root)) {
-            $this->error('Папки нет: '.$root);
+            $this->error('Folder does not exist: '.$root);
 
             return [[], ''];
         }

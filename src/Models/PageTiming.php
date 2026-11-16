@@ -7,10 +7,10 @@ namespace Atrium\Admin\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Замер времени генерации одной страницы публичной части.
+ * Generation time of one public page.
  *
- * Пишется из RecordPageTiming после отдачи ответа, читается гаджетами
- * рабочего стола через PageSpeedStats.
+ * Written by RecordPageTiming after the response is sent, read by the
+ * dashboard gadgets through PageSpeedStats.
  */
 class PageTiming extends Model
 {

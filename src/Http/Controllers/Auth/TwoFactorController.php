@@ -18,15 +18,16 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Второй шаг входа в админку — код с почты.
+ * Second sign-in step: the code from the e-mail.
  *
- * Между паролем и панелью: пароль уже сошёлся, но авторизации ещё нет — в
- * сессии лежит только идентификатор ожидающего. Пока код не сойдётся, доступа
- * в админку нет, и обновление страницы или переход по адресу ничего не меняют.
+ * Sits between the password and the panel: the password has matched, but the
+ * user is not signed in yet, the session only holds the pending user's id.
+ * Until the code matches there is no access, and reloading the page or typing
+ * a URL changes nothing.
  */
 class TwoFactorController extends Controller
 {
-    /** Столько попыток на код, потом — минута ожидания. */
+    /** This many attempts per code, then a minute of waiting. */
     private const MAX_ATTEMPTS = 5;
 
     private const DECAY_SECONDS = 60;
@@ -56,7 +57,7 @@ class TwoFactorController extends Controller
 
         $request->validate(
             ['code' => ['required', 'string']],
-            ['code.required' => 'Введите код из письма.'],
+            ['code.required' => __('atrium::auth.two_factor.code_required')],
         );
 
         $this->ensureIsNotRateLimited($request, $user);
@@ -67,7 +68,7 @@ class TwoFactorController extends Controller
             RateLimiter::hit($this->throttleKey($request, $user), self::DECAY_SECONDS);
 
             throw ValidationException::withMessages([
-                'code' => 'Код не подошёл или устарел. Проверьте письмо или запросите новый.',
+                'code' => __('atrium::auth.two_factor.code_invalid'),
             ]);
         }
 
@@ -86,7 +87,7 @@ class TwoFactorController extends Controller
         );
     }
 
-    /** Письмо не дошло — отправить ещё раз. */
+    /** The e-mail did not arrive: send it again. */
     public function resend(Request $request): RedirectResponse
     {
         $user = $this->pending($request);
@@ -98,24 +99,25 @@ class TwoFactorController extends Controller
         try {
             if (! TwoFactorCode::send($user)) {
                 throw ValidationException::withMessages([
-                    'code' => 'Письмо уже отправлено. Новое можно запросить через '
-                        .TwoFactorCode::retryAfter($user).' с.',
+                    'code' => __('atrium::auth.two_factor.resend_too_soon', [
+                        'seconds' => TwoFactorCode::retryAfter($user),
+                    ]),
                 ]);
             }
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {
-            Log::error('Не удалось повторно отправить код входа: '.$e->getMessage());
+            Log::error('Could not resend the admin sign-in code: '.$e->getMessage());
 
             throw ValidationException::withMessages([
-                'code' => TwoFactorCode::MAIL_FAILED_MESSAGE,
+                'code' => TwoFactorCode::mailFailedMessage(),
             ]);
         }
 
-        return back()->with('success', 'Код отправлен ещё раз.');
+        return back()->with('success', __('atrium::auth.two_factor.resent'));
     }
 
-    /** Уйти со второго шага, не входя. */
+    /** Leave the second step without signing in. */
     public function cancel(Request $request): RedirectResponse
     {
         $request->session()->forget('admin.two_factor');
@@ -123,7 +125,7 @@ class TwoFactorController extends Controller
         return redirect()->route('admin.login');
     }
 
-    /** Тот, кто уже ввёл пароль, но ещё не ввёл код. */
+    /** The user who has entered the password but not the code yet. */
     private function pending(Request $request): ?AdminUser
     {
         $id = $request->session()->get('admin.two_factor.id');
@@ -134,7 +136,7 @@ class TwoFactorController extends Controller
 
         $user = Auth::createUserProvider(config("auth.guards.{$this->guard()}.provider"))?->retrieveById($id);
 
-        // Пока человек ходил за письмом, учётку могли отключить.
+        // The account may have been deactivated while the person went for the e-mail.
         if (! $user instanceof AdminUser || ! $user->is_active) {
             $request->session()->forget('admin.two_factor');
 
@@ -153,8 +155,9 @@ class TwoFactorController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'code' => 'Слишком много попыток. Попробуйте через '
-                .RateLimiter::availableIn($key).' с.',
+            'code' => __('atrium::auth.two_factor.throttle', [
+                'seconds' => RateLimiter::availableIn($key),
+            ]),
         ]);
     }
 
@@ -168,7 +171,7 @@ class TwoFactorController extends Controller
         return config('atrium.auth.guard', 'admin');
     }
 
-    /** «ol****@mail.ru» — чтобы было видно, куда смотреть, но не кому. */
+    /** "jo****@example.com": shows where to look, but not whose mailbox it is. */
     private function maskEmail(string $email): string
     {
         [$name, $domain] = array_pad(explode('@', $email, 2), 2, '');

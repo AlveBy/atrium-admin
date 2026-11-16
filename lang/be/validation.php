@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'accepted' => 'Вы павінны прыняць :attribute.',
+    'array' => 'Поле :attribute павінна быць масівам.',
+    'boolean' => 'Поле :attribute павінна мець значэнне true або false.',
+    'confirmed' => 'Поле :attribute не супадае з пацвярджэннем.',
+    'current_password' => 'Няправільны пароль.',
+    'date' => 'Поле :attribute павінна быць правільнай датай.',
+    'date_format' => 'Поле :attribute не адпавядае фармату :format.',
+    'distinct' => 'Поле :attribute мае паўторнае значэнне.',
+    'email' => 'Поле :attribute павінна быць правільным адрасам электроннай пошты.',
+    'exists' => 'Выбранае значэнне для :attribute няправільнае.',
+    'file' => 'Поле :attribute павінна быць файлам.',
+    'image' => 'Поле :attribute павінна быць выявай.',
+    'in' => 'Выбранае значэнне для :attribute няправільнае.',
+    'integer' => 'Поле :attribute павінна быць цэлым лікам.',
+    'json' => 'Поле :attribute павінна быць правільным радком JSON.',
+    'max' => [
+        'array' => 'Поле :attribute не можа мець больш за :max элементаў.',
+        'file' => 'Памер файла ў полі :attribute не можа перавышаць :max кілабайт.',
+        'numeric' => 'Поле :attribute не можа быць больш за :max.',
+        'string' => 'Поле :attribute не можа мець больш за :max сімвалаў.',
+    ],
+    'mimes' => 'Поле :attribute павінна быць файлам аднаго з тыпаў: :values.',
+    'mimetypes' => 'Поле :attribute павінна быць файлам аднаго з тыпаў: :values.',
+    'min' => [
+        'array' => 'Поле :attribute павінна мець не менш за :min элементаў.',
+        'file' => 'Памер файла ў полі :attribute павінен быць не менш за :min кілабайт.',
+        'numeric' => 'Поле :attribute павінна быць не менш за :min.',
+        'string' => 'Поле :attribute павінна мець не менш за :min сімвалаў.',
+    ],
+    'numeric' => 'Поле :attribute павінна быць лікам.',
+    'regex' => 'Поле :attribute мае няправільны фармат.',
+    'required' => 'Поле :attribute абавязковае для запаўнення.',
+    'required_if' => 'Поле :attribute абавязковае, калі :other мае значэнне :value.',
+    'required_with' => 'Поле :attribute абавязковае, калі ўказана :values.',
+    'same' => 'Поле :attribute павінна супадаць з :other.',
+    'string' => 'Поле :attribute павінна быць радком.',
+    'unique' => 'Такое значэнне поля :attribute ужо існуе.',
+    'url' => 'Поле :attribute павінна быць правільным URL.',
+    'uploaded' => 'Не ўдалося загрузіць :attribute.',
+    'after' => 'Поле :attribute павінна быць датай пасля :date.',
+    'after_or_equal' => 'Поле :attribute павінна быць датай не раней за :date.',
+    'before' => 'Поле :attribute павінна быць датай да :date.',
+    'before_or_equal' => 'Поле :attribute павінна быць датай не пазней за :date.',
+    'lowercase' => 'Поле :attribute павінна быць у ніжнім рэгістры.',
+    'alpha_dash' => 'Поле :attribute можа змяшчаць толькі літары, лічбы, злучкі і падкрэсліванні.',
+    'password' => [
+        'letters' => 'Поле :attribute павінна змяшчаць хаця б адну літару.',
+        'mixed' => 'Поле :attribute павінна змяшчаць хаця б адну вялікую і адну малую літару.',
+        'numbers' => 'Поле :attribute павінна змяшчаць хаця б адну лічбу.',
+        'symbols' => 'Поле :attribute павінна змяшчаць хаця б адзін сімвал.',
+        'uncompromised' => 'Значэнне поля :attribute з\'явілася ва ўцечцы даных. Выберыце іншае значэнне для :attribute.',
+    ],
+];

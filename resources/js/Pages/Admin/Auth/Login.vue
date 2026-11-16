@@ -1,6 +1,7 @@
 <script setup>
 import { useForm, Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import LocaleSwitcher from '../../../Components/Admin/Layout/LocaleSwitcher.vue'
 
 const props = defineProps({
     branding: {
@@ -25,9 +26,13 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Вход" />
+    <Head :title="$t('auth.login.title')" />
 
     <div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="absolute top-4 right-4">
+            <LocaleSwitcher />
+        </div>
+
         <div class="max-w-md w-full">
             <!-- Logo / Branding -->
             <div class="text-center mb-8">
@@ -38,10 +43,10 @@ const submit = () => {
                     class="mx-auto h-12 w-auto"
                 />
                 <h2 v-else class="text-3xl font-bold text-gray-900">
-                    {{ branding.name || 'Admin Panel' }}
+                    {{ branding.name || $t('layout.panel_name') }}
                 </h2>
                 <p class="mt-2 text-sm text-gray-600">
-                    Войдите в панель управления
+                    {{ $t('auth.login.subtitle') }}
                 </p>
             </div>
 
@@ -51,7 +56,7 @@ const submit = () => {
                     <!-- Email -->
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700">
-                            Email
+                            {{ $t('auth.login.email') }}
                         </label>
                         <input
                             id="email"
@@ -71,7 +76,7 @@ const submit = () => {
                     <!-- Password -->
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700">
-                            Пароль
+                            {{ $t('auth.login.password') }}
                         </label>
                         <div class="mt-1 relative">
                             <input
@@ -111,7 +116,7 @@ const submit = () => {
                             class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label for="remember" class="ml-2 block text-sm text-gray-700">
-                            Запомнить меня
+                            {{ $t('auth.login.remember') }}
                         </label>
                     </div>
 
@@ -130,7 +135,7 @@ const submit = () => {
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        {{ form.processing ? 'Вход...' : 'Войти' }}
+                        {{ form.processing ? $t('auth.login.submitting') : $t('auth.login.submit') }}
                     </button>
                 </form>
             </div>

@@ -1,7 +1,21 @@
 import '../css/atrium.css';
 import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { ZiggyVue } from 'ziggy-js';
+import { i18n } from './Support/i18n';
+
+// The server sets <html lang> only on a full load; keep it right after an
+// Inertia visit too, so screen readers pronounce the new language. `navigate`
+// is skipped when a visit replaces the same URL (the language switch does
+// that), hence `success` as well; history moves only fire `navigate`.
+const syncLang = (event) => {
+    const locale = event.detail.page.props.locale;
+    if (locale) {
+        document.documentElement.lang = locale.replace('_', '-');
+    }
+};
+router.on('success', syncLang);
+router.on('navigate', syncLang);
 
 const pages = import.meta.glob('./Pages/**/*.vue');
 
@@ -21,6 +35,7 @@ createInertiaApp({
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .use(i18n)
             .mount(el);
     },
     progress: {

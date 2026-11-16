@@ -11,10 +11,10 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Письмо с кодом подтверждения входа в админку.
+ * The e-mail with the admin sign-in confirmation code.
  *
- * Код выносим в тему письма: в списке писем его видно без открытия, а
- * набирать всё равно вручную.
+ * The code goes into the subject: it is visible in the inbox list without
+ * opening the message, and it is typed by hand anyway.
  */
 class TwoFactorCodeMail extends Mailable
 {
@@ -28,7 +28,7 @@ class TwoFactorCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->code.' — код для входа в админку',
+            subject: __('atrium::auth.mail.subject', ['code' => $this->code]),
         );
     }
 

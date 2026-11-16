@@ -8,27 +8,27 @@ use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Http\Controllers\AdminController;
 
 /**
- * Документация API, собранная из описания полей админки.
+ * API documentation built from the admin field definitions.
  *
- * Руками её не пишут: поля, их типы, обязательность и варианты значений
- * берутся у тех же Field, что рисуют форму и проверяют сохранение. Добавили
- * поле или модуль — документация уже про него знает.
+ * Nobody writes it by hand: fields, their types, whether they are required and
+ * their allowed values come from the same Field objects that render the form
+ * and validate saving. Add a field or a module and the documentation knows it.
  *
- * Два вида одного и того же: Markdown для чтения (человеком или моделью)
- * и OpenAPI для агентов, которые строят вызовы по схеме.
+ * Two views of the same thing: Markdown for reading (by a human or a model)
+ * and OpenAPI for agents that build calls from a schema.
  */
 final class ApiDocumentation
 {
     /**
-     * Сколько вариантов перечислять прямо в документации. Длиннее — ссылка
-     * на модуль, откуда их взять (у «Связанных туров» их сотни).
+     * How many options to list right in the documentation. Longer lists become
+     * a reference to the module to fetch them from (relations can have hundreds).
      */
     private const MAX_INLINE_OPTIONS = 80;
 
     public function __construct(private readonly ApiResources $resources) {}
 
     /**
-     * @param  array<int,string>  $only  ключи модулей; пусто — все
+     * @param  array<int,string>  $only  module keys; empty — all
      * @return array<string,array{label:string,fields:array<int,array<string,mixed>>}>
      */
     public function modules(array $only = []): array
@@ -55,10 +55,11 @@ final class ApiDocumentation
     }
 
     /**
-     * Поле глазами клиента API: какой JSON слать и что он значит.
+     * A field as an API client sees it: what JSON to send and what it means.
      *
-     * Свойства поля берутся выборочно, а не всем toArray(): там, например,
-     * ключ API карт, которому в открытой документации не место.
+     * Field properties are picked selectively rather than the whole toArray():
+     * it contains, for example, the maps API key, which has no place in public
+     * documentation.
      *
      * @return array<string,mixed>
      */
@@ -79,22 +80,22 @@ final class ApiDocumentation
         ];
 
         if (! $field->shouldShowOnCreate()) {
-            $doc['note'] = 'Только при правке.';
+            $doc['note'] = 'Edit only.';
         } elseif (! $field->shouldShowOnEdit()) {
-            $doc['note'] = 'Только при создании.';
+            $doc['note'] = 'Create only.';
         }
 
         $doc = match ($type) {
             'number' => $this->set($doc, ['type' => 'number'], ''),
             'checkbox' => $this->checkboxSchema($doc, $props),
-            'date' => $this->set($doc, ['type' => 'string', 'format' => 'date'], 'Дата: ГГГГ-ММ-ДД.'),
-            'datetime' => $this->set($doc, ['type' => 'string', 'format' => 'date-time'], 'Дата и время: ГГГГ-ММ-ДД ЧЧ:ММ:СС.'),
-            'slug' => $this->set($doc, ['type' => 'string', 'pattern' => '^[a-z0-9-]+$'], 'Для адреса страницы: латиница, цифры и дефис. Пусто — соберётся из названия.'),
+            'date' => $this->set($doc, ['type' => 'string', 'format' => 'date'], 'Date: YYYY-MM-DD.'),
+            'datetime' => $this->set($doc, ['type' => 'string', 'format' => 'date-time'], 'Date and time: YYYY-MM-DD HH:MM:SS.'),
+            'slug' => $this->set($doc, ['type' => 'string', 'pattern' => '^[a-z0-9-]+$'], 'For the page URL: Latin letters, digits and hyphens. Empty — built from the name.'),
             'content', 'wysiwyg' => $this->set($doc, ['type' => 'string'], 'HTML: p, h2, h3, ul, ol, li, a, b, i, img, table.'),
-            'color' => $this->set($doc, ['type' => 'string'], 'Цвет, например #1e88e5.'),
-            'map' => $this->set($doc, ['type' => 'string'], 'Координаты «широта,долгота», например 53.9045,27.5615.'),
-            'image', 'file' => $this->set($doc, ['type' => 'string'], 'Адрес файла: загрузите его через POST /files и подставьте `url` из ответа.'),
-            'gallery' => $this->set($doc, ['type' => 'array', 'items' => ['type' => 'string']], 'Список адресов файлов, каждый загружается через POST /files.'),
+            'color' => $this->set($doc, ['type' => 'string'], 'Colour, e.g. #1e88e5.'),
+            'map' => $this->set($doc, ['type' => 'string'], 'Coordinates "latitude,longitude", e.g. 51.5074,-0.1278.'),
+            'image', 'file' => $this->set($doc, ['type' => 'string'], 'File URL: upload the file via POST /files and use `url` from the response.'),
+            'gallery' => $this->set($doc, ['type' => 'array', 'items' => ['type' => 'string']], 'List of file URLs, each uploaded via POST /files.'),
             'repeatable' => $this->set($doc, ['type' => 'array', 'items' => $this->repeatableItem($props['itemType'] ?? 'text')], $this->repeatableNote($props['itemType'] ?? 'text')),
             'select' => $this->optionsSchema($doc, $props['options'] ?? [], false),
             'multiSelect' => $this->optionsSchema($doc, $props['options'] ?? [], true),
@@ -129,7 +130,7 @@ final class ApiDocumentation
         $doc['schema'] = ['type' => 'boolean'];
 
         if (($props['checkedValue'] ?? null) !== null) {
-            $doc['note'] = trim(($doc['note'] ?? '')." Шлите true/false, в ответе придёт «{$props['checkedValue']}» или null.");
+            $doc['note'] = trim(($doc['note'] ?? '')." Send true/false; the response contains \"{$props['checkedValue']}\" or null.");
         }
 
         return $doc;
@@ -148,11 +149,11 @@ final class ApiDocumentation
     private function repeatableNote(string $itemType): string
     {
         return match ($itemType) {
-            'date' => 'Список дат ГГГГ-ММ-ДД.',
-            'datetime' => 'Список дат со временем ГГГГ-ММ-ДД ЧЧ:ММ:СС.',
-            'content' => 'Список HTML-фрагментов.',
-            'number' => 'Список чисел.',
-            default => 'Список строк.',
+            'date' => 'List of dates YYYY-MM-DD.',
+            'datetime' => 'List of dates with time YYYY-MM-DD HH:MM:SS.',
+            'content' => 'List of HTML fragments.',
+            'number' => 'List of numbers.',
+            default => 'List of strings.',
         };
     }
 
@@ -168,22 +169,22 @@ final class ApiDocumentation
         $doc['options'] = $options;
 
         if ($multiple) {
-            $doc['note'] = trim(($doc['note'] ?? '').' Список значений.');
+            $doc['note'] = trim(($doc['note'] ?? '').' List of values.');
         }
 
         return $doc;
     }
 
     /**
-     * Ссылка на другую запись — по id. Варианты либо прямо здесь, либо, когда
-     * их слишком много, ссылка на модуль, где их взять.
+     * A reference to another record — by id. Options are either listed right
+     * here or, when there are too many, a reference to the module to get them from.
      *
      * @param  array<int,array{value:mixed,label:mixed}>  $options
      */
     private function relationSchema(array $doc, array $options, bool $multiple, ?string $model): array
     {
         $doc['schema'] = $multiple ? ['type' => 'array', 'items' => ['type' => 'integer']] : ['type' => 'integer'];
-        $doc['note'] = trim(($doc['note'] ?? '').($multiple ? ' Список id.' : ' id записи.'));
+        $doc['note'] = trim(($doc['note'] ?? '').($multiple ? ' List of ids.' : ' Record id.'));
 
         $source = $model !== null ? $this->resources->keyOf($model) : null;
 
@@ -198,8 +199,8 @@ final class ApiDocumentation
     }
 
     /**
-     * Дерево разделов — в плоский список с полным путём в подписи:
-     * «Беларусь / Однодневные туры», иначе одноимённые разделы не различить.
+     * A section tree as a flat list with the full path in the label:
+     * "Europe / Day trips", otherwise sections with the same name are indistinguishable.
      *
      * @return array<int,array{value:mixed,label:string}>
      */
@@ -229,54 +230,54 @@ final class ApiDocumentation
         $site = $this->siteName();
 
         $lines = [
-            "# API сайта {$site}",
+            "# {$site} API",
             '',
-            'Через API доступно то же, что в админке: списки, чтение, создание, правка и удаление записей любого модуля.',
-            'Записи проверяются и сохраняются теми же правилами, что и форма в админке.',
+            'The API offers the same as the admin panel: listing, reading, creating, editing and deleting records of any module.',
+            'Records are validated and saved by the same rules as the admin form.',
             '',
-            "Адрес: `{$base}`. Эта страница: `{$base}`, схема OpenAPI 3.1: `{$base}/openapi.json`.",
-            "Описание только нужных модулей: `{$base}?only=ключ,ключ` (так же у `openapi.json`).",
+            "Base URL: `{$base}`. This page: `{$base}`, OpenAPI 3.1 schema: `{$base}/openapi.json`.",
+            "Only the modules you need: `{$base}?only=key,key` (same for `openapi.json`).",
             '',
-            '## Доступ',
+            '## Access',
             '',
-            'Токен выпускают в админке, раздел «API-токены». У токена права по модулям: `модуль:read` даёт читать, `модуль:write` создавать, менять и удалять.',
-            'Каждый запрос — с заголовками `Authorization: Bearer <токен>` и `Accept: application/json`.',
+            'Tokens are issued in the admin panel, "API tokens" section. A token has per-module abilities: `module:read` allows reading, `module:write` creating, editing and deleting.',
+            'Send every request with the headers `Authorization: Bearer <token>` and `Accept: application/json`.',
             '',
-            '## Запросы',
+            '## Requests',
             '',
-            '| Что | Запрос |',
+            '| What | Request |',
             '|---|---|',
-            '| Список | `GET /{модуль}?page=1&per_page=20&search=текст&filter[поле]=значение&sort=поле&direction=asc` |',
-            '| Одна запись | `GET /{модуль}/{id}` |',
-            '| Создать | `POST /{модуль}` с JSON полей |',
-            '| Изменить | `PATCH /{модуль}/{id}`: только те поля, что меняются |',
-            '| Удалить | `DELETE /{модуль}/{id}` |',
-            '| Загрузить файл | `POST /files`, multipart/form-data, поле `file` (jpg, png, gif, webp, pdf, doc, docx, xls, xlsx) |',
+            '| List | `GET /{module}?page=1&per_page=20&search=text&filter[field]=value&sort=field&direction=asc` |',
+            '| One record | `GET /{module}/{id}` |',
+            '| Create | `POST /{module}` with a JSON of fields |',
+            '| Update | `PATCH /{module}/{id}`: only the fields that change |',
+            '| Delete | `DELETE /{module}/{id}` |',
+            '| Upload a file | `POST /files`, multipart/form-data, field `file` (jpg, png, gif, webp, pdf, doc, docx, xls, xlsx) |',
             '',
-            '`per_page` не больше 100. `filter` и `sort` принимают только поля модуля.',
-            'Ответ на запись: `{"data": {...}}`, в нём ещё `admin_url` (правка в админке) и `public_url` (страница на сайте, если она есть).',
-            'Ответ на список: `{"data": [...], "meta": {"current_page", "last_page", "per_page", "total"}}`.',
+            '`per_page` is at most 100. `filter` and `sort` accept only fields of the module.',
+            'Record response: `{"data": {...}}`, which also has `admin_url` (edit in the admin panel) and `public_url` (the page on the site, if any).',
+            'List response: `{"data": [...], "meta": {"current_page", "last_page", "per_page", "total"}}`.',
             '',
-            '## Ошибки',
+            '## Errors',
             '',
-            '- 401: нет токена, он отозван, истёк или его владелец отключён.',
-            '- 403: у токена нет права на этот модуль.',
-            '- 404: нет такого модуля или записи.',
-            '- 422: поля не прошли проверку, разбор по полям в `errors`.',
+            '- 401: no token, or it is revoked, expired, or its owner is disabled.',
+            '- 403: the token has no ability for this module.',
+            '- 404: no such module or record.',
+            '- 422: fields failed validation, per-field details in `errors`.',
             '',
-            '## Картинки',
+            '## Images',
             '',
-            'Поле-картинка хранит адрес файла. Сначала `POST /files` с файлом, затем `url` из ответа кладётся в поле. В галерею — список таких адресов.',
+            'An image field stores a file URL. First `POST /files` with the file, then put `url` from the response into the field. A gallery takes a list of such URLs.',
             '',
-            '## Как не навредить',
+            '## How not to do harm',
             '',
-            '- Новую запись создавайте с `active: false` и включайте после проверки человеком, если у модуля есть поле `active`.',
-            '- Перед созданием поищите запись по коду (`filter[code]=...`), чтобы не завести дубль.',
-            '- Значения полей со списком вариантов берите только из этих вариантов.',
+            '- Create new records with `active: false` and let a human enable them after review, if the module has an `active` field.',
+            '- Before creating, look the record up by code (`filter[code]=...`) to avoid duplicates.',
+            '- For fields with a list of options, use only those options.',
             '',
-            '## Модули',
+            '## Modules',
             '',
-            '| Модуль | Ключ |',
+            '| Module | Key |',
             '|---|---|',
         ];
 
@@ -286,7 +287,7 @@ final class ApiDocumentation
 
         foreach ($modules as $key => $module) {
             array_push($lines, '', "## {$module['label']}", '', "`GET|POST /{$key}`, `GET|PATCH|DELETE /{$key}/{id}`", '');
-            $lines[] = '| Поле | Тип | Обязательное | Что это |';
+            $lines[] = '| Field | Type | Required | Description |';
             $lines[] = '|---|---|---|---|';
 
             $options = [];
@@ -295,14 +296,14 @@ final class ApiDocumentation
                 $about = array_filter([$field['label'], $field['hint'], $field['note']]);
 
                 if ($field['options_from'] !== null && $field['options'] === null) {
-                    $about[] = "Варианты: GET /{$field['options_from']}.";
+                    $about[] = "Options: GET /{$field['options_from']}.";
                 }
 
                 $lines[] = sprintf(
                     '| `%s` | %s | %s | %s |',
                     $field['name'],
                     $this->typeName($field['schema']),
-                    $field['required'] ? 'да' : '',
+                    $field['required'] ? 'yes' : '',
                     $this->cell(implode('. ', array_map(static fn ($s) => rtrim((string) $s, '.'), $about)).'.')
                 );
 
@@ -312,7 +313,7 @@ final class ApiDocumentation
             }
 
             foreach ($options as $name => $list) {
-                array_push($lines, '', "Варианты `{$name}`:", '');
+                array_push($lines, '', "Options for `{$name}`:", '');
 
                 foreach ($list as $option) {
                     $lines[] = '- `'.$option['value'].'`: '.$this->cell((string) $option['label']);
@@ -336,9 +337,9 @@ final class ApiDocumentation
         $json = static fn (array $schema): array => ['content' => ['application/json' => ['schema' => $schema]]];
         $idParam = ['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']];
         $errors = [
-            '401' => ['description' => 'Нет действующего токена'],
-            '403' => ['description' => 'У токена нет права на модуль'],
-            '404' => ['description' => 'Нет модуля или записи'],
+            '401' => ['description' => 'No valid token'],
+            '403' => ['description' => 'The token has no ability for the module'],
+            '404' => ['description' => 'No such module or record'],
         ];
 
         foreach ($modules as $key => $module) {
@@ -351,12 +352,12 @@ final class ApiDocumentation
                 $description = implode('. ', array_filter([$field['label'], $field['hint'], $field['note']]));
 
                 if (! empty($field['options']) && ! isset($schema['enum']) && ! isset($schema['items']['enum'])) {
-                    $description .= '. Варианты: '.implode('; ', array_map(
+                    $description .= '. Options: '.implode('; ', array_map(
                         static fn (array $option): string => $option['value'].' = '.$option['label'],
                         $field['options']
                     ));
                 } elseif ($field['options_from'] !== null && $field['options'] === null) {
-                    $description .= ". Варианты: GET /{$field['options_from']}";
+                    $description .= ". Options: GET /{$field['options_from']}";
                 }
 
                 $properties[$field['name']] = $schema + ['description' => $description];
@@ -367,7 +368,7 @@ final class ApiDocumentation
             }
 
             $schemas[$name] = array_filter(['type' => 'object', 'properties' => (object) $properties, 'required' => $required]);
-            // Правка частичная: те же поля, но обязательных нет.
+            // Updates are partial: the same fields, none required.
             $schemas[$name.'Changes'] = ['type' => 'object', 'properties' => (object) $properties];
             $schemas[$name.'Record'] = ['allOf' => [
                 ['type' => 'object', 'properties' => [
@@ -385,7 +386,7 @@ final class ApiDocumentation
             $paths["/{$key}"] = [
                 'get' => [
                     'operationId' => "list_{$key}",
-                    'summary' => "{$module['label']}: список",
+                    'summary' => "{$module['label']}: list",
                     'tags' => $tag,
                     'parameters' => [
                         ['name' => 'page', 'in' => 'query', 'schema' => ['type' => 'integer']],
@@ -395,55 +396,55 @@ final class ApiDocumentation
                         ['name' => 'sort', 'in' => 'query', 'schema' => ['type' => 'string']],
                         ['name' => 'direction', 'in' => 'query', 'schema' => ['type' => 'string', 'enum' => ['asc', 'desc']]],
                     ],
-                    'responses' => ['200' => ['description' => 'Страница списка'] + $json(['type' => 'object', 'properties' => [
+                    'responses' => ['200' => ['description' => 'List page'] + $json(['type' => 'object', 'properties' => [
                         'data' => ['type' => 'array', 'items' => ['$ref' => "#/components/schemas/{$name}Record"]],
                         'meta' => ['type' => 'object'],
                     ]])] + $errors,
                 ],
                 'post' => [
                     'operationId' => "create_{$key}",
-                    'summary' => "{$module['label']}: создать",
+                    'summary' => "{$module['label']}: create",
                     'tags' => $tag,
                     'requestBody' => ['required' => true] + $json($ref),
-                    'responses' => ['201' => ['description' => 'Создано'] + $record, '422' => ['description' => 'Поля не прошли проверку']] + $errors,
+                    'responses' => ['201' => ['description' => 'Created'] + $record, '422' => ['description' => 'Fields failed validation']] + $errors,
                 ],
             ];
 
             $paths["/{$key}/{id}"] = [
                 'get' => [
                     'operationId' => "get_{$key}",
-                    'summary' => "{$module['label']}: запись",
+                    'summary' => "{$module['label']}: record",
                     'tags' => $tag,
                     'parameters' => [$idParam],
-                    'responses' => ['200' => ['description' => 'Запись'] + $record] + $errors,
+                    'responses' => ['200' => ['description' => 'Record'] + $record] + $errors,
                 ],
                 'patch' => [
                     'operationId' => "update_{$key}",
-                    'summary' => "{$module['label']}: изменить присланные поля",
+                    'summary' => "{$module['label']}: update the fields sent",
                     'tags' => $tag,
                     'parameters' => [$idParam],
                     'requestBody' => ['required' => true] + $json(['$ref' => "#/components/schemas/{$name}Changes"]),
-                    'responses' => ['200' => ['description' => 'Изменено'] + $record, '422' => ['description' => 'Поля не прошли проверку']] + $errors,
+                    'responses' => ['200' => ['description' => 'Updated'] + $record, '422' => ['description' => 'Fields failed validation']] + $errors,
                 ],
                 'delete' => [
                     'operationId' => "delete_{$key}",
-                    'summary' => "{$module['label']}: удалить",
+                    'summary' => "{$module['label']}: delete",
                     'tags' => $tag,
                     'parameters' => [$idParam],
-                    'responses' => ['204' => ['description' => 'Удалено'], '409' => ['description' => 'Запись нельзя удалить']] + $errors,
+                    'responses' => ['204' => ['description' => 'Deleted'], '409' => ['description' => 'The record cannot be deleted']] + $errors,
                 ],
             ];
         }
 
         $paths['/files'] = ['post' => [
             'operationId' => 'upload_file',
-            'summary' => 'Загрузить файл, вернёт url для поля-картинки или галереи',
+            'summary' => 'Upload a file; returns a url for an image field or a gallery',
             'requestBody' => ['required' => true, 'content' => ['multipart/form-data' => ['schema' => [
                 'type' => 'object',
                 'properties' => ['file' => ['type' => 'string', 'format' => 'binary']],
                 'required' => ['file'],
             ]]]],
-            'responses' => ['200' => ['description' => 'Файл загружен'] + $json(['type' => 'object', 'properties' => [
+            'responses' => ['200' => ['description' => 'File uploaded'] + $json(['type' => 'object', 'properties' => [
                 'url' => ['type' => 'string'],
                 'path' => ['type' => 'string'],
             ]])] + $errors,
@@ -452,9 +453,9 @@ final class ApiDocumentation
         return [
             'openapi' => '3.1.0',
             'info' => [
-                'title' => 'API сайта '.$this->siteName(),
+                'title' => $this->siteName().' API',
                 'version' => '1',
-                'description' => 'То же, что в админке. Подробно, с вариантами значений: '.url(config('atrium.api.prefix', 'api/v1')),
+                'description' => 'The same as the admin panel. Full details with allowed values: '.url(config('atrium.api.prefix', 'api/v1')),
             ],
             'servers' => [['url' => url(config('atrium.api.prefix', 'api/v1'))]],
             'security' => [['bearer' => []]],
@@ -467,7 +468,7 @@ final class ApiDocumentation
     }
 
     /**
-     * Сайт по домену: APP_NAME у проектов часто так и остаётся «Laravel».
+     * The site by its domain: projects often leave APP_NAME as "Laravel".
      */
     private function siteName(): string
     {
@@ -480,21 +481,21 @@ final class ApiDocumentation
 
         if ($type === 'array') {
             return match ($this->typeName($schema['items'] ?? [])) {
-                'id' => 'список id',
-                'число' => 'список чисел',
-                'дата' => 'список дат',
-                'дата и время' => 'список дат со временем',
-                default => 'список строк',
+                'id' => 'list of ids',
+                'number' => 'list of numbers',
+                'date' => 'list of dates',
+                'date and time' => 'list of dates with time',
+                default => 'list of strings',
             };
         }
 
         return match ($schema['format'] ?? $type) {
             'integer' => 'id',
-            'number' => 'число',
-            'boolean' => 'да/нет',
-            'date' => 'дата',
-            'date-time' => 'дата и время',
-            default => 'строка',
+            'number' => 'number',
+            'boolean' => 'yes/no',
+            'date' => 'date',
+            'date-time' => 'date and time',
+            default => 'string',
         };
     }
 

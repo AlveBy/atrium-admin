@@ -15,33 +15,39 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Медиабиблиотека: список, загрузка, удаление.
+ * Media library: list, upload, delete.
  *
- * Раньше список собирался обходом каталога uploads на диске. Из-за этого
- * менеджер видел только то, что загрузили через админку, — а все семь тысяч
- * картинок, переехавших из Битрикса, лежат в public/upload и в список не
- * попадали. Теперь источник — таблица media_library_items, куда попадает и
- * перенесённое из Битрикса, и всё, что загружают сейчас. Заодно появился
- * поиск по названию: имена файлов на диске — хеши, искать по ним нечего.
+ * The list used to be built by walking the uploads directory on disk, so the
+ * manager saw only what had been uploaded through the panel — thousands of
+ * images migrated from Bitrix live in public/upload and never showed up. Now
+ * the source is the media_library_items table, which holds both migrated files
+ * and everything uploaded since. That also enabled search by title: file names
+ * on disk are hashes, there is nothing to search in them.
  */
 class FileManagerController extends Controller
 {
     private const PER_PAGE = 24;
 
     /**
-     * Загрузить файл и сразу положить его в библиотеку.
+     * Upload a file and add it to the library right away.
      *
-     * Регистрация здесь — то, ради чего всё затевалось: загруженная один раз
-     * картинка дальше выбирается из библиотеки, а не заливается заново.
+     * Registering it here is the whole point: an image uploaded once is then
+     * picked from the library instead of being uploaded again.
      */
     public function upload(Request $request): JsonResponse
     {
+        $maxKb = (int) config('atrium.uploads.max_size', 10240);
+
         $request->validate([
             'file' => [
                 'required',
                 'file',
-                'max:'.config('atrium.uploads.max_size', 10240),
+                'max:'.$maxKb,
             ],
+        ], [
+            'file.required' => __('atrium::files.errors.required'),
+            'file.file' => __('atrium::files.errors.upload_broken'),
+            'file.max' => __('atrium::files.errors.too_big', ['max' => round($maxKb / 1024, 1)]),
         ]);
 
         /** @var UploadedFile $file */
@@ -55,7 +61,7 @@ class FileManagerController extends Controller
 
         if (! in_array($extension, $allowed, true)) {
             return response()->json([
-                'message' => 'Недопустимый тип файла. Разрешены: '.implode(', ', $allowed),
+                'message' => __('atrium::files.errors.type_not_allowed', ['types' => implode(', ', $allowed)]),
             ], 422);
         }
 
@@ -79,8 +85,8 @@ class FileManagerController extends Controller
             'is_image' => str_starts_with($mimeType, 'image/'),
         ]);
 
-        // Ключи url/path/filename сохранены как были: на них завязаны поля
-        // с картинками и вставка изображения в визуальном редакторе.
+        // The url/path/filename keys are kept as they were: image fields and
+        // image insertion in the visual editor depend on them.
         return response()->json([
             'url' => $item->url,
             'path' => $path,
@@ -94,16 +100,16 @@ class FileManagerController extends Controller
     }
 
     /**
-     * Положить рядом с загруженной картинкой её облегчённую копию.
+     * Put a lighter copy next to an uploaded image.
      *
-     * Посетителю она поедет вместо оригинала, если браузер понимает webp
-     * (подменяет веб-сервер, правило в public/.htaccess). Раньше копии делала
-     * только команда `images:webp` по расписанию, и картинка, загруженная в
-     * админке, до её запуска ехала тяжёлой.
+     * Visitors get it instead of the original if the browser understands webp
+     * (the web server swaps it, rule in public/.htaccess). Copies used to be
+     * made only by the scheduled `images:webp` command, so an image uploaded in
+     * the panel was served heavy until the next run.
      *
-     * Отказ проглатываем: не сделать копию — досадно, а не дать сохранить
-     * картинку из-за этого — куда хуже. Причина уходит в журнал, а команда
-     * по расписанию потом всё равно догонит пропущенное.
+     * A failure is swallowed: a missing copy is a pity, refusing to save the
+     * image because of it is far worse. The reason goes to the log, and the
+     * scheduled command catches up later anyway.
      */
     private function makeWebpCopy(string $disk, string $path): void
     {
@@ -114,12 +120,12 @@ class FileManagerController extends Controller
         try {
             WebpCopy::make(Storage::disk($disk)->path($path));
         } catch (\Throwable $e) {
-            Log::warning('Не удалось сделать webp-копию для '.$path.': '.$e->getMessage());
+            Log::warning('Could not make a webp copy of '.$path.': '.$e->getMessage());
         }
     }
 
     /**
-     * Список файлов библиотеки.
+     * Library file list.
      */
     public function index(Request $request): JsonResponse
     {
@@ -150,7 +156,7 @@ class FileManagerController extends Controller
             ->map(fn (MediaItem $item) => [
                 'id' => $item->id,
                 'url' => $item->url,
-                // Историческое имя ключа: его читают поля и визуальный редактор.
+                // Historical key name: fields and the visual editor read it.
                 'path' => $item->path ?? ltrim($item->url, '/'),
                 'filename' => $item->name,
                 'collection_id' => $item->collection_id,
@@ -171,7 +177,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * Убрать файл из библиотеки.
+     * Remove a file from the library.
      */
     public function destroy(Request $request): JsonResponse
     {
@@ -181,20 +187,20 @@ class FileManagerController extends Controller
             ->first();
 
         if ($item === null) {
-            return response()->json(['message' => 'Файл не найден.'], 404);
+            return response()->json(['message' => __('atrium::files.errors.not_found')], 404);
         }
 
-        // Файл с диска стираем, только если им управляем мы. Перенесённые из
-        // Битрикса лежат в public/upload и могут быть вставлены в тексты
-        // страниц напрямую — удаление оставило бы битые картинки в контенте.
+        // The file is erased from disk only if we manage it. Files migrated from
+        // Bitrix live in public/upload and may be embedded in page texts
+        // directly — deleting them would leave broken images in the content.
         $item->deleteFile();
         $item->delete();
 
-        return response()->json(['message' => 'Файл удалён из библиотеки.']);
+        return response()->json(['message' => __('atrium::files.removed')]);
     }
 
     /**
-     * Коллекции с числом файлов — для фильтра в шапке менеджера.
+     * Collections with file counts — for the filter in the manager header.
      *
      * @return array<int,array{id:int,name:string,count:int}>
      */
@@ -221,11 +227,17 @@ class FileManagerController extends Controller
             ->all();
     }
 
-    /** Куда складывать то, что загружают через админку. */
+    /**
+     * Where files uploaded through the panel go.
+     *
+     * The collection is found by name, so the name is taken in the install's
+     * default language, not the current admin's — otherwise every language
+     * would get its own collection.
+     */
     private function uploadsCollection(): MediaCollection
     {
         return MediaCollection::firstOrCreate(
-            ['name' => 'Загруженные из админки'],
+            ['name' => __('atrium::files.uploads_collection', [], (string) config('atrium.locale', 'en'))],
             ['sort' => 100]
         );
     }

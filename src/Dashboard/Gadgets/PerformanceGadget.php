@@ -8,17 +8,16 @@ use Atrium\Admin\Dashboard\Gadget;
 use Atrium\Admin\Dashboard\PageSpeedStats;
 
 /**
- * «Монитор производительности» — текущая оценка в страницах в секунду.
+ * "Performance monitor" — the current score in pages per second.
  *
- * У заказчика в этой плитке стояло 32,23. Число приходило из опции
- * perfmon.mark_php_page_rate, которую модуль записывал по формуле
- * `количество замеров / сумма времени` (perfmon_panel.php) после ручного
- * прогона теста, — то есть страниц в секунду, и оно оставалось таким, каким
- * его оставил последний прогон, хоть год назад.
+ * In Bitrix the number came from the perfmon.mark_php_page_rate option, which
+ * the module wrote with the formula `samples / total time` (perfmon_panel.php)
+ * after a manual test run — i.e. pages per second — and it stayed whatever the
+ * last run left, even a year ago.
  *
- * Формулу и единицу берём ту же, но считаем по живым запросам, поэтому число
- * не сравнивается с битриксовым напрямую: там синтетика на одной странице,
- * здесь весь реальный трафик вместе с самыми тяжёлыми страницами.
+ * Same formula and unit here, but computed from live requests, so the number
+ * is not directly comparable with Bitrix: there it was a synthetic test of one
+ * page, here it is all real traffic including the heaviest pages.
  */
 final class PerformanceGadget extends Gadget
 {
@@ -36,7 +35,7 @@ final class PerformanceGadget extends Gadget
 
     public function title(): string
     {
-        return (string) $this->option('title', 'Монитор производительности');
+        return (string) $this->option('title', __('atrium::dashboard.performance.title'));
     }
 
     public function width(): string
@@ -51,8 +50,8 @@ final class PerformanceGadget extends Gadget
 
         return [
             'rate' => $rate === null ? null : number_format($rate, 2, ',', ' '),
-            'caption' => 'Текущая оценка',
-            'unit' => 'страниц в секунду',
+            'caption' => __('atrium::dashboard.performance.caption'),
+            'unit' => __('atrium::dashboard.performance.unit'),
             'averageSeconds' => $average === null ? null : number_format($average / 1000, 3, ',', ' '),
             'samples' => $this->stats->samples(),
             'windowDays' => $this->stats->windowDays(),

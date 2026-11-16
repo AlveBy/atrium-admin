@@ -38,7 +38,7 @@ const getIconPath = (icon) => iconPaths[icon] || iconPaths['document-text']
     <div class="admin-tabs">
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <nav class="-mb-px flex space-x-8" :aria-label="$t('fields.tabs.label')">
                 <button
                     v-for="tab in tabs"
                     :key="tab.name"

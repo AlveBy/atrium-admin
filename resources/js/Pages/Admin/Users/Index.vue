@@ -63,14 +63,14 @@ const handleDelete = () => {
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
                 <p class="mt-1 text-sm text-gray-600">
-                    Всего записей: {{ items.total }}
+                    {{ $t('account.users.total', { count: items.total }) }}
                 </p>
             </div>
             <AdminButton :href="route('admin.users.create')">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Создать
+                {{ $t('common.create') }}
             </AdminButton>
         </div>
 
@@ -81,13 +81,13 @@ const handleDelete = () => {
                     <input
                         v-model="search"
                         type="text"
-                        placeholder="Поиск..."
+                        :placeholder="$t('account.users.search_placeholder')"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                         @keyup.enter="handleSearch"
                     />
                 </div>
                 <AdminButton @click="handleSearch" variant="secondary">
-                    Найти
+                    {{ $t('common.search') }}
                 </AdminButton>
             </div>
         </div>
@@ -106,23 +106,23 @@ const handleDelete = () => {
         <!-- Delete Confirmation Modal -->
         <AdminModal
             :show="showDeleteModal"
-            title="Подтверждение удаления"
+            :title="$t('account.users.delete_title')"
             @close="showDeleteModal = false"
         >
             <p class="text-gray-600">
-                Вы уверены, что хотите удалить эту запись?
+                {{ $t('account.users.delete_confirm') }}
                 <strong v-if="itemToDelete">{{ itemToDelete.name }}</strong>
             </p>
             <p class="mt-2 text-sm text-red-600">
-                Это действие нельзя отменить.
+                {{ $t('account.users.delete_irreversible') }}
             </p>
 
             <template #footer>
                 <AdminButton variant="secondary" @click="showDeleteModal = false">
-                    Отмена
+                    {{ $t('common.cancel') }}
                 </AdminButton>
                 <AdminButton variant="danger" @click="handleDelete">
-                    Удалить
+                    {{ $t('common.delete') }}
                 </AdminButton>
             </template>
         </AdminModal>

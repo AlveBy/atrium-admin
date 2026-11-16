@@ -11,22 +11,22 @@ use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Пускает в API только по токену, выпущенному в админке.
+ * Lets into the API only with a token issued in the admin panel.
  *
- * Не `auth:sanctum`: тот сначала пробует сессию гарда `web`, и запрос
- * с открытой вкладкой сайта прошёл бы как пользователь сайта, а не как
- * администратор. Здесь — только Bearer-токен, только администратора и только
- * пока тот активен.
+ * Not `auth:sanctum`: it tries the `web` guard session first, so a request
+ * from a browser with the site open would pass as a site user rather than as
+ * an administrator. Here it is a Bearer token only, an administrator's only,
+ * and only while that administrator is active.
  *
- * Владелец токена становится пользователем гарда админки: всё, что пишет
- * «кто изменил», видит его так же, как при правке руками.
+ * The token owner becomes the admin guard's user: everything that records
+ * "who changed it" sees them exactly as with a manual edit.
  */
 class AuthenticateApiToken
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Ответы API — всегда JSON, в том числе ошибки проверки: без этого
-        // Laravel отвечает на неудачную валидацию редиректом назад.
+        // API responses are always JSON, validation errors included: without
+        // this Laravel answers a failed validation with a redirect back.
         $request->headers->set('Accept', 'application/json');
 
         $token = PersonalAccessToken::findToken((string) $request->bearerToken());
@@ -38,7 +38,7 @@ class AuthenticateApiToken
             || ! $user instanceof $model
             || ! $user->is_active
             || ($token->expires_at !== null && $token->expires_at->isPast())) {
-            return response()->json(['message' => 'Нужен действующий API-токен: заголовок Authorization: Bearer <токен>.'], 401);
+            return response()->json(['message' => 'A valid API token is required: Authorization: Bearer <token> header.'], 401);
         }
 
         $token->forceFill(['last_used_at' => now()])->save();

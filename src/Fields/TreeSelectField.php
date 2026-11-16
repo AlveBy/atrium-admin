@@ -102,16 +102,16 @@ class TreeSelectField extends Field
     }
 
     /**
-     * Подпись строки «ничего не выбрано» в самом верху дерева.
+     * Label of the "nothing selected" row at the very top of the tree.
      *
-     * Без неё список родителей — это только уже заведённые разделы, и
-     * «создать раздел верхнего уровня» превращается в догадку: заказчик,
-     * добавляя Японию, увидел в «Родительском разделе» одни страны и решил,
-     * что новую страну можно завести только внутри старой. Пустое значение
-     * работало и раньше — но выбрать его было нечем.
+     * Without it the parent list shows only existing sections, and "create a
+     * top-level section" becomes guesswork: an editor adding a new top-level
+     * section saw only existing ones under "Parent section" and concluded a new
+     * one could only be created inside an old one. The empty value worked
+     * before too — there was just no way to pick it.
      *
-     * null — строки нет (так у привязки элемента к разделу: «без раздела»
-     * там не нормальный выбор, а потерянная страница).
+     * null — no such row (as for linking an element to a section: "no section"
+     * there is not a normal choice but an orphaned page).
      */
     public function rootLabel(?string $label): static
     {
@@ -122,8 +122,8 @@ class TreeSelectField extends Field
     }
 
     /**
-     * Дерево, вложенное само в себя (`parent_id` → та же модель), — ровно тот
-     * случай, где «ничего не выбрано» значит «верхний уровень».
+     * A self-nested tree (`parent_id` → the same model) is exactly the case
+     * where "nothing selected" means "top level".
      */
     protected function defaultRootLabel(): ?string
     {
@@ -131,7 +131,7 @@ class TreeSelectField extends Field
             return null;
         }
 
-        return 'Верхний уровень';
+        return __('atrium::fields.tree.top_level');
     }
 
     /**
@@ -234,12 +234,12 @@ class TreeSelectField extends Field
     }
 
     /**
-     * Раздел не может лежать внутри себя или внутри собственного потомка.
+     * A section cannot sit inside itself or inside its own descendant.
      *
-     * В дереве родителей показаны все разделы, включая правимый, и `exists`
-     * такой выбор пропускает. Дальше HasAdminSlug идёт от раздела к корню за
-     * путём ЧПУ — и в кольце этот подъём не заканчивается никогда: сохранение
-     * не падает с ошибкой, а вешает запрос.
+     * The parent tree shows all sections, including the one being edited, and
+     * `exists` lets such a choice through. HasAdminSlug then walks from the
+     * section to the root for the slug path — and in a cycle that walk never
+     * ends: the save does not fail with an error, it hangs the request.
      */
     protected function notItsOwnAncestorRule(?FieldContext $context): ?\Closure
     {
@@ -266,7 +266,7 @@ class TreeSelectField extends Field
 
             for ($depth = 0; $cursor && $depth <= $rows->count(); $depth++) {
                 if ($cursor === (int) $record->getKey()) {
-                    $fail('Раздел нельзя положить внутрь себя или своего подраздела.');
+                    $fail(__('atrium::fields.validation.own_ancestor'));
 
                     return;
                 }

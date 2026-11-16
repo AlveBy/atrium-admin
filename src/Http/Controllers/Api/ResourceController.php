@@ -13,14 +13,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Любой модуль админки через API: список, запись, создание, правка, удаление.
+ * Any admin module through the API: list, read, create, update, delete.
  *
- * Наследуется от AdminController ради одного — сохранять теми же правилами,
- * что и форма: та же проверка полей, галочки, привязки, SEO, хуки модели.
- * Модель выбирается по ключу из адреса (`/api/v1/articles`).
+ * Extends AdminController for one reason — to save by the same rules as the
+ * form: the same field validation, checkboxes, relations, SEO, model hooks.
+ * The model is chosen by the key in the URL (`/api/v1/articles`).
  *
- * Имена действий свои (listItems, а не index): родительские index/update
- * отдают страницы Inertia и редиректы, переопределить их JSON-ответом нельзя.
+ * Action names are its own (listItems, not index): the parent index/update
+ * return Inertia pages and redirects and cannot be overridden with JSON.
  */
 class ResourceController extends AdminController
 {
@@ -90,7 +90,7 @@ class ResourceController extends AdminController
     }
 
     /**
-     * Правка частичная: проверяются и пишутся только присланные поля.
+     * Updates are partial: only the fields sent are validated and written.
      */
     public function updateItem(Request $request, string $resource = '', int $id = 0): JsonResponse
     {
@@ -108,7 +108,7 @@ class ResourceController extends AdminController
         $item = $this->findItem($id);
 
         if (! $item->canDelete() || ! $item->beforeAdminDelete()) {
-            return response()->json(['message' => 'Эту запись нельзя удалить.'], 409);
+            return response()->json(['message' => 'This record cannot be deleted.'], 409);
         }
 
         $item->delete();
@@ -117,23 +117,23 @@ class ResourceController extends AdminController
     }
 
     /**
-     * Загрузка файла в медиабиблиотеку — тем же кодом, что и в админке.
-     * Ответный `url` кладётся в поле-картинку или в список галереи.
+     * File upload into the media library — the same code as in the admin panel.
+     * The returned `url` goes into an image field or a gallery list.
      */
     public function upload(Request $request, FileManagerController $files): JsonResponse
     {
         $canWrite = collect($this->resources->abilities())
             ->contains(fn (string $ability): bool => str_ends_with($ability, ':write') && $request->user()->tokenCan($ability));
 
-        abort_unless($canWrite, 403, 'Токену не дано права что-либо менять.');
+        abort_unless($canWrite, 403, 'The token is not allowed to change anything.');
 
         return $files->upload($request);
     }
 
     /**
-     * В правке поле, которого нет в запросе, остаётся как было — значит,
-     * и проверять его не за чем. Иначе `required` у неприсланного названия
-     * не дал бы поменять у тура одну цену.
+     * On update a field missing from the request stays as it was, so there is
+     * nothing to validate. Otherwise `required` on a name that was not sent
+     * would block changing a single price.
      */
     protected function resolveRules(Request $request, string $context, ?Model $record): array
     {
@@ -150,8 +150,8 @@ class ResourceController extends AdminController
     {
         $model = $this->resources->model($resource);
 
-        abort_if($model === null, 404, 'Нет такого модуля. Список — в документации: /'.config('atrium.api.prefix', 'api/v1'));
-        abort_unless($request->user()->tokenCan("{$resource}:{$mode}"), 403, "Токену не дано право {$resource}:{$mode}.");
+        abort_if($model === null, 404, 'No such module. See the list in the documentation: /'.config('atrium.api.prefix', 'api/v1'));
+        abort_unless($request->user()->tokenCan("{$resource}:{$mode}"), 403, "The token lacks the {$resource}:{$mode} ability.");
 
         $this->model = $model;
     }
@@ -171,8 +171,8 @@ class ResourceController extends AdminController
     }
 
     /**
-     * Колонки, по которым можно фильтровать и сортировать: только настоящие
-     * поля модели, чтобы из адреса нельзя было подсунуть что попало.
+     * Columns allowed for filtering and sorting: only real model fields, so
+     * nothing arbitrary can be slipped in through the URL.
      *
      * @return array<int,string>
      */
@@ -182,7 +182,7 @@ class ResourceController extends AdminController
     }
 
     /**
-     * Запись так, как её видит форма админки, плюс где она живёт.
+     * The record as the admin form sees it, plus where it lives.
      *
      * @return array<string,mixed>
      */

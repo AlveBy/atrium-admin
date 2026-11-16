@@ -39,9 +39,9 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'Email обязателен для заполнения.',
-            'email.email' => 'Введите корректный email.',
-            'password.required' => 'Пароль обязателен для заполнения.',
+            'email.required' => __('atrium::auth.validation.email_required'),
+            'email.email' => __('atrium::auth.validation.email_invalid'),
+            'password.required' => __('atrium::auth.validation.password_required'),
         ];
     }
 
@@ -59,11 +59,12 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Проверить логин с паролем, никого не впуская.
+     * Check the email and password without letting anyone in.
      *
-     * Отдельно от `authenticate()`, потому что между проверкой пароля и входом
-     * встал второй шаг — код с почты. Раньше здесь был `attempt()`, который
-     * сразу открывал сессию; теперь сессию открывает тот, кто дошёл до конца.
+     * Separate from `authenticate()` because a second step, the e-mailed code,
+     * now sits between the password check and the sign-in. This used to be
+     * `attempt()`, which opened the session at once; now the session is opened
+     * by whoever gets to the end.
      *
      * @throws ValidationException
      */
@@ -80,13 +81,13 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'email' => __('atrium::auth.failed'),
             ]);
         }
 
         if (! $user->is_active) {
             throw ValidationException::withMessages([
-                'email' => 'Ваш аккаунт деактивирован.',
+                'email' => __('atrium::auth.deactivated'),
             ]);
         }
 
@@ -109,9 +110,8 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'email' => __('atrium::auth.throttle', [
                 'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
             ]),
         ]);
     }

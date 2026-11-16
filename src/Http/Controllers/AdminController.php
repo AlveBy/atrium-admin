@@ -125,12 +125,12 @@ abstract class AdminController extends Controller
     }
 
     /**
-     * Подставить раздел, с которого пришли.
+     * Preselect the section the editor came from.
      *
-     * Публичная панель уводит на эту форму прямо с открытого раздела сайта
-     * (`?section_id=12`) — раздел должен быть уже выбран, иначе заказчик,
-     * нажавший «Добавить товар» на «Турах по Беларуси», ищет их заново в
-     * дереве и половину раз промахивается.
+     * The public admin bar links to this form straight from an open section of
+     * the site (`?section_id=12`) — the section must already be chosen,
+     * otherwise an editor who clicked "Add item" on a section has to find it
+     * again in the tree and misses half the time.
      *
      * @param  array<string,mixed>  $data
      * @return array<string,mixed>
@@ -166,8 +166,8 @@ abstract class AdminController extends Controller
     }
 
     /**
-     * Есть ли такой раздел на самом деле: по кривой ссылке лучше открыть форму
-     * без выбранного раздела, чем с несуществующим.
+     * Whether the section really exists: for a broken link it is better to open
+     * the form with no section chosen than with a non-existent one.
      */
     protected function sectionExists(int $sectionId): bool
     {
@@ -189,7 +189,7 @@ abstract class AdminController extends Controller
 
         return redirect()
             ->route($this->model::getAdminRouteName().'.index')
-            ->with('success', 'Запись успешно создана.');
+            ->with('success', __('atrium::resource.created'));
     }
 
     /**
@@ -310,7 +310,9 @@ abstract class AdminController extends Controller
             $label = $field->getLabel();
 
             if ($label !== '') {
-                $attributes[$field->getName()] = mb_strtolower($label);
+                // "The name field is required." reads right in lower case; in
+                // German or Russian a label keeps its own case (nouns, quotes).
+                $attributes[$field->getName()] = str_starts_with(app()->getLocale(), 'en') ? mb_strtolower($label) : $label;
             }
         }
 
@@ -362,17 +364,16 @@ abstract class AdminController extends Controller
 
         $data = $request->only(array_values(array_unique($keys)));
 
-        // Нетронутая галочка приезжает пустой строкой: форма заводит каждое
-        // поле как `default ?? ''`, а ConvertEmptyStringsToNull делает из
-        // пустой строки null. Правило `nullable|boolean` такое пропускает, и
-        // null доезжает до колонки — а `on_main_page` объявлена
-        // `boolean NOT NULL default false`, и вся запись отваливается с
-        // «Column 'on_main_page' cannot be null». То есть тур не сохранялся,
-        // пока никто не трогал галочку «На главной».
+        // An untouched checkbox arrives as an empty string: the form seeds every
+        // field as `default ?? ''`, and ConvertEmptyStringsToNull turns the
+        // empty string into null. `nullable|boolean` lets that through, and
+        // null reaches the column — a `boolean NOT NULL default false` column
+        // then fails the whole record with "Column '…' cannot be null". So a
+        // record would not save until someone touched the checkbox.
         //
-        // Снятая галочка — это false (или отсутствие битриксового кода), а не
-        // «неизвестно». Чем именно её хранить, знает сама CheckboxField:
-        // boolean либо строку-код из Битрикса ('YES').
+        // An unchecked box is false (or the absence of the Bitrix code), not
+        // "unknown". How to store it is up to CheckboxField itself: a boolean
+        // or a Bitrix code string ('YES').
         foreach ($this->contextFields($context) as $field) {
             $name = $field->getName();
 
@@ -552,7 +553,7 @@ abstract class AdminController extends Controller
 
         return redirect()
             ->route($this->model::getAdminRouteName().'.index')
-            ->with('success', 'Запись успешно обновлена.');
+            ->with('success', __('atrium::resource.updated'));
     }
 
     /**
@@ -563,18 +564,18 @@ abstract class AdminController extends Controller
         $item = $this->findItem($id);
 
         if (! $item->canDelete()) {
-            return back()->with('error', 'Эту запись нельзя удалить.');
+            return back()->with('error', __('atrium::resource.cannot_delete'));
         }
 
         if (! $item->beforeAdminDelete()) {
-            return back()->with('error', 'Ошибка при удалении записи.');
+            return back()->with('error', __('atrium::resource.delete_failed'));
         }
 
         $item->delete();
 
         return redirect()
             ->route($this->model::getAdminRouteName().'.index')
-            ->with('success', 'Запись успешно удалена.');
+            ->with('success', __('atrium::resource.deleted'));
     }
 
     /**
@@ -583,8 +584,8 @@ abstract class AdminController extends Controller
     protected function prepareFormData(string $context, $item = null): array
     {
         $title = $item
-            ? 'Редактировать: '.$item->getAdminTitle()
-            : 'Создать '.$this->model::getAdminLabel();
+            ? __('atrium::resource.title.edit', ['title' => $item->getAdminTitle()])
+            : __('atrium::resource.title.create', ['label' => $this->model::getAdminLabel()]);
 
         $adminLabel = $this->model::getAdminLabel();
 
@@ -626,7 +627,7 @@ abstract class AdminController extends Controller
      *
      * HasAdminSeo gives 31 models getSeoAdminFields() and an updateSeoMeta(),
      * and every model declares a `seo` tab — but nothing ever merged the two,
-     * so the SEO tab rendered "Нет полей для отображения" everywhere and no
+     * so the SEO tab rendered "No fields to show" everywhere and no
      * meta was ever saved. HasAdminTabs::getAdminFieldsWithTabs() does the
      * merge but is only used by 3 of the 32 models, so do it here instead.
      *
@@ -664,9 +665,9 @@ abstract class AdminController extends Controller
     /**
      * Form field name => seo_meta column.
      *
-     * Карта берётся у самой модели (HasAdminSeo::seoFieldMap()), а не держится
-     * здесь вторым списком: разъехавшиеся копии уже стоили нам восьми полей,
-     * которые форма показывала, а проверка считала непросохранёнными.
+     * The map comes from the model itself (HasAdminSeo::seoFieldMap()) rather
+     * than a second list kept here: copies that drifted apart once cost us
+     * eight fields the form showed but the check counted as unsaved.
      *
      * @return array<string,string>
      */
@@ -776,9 +777,10 @@ abstract class AdminController extends Controller
                 return $field->shouldShowOnEdit();
             })
             ->map(fn ($field) => $field->toArray())
-            // Превью под «Символьным кодом» должно показывать адрес сайта, а
-            // не путь ЧПУ админки: у страны это /countries/china, а не /china.
-            // Поле само модель не знает — карту адресов кладёт контроллер.
+            // The preview under the slug field must show the public site address,
+            // not the admin slug path: /countries/china for a country, not
+            // /china. The field does not know its model, so the controller
+            // supplies the address map.
             ->map(fn (array $field) => PublicUrl::decorateSlugField($field, $this->model))
             ->values()
             ->toArray();

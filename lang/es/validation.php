@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'accepted' => 'El campo :attribute debe ser aceptado.',
+    'array' => 'El campo :attribute debe ser un conjunto.',
+    'boolean' => 'El campo :attribute debe ser verdadero o falso.',
+    'confirmed' => 'La confirmación del campo :attribute no coincide.',
+    'current_password' => 'La contraseña es incorrecta.',
+    'date' => 'El campo :attribute debe ser una fecha válida.',
+    'date_format' => 'El campo :attribute debe coincidir con el formato :format.',
+    'distinct' => 'El campo :attribute contiene un valor duplicado.',
+    'email' => 'El campo :attribute debe ser una dirección de correo electrónico válida.',
+    'exists' => 'El :attribute seleccionado no es válido.',
+    'file' => 'El campo :attribute debe ser un archivo.',
+    'image' => 'El campo :attribute debe ser una imagen.',
+    'in' => 'El :attribute seleccionado no es válido.',
+    'integer' => 'El campo :attribute debe ser un número entero.',
+    'json' => 'El campo :attribute debe ser una cadena JSON válida.',
+    'max' => [
+        'array' => 'El campo :attribute no debe tener más de :max elementos.',
+        'file' => 'El campo :attribute no debe ser mayor que :max kilobytes.',
+        'numeric' => 'El campo :attribute no debe ser mayor que :max.',
+        'string' => 'El campo :attribute no debe superar los :max caracteres.',
+    ],
+    'mimes' => 'El campo :attribute debe ser un archivo de tipo: :values.',
+    'mimetypes' => 'El campo :attribute debe ser un archivo de tipo: :values.',
+    'min' => [
+        'array' => 'El campo :attribute debe tener al menos :min elementos.',
+        'file' => 'El campo :attribute debe tener al menos :min kilobytes.',
+        'numeric' => 'El campo :attribute debe ser al menos :min.',
+        'string' => 'El campo :attribute debe tener al menos :min caracteres.',
+    ],
+    'numeric' => 'El campo :attribute debe ser un número.',
+    'regex' => 'El formato del campo :attribute no es válido.',
+    'required' => 'El campo :attribute es obligatorio.',
+    'required_if' => 'El campo :attribute es obligatorio cuando :other es :value.',
+    'required_with' => 'El campo :attribute es obligatorio cuando :values está presente.',
+    'same' => 'El campo :attribute debe coincidir con :other.',
+    'string' => 'El campo :attribute debe ser una cadena de caracteres.',
+    'unique' => 'El valor del campo :attribute ya está en uso.',
+    'url' => 'El campo :attribute debe ser una URL válida.',
+    'uploaded' => 'No se pudo subir el campo :attribute.',
+    'after' => 'El campo :attribute debe ser una fecha posterior a :date.',
+    'after_or_equal' => 'El campo :attribute debe ser una fecha posterior o igual a :date.',
+    'before' => 'El campo :attribute debe ser una fecha anterior a :date.',
+    'before_or_equal' => 'El campo :attribute debe ser una fecha anterior o igual a :date.',
+    'lowercase' => 'El campo :attribute debe estar en minúsculas.',
+    'alpha_dash' => 'El campo :attribute solo puede contener letras, números, guiones y guiones bajos.',
+    'password' => [
+        'letters' => 'El campo :attribute debe contener al menos una letra.',
+        'mixed' => 'El campo :attribute debe contener al menos una letra mayúscula y una minúscula.',
+        'numbers' => 'El campo :attribute debe contener al menos un número.',
+        'symbols' => 'El campo :attribute debe contener al menos un símbolo.',
+        'uncompromised' => 'El valor del campo :attribute ha aparecido en una filtración de datos. Elige un valor diferente para :attribute.',
+    ],
+];

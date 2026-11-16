@@ -1,4 +1,5 @@
 <script setup>
+import { computed, provide } from 'vue'
 import { useForm, Link } from '@inertiajs/vue3'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
@@ -41,7 +42,7 @@ const submit = () => {
                 <ol class="inline-flex items-center space-x-1 md:space-x-3">
                     <li class="inline-flex items-center">
                         <Link :href="route('admin.users.index')" class="text-gray-600 hover:text-blue-600">
-                            Администраторы
+                            {{ $t('menu.administrators') }}
                         </Link>
                     </li>
                     <li>
@@ -88,7 +89,7 @@ const submit = () => {
                                 :id="field.name"
                                 v-model="form[field.name]"
                                 :type="field.type === 'password' ? 'password' : field.type === 'email' ? 'email' : 'text'"
-                                :placeholder="field.type === 'password' ? 'Оставьте пустым, чтобы не менять' : field.placeholder"
+                                :placeholder="field.type === 'password' ? $t('account.users.password_keep_placeholder') : field.placeholder"
                                 :required="field.required && field.type !== 'password'"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 :class="{ 'border-red-500': form.errors[field.name] }"
@@ -99,7 +100,7 @@ const submit = () => {
                             {{ field.hint }}
                         </p>
                         <p v-if="field.type === 'password' && field.name === 'password'" class="mt-1 text-sm text-gray-500">
-                            Оставьте пустым, если не хотите менять пароль
+                            {{ $t('account.users.password_keep_hint') }}
                         </p>
                         <p v-if="form.errors[field.name]" class="mt-1 text-sm text-red-600">
                             {{ form.errors[field.name] }}
@@ -111,13 +112,13 @@ const submit = () => {
                             :href="route('admin.users.index')"
                             variant="secondary"
                         >
-                            Отмена
+                            {{ $t('common.cancel') }}
                         </AdminButton>
                         <AdminButton
                             type="submit"
                             :loading="form.processing"
                         >
-                            Сохранить
+                            {{ $t('common.save') }}
                         </AdminButton>
                     </div>
                 </form>

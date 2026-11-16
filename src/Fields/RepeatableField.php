@@ -8,23 +8,24 @@ class RepeatableField extends Field
 {
     protected string $itemType = 'text';
 
-    protected int $maxItems = 0; // 0 = без ограничения
+    protected int $maxItems = 0; // 0 = unlimited
 
     protected int $minItems = 0;
 
-    protected string $addLabel = 'Добавить';
+    /** null — the generic "Add" in the current locale. */
+    protected ?string $addLabel = null;
 
     protected string $itemLabel = '';
 
-    /** @var array<int,string> режимы для itemType('content') */
+    /** @var array<int,string> modes for itemType('content') */
     protected array $itemModes = ['text', 'html', 'wysiwyg'];
 
     /**
-     * Кнопки редактора для itemType('content').
+     * Editor buttons for itemType('content').
      *
-     * Держим тем же набором, что у ContentField: «Описание дней» — такое же
-     * HTML-свойство, и урезанная панель у него была не решением, а следствием
-     * того, что список кнопок туда просто не передавали.
+     * Kept the same set as ContentField: a multiple HTML property is the same kind
+     * of property, and a trimmed toolbar there was not a decision but a consequence
+     * of the button list simply not being passed through.
      *
      * @var array<int,string>
      */
@@ -38,9 +39,8 @@ class RepeatableField extends Field
     /**
      * Set the type of each item (text, number, date, datetime, content).
      *
-     * 'content' рисует у каждого элемента полноценный редактор с
-     * переключателем Текст/HTML/Визуальный — так в Битриксе выглядели
-     * множественные HTML-свойства вроде «Описание дней».
+     * 'content' gives every item a full editor with the Text/HTML/Visual
+     * switch — that is how multiple HTML properties looked in Bitrix.
      */
     public function itemType(string $type): static
     {
@@ -50,7 +50,7 @@ class RepeatableField extends Field
     }
 
     /**
-     * Подпись одного элемента: «Описание дня #1», «Дата отправления #2».
+     * Label of a single item: "Day description #1", "Departure date #2".
      */
     public function itemLabel(string $label): static
     {
@@ -60,7 +60,7 @@ class RepeatableField extends Field
     }
 
     /**
-     * Доступные режимы редактора для itemType('content').
+     * Available editor modes for itemType('content').
      *
      * @param  array<int,string>  $modes
      */
@@ -72,7 +72,7 @@ class RepeatableField extends Field
     }
 
     /**
-     * Кнопки редактора для itemType('content').
+     * Editor buttons for itemType('content').
      *
      * @param  array<int,string>  $toolbar
      */
@@ -119,7 +119,7 @@ class RepeatableField extends Field
             'itemType' => $this->itemType,
             'maxItems' => $this->maxItems,
             'minItems' => $this->minItems,
-            'addLabel' => $this->addLabel,
+            'addLabel' => $this->addLabel ?? __('atrium::common.add'),
             'itemLabel' => $this->itemLabel,
             'itemModes' => $this->itemModes,
             'itemToolbar' => $this->itemToolbar,

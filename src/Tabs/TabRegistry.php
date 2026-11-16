@@ -26,27 +26,27 @@ class TabRegistry
     {
         return [
             Tab::make(self::MAIN)
-                ->label('Основное')
+                ->label(__('atrium::fields.tabs.main'))
                 ->icon('document-text')
                 ->order(0),
 
             Tab::make(self::SEO)
-                ->label('SEO')
+                ->label(__('atrium::fields.tabs.seo'))
                 ->icon('search')
                 ->order(10),
 
             Tab::make(self::ADDITIONAL)
-                ->label('Дополнительно')
+                ->label(__('atrium::fields.tabs.additional'))
                 ->icon('cog')
                 ->order(20),
 
             Tab::make(self::CUSTOM_FIELDS)
-                ->label('Доп. поля')
+                ->label(__('atrium::fields.tabs.custom_fields'))
                 ->icon('collection')
                 ->order(30),
 
             Tab::make(self::ELEMENT_PROPERTIES)
-                ->label('Свойства элементов')
+                ->label(__('atrium::fields.tabs.element_properties'))
                 ->icon('puzzle')
                 ->order(40),
         ];
@@ -59,27 +59,27 @@ class TabRegistry
     {
         return [
             Tab::make(self::MAIN)
-                ->label('Раздел')
+                ->label(__('atrium::fields.tabs.section'))
                 ->icon('folder')
                 ->order(0),
 
             Tab::make(self::SEO)
-                ->label('SEO')
+                ->label(__('atrium::fields.tabs.seo'))
                 ->icon('search')
                 ->order(10),
 
             Tab::make(self::ADDITIONAL)
-                ->label('Дополнительно')
+                ->label(__('atrium::fields.tabs.additional'))
                 ->icon('cog')
                 ->order(20),
 
             Tab::make(self::CUSTOM_FIELDS)
-                ->label('Доп. поля')
+                ->label(__('atrium::fields.tabs.custom_fields'))
                 ->icon('collection')
                 ->order(30),
 
             Tab::make(self::ELEMENT_PROPERTIES)
-                ->label('Свойства элементов')
+                ->label(__('atrium::fields.tabs.element_properties'))
                 ->icon('puzzle')
                 ->order(40),
         ];

@@ -1,19 +1,24 @@
 /**
- * CSRF для «ручных» fetch-запросов админки (загрузка файлов, медиабиблиотека).
+ * CSRF for the admin's "manual" fetch requests (file uploads, media library).
  *
- * Формы Inertia не ломаются потому, что axios под ними шлёт куку XSRF-TOKEN,
- * а Laravel обновляет её на каждом ответе. Мета-тег csrf-token, наоборот,
- * попадает в <head> один раз — при полной загрузке страницы. Дальше Inertia
- * меняет только тело документа, и после перевыпуска токена (повторный вход,
- * истёкшая сессия) мета остаётся с прежним значением, хотя сессия жива.
+ * Inertia forms don't break because axios underneath sends the XSRF-TOKEN
+ * cookie, and Laravel refreshes it on every response. The csrf-token meta tag,
+ * by contrast, lands in <head> once — on a full page load. After that Inertia
+ * swaps only the document body, and once the token is reissued (re-login,
+ * expired session) the meta keeps the old value even though the session is alive.
  *
- * Слать оба заголовка нельзя: VerifyCsrfToken читает X-CSRF-TOKEN раньше
- * X-XSRF-TOKEN, поэтому протухшая мета побеждает свежую куку и запрос
- * получает 419 «CSRF token mismatch». Отсюда порядок: кука, а мета — только
- * если куки нет.
+ * Sending both headers is not an option: VerifyCsrfToken reads X-CSRF-TOKEN
+ * before X-XSRF-TOKEN, so a stale meta beats a fresh cookie and the request
+ * gets 419 "CSRF token mismatch". Hence the order: the cookie, and the meta
+ * only if there is no cookie.
  */
 
-export const SESSION_EXPIRED_MESSAGE = 'Сессия истекла. Обновите страницу и войдите заново.';
+import { t } from './i18n';
+
+/** A function, not a constant: the dictionary is not loaded at import time. */
+export function sessionExpiredMessage() {
+  return t('fields.upload.session_expired');
+}
 
 function readCookie(name) {
   const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
@@ -30,7 +35,7 @@ function readCookie(name) {
 }
 
 /**
- * Заголовки для запроса, изменяющего данные.
+ * Headers for a request that changes data.
  *
  * @returns {Record<string, string>}
  */
@@ -46,7 +51,7 @@ export function csrfHeaders() {
   return meta ? { 'X-CSRF-TOKEN': meta } : {};
 }
 
-/** Тот же набор плюс то, что ждёт от нас Laravel при ajax-запросе. */
+/** The same set plus what Laravel expects from an ajax request. */
 export function ajaxHeaders(extra = {}) {
   return {
     Accept: 'application/json',
@@ -57,18 +62,18 @@ export function ajaxHeaders(extra = {}) {
 }
 
 /**
- * Текст ошибки для человека.
+ * A human-readable error message.
  *
- * 419 приходит от VerifyCsrfToken со служебным «CSRF token mismatch.» —
- * показывать его бессмысленно: нужно знать не название проверки, а что делать.
+ * 419 comes from VerifyCsrfToken with the technical "CSRF token mismatch." —
+ * showing it is pointless: the user needs to know what to do, not the check's name.
  */
-export async function responseErrorMessage(response, fallback = 'Запрос не удался') {
+export async function responseErrorMessage(response, fallback = t('fields.upload.request_failed')) {
   if (response.status === 419) {
-    return SESSION_EXPIRED_MESSAGE;
+    return sessionExpiredMessage();
   }
 
   if (response.status === 413) {
-    return 'Файл слишком большой — сервер не принял загрузку.';
+    return t('fields.upload.too_large');
   }
 
   const data = await response.json().catch(() => ({}));

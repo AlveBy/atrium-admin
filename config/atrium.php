@@ -57,20 +57,52 @@ return [
         'redirect_after_logout' => 'admin.login',
 
         /*
-        | Подтверждение входа кодом с почты.
+        | Sign-in confirmation with a code sent by email.
         |
-        | Пароль один и живёт, пока его не сменят; код приходит на ящик и
-        | действует минуты. Выключать стоит только там, где почты нет —
-        | например в браузерных тестах.
+        | A password lives until someone changes it; the code goes to the
+        | mailbox and is valid for minutes. Turn it off only where there is no
+        | mail — in browser tests, for example.
         |
-        | ttl — сколько минут годен код, resend_after — через сколько секунд
-        | можно попросить новое письмо.
+        | ttl — how many minutes the code is valid, resend_after — after how
+        | many seconds a new email may be requested.
         */
         'two_factor' => [
             'enabled' => (bool) env('ATRIUM_2FA_ENABLED', true),
             'ttl' => (int) env('ATRIUM_2FA_TTL', 10),
             'resend_after' => (int) env('ATRIUM_2FA_RESEND_AFTER', 60),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Interface languages
+    |--------------------------------------------------------------------------
+    |
+    | Languages of the panel itself (not of the site content). Each admin picks
+    | one in the header; guests get the browser's language if it is listed,
+    | otherwise `locale`. Remove entries to hide them from the switcher.
+    | Translations live in lang/{code}/*.php of this package and can be
+    | overridden with `php artisan vendor:publish --tag=atrium-lang`.
+    |
+    */
+    'locale' => env('ATRIUM_LOCALE', 'en'),
+
+    'locales' => [
+        'en' => 'English',
+        'ru' => 'Русский',
+        'uk' => 'Українська',
+        'be' => 'Беларуская',
+        'kk' => 'Қазақша',
+        'uz' => 'Oʻzbekcha',
+        'de' => 'Deutsch',
+        'fr' => 'Français',
+        'es' => 'Español',
+        'pt_BR' => 'Português (Brasil)',
+        'it' => 'Italiano',
+        'pl' => 'Polski',
+        'tr' => 'Türkçe',
+        'zh_CN' => '简体中文',
+        'ja' => '日本語',
     ],
 
     /*
@@ -94,21 +126,23 @@ return [
     |
     | Fixed entries of the sidebar. Modules from `resources` that are not
     | listed here are added automatically right after the first entry.
+    | A label may be a translation key (`atrium::menu.dashboard`, or one of
+    | your own in lang/) or plain text.
     |
     */
     'menu' => [
         [
-            'label' => 'Dashboard',
+            'label' => 'atrium::menu.dashboard',
             'route' => 'admin.dashboard',
             'icon' => 'home',
         ],
         [
-            'label' => 'Administrators',
+            'label' => 'atrium::menu.administrators',
             'route' => 'admin.users.index',
             'icon' => 'users',
         ],
         [
-            'label' => 'API tokens',
+            'label' => 'atrium::menu.api_tokens',
             'route' => 'admin.api-tokens.index',
             'icon' => 'settings',
         ],
@@ -129,10 +163,10 @@ return [
         'image_max_size' => 2048, // KB
         'allowed_extensions' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
 
-        // Делать ли рядом с загруженной картинкой облегчённую webp-копию.
-        // Отдаёт её веб-сервер сам, по заголовку Accept — см. public/.htaccess.
-        // Выключать имеет смысл только там, где такого правила нет: копии
-        // будут занимать место, а посетителю не поедут.
+        // Whether to put a lighter webp copy next to an uploaded image.
+        // The web server serves it by the Accept header — see public/.htaccess.
+        // Turn it off only where there is no such rule: the copies would take
+        // disk space and never reach visitors.
         'webp' => env('ATRIUM_UPLOADS_WEBP', true),
     ],
 
@@ -163,7 +197,7 @@ return [
         'default_description' => '',
         'templates' => [
             // 'App\Models\Product' => [
-            //     'title' => '{name} - купить в интернет-магазине',
+            //     'title' => '{name} - buy online',
             //     'description' => '{name}. {preview_text}',
             // ],
         ],
@@ -200,17 +234,16 @@ return [
     | Dashboard
     |--------------------------------------------------------------------------
     |
-    | Рабочий стол — плитки-гаджеты, как на стартовой странице админки
-    | Битрикса. Каждый элемент `gadgets` — либо имя класса, либо массив с
-    | ключом `gadget` и настройками экземпляра ('title', 'width', 'model',
-    | 'count', 'enabled').
+    | Dashboard gadgets (tiles). Each `gadgets` entry is either a class name
+    | or an array with a `gadget` key plus instance options ('title',
+    | 'width', 'model', 'count', 'enabled').
     |
-    | Здесь только те гаджеты, которым не нужно знать про модели проекта.
-    | Гаджет «Элементы инфоблока» добавляется в конфиг приложения, где эти
-    | модели уже есть.
+    | Only gadgets that need no knowledge of the project's models are listed
+    | here. The "recent items" gadget (RecentElementsGadget) is added in the
+    | application config, where those models exist.
     |
-    | `timings` — сбор времени генерации страниц публичной части, из него
-    | живут оба «зелёных» гаджета. Выключается целиком, вместе с middleware.
+    | `timings` — recording of public page generation time; both speed
+    | gadgets live on it. Turning it off disables the middleware as well.
     |
     */
     'dashboard' => [
@@ -231,13 +264,13 @@ return [
     | API
     |--------------------------------------------------------------------------
     |
-    | Модули админки через API — для внешних программ и ИИ-агентов. Токены
-    | выпускаются в разделе «API-токены», документация открыта по адресу
-    | `prefix` (Markdown) и `prefix/openapi.json`.
+    | Admin modules over an API — for external programs and AI agents. Tokens
+    | are issued in the "API tokens" section; the documentation is open at
+    | `prefix` (Markdown) and `prefix/openapi.json`.
     |
-    | Модули в API попадают сами — всё, что зарегистрировано в админке.
-    | `except` — ключи модулей, которых в API не должно быть никогда:
-    | администраторов через токен не заводят.
+    | Every module registered in the panel is exposed automatically.
+    | `except` — module keys that must never be in the API: administrators
+    | are not created with a token.
     |
     */
     'api' => [

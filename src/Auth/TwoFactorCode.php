@@ -11,35 +11,38 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * Код подтверждения входа в админку.
+ * Sign-in confirmation code for the admin panel.
  *
- * Выдаём шестизначное число: его можно продиктовать по телефону и набрать с
- * бумажки, а перебрать за отведённые минуты — нет, потому что попытки
- * ограничены отдельно (TwoFactorController).
+ * A six-digit number: easy to read out over the phone or type from a note,
+ * yet impossible to brute-force within its lifetime, because attempts are
+ * limited separately (TwoFactorController).
  *
- * В базе лежит хеш, поэтому сверять можно только присланное значение, а
- * прочитать код из базы нельзя даже нам.
+ * Only a hash is stored, so a submitted value can be checked, but nobody can
+ * read the code from the database, not even us.
  */
 final class TwoFactorCode
 {
     /**
-     * Что показать, если письмо с кодом не ушло.
+     * What to show when the e-mail with the code could not be sent.
      *
-     * Почта отказывает целиком: у Яндекса, например, доступ почтовым
-     * программам выключается в настройках ящика, и SMTP отвечает 535 на
-     * верный пароль. Код при этом уже выдан, но толку от него нет — попасть
-     * внутрь без письма нельзя, поэтому честно говорим причину, а не
-     * роняем вход пятисоткой.
+     * Mail can fail as a whole: Yandex, for example, lets the mailbox owner
+     * switch off access for mail clients, and SMTP then answers 535 to a
+     * correct password. The code is already issued but useless, since there
+     * is no way in without the e-mail, so we state the reason honestly
+     * instead of failing the sign-in with a 500.
      */
-    public const MAIL_FAILED_MESSAGE = 'Код подтверждения не удалось отправить: почта недоступна. Проверьте настройки отправки почты.';
+    public static function mailFailedMessage(): string
+    {
+        return __('atrium::auth.two_factor.mail_failed');
+    }
 
-    /** Столько живёт код. */
+    /** How long a code lives. */
     public static function ttlMinutes(): int
     {
         return (int) config('atrium.auth.two_factor.ttl', 10);
     }
 
-    /** Раньше этого срока второе письмо не отправляем. */
+    /** No second e-mail before this much time has passed. */
     public static function resendAfterSeconds(): int
     {
         return (int) config('atrium.auth.two_factor.resend_after', 60);
@@ -51,9 +54,9 @@ final class TwoFactorCode
     }
 
     /**
-     * Выдать новый код и отправить его письмом.
+     * Issue a new code and e-mail it.
      *
-     * @return bool false, если письмо просили слишком часто
+     * @return bool false if an e-mail was requested too often
      */
     public static function send(AdminUser $user, bool $force = false): bool
     {
@@ -74,7 +77,7 @@ final class TwoFactorCode
         return true;
     }
 
-    /** Сколько секунд ждать до следующего письма (0 — можно сейчас). */
+    /** Seconds to wait until the next e-mail (0 means right now). */
     public static function retryAfter(AdminUser $user): int
     {
         $sentAt = $user->two_factor_sent_at;
@@ -93,7 +96,7 @@ final class TwoFactorCode
         return self::retryAfter($user) === 0;
     }
 
-    /** Код подходит и ещё не просрочен. */
+    /** The code matches and has not expired yet. */
     public static function matches(AdminUser $user, string $code): bool
     {
         if (empty($user->two_factor_code) || $user->two_factor_expires_at === null) {
@@ -107,7 +110,7 @@ final class TwoFactorCode
         return Hash::check($code, $user->two_factor_code);
     }
 
-    /** Код одноразовый: после удачного входа стираем. */
+    /** The code is single-use: wiped after a successful sign-in. */
     public static function forget(AdminUser $user): void
     {
         $user->forceFill([
@@ -118,8 +121,8 @@ final class TwoFactorCode
     }
 
     /**
-     * Шестизначный код с ведущими нулями — random_int, а не rand():
-     * предсказуемый код здесь равен отсутствию второго фактора.
+     * Six digits with leading zeros. random_int(), not rand(): a predictable
+     * code here is the same as no second factor at all.
      */
     private static function generate(): string
     {

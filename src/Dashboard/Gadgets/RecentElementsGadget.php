@@ -6,32 +6,26 @@ namespace Atrium\Admin\Dashboard\Gadgets;
 
 use Atrium\Admin\Dashboard\Gadget;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 /**
- * «Элементы инфоблока» — последние изменённые элементы одного раздела.
+ * "Recent items" — the most recently changed items of one module.
  *
- * Повторяет гаджет bitrix/gadgets/bitrix/admin_iblock_elements: дата, картинка
- * анонса, заголовок ссылкой на форму редактирования и «Все элементы» внизу.
+ * Mirrors bitrix/gadgets/bitrix/admin_iblock_elements: date, preview picture,
+ * title linking to the edit form and "All items" below.
  *
- * У заказчика этот гаджет на рабочем столе стоял, но настроен не был — в
- * b_user_option у него нет ключа SETTINGS, а без IBLOCK_ID гаджет Битрикса не
- * рисует ничего. То есть копировать там нечего: в админке висела пустая рамка
- * с заголовком. Поэтому берём смысл гаджета, а инфоблок задаём в конфиге.
+ * The Bitrix gadget draws nothing without an IBLOCK_ID in its settings, and in
+ * practice it often sat unconfigured as an empty frame with a title. So we take
+ * the idea of the gadget and set the model in the config.
  *
- * Сортировка по «изменён», а не по ID, как у Битрикса по умолчанию: гаджет
- * нужен, чтобы вернуться к тому, что правил вчера, а не к тому, что завёл.
+ * Sorted by "updated", not by ID as Bitrix does by default: the gadget exists
+ * to get back to what you edited yesterday, not to what you created.
  */
 final class RecentElementsGadget extends Gadget
 {
-    private const MONTHS = [
-        1 => 'января', 2 => 'февраля', 3 => 'марта', 4 => 'апреля',
-        5 => 'мая', 6 => 'июня', 7 => 'июля', 8 => 'августа',
-        9 => 'сентября', 10 => 'октября', 11 => 'ноября', 12 => 'декабря',
-    ];
-
     public function component(): string
     {
         return 'RecentElementsGadget';
@@ -51,7 +45,7 @@ final class RecentElementsGadget extends Gadget
             return (string) $model::getAdminLabel();
         }
 
-        return 'Элементы инфоблока';
+        return __('atrium::dashboard.recent.title');
     }
 
     public function isVisible(): bool
@@ -64,13 +58,13 @@ final class RecentElementsGadget extends Gadget
         $model = $this->modelClass();
 
         if ($model === null) {
-            return ['items' => [], 'allUrl' => null, 'allLabel' => 'Все элементы'];
+            return ['items' => [], 'allUrl' => null, 'allLabel' => __('atrium::dashboard.recent.all')];
         }
 
         return [
             'items' => $this->items($model),
             'allUrl' => $this->routeTo($model, 'index'),
-            'allLabel' => 'Все элементы',
+            'allLabel' => __('atrium::dashboard.recent.all'),
         ];
     }
 
@@ -114,8 +108,8 @@ final class RecentElementsGadget extends Gadget
                 ])
                 ->all();
         } catch (Throwable) {
-            // Таблицы может не быть (модель есть, миграция не прогонялась) —
-            // рабочий стол из-за одной плитки падать не должен.
+            // The table may be missing (the model exists, the migration has not
+            // run) — the dashboard must not fail because of one tile.
             return [];
         }
     }
@@ -138,8 +132,9 @@ final class RecentElementsGadget extends Gadget
             return null;
         }
 
-        // «3 августа 2026» — как FormatDate("j F Y") в гаджете Битрикса.
-        return $value->format('j').' '.self::MONTHS[(int) $value->format('n')].' '.$value->format('Y');
+        // "3 August 2026" — like FormatDate("j F Y") in the Bitrix gadget, with
+        // month names in the interface language.
+        return Carbon::instance($value)->locale(app()->getLocale())->translatedFormat('j F Y');
     }
 
     private function imageUrl(mixed $value): ?string

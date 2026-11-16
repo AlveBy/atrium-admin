@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'save' => 'Enregistrer',
+    'saving' => 'Enregistrement…',
+    'cancel' => 'Annuler',
+    'create' => 'Créer',
+    'edit' => 'Modifier',
+    'delete' => 'Supprimer',
+    'add' => 'Ajouter',
+    'remove' => 'Retirer',
+    'search' => 'Rechercher',
+    'yes' => 'Oui',
+    'no' => 'Non',
+    'loading' => 'Chargement…',
+    'actions' => 'Actions',
+    'select' => 'Sélectionner…',
+    'upload' => 'Importer',
+    'copy' => 'Copier',
+    'copied' => 'Copié',
+    'language' => 'Langue',
+];

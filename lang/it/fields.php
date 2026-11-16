@@ -1,0 +1,123 @@
+<?php
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'clear' => 'Cancella',
+
+    'content' => [
+        'mode_text' => 'Testo',
+        'mode_html' => 'HTML',
+        'mode_wysiwyg' => 'Editor visuale',
+    ],
+
+    'editor' => [
+        'placeholder' => 'Inizia a scrivere…',
+        'format' => 'Stile del testo',
+        'format_paragraph' => 'Testo normale',
+        'format_h1' => 'Titolo 1',
+        'format_h2' => 'Titolo 2',
+        'format_h3' => 'Titolo 3',
+        'format_h4' => 'Titolo 4',
+        'format_h5' => 'Titolo 5',
+        'format_h6' => 'Titolo 6',
+        'format_blockquote' => 'Citazione',
+        'font_size' => 'Dimensione carattere',
+        'font_size_default' => 'Dimensione',
+        'font_size_pt' => ':size pt',
+        'text_color' => 'Colore del testo',
+        'bold' => 'Grassetto',
+        'bold_shortcut' => 'Grassetto (Ctrl+B)',
+        'italic' => 'Corsivo',
+        'italic_shortcut' => 'Corsivo (Ctrl+I)',
+        'underline' => 'Sottolineato',
+        'underline_shortcut' => 'Sottolineato (Ctrl+U)',
+        'strike' => 'Barrato',
+        'link' => 'Link',
+        'link_prompt' => 'URL del link:',
+        'bullet_list' => 'Elenco puntato',
+        'ordered_list' => 'Elenco numerato',
+        'heading' => 'Titolo',
+        'image' => 'Immagine',
+        'file' => 'File (PDF, DOC, XLS)',
+        'align_left' => 'Allinea a sinistra',
+        'align_center' => 'Allinea al centro',
+        'align_right' => 'Allinea a destra',
+        'align_justify' => 'Giustifica',
+        'table_insert' => 'Inserisci tabella',
+        'table_add_row' => 'Aggiungi riga',
+        'table_delete_row' => 'Elimina riga',
+        'table_add_column' => 'Aggiungi colonna',
+        'table_delete_column' => 'Elimina colonna',
+        'table_merge_split' => 'Unisci o dividi celle',
+        'table_delete' => 'Elimina tabella',
+    ],
+
+    'upload' => [
+        'from_library' => 'Dalla libreria',
+        'progress' => 'Caricamento… :percent%',
+        'too_big' => 'Il file supera la dimensione massima (:max KB).',
+        'too_large' => 'Il file è troppo grande — il server ha rifiutato il caricamento.',
+        'network_error' => 'Impossibile raggiungere il server. Controlla la connessione.',
+        'aborted' => 'Caricamento annullato.',
+        'no_url' => 'Il server non ha restituito un link al file caricato.',
+        'http_error' => 'Errore durante il caricamento del file (HTTP :status).',
+        'failed' => 'Impossibile caricare il file.',
+        'request_failed' => 'Richiesta non riuscita',
+        'session_expired' => 'La sessione è scaduta. Aggiorna la pagina e accedi di nuovo.',
+    ],
+
+    'gallery' => [
+        'add_from_library' => 'Aggiungi dalla libreria',
+        'counter' => ':current / :count immagine|:current / :count immagini',
+        'file_too_big' => 'Il file :name supera la dimensione massima di :max KB',
+        'upload_failed' => 'Impossibile caricare il file :name',
+    ],
+
+    'belongs_to_many' => [
+        'clear_all' => 'Cancella tutto',
+        'no_options' => 'Nessuna opzione disponibile',
+    ],
+
+    'map' => [
+        'latitude' => 'Latitudine',
+        'longitude' => 'Longitudine',
+        'open_on_map' => 'Apri sulla mappa',
+        'parse_error' => 'Impossibile leggere le coordinate. Formato previsto: latitudine,longitudine — ad esempio :example',
+    ],
+
+    'repeatable' => [
+        'item' => 'Elemento',
+        'item_title' => ':label n. :number',
+        'empty' => 'Nessun elemento. Fai clic su “:add” per aggiungerne uno.',
+        'move_up' => 'Sposta su',
+        'move_down' => 'Sposta giù',
+    ],
+
+    'slug' => [
+        'placeholder' => 'url-slug',
+        'generate' => 'Genera dal nome',
+        'url_label' => 'URL:',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Cerca…',
+        'top_level' => 'Livello principale',
+    ],
+
+    'tabs' => [
+        'label' => 'Schede',
+        'main' => 'Generale',
+        'section' => 'Sezione',
+        'seo' => 'SEO',
+        'additional' => 'Altro',
+        'custom_fields' => 'Campi personalizzati',
+        'element_properties' => 'Proprietà dell\'elemento',
+    ],
+
+    'validation' => [
+        'own_ancestor' => 'Una sezione non può essere inserita in se stessa o in una propria sottosezione.',
+    ],
+];

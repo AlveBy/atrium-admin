@@ -1,21 +1,22 @@
 <script setup>
 import { computed } from 'vue'
 import ContentField from './ContentField.vue'
+import { t } from '@atrium/Support/i18n'
 
 const props = defineProps({
-    // Подпись одного элемента: «Описание дня #1», «Дата отправления #2».
-    // Пусто — берётся label поля.
+    // Label of a single item: "Day description #1", "Departure date #2".
+    // Empty — the field's label is used.
     itemLabel: {
         type: String,
         default: ''
     },
-    // Режимы для itemType="content" (те же, что у ContentField).
+    // Modes for itemType="content" (the same as ContentField's).
     itemModes: {
         type: Array,
         default: () => ['text', 'html', 'wysiwyg']
     },
-    // Кнопки редактора для itemType="content". Пусто — ContentField возьмёт
-    // свой набор; список кнопок здесь не дублируем, чтобы он не разъехался.
+    // Editor buttons for itemType="content". Empty — ContentField uses its own
+    // set; the button list is not duplicated here so the two don't diverge.
     itemToolbar: {
         type: Array,
         default: null
@@ -38,15 +39,16 @@ const props = defineProps({
     },
     maxItems: {
         type: Number,
-        default: 0  // 0 = без ограничения
+        default: 0  // 0 = unlimited
     },
     minItems: {
         type: Number,
         default: 0
     },
+    // Empty — the generic "Add" is used.
     addLabel: {
         type: String,
-        default: 'Добавить'
+        default: ''
     },
     placeholder: {
         type: String,
@@ -89,14 +91,16 @@ const inputType = computed(() => {
     return typeMap[props.itemType] || 'text'
 })
 
-// «Описание дней» в Битриксе — множественное HTML-свойство: у каждого дня свой
-// редактор с переключателем Текст/HTML/Визуальный. Однострочный input для этого
-// не годится, поэтому такие элементы рисуем карточками с ContentField внутри.
+// A multiple HTML property in Bitrix gives every value its own editor with the
+// Text/HTML/Visual switch. A single-line input won't do for that, so such items
+// are drawn as cards with a ContentField inside.
 const isRichItem = computed(() => props.itemType === 'content')
 
+const addText = computed(() => props.addLabel || t('common.add'))
+
 function itemTitle(index) {
-    const base = props.itemLabel || props.label || 'Элемент'
-    return `${base} #${index + 1}`
+    const base = props.itemLabel || props.label || t('fields.repeatable.item')
+    return t('fields.repeatable.item_title', { label: base, number: index + 1 })
 }
 
 function addItem() {
@@ -137,7 +141,7 @@ function moveItem(fromIndex, toIndex) {
             <span v-if="required" class="text-red-500">*</span>
         </label>
 
-        <!-- Многострочные значения: у каждого свой редактор, как «Описание дней» в Битриксе -->
+        <!-- Multi-line values: each has its own editor, like a multiple HTML property in Bitrix -->
         <div v-if="isRichItem" class="space-y-3">
             <div
                 v-for="(item, index) in items"
@@ -154,7 +158,7 @@ function moveItem(fromIndex, toIndex) {
                             @click="moveItem(index, index - 1)"
                             :disabled="disabled || index === 0"
                             class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Переместить вверх"
+                            :title="$t('fields.repeatable.move_up')"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
@@ -165,7 +169,7 @@ function moveItem(fromIndex, toIndex) {
                             @click="moveItem(index, index + 1)"
                             :disabled="disabled || index === items.length - 1"
                             class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Переместить вниз"
+                            :title="$t('fields.repeatable.move_down')"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -176,7 +180,7 @@ function moveItem(fromIndex, toIndex) {
                             type="button"
                             @click="removeItem(index)"
                             class="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                            title="Удалить"
+                            :title="$t('common.delete')"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -185,8 +189,8 @@ function moveItem(fromIndex, toIndex) {
                     </div>
                 </div>
 
-                <!-- name уникален по индексу: иначе радиокнопки режима у всех
-                     элементов оказались бы в одной группе и переключались вместе -->
+                <!-- name is unique per index: otherwise the mode radios of all items
+                     would end up in one group and switch together -->
                 <ContentField
                     :model-value="item"
                     @update:model-value="updateItem(index, $event)"
@@ -214,7 +218,7 @@ function moveItem(fromIndex, toIndex) {
                         @click="moveItem(index, index - 1)"
                         :disabled="disabled || index === 0"
                         class="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Переместить вверх"
+                        :title="$t('fields.repeatable.move_up')"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
@@ -225,7 +229,7 @@ function moveItem(fromIndex, toIndex) {
                         @click="moveItem(index, index + 1)"
                         :disabled="disabled || index === items.length - 1"
                         class="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Переместить вниз"
+                        :title="$t('fields.repeatable.move_down')"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -238,7 +242,7 @@ function moveItem(fromIndex, toIndex) {
                     :type="inputType"
                     :value="item"
                     @input="updateItem(index, $event.target.value)"
-                    :placeholder="placeholder || `${label} #${index + 1}`"
+                    :placeholder="placeholder || $t('fields.repeatable.item_title', { label, number: index + 1 })"
                     :disabled="disabled"
                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     :class="{ 'border-red-500': error }"
@@ -251,7 +255,7 @@ function moveItem(fromIndex, toIndex) {
                     @click="removeItem(index)"
                     :disabled="!canRemove"
                     class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="Удалить"
+                    :title="$t('common.delete')"
                 >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -262,7 +266,7 @@ function moveItem(fromIndex, toIndex) {
 
         <!-- Empty state -->
         <div v-if="items.length === 0" class="text-gray-500 text-sm py-2">
-            Нет элементов. Нажмите "{{ addLabel }}" чтобы добавить.
+            {{ $t('fields.repeatable.empty', { add: addText }) }}
         </div>
 
         <!-- Add button -->
@@ -275,7 +279,7 @@ function moveItem(fromIndex, toIndex) {
             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            {{ addLabel }}
+            {{ addText }}
         </button>
 
         <!-- Counter -->

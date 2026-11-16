@@ -1,6 +1,7 @@
 <script setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import LocaleSwitcher from '../../../Components/Admin/Layout/LocaleSwitcher.vue'
 
 const props = defineProps({
     branding: {
@@ -11,7 +12,7 @@ const props = defineProps({
         type: String,
         default: ''
     },
-    // Сколько секунд осталось до следующего письма.
+    // Seconds left until the next e-mail may be sent.
     retryAfter: {
         type: Number,
         default: 0
@@ -61,9 +62,13 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
 </script>
 
 <template>
-    <Head title="Подтверждение входа" />
+    <Head :title="$t('auth.two_factor.title')" />
 
     <div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="absolute top-4 right-4">
+            <LocaleSwitcher />
+        </div>
+
         <div class="max-w-md w-full">
             <div class="text-center mb-8">
                 <img
@@ -73,10 +78,10 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                     class="mx-auto h-12 w-auto"
                 />
                 <h2 v-else class="text-3xl font-bold text-gray-900">
-                    {{ branding.name || 'Admin Panel' }}
+                    {{ branding.name || $t('layout.panel_name') }}
                 </h2>
                 <p class="mt-2 text-sm text-gray-600">
-                    Мы отправили код на {{ email }}
+                    {{ $t('auth.two_factor.code_sent_to', { email }) }}
                 </p>
             </div>
 
@@ -88,7 +93,7 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                 <form @submit.prevent="submit" class="space-y-6">
                     <div>
                         <label for="code" class="block text-sm font-medium text-gray-700">
-                            Код из письма
+                            {{ $t('auth.two_factor.code') }}
                         </label>
                         <input
                             id="code"
@@ -122,7 +127,7 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        {{ form.processing ? 'Проверяем...' : 'Подтвердить' }}
+                        {{ form.processing ? $t('auth.two_factor.submitting') : $t('auth.two_factor.submit') }}
                     </button>
                 </form>
 
@@ -133,7 +138,7 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                         @click="resend"
                         class="text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed"
                     >
-                        {{ canResend ? 'Отправить код ещё раз' : `Отправить ещё раз через ${seconds} с` }}
+                        {{ canResend ? $t('auth.two_factor.resend') : $t('auth.two_factor.resend_in', { seconds }) }}
                     </button>
 
                     <button
@@ -141,7 +146,7 @@ const cancel = () => cancelForm.post(route('admin.two-factor.cancel'))
                         @click="cancel"
                         class="text-gray-500 hover:text-gray-700"
                     >
-                        Войти другим пользователем
+                        {{ $t('auth.two_factor.switch_user') }}
                     </button>
                 </div>
             </div>

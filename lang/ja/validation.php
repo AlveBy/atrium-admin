@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'accepted' => ':attribute を承認してください。',
+    'array' => ':attribute は配列でなければなりません。',
+    'boolean' => ':attribute は true か false でなければなりません。',
+    'confirmed' => ':attribute が確認用の値と一致しません。',
+    'current_password' => 'パスワードが正しくありません。',
+    'date' => ':attribute は有効な日付でなければなりません。',
+    'date_format' => ':attribute は :format 形式で入力してください。',
+    'distinct' => ':attribute に重複した値があります。',
+    'email' => ':attribute は有効なメールアドレスでなければなりません。',
+    'exists' => '選択された :attribute は無効です。',
+    'file' => ':attribute はファイルでなければなりません。',
+    'image' => ':attribute は画像でなければなりません。',
+    'in' => '選択された :attribute は無効です。',
+    'integer' => ':attribute は整数でなければなりません。',
+    'json' => ':attribute は有効な JSON 文字列でなければなりません。',
+    'max' => [
+        'array' => ':attribute は :max 個以下にしてください。',
+        'file' => ':attribute は :max KB 以下のファイルにしてください。',
+        'numeric' => ':attribute は :max 以下にしてください。',
+        'string' => ':attribute は :max 文字以下にしてください。',
+    ],
+    'mimes' => ':attribute は次の形式のファイルでなければなりません: :values。',
+    'mimetypes' => ':attribute は次の形式のファイルでなければなりません: :values。',
+    'min' => [
+        'array' => ':attribute は :min 個以上にしてください。',
+        'file' => ':attribute は :min KB 以上のファイルにしてください。',
+        'numeric' => ':attribute は :min 以上にしてください。',
+        'string' => ':attribute は :min 文字以上にしてください。',
+    ],
+    'numeric' => ':attribute は数値でなければなりません。',
+    'regex' => ':attribute の形式が正しくありません。',
+    'required' => ':attribute は必須です。',
+    'required_if' => ':other が :value の場合、:attribute は必須です。',
+    'required_with' => ':values が指定されている場合、:attribute は必須です。',
+    'same' => ':attribute と :other が一致しなければなりません。',
+    'string' => ':attribute は文字列でなければなりません。',
+    'unique' => ':attribute は既に使用されています。',
+    'url' => ':attribute は有効な URL でなければなりません。',
+    'uploaded' => ':attribute のアップロードに失敗しました。',
+    'after' => ':attribute は :date より後の日付でなければなりません。',
+    'after_or_equal' => ':attribute は :date 以降の日付でなければなりません。',
+    'before' => ':attribute は :date より前の日付でなければなりません。',
+    'before_or_equal' => ':attribute は :date 以前の日付でなければなりません。',
+    'lowercase' => ':attribute は小文字でなければなりません。',
+    'alpha_dash' => ':attribute には英字、数字、ハイフン、アンダースコアのみ使用できます。',
+    'password' => [
+        'letters' => ':attribute には少なくとも 1 文字の英字を含めてください。',
+        'mixed' => ':attribute には大文字と小文字をそれぞれ 1 文字以上含めてください。',
+        'numbers' => ':attribute には少なくとも 1 文字の数字を含めてください。',
+        'symbols' => ':attribute には少なくとも 1 文字の記号を含めてください。',
+        'uncompromised' => '入力された :attribute はデータ漏洩で流出しています。別の :attribute を選択してください。',
+    ],
+];

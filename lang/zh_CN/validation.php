@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'accepted' => '必须接受 :attribute。',
+    'array' => ':attribute 必须是数组。',
+    'boolean' => ':attribute 必须为 true 或 false。',
+    'confirmed' => ':attribute 两次输入不一致。',
+    'current_password' => '密码错误。',
+    'date' => ':attribute 必须是有效的日期。',
+    'date_format' => ':attribute 必须符合 :format 格式。',
+    'distinct' => ':attribute 存在重复值。',
+    'email' => ':attribute 必须是有效的电子邮件地址。',
+    'exists' => '所选的 :attribute 无效。',
+    'file' => ':attribute 必须是文件。',
+    'image' => ':attribute 必须是图片。',
+    'in' => '所选的 :attribute 无效。',
+    'integer' => ':attribute 必须是整数。',
+    'json' => ':attribute 必须是有效的 JSON 字符串。',
+    'max' => [
+        'array' => ':attribute 最多只能有 :max 项。',
+        'file' => ':attribute 不能大于 :max KB。',
+        'numeric' => ':attribute 不能大于 :max。',
+        'string' => ':attribute 不能超过 :max 个字符。',
+    ],
+    'mimes' => ':attribute 必须是以下类型的文件：:values。',
+    'mimetypes' => ':attribute 必须是以下类型的文件：:values。',
+    'min' => [
+        'array' => ':attribute 至少需要 :min 项。',
+        'file' => ':attribute 不能小于 :min KB。',
+        'numeric' => ':attribute 不能小于 :min。',
+        'string' => ':attribute 至少需要 :min 个字符。',
+    ],
+    'numeric' => ':attribute 必须是数字。',
+    'regex' => ':attribute 格式无效。',
+    'required' => ':attribute 不能为空。',
+    'required_if' => '当 :other 为 :value 时，:attribute 不能为空。',
+    'required_with' => '当 :values 存在时，:attribute 不能为空。',
+    'same' => ':attribute 必须与 :other 相同。',
+    'string' => ':attribute 必须是字符串。',
+    'unique' => ':attribute 已被占用。',
+    'url' => ':attribute 必须是有效的 URL。',
+    'uploaded' => ':attribute 上传失败。',
+    'after' => ':attribute 必须是 :date 之后的日期。',
+    'after_or_equal' => ':attribute 必须是 :date 或之后的日期。',
+    'before' => ':attribute 必须是 :date 之前的日期。',
+    'before_or_equal' => ':attribute 必须是 :date 或之前的日期。',
+    'lowercase' => ':attribute 必须为小写。',
+    'alpha_dash' => ':attribute 只能包含字母、数字、短横线和下划线。',
+    'password' => [
+        'letters' => ':attribute 必须至少包含一个字母。',
+        'mixed' => ':attribute 必须至少包含一个大写字母和一个小写字母。',
+        'numbers' => ':attribute 必须至少包含一个数字。',
+        'symbols' => ':attribute 必须至少包含一个符号。',
+        'uncompromised' => '所填的 :attribute 已出现在数据泄露中。请选择其他 :attribute。',
+    ],
+];

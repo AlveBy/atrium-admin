@@ -1,0 +1,123 @@
+<?php
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'clear' => 'Очистити',
+
+    'content' => [
+        'mode_text' => 'Текст',
+        'mode_html' => 'HTML',
+        'mode_wysiwyg' => 'Візуальний редактор',
+    ],
+
+    'editor' => [
+        'placeholder' => 'Почніть вводити текст…',
+        'format' => 'Стиль тексту',
+        'format_paragraph' => 'Звичайний текст',
+        'format_h1' => 'Заголовок 1',
+        'format_h2' => 'Заголовок 2',
+        'format_h3' => 'Заголовок 3',
+        'format_h4' => 'Заголовок 4',
+        'format_h5' => 'Заголовок 5',
+        'format_h6' => 'Заголовок 6',
+        'format_blockquote' => 'Цитата',
+        'font_size' => 'Розмір шрифту',
+        'font_size_default' => 'Розмір',
+        'font_size_pt' => ':size пт',
+        'text_color' => 'Колір тексту',
+        'bold' => 'Жирний',
+        'bold_shortcut' => 'Жирний (Ctrl+B)',
+        'italic' => 'Курсив',
+        'italic_shortcut' => 'Курсив (Ctrl+I)',
+        'underline' => 'Підкреслений',
+        'underline_shortcut' => 'Підкреслений (Ctrl+U)',
+        'strike' => 'Закреслений',
+        'link' => 'Посилання',
+        'link_prompt' => 'URL посилання:',
+        'bullet_list' => 'Маркований список',
+        'ordered_list' => 'Нумерований список',
+        'heading' => 'Заголовок',
+        'image' => 'Зображення',
+        'file' => 'Файл (PDF, DOC, XLS)',
+        'align_left' => 'Вирівняти ліворуч',
+        'align_center' => 'Вирівняти по центру',
+        'align_right' => 'Вирівняти праворуч',
+        'align_justify' => 'Вирівняти за шириною',
+        'table_insert' => 'Вставити таблицю',
+        'table_add_row' => 'Додати рядок',
+        'table_delete_row' => 'Видалити рядок',
+        'table_add_column' => 'Додати стовпець',
+        'table_delete_column' => 'Видалити стовпець',
+        'table_merge_split' => 'Об\'єднати або розділити клітинки',
+        'table_delete' => 'Видалити таблицю',
+    ],
+
+    'upload' => [
+        'from_library' => 'З бібліотеки',
+        'progress' => 'Завантаження… :percent%',
+        'too_big' => 'Файл перевищує максимальний розмір (:max КБ).',
+        'too_large' => 'Файл завеликий — сервер відхилив завантаження.',
+        'network_error' => 'Не вдалося з\'єднатися із сервером. Перевірте підключення.',
+        'aborted' => 'Завантаження скасовано.',
+        'no_url' => 'Сервер не повернув посилання на завантажений файл.',
+        'http_error' => 'Помилка завантаження файлу (HTTP :status).',
+        'failed' => 'Не вдалося завантажити файл.',
+        'request_failed' => 'Не вдалося виконати запит',
+        'session_expired' => 'Сеанс завершився. Оновіть сторінку й увійдіть знову.',
+    ],
+
+    'gallery' => [
+        'add_from_library' => 'Додати з бібліотеки',
+        'counter' => ':current / :count зображення|:current / :count зображення|:current / :count зображень',
+        'file_too_big' => 'Файл :name перевищує максимальний розмір :max КБ',
+        'upload_failed' => 'Не вдалося завантажити файл :name',
+    ],
+
+    'belongs_to_many' => [
+        'clear_all' => 'Очистити все',
+        'no_options' => 'Немає доступних варіантів',
+    ],
+
+    'map' => [
+        'latitude' => 'Широта',
+        'longitude' => 'Довгота',
+        'open_on_map' => 'Відкрити на карті',
+        'parse_error' => 'Не вдалося розпізнати координати. Очікуваний формат: широта,довгота — наприклад, :example',
+    ],
+
+    'repeatable' => [
+        'item' => 'Елемент',
+        'item_title' => ':label #:number',
+        'empty' => 'Немає елементів. Натисніть «:add», щоб додати.',
+        'move_up' => 'Перемістити вгору',
+        'move_down' => 'Перемістити вниз',
+    ],
+
+    'slug' => [
+        'placeholder' => 'url-slug',
+        'generate' => 'Згенерувати з назви',
+        'url_label' => 'URL:',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Пошук…',
+        'top_level' => 'Верхній рівень',
+    ],
+
+    'tabs' => [
+        'label' => 'Вкладки',
+        'main' => 'Загальне',
+        'section' => 'Розділ',
+        'seo' => 'SEO',
+        'additional' => 'Додатково',
+        'custom_fields' => 'Додаткові поля',
+        'element_properties' => 'Властивості елементів',
+    ],
+
+    'validation' => [
+        'own_ancestor' => 'Розділ не можна розмістити всередині самого себе або власного підрозділу.',
+    ],
+];

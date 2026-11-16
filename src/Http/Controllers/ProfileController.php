@@ -34,10 +34,10 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:admin_users,email,'.$user->id],
         ], [
-            'name.required' => 'Имя обязательно для заполнения.',
-            'email.required' => 'Email обязателен для заполнения.',
-            'email.email' => 'Введите корректный email.',
-            'email.unique' => 'Этот email уже используется.',
+            'name.required' => __('atrium::account.profile.validation.name_required'),
+            'email.required' => __('atrium::account.profile.validation.email_required'),
+            'email.email' => __('atrium::account.profile.validation.email_invalid'),
+            'email.unique' => __('atrium::account.profile.validation.email_taken'),
         ]);
 
         $user->fill($validated);
@@ -48,7 +48,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return back()->with('success', 'Профиль успешно обновлен.');
+        return back()->with('success', __('atrium::account.profile.updated'));
     }
 
     /**
@@ -60,16 +60,16 @@ class ProfileController extends Controller
             'current_password' => ['required', 'current_password:admin'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ], [
-            'current_password.required' => 'Текущий пароль обязателен.',
-            'current_password.current_password' => 'Текущий пароль неверен.',
-            'password.required' => 'Новый пароль обязателен.',
-            'password.confirmed' => 'Пароли не совпадают.',
+            'current_password.required' => __('atrium::account.profile.validation.current_password_required'),
+            'current_password.current_password' => __('atrium::account.profile.validation.current_password_wrong'),
+            'password.required' => __('atrium::account.profile.validation.password_required'),
+            'password.confirmed' => __('atrium::account.profile.validation.password_mismatch'),
         ]);
 
         $request->user('admin')->update([
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back()->with('success', 'Пароль успешно изменен.');
+        return back()->with('success', __('atrium::account.profile.password_updated'));
     }
 }

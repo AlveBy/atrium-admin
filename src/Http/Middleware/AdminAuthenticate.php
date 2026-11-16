@@ -36,7 +36,7 @@ class AdminAuthenticate
 
             return redirect()
                 ->route(config('atrium.auth.login_route', 'admin.login'))
-                ->withErrors(['email' => 'Ваш аккаунт деактивирован.']);
+                ->withErrors(['email' => __('atrium::auth.deactivated')]);
         }
 
         return $next($request);

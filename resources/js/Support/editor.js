@@ -1,22 +1,22 @@
 /**
- * Набор расширений TipTap для редакторов админки.
+ * TipTap extension set for the admin editors.
  *
- * TipTap — не «редактор HTML», а редактор документа со строгой схемой:
- * всё, чему в схеме нет узла, при загрузке молча выбрасывается, а следующее
- * сохранение записывает уже обрезанный документ. Так пропадали таблицы —
- * StarterKit их не содержит, и прайс тура превращался в столбик значений
- * (жалоба заказчика 2026-08-13). Поэтому здесь набор расширений живёт
- * одним списком на оба поля: разъехавшиеся копии мы уже проходили с CSRF.
+ * TipTap is not an "HTML editor" but a document editor with a strict schema:
+ * anything the schema has no node for is silently dropped on load, and the
+ * next save writes the truncated document. That is how tables got lost —
+ * StarterKit does not include them, and a price table turned into a column
+ * of values. So the extension set lives here as one list shared by both
+ * fields: diverging copies already bit us once with CSRF.
  *
- * Таблицы в контенте — перенесённые из Битрикса, свёрстанные Вордом:
- * `<table border="1" cellspacing="0" cellpadding="0">`, выравнивание ячеек
- * через `style`, colspan до 13. Ни один из этих атрибутов схема TipTap не
- * знает, а рисует их публичная часть — поэтому атрибуты пробрасываем как
- * есть: круговой прогон через редактор не должен менять вид таблицы.
+ * Tables in migrated content are often laid out by Word:
+ * `<table border="1" cellspacing="0" cellpadding="0">`, cell alignment via
+ * `style`, colspan up to 13. The TipTap schema knows none of these
+ * attributes, yet the public site renders them — so they are passed through
+ * as is: a round trip through the editor must not change how a table looks.
  */
 
-// Оформление содержимого редактора — рядом с расширениями, чтобы поля не
-// разъезжались: без этих правил Tailwind сбрасывает заголовки и списки.
+// Editor content styles sit next to the extensions so the fields don't
+// diverge: without these rules Tailwind resets headings and lists.
 import './editor.css';
 
 import StarterKit from '@tiptap/starter-kit';
@@ -27,8 +27,9 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import { TextAlign } from '@tiptap/extension-text-align';
+import { t } from './i18n';
 
-/** Атрибут, который сохраняем как есть — TipTap про него ничего не знает. */
+/** An attribute kept as is — TipTap knows nothing about it. */
 function passthroughAttribute(name) {
   return {
     default: null,
@@ -37,7 +38,7 @@ function passthroughAttribute(name) {
   };
 }
 
-/** Расширение, дополненное сквозными атрибутами поверх собственных. */
+/** The extension with pass-through attributes added on top of its own. */
 function keeping(extension, names) {
   return extension.extend({
     addAttributes() {
@@ -52,35 +53,37 @@ function keeping(extension, names) {
   });
 }
 
-// Вёрстка ячеек в перенесённом контенте держится на style и colspan/rowspan
-// (последние TipTap знает сам), остальное — наследие Ворда и старых шаблонов.
+// Cell layout in migrated content relies on style and colspan/rowspan
+// (TipTap knows the latter itself); the rest is a legacy of Word and old templates.
 const CELL_ATTRIBUTES = ['style', 'class', 'align', 'valign', 'bgcolor', 'width'];
 const TABLE_ATTRIBUTES = ['style', 'class', 'border', 'cellpadding', 'cellspacing', 'width', 'align'];
 const ROW_ATTRIBUTES = ['style', 'class'];
 
 /**
- * Выравнивание абзаца — четыре варианта, как в редакторе Битрикса.
- * Порядок этого списка — порядок кнопок на панели.
+ * Paragraph alignment — four options, as in the Bitrix editor.
+ * The order of this list is the order of the toolbar buttons.
+ * Titles are lang keys: they are translated when the toolbar is built,
+ * not at import time, when the dictionary is not loaded yet.
  */
 const ALIGNMENTS = [
-  { value: 'left', name: 'alignLeft', title: 'По левому краю' },
-  { value: 'center', name: 'alignCenter', title: 'По центру' },
-  { value: 'right', name: 'alignRight', title: 'По правому краю' },
-  { value: 'justify', name: 'alignJustify', title: 'По ширине страницы' },
+  { value: 'left', name: 'alignLeft', title: 'fields.editor.align_left' },
+  { value: 'center', name: 'alignCenter', title: 'fields.editor.align_center' },
+  { value: 'right', name: 'alignRight', title: 'fields.editor.align_right' },
+  { value: 'justify', name: 'alignJustify', title: 'fields.editor.align_justify' },
 ];
 
-// Кому выравнивание разрешено. Ячеек таблиц в списке нет: их style и align
-// уже переносятся сквозными атрибутами, а два атрибута, пишущих один и тот же
-// style, затёрли бы друг друга. Абзацу внутри ячейки это не мешает.
+// Which nodes may be aligned. Table cells are not in the list: their style and
+// align already pass through as attributes, and two attributes writing the same
+// style would overwrite each other. A paragraph inside a cell is unaffected.
 const ALIGNED_NODES = ['paragraph', 'heading', 'blockquote'];
 
 /**
- * Выравнивание абзацев.
+ * Paragraph alignment.
  *
- * Перенесённый контент размечен двумя способами сразу: `style="text-align:
- * justify"` и вордовским `align="center"` (второй — в прайсах, внутри ячеек).
- * Родное расширение читает только style, а всё, чего схема не знает, теряется
- * при первом же сохранении — поэтому читаем оба, а пишем style, как браузер.
+ * Migrated content is marked up both ways at once: `style="text-align:
+ * justify"` and Word's `align="center"` (the latter in price tables, inside cells).
+ * The stock extension reads only style, and whatever the schema doesn't know is
+ * lost on the very first save — so we read both and write style, like a browser.
  */
 const Alignment = TextAlign.extend({
   addGlobalAttributes() {
@@ -92,9 +95,9 @@ const Alignment = TextAlign.extend({
         attributes: {
           textAlign: {
             default: null,
-            // style важнее align: в контенте встречается
-            // `<p align="center" style="text-align: left;">`, и такой абзац
-            // браузер рисует слева.
+            // style wins over align: content contains
+            // `<p align="center" style="text-align: left;">`, and the browser
+            // renders such a paragraph on the left.
             parseHTML: (element) => {
               const value = element.style.textAlign || element.getAttribute('align') || '';
 
@@ -112,20 +115,20 @@ const Alignment = TextAlign.extend({
 /**
  * @param {{placeholder?: string, extra?: Array}} options
  */
-export function editorExtensions({ placeholder = 'Начните вводить текст...', extra = [] } = {}) {
+export function editorExtensions({ placeholder = t('fields.editor.placeholder'), extra = [] } = {}) {
   return [
-    // link и underline входят в StarterKit; выключаем, чтобы не дублировать
-    // их своими — TipTap на одинаковые имена ругается в консоль.
+    // link and underline are part of StarterKit; turn them off so they don't
+    // clash with ours — TipTap complains in the console about duplicate names.
     StarterKit.configure({ link: false, underline: false }),
     Underline,
     Link.configure({ openOnClick: false }),
-    // Картинка — часть строки, а не отдельный блок. В перенесённом контенте
-    // она и так лежит внутри абзаца (`<p align="center"><img>`), и блочная
-    // картинка выдёргивалась оттуда наружу: абзац оставался пустым, а
-    // фотография — прижатой влево, и выровнять её было нечем.
+    // An image is part of the line, not a separate block. In migrated content
+    // it already sits inside a paragraph (`<p align="center"><img>`), and a block
+    // image got pulled out of it: the paragraph was left empty and the photo
+    // stuck to the left, with no way to align it.
     Image.configure({ inline: true }),
-    // Цвет, фон и размер текста: в тех же таблицах красным помечено
-    // «мест нет», и без TextStyle пометка стала бы обычным текстом.
+    // Text colour, background and size: the same tables mark "sold out" in red,
+    // and without TextStyle that mark would become plain text.
     TextStyleKit,
     Alignment,
     keeping(Table, TABLE_ATTRIBUTES),
@@ -137,7 +140,7 @@ export function editorExtensions({ placeholder = 'Начните вводить 
   ];
 }
 
-/** Кнопки работы с таблицей. Часть видна, только когда курсор внутри таблицы. */
+/** Table buttons. Some are visible only while the cursor is inside a table. */
 export function tableToolbarButtons(editor, icons) {
   const inTable = () => Boolean(editor.value?.isActive('table'));
   const chain = () => editor.value?.chain().focus();
@@ -145,48 +148,48 @@ export function tableToolbarButtons(editor, icons) {
   return [
     {
       name: 'table',
-      title: 'Вставить таблицу',
+      title: t('fields.editor.table_insert'),
       icon: icons.table,
       action: () => chain()?.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
     },
     {
       name: 'addRowAfter',
-      title: 'Добавить строку',
+      title: t('fields.editor.table_add_row'),
       icon: icons.rowPlus,
       action: () => chain()?.addRowAfter().run(),
       visible: inTable,
     },
     {
       name: 'deleteRow',
-      title: 'Удалить строку',
+      title: t('fields.editor.table_delete_row'),
       icon: icons.rowMinus,
       action: () => chain()?.deleteRow().run(),
       visible: inTable,
     },
     {
       name: 'addColumnAfter',
-      title: 'Добавить столбец',
+      title: t('fields.editor.table_add_column'),
       icon: icons.columnPlus,
       action: () => chain()?.addColumnAfter().run(),
       visible: inTable,
     },
     {
       name: 'deleteColumn',
-      title: 'Удалить столбец',
+      title: t('fields.editor.table_delete_column'),
       icon: icons.columnMinus,
       action: () => chain()?.deleteColumn().run(),
       visible: inTable,
     },
     {
       name: 'mergeOrSplit',
-      title: 'Объединить или разделить ячейки',
+      title: t('fields.editor.table_merge_split'),
       icon: icons.mergeCells,
       action: () => chain()?.mergeOrSplit().run(),
       visible: inTable,
     },
     {
       name: 'deleteTable',
-      title: 'Удалить таблицу',
+      title: t('fields.editor.table_delete'),
       icon: icons.tableMinus,
       action: () => chain()?.deleteTable().run(),
       visible: inTable,
@@ -194,16 +197,16 @@ export function tableToolbarButtons(editor, icons) {
   ];
 }
 
-/** Кнопки выравнивания абзаца. */
+/** Paragraph alignment buttons. */
 export function alignToolbarButtons(editor, icons) {
-  // Абзац без атрибута выровнен по левому краю: подсвечиваем «слева», иначе
-  // на обычном тексте ни одна из четырёх кнопок не выглядит нажатой.
+  // A paragraph without the attribute is left-aligned: highlight "left", otherwise
+  // none of the four buttons looks pressed on plain text.
   const current = () =>
     ALIGNMENTS.find(({ value }) => editor.value?.isActive({ textAlign: value }))?.value ?? 'left';
 
   return ALIGNMENTS.map(({ value, name, title }) => ({
     name,
-    title,
+    title: t(title),
     icon: icons[name],
     action: () => editor.value?.chain().focus().setTextAlign(value).run(),
     isActive: () => current() === value,
@@ -211,22 +214,21 @@ export function alignToolbarButtons(editor, icons) {
 }
 
 /**
- * Позиция каретки, которую видит пользователь.
+ * The caret position the user sees.
  *
- * TipTap узнаёт о клике мышью не сразу: ProseMirror читает выделение из DOM
- * отложенно, через таймер. Клик по кнопке панели уводит фокус из редактора
- * раньше, чем это чтение случится, и тогда редактор так и остаётся думать,
- * что курсор в самом начале поля — картинка из медиабиблиотеки встаёт в
- * начало текста, а страница ещё и прокручивается туда (жалоба заказчика
- * 27.08.2026: «картинка становится здесь, хотя курсор стоит в первом месте»).
- * Промах редкий — успеет чтение или нет, зависит от того, насколько занят
- * браузер: карточка тура на 11 дней с фотографиями тормозит его заметно.
+ * TipTap does not learn about a mouse click right away: ProseMirror reads the
+ * selection from the DOM lazily, on a timer. A click on a toolbar button takes
+ * focus away from the editor before that read happens, and the editor keeps
+ * thinking the cursor is at the very start of the field — an image from the
+ * media library lands at the start of the text, and the page scrolls there too.
+ * The miss is rare — whether the read makes it depends on how busy the browser
+ * is: a long page with many photos slows it down noticeably.
  *
- * Поэтому позицию читаем сами и заранее — в момент нажатия на кнопку, пока
- * фокус ещё в редакторе. В DOM каретка к этому времени уже стоит на месте.
+ * So we read the position ourselves and early — at the moment the button is
+ * pressed, while focus is still in the editor. By then the DOM caret is in place.
  *
- * Возвращает null, если каретки в этом редакторе нет: в поле не заходили, и
- * «текущей позиции» в нём просто не существует.
+ * Returns null if this editor has no caret: the field was never entered, and
+ * a "current position" simply doesn't exist in it.
  */
 export function caretPosition(editor) {
   const view = editor?.view;
@@ -249,19 +251,20 @@ export function caretPosition(editor) {
 
     return { from: Math.min(anchor, head), to: Math.max(anchor, head) };
   } catch {
-    // posAtDOM ругается на узлы, которых нет в документе (например, каретка
-    // осталась в куске, который редактор уже перерисовал).
+    // posAtDOM throws on nodes that are not in the document (e.g. the caret
+    // stayed in a piece the editor has already re-rendered).
     return null;
   }
 }
 
 /**
- * Вставка файла из медиабиблиотеки.
+ * Insert a file from the media library.
  *
- * `at` — позиция, запомненная при нажатии кнопки. Без неё кладём файл в конец
- * текста: курсор в поле не ставили, и начало текста — самое неудачное место,
- * которое можно выбрать за пользователя (именно так выглядела ошибка).
- * TipTap сам прижмёт позицию к границам документа, если текст успел измениться.
+ * `at` is the position remembered when the button was pressed. Without it the
+ * file goes to the end of the text: the cursor was never placed in the field, and
+ * the start of the text is the worst place to pick for the user (that is exactly
+ * what the bug looked like). TipTap clamps the position to the document bounds
+ * if the text has changed meanwhile.
  */
 export function insertLibraryFile(editor, file, at = null) {
   if (!editor) {

@@ -35,11 +35,11 @@ const updatePassword = () => {
 </script>
 
 <template>
-    <AdminLayout title="Профиль">
+    <AdminLayout :title="$t('account.profile.title')">
         <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Профиль</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $t('account.profile.title') }}</h1>
             <p class="mt-1 text-sm text-gray-600">
-                Управление настройками вашего аккаунта
+                {{ $t('account.profile.subtitle') }}
             </p>
         </div>
 
@@ -47,15 +47,15 @@ const updatePassword = () => {
             <!-- Profile Information -->
             <div class="bg-white rounded-lg shadow">
                 <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-medium text-gray-900">Основная информация</h2>
+                    <h2 class="text-lg font-medium text-gray-900">{{ $t('account.profile.info_title') }}</h2>
                     <p class="mt-1 text-sm text-gray-600">
-                        Обновите информацию вашего профиля
+                        {{ $t('account.profile.info_subtitle') }}
                     </p>
                 </div>
                 <form @submit.prevent="updateProfile" class="p-6 space-y-4">
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700">
-                            Имя
+                            {{ $t('account.profile.name') }}
                         </label>
                         <input
                             id="name"
@@ -71,7 +71,7 @@ const updatePassword = () => {
 
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700">
-                            Email
+                            {{ $t('account.profile.email') }}
                         </label>
                         <input
                             id="email"
@@ -91,7 +91,7 @@ const updatePassword = () => {
                             :disabled="profileForm.processing"
                             class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                         >
-                            {{ profileForm.processing ? 'Сохранение...' : 'Сохранить' }}
+                            {{ profileForm.processing ? $t('common.saving') : $t('common.save') }}
                         </button>
                     </div>
                 </form>
@@ -100,15 +100,15 @@ const updatePassword = () => {
             <!-- Update Password -->
             <div class="bg-white rounded-lg shadow">
                 <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-medium text-gray-900">Смена пароля</h2>
+                    <h2 class="text-lg font-medium text-gray-900">{{ $t('account.profile.password_title') }}</h2>
                     <p class="mt-1 text-sm text-gray-600">
-                        Используйте надежный пароль для защиты аккаунта
+                        {{ $t('account.profile.password_subtitle') }}
                     </p>
                 </div>
                 <form @submit.prevent="updatePassword" class="p-6 space-y-4">
                     <div>
                         <label for="current_password" class="block text-sm font-medium text-gray-700">
-                            Текущий пароль
+                            {{ $t('account.profile.current_password') }}
                         </label>
                         <input
                             id="current_password"
@@ -124,7 +124,7 @@ const updatePassword = () => {
 
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700">
-                            Новый пароль
+                            {{ $t('account.profile.new_password') }}
                         </label>
                         <input
                             id="password"
@@ -140,7 +140,7 @@ const updatePassword = () => {
 
                     <div>
                         <label for="password_confirmation" class="block text-sm font-medium text-gray-700">
-                            Подтверждение пароля
+                            {{ $t('account.profile.password_confirmation') }}
                         </label>
                         <input
                             id="password_confirmation"
@@ -156,7 +156,7 @@ const updatePassword = () => {
                             :disabled="passwordForm.processing"
                             class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                         >
-                            {{ passwordForm.processing ? 'Сохранение...' : 'Изменить пароль' }}
+                            {{ passwordForm.processing ? $t('common.saving') : $t('account.profile.change_password') }}
                         </button>
                     </div>
                 </form>

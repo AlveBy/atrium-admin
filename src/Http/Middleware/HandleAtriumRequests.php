@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Http\Middleware;
 
+use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
+use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Inertia for the admin panel only.
@@ -18,6 +23,23 @@ use Inertia\Middleware;
 final class HandleAtriumRequests extends Middleware
 {
     protected $rootView = 'atrium::app';
+
+    /**
+     * The panel speaks the admin's language; the site keeps its own locale.
+     * Set here, before any controller builds field labels or flash messages.
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user = auth()->guard(config('atrium.auth.guard', 'admin'))->user();
+
+        $locales = app(Locales::class);
+        $locale = $locales->resolve($request, $user instanceof AdminUser ? $user : null);
+
+        app()->setLocale($locale);
+        $locales->fillValidationGaps($locale);
+
+        return parent::handle($request, $next);
+    }
 
     public function version(Request $request): ?string
     {
@@ -45,6 +67,11 @@ final class HandleAtriumRequests extends Middleware
                 ];
             },
             'branding' => fn () => config('atrium.branding'),
+            'locale' => fn () => app()->getLocale(),
+            'locales' => fn () => app(Locales::class)->available(),
+            // Sent once per language and kept by the client across visits.
+            'translations' => Inertia::once(fn () => app(Locales::class)->dictionary(app()->getLocale()))
+                ->as('atrium.translations.'.app()->getLocale()),
             'menu' => fn () => app(Menu::class)->items(),
             'flash' => fn () => [
                 'success' => $request->session()->get('success'),

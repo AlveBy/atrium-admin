@@ -23,7 +23,7 @@ class SeoMeta extends Model
         'og_image',
         'canonical_url',
         'robots',
-        // Блоки «Настройки для картинок …» с вкладки SEO в Битриксе.
+        // The "picture settings" blocks of the Bitrix SEO tab.
         'preview_picture_alt',
         'preview_picture_title',
         'preview_picture_file_name',

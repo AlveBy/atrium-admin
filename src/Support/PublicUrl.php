@@ -8,24 +8,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 
 /**
- * Публичный адрес страницы — тот, что показывается под «Символьным кодом».
+ * Public address of a page — the one shown under the slug field.
  *
- * Раньше превью собиралось из ЧПУ админки (`getFullPath()`), а это разные
- * вещи: у раздела в базе лежит код `china`, публичный же адрес —
- * `/countries/china`. Новому разделу и подавно неоткуда взять `fullPath`, и
- * форма показывала `https://example.com/japan` — адрес, которого нет.
+ * The preview used to be built from the admin slug path (`getFullPath()`),
+ * and those are different things: a section stores the code `china`, while
+ * its public address is `/countries/china`. A new section has no `fullPath`
+ * at all, and the form showed `https://example.com/japan` — an address that
+ * does not exist.
  *
- * Карта адресов лежит в `config/atrium.php` → `public_urls`: пакет не
- * знает ни про `/countries`, ни про `/catalog`, это роуты проекта. Модели,
- * которой в карте нет (заявки, баннеры, отзывы), превью не положено вовсе —
- * страницы у неё просто не существует.
+ * The address map lives in `config/atrium.php` → `public_urls`: the package
+ * knows nothing about `/countries` or `/catalog`, those are project routes.
+ * A model missing from the map (form submissions, banners, reviews) gets no
+ * preview at all — it simply has no page.
  */
 final class PublicUrl
 {
     /**
-     * Сколько уровней вложенности разделов разбираем, поднимаясь к корню.
-     * Ограничение спасает от зацикливания, если раздел окажется собственным
-     * предком.
+     * How many section levels to walk up towards the root. The limit guards
+     * against a loop if a section turns out to be its own ancestor.
      */
     private const MAX_DEPTH = 20;
 
@@ -33,7 +33,7 @@ final class PublicUrl
     private static array $pathCache = [];
 
     /**
-     * Дописать полю «Символьный код» всё, что нужно для честного превью.
+     * Add to the slug field everything an honest preview needs.
      *
      * @param  array<string,mixed>  $field
      * @return array<string,mixed>
@@ -47,7 +47,7 @@ final class PublicUrl
         $rule = self::ruleFor($modelClass);
 
         if ($rule === null) {
-            // Публичной страницы нет — молчим, а не показываем выдуманный адрес.
+            // No public page — show nothing rather than a made-up address.
             $field['showPreview'] = false;
 
             return $field;
@@ -63,8 +63,8 @@ final class PublicUrl
     }
 
     /**
-     * Правило для модели: префикс роута, поле формы с разделом и дерево,
-     * из которого считается путь раздела.
+     * Rule for a model: route prefix, the form field holding the section, and
+     * the tree the section path is computed from.
      *
      * @return array{prefix:string,parent:?string,tree:?string,parent_column:string}|null
      */
@@ -88,10 +88,11 @@ final class PublicUrl
     }
 
     /**
-     * Путь каждого раздела дерева: id => «китай/лечебные-туры».
+     * Path of every section in the tree: id => "china/spa-tours".
      *
-     * Один запрос на всё дерево — предки собираются в памяти. Тянуть их
-     * связями значило бы запрос на каждого предка каждого раздела.
+     * One query for the whole tree — ancestors are assembled in memory.
+     * Loading them through relations would mean a query per ancestor of every
+     * section.
      *
      * @return array<int|string,string>
      */
@@ -129,9 +130,9 @@ final class PublicUrl
     }
 
     /**
-     * Адрес записи на сайте — тот же, что показывает превью под «Символьным
-     * кодом»: префикс, путь раздела, код. Null, если публичной страницы нет
-     * или код пустой.
+     * Address of the record on the site — the same one the slug field preview
+     * shows: prefix, section path, code. Null if there is no public page or
+     * the code is empty.
      */
     public static function forRecord(Model $record): ?string
     {
@@ -150,7 +151,7 @@ final class PublicUrl
     }
 
     /**
-     * Сбросить память о путях разделов (нужно тестам и после переноса данных).
+     * Forget the cached section paths (for tests and after a data import).
      */
     public static function forgetPaths(): void
     {

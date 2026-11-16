@@ -85,7 +85,7 @@ const tabsWithBadges = computed(() => {
                             <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="ml-1 text-gray-500">Создание</span>
+                            <span class="ml-1 text-gray-500">{{ $t('resource.form.breadcrumb_create') }}</span>
                         </div>
                     </li>
                 </ol>
@@ -121,7 +121,7 @@ const tabsWithBadges = computed(() => {
                                             v-if="!fieldsByTab[tab.name]?.length"
                                             class="text-center py-12 text-gray-500"
                                         >
-                                            <p>Нет полей для отображения</p>
+                                            <p>{{ $t('resource.form.empty_tab') }}</p>
                                         </div>
                                     </div>
                                 </AdminTabPanel>
@@ -145,10 +145,10 @@ const tabsWithBadges = computed(() => {
                     <!-- Form buttons -->
                     <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t">
                         <AdminButton data-action="cancel" :href="route(`${props.routeName}.index`)" variant="secondary">
-                            Отмена
+                            {{ $t('common.cancel') }}
                         </AdminButton>
                         <AdminButton data-action="save" type="submit" :loading="form.processing">
-                            Создать
+                            {{ $t('common.create') }}
                         </AdminButton>
                     </div>
                 </form>

@@ -8,27 +8,27 @@ use Atrium\Admin\Dashboard\Gadget;
 use Atrium\Admin\Dashboard\PageSpeedStats;
 
 /**
- * «Скорость сайта» — медиана времени генерации страницы.
+ * "Site speed" — median page generation time.
  *
- * Шкала один в один из гаджета Битрикса (bitrix/gadgets/bitrix/admin_sitespeed):
- * линейка 0–2.5 сек, пять полос и подписи «Очень быстро … Очень медленно» с
- * теми же порогами. Источник числа другой: Битрикс постил лицензионный ключ на
- * www.1c-bitrix.ru и рисовал p50 из их аналитики (у заказчика этот запрос
- * ничего не возвращал — гаджет так и висел с «нет данных»), а мы берём медиану
- * собственных замеров.
+ * The scale is the same as in the Bitrix gadget (bitrix/gadgets/bitrix/admin_sitespeed):
+ * a 0–2.5 s ruler, five bands labelled "Very fast … Very slow" with the same
+ * thresholds. The number comes from elsewhere: Bitrix posted the licence key to
+ * its vendor's server and drew p50 from their analytics (that request often
+ * returned nothing, leaving the gadget at "no data"); we take the median of our
+ * own measurements.
  */
 final class SiteSpeedGadget extends Gadget
 {
-    /** Верх линейки, мс. Из gadget: siteIndexPercent = p50 / 2500 * 100. */
+    /** Top of the ruler, ms. From the gadget: siteIndexPercent = p50 / 2500 * 100. */
     private const SCALE_MS = 2500;
 
-    /** Пороги полос, мс => подпись. Из intervals[] в index.php гаджета. */
+    /** Band thresholds, ms => label key. From intervals[] in the gadget's index.php. */
     private const BANDS = [
-        500 => 'Очень быстро',
-        1000 => 'Быстро',
-        1500 => 'Не быстро',
-        2000 => 'Медленно',
-        2500 => 'Очень медленно',
+        500 => 'very_fast',
+        1000 => 'fast',
+        1500 => 'not_fast',
+        2000 => 'slow',
+        2500 => 'very_slow',
     ];
 
     public function __construct(array $options = [], private ?PageSpeedStats $stats = null)
@@ -45,7 +45,7 @@ final class SiteSpeedGadget extends Gadget
 
     public function title(): string
     {
-        return (string) $this->option('title', 'Скорость сайта');
+        return (string) $this->option('title', __('atrium::dashboard.site_speed.title'));
     }
 
     public function width(): string
@@ -60,16 +60,16 @@ final class SiteSpeedGadget extends Gadget
         return [
             'seconds' => $median === null ? null : number_format($median / 1000, 2, ',', ' '),
             'percent' => $median === null ? null : $this->pointerPercent($median),
-            'label' => $median === null ? 'нет данных' : $this->band($median),
-            'unit' => 'Сек.',
+            'label' => $median === null ? __('atrium::dashboard.site_speed.no_data') : $this->band($median),
+            'unit' => __('atrium::dashboard.site_speed.unit'),
             'samples' => $this->stats->samples(),
             'windowDays' => $this->stats->windowDays(),
-            'bands' => array_values(self::BANDS),
+            'bands' => array_map(self::bandLabel(...), array_values(self::BANDS)),
             'scaleSeconds' => number_format(self::SCALE_MS / 1000, 1, ',', ' '),
         ];
     }
 
-    /** Положение указателя, %. Битрикс зажимал его в 4…98, чтобы не съезжал за края. */
+    /** Pointer position, %. Bitrix clamped it to 4…98 so it does not slide off the edges. */
     private function pointerPercent(int $ms): float
     {
         return round(min(max($ms / self::SCALE_MS * 100, 4), 98), 2);
@@ -77,12 +77,17 @@ final class SiteSpeedGadget extends Gadget
 
     private function band(int $ms): string
     {
-        foreach (self::BANDS as $threshold => $label) {
+        foreach (self::BANDS as $threshold => $band) {
             if ($ms < $threshold) {
-                return $label;
+                return self::bandLabel($band);
             }
         }
 
-        return (string) array_values(self::BANDS)[count(self::BANDS) - 1];
+        return self::bandLabel(array_values(self::BANDS)[count(self::BANDS) - 1]);
+    }
+
+    private static function bandLabel(string $band): string
+    {
+        return __('atrium::dashboard.site_speed.bands.'.$band);
     }
 }

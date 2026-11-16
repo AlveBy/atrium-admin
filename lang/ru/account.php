@@ -1,0 +1,102 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * The administrator's own account: profile, the administrators list and API tokens.
+ */
+return [
+    'profile' => [
+        'title' => 'Профиль',
+        'subtitle' => 'Управление настройками вашего аккаунта',
+        'info_title' => 'Основная информация',
+        'info_subtitle' => 'Обновите информацию вашего профиля',
+        'name' => 'Имя',
+        'email' => 'Email',
+        'password_title' => 'Смена пароля',
+        'password_subtitle' => 'Используйте надежный пароль для защиты аккаунта',
+        'current_password' => 'Текущий пароль',
+        'new_password' => 'Новый пароль',
+        'password_confirmation' => 'Подтверждение пароля',
+        'change_password' => 'Изменить пароль',
+        'updated' => 'Профиль успешно обновлен.',
+        'password_updated' => 'Пароль успешно изменен.',
+
+        'validation' => [
+            'name_required' => 'Имя обязательно для заполнения.',
+            'email_required' => 'Email обязателен для заполнения.',
+            'email_invalid' => 'Введите корректный email.',
+            'email_taken' => 'Этот email уже используется.',
+            'current_password_required' => 'Текущий пароль обязателен.',
+            'current_password_wrong' => 'Текущий пароль неверен.',
+            'password_required' => 'Новый пароль обязателен.',
+            'password_mismatch' => 'Пароли не совпадают.',
+        ],
+    ],
+
+    'users' => [
+        'fields' => [
+            'id' => 'ID',
+            'name' => 'Имя',
+            'email' => 'Email',
+            'password' => 'Пароль',
+            'password_confirmation' => 'Подтверждение пароля',
+            'is_active' => 'Активен',
+            'created_at' => 'Создан',
+        ],
+        'creating' => 'Создание',
+        'total' => 'Всего записей: :count',
+        'search_placeholder' => 'Поиск...',
+        'delete_title' => 'Подтверждение удаления',
+        'delete_confirm' => 'Вы уверены, что хотите удалить эту запись?',
+        'delete_irreversible' => 'Это действие нельзя отменить.',
+        'password_keep_placeholder' => 'Оставьте пустым, чтобы не менять',
+        'password_keep_hint' => 'Оставьте пустым, если не хотите менять пароль',
+    ],
+
+    'api_tokens' => [
+        'subtitle' => 'Ключи для внешних программ: агент или другой сайт работает с модулями через API от вашего имени и только там, где вы разрешили.',
+        'plain_notice' => 'Новый токен. Скопируйте его сейчас: после ухода со страницы он больше не покажется.',
+        'docs_title' => 'Документация',
+        'docs_subtitle' => 'Открывается без токена. Ссылку можно дать программисту или ИИ-агенту: там все модули, поля и допустимые значения.',
+        'docs_page' => 'Описание:',
+        'openapi_schema' => 'Схема OpenAPI:',
+        'create_title' => 'Выпустить токен',
+        'name' => 'Название',
+        'name_placeholder' => 'Например: ИИ-агент новостей',
+        'expires_at' => 'Действует до (необязательно)',
+        'abilities' => 'Права',
+        'select_read_all' => 'Читать всё',
+        'select_all' => 'Всё',
+        'clear' => 'Снять',
+        'module' => 'Модуль',
+        'read' => 'Читать',
+        'write' => 'Менять',
+        'ability_read' => ':module: читать',
+        'ability_write' => ':module: менять',
+        'submit' => 'Выпустить токен',
+        'list_title' => 'Выпущенные токены',
+        'empty' => 'Токенов пока нет.',
+        'owner' => 'Выпустил',
+        'last_used' => 'Последний вызов',
+        'expiry' => 'Срок',
+        'abilities_count' => ':count право|:count права|:count прав',
+        'never_used' => 'не вызывался',
+        'until' => 'до :date',
+        'expired' => '(истёк)',
+        'no_expiry' => 'бессрочно',
+        'revoke' => 'Отозвать',
+        'revoke_title' => 'Отозвать токен',
+        'revoke_confirm_before' => 'Программа с токеном',
+        'revoke_confirm_after' => 'сразу перестанет получать доступ.',
+        'created' => 'Токен выпущен.',
+        'revoked' => 'Токен отозван.',
+        'abilities_required' => 'Отметьте хотя бы одно право.',
+
+        'attributes' => [
+            'name' => 'название',
+            'abilities' => 'права',
+            'expires_at' => 'срок действия',
+        ],
+    ],
+];

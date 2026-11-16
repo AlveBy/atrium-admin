@@ -26,15 +26,15 @@ trait InteractsWithAdmin
     }
 
     /**
-     * Подпись кнопки «добавить» для этой сущности.
+     * Label of the "add" button for this entity.
      *
-     * У инфоблоков Битрикса она своя и уже в нужном падеже («Добавить товар»,
-     * «Добавить услугу», «Добавить вакансию») — генератор переопределяет этот
-     * метод текстом из настроек инфоблока. Здесь общий запасной вариант.
+     * Bitrix iblocks have their own, already in the right grammatical case
+     * ("Add product", "Add service") — the generator overrides this method with
+     * the text from the iblock settings. This is the generic fallback.
      */
     public static function getAdminCreateLabel(): string
     {
-        return 'Добавить элемент';
+        return __('atrium::resource.add_item');
     }
 
     /**
@@ -156,7 +156,7 @@ trait InteractsWithAdmin
     {
         return [
             ['label' => static::getAdminLabel(), 'url' => route(static::getAdminRouteName().'.index')],
-            ['label' => $this->exists ? $this->getAdminTitle() : 'Создание'],
+            ['label' => $this->exists ? $this->getAdminTitle() : __('atrium::resource.form.breadcrumb_create')],
         ];
     }
 

@@ -12,7 +12,7 @@
       <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col mx-4">
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">Медиабиблиотека</h2>
+          <h2 class="text-lg font-semibold text-gray-900">{{ $t('files.title') }}</h2>
           <button type="button" @click="close" class="p-1 text-gray-400 hover:text-gray-600 rounded">
             <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -31,7 +31,7 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            Загрузить
+            {{ $t('common.upload') }}
           </button>
 
           <input
@@ -56,7 +56,7 @@
                 ? 'bg-indigo-100 text-indigo-700 font-medium'
                 : 'text-gray-600 hover:bg-gray-200'"
             >
-              {{ t.label }}
+              {{ $t(t.label) }}
             </button>
           </div>
 
@@ -66,7 +66,7 @@
             v-model="selectedCollection"
             class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 max-w-56"
           >
-            <option :value="0">Все коллекции</option>
+            <option :value="0">{{ $t('files.all_collections') }}</option>
             <option v-for="c in collections" :key="c.id" :value="c.id">
               {{ c.name }} ({{ c.count }})
             </option>
@@ -77,7 +77,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Поиск файлов..."
+              :placeholder="$t('files.search_placeholder')"
               class="w-56 pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               @input="debouncedSearch"
             />
@@ -94,7 +94,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span class="text-sm text-indigo-700">Загрузка файлов...</span>
+            <span class="text-sm text-indigo-700">{{ $t('files.uploading') }}</span>
           </div>
         </div>
 
@@ -123,7 +123,7 @@
             <svg class="w-16 h-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            <p class="text-sm">Файлы не найдены</p>
+            <p class="text-sm">{{ $t('files.empty') }}</p>
           </div>
 
           <div v-else class="grid grid-cols-4 sm:grid-cols-6 gap-3">
@@ -176,7 +176,7 @@
                 type="button"
                 @click.stop="deleteFile(file)"
                 class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                title="Удалить"
+                :title="$t('common.delete')"
               >
                 <svg class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -193,7 +193,7 @@
               class="px-4 py-2 text-sm text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 transition-colors"
               :disabled="loading"
             >
-              {{ loading ? 'Загрузка...' : 'Загрузить ещё' }}
+              {{ loading ? $t('common.loading') : $t('files.load_more') }}
             </button>
           </div>
         </div>
@@ -206,7 +206,7 @@
             <span class="text-gray-400 flex-shrink-0">{{ formatSize(selectedFile.size) }}</span>
           </div>
           <div v-else class="text-sm text-gray-400">
-            Выберите файл или загрузите новый
+            {{ $t('files.select_hint') }}
           </div>
 
           <div class="flex items-center gap-2 flex-shrink-0">
@@ -215,7 +215,7 @@
               @click="close"
               class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              Отмена
+              {{ $t('common.cancel') }}
             </button>
             <button
               type="button"
@@ -224,7 +224,7 @@
               :disabled="!selectedFile"
               class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Вставить
+              {{ $t('files.insert') }}
             </button>
           </div>
         </div>
@@ -236,6 +236,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { ajaxHeaders, responseErrorMessage } from '../../Support/csrf'
+import { t } from '@atrium/Support/i18n'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -263,9 +264,9 @@ const hasMore = ref(false)
 let searchTimeout = null
 
 const typeFilters = [
-  { value: 'all', label: 'Все' },
-  { value: 'image', label: 'Изображения' },
-  { value: 'document', label: 'Документы' },
+  { value: 'all', label: 'files.filters.all' },
+  { value: 'image', label: 'files.filters.images' },
+  { value: 'document', label: 'files.filters.documents' },
 ]
 
 const acceptString = 'image/jpeg,image/png,image/gif,image/webp,application/pdf,.doc,.docx,.xls,.xlsx'
@@ -298,7 +299,7 @@ async function loadFiles(append = false) {
     lastPage.value = data.last_page
     hasMore.value = currentPage.value < data.last_page
   } catch (e) {
-    errorMessage.value = 'Ошибка загрузки списка файлов'
+    errorMessage.value = t('files.errors.list_failed')
   } finally {
     loading.value = false
   }
@@ -370,7 +371,7 @@ async function uploadSingleFile(file) {
     })
 
     if (!response.ok) {
-      throw new Error(await responseErrorMessage(response, `Не удалось загрузить файл ${file.name}`))
+      throw new Error(await responseErrorMessage(response, t('files.errors.upload_failed', { name: file.name })))
     }
 
     const result = await response.json()
@@ -378,12 +379,12 @@ async function uploadSingleFile(file) {
     // Auto-select the newly uploaded file
     selectedFile.value = result
   } catch (e) {
-    errorMessage.value = e.message || `Ошибка загрузки файла ${file.name}`
+    errorMessage.value = e.message || t('files.errors.upload_failed', { name: file.name })
   }
 }
 
 async function deleteFile(file) {
-  if (!confirm(`Убрать "${file.filename}" из библиотеки?`)) return
+  if (!confirm(t('files.remove_confirm', { name: file.filename }))) return
 
   try {
     const response = await fetch(props.deleteUrl, {
@@ -393,7 +394,7 @@ async function deleteFile(file) {
     })
 
     if (!response.ok) {
-      throw new Error(await responseErrorMessage(response, `Не удалось убрать «${file.filename}» из библиотеки`))
+      throw new Error(await responseErrorMessage(response, t('files.errors.remove_failed', { name: file.filename })))
     }
 
     files.value = files.value.filter(f => f.id !== file.id)
@@ -402,7 +403,7 @@ async function deleteFile(file) {
       selectedFile.value = null
     }
   } catch (e) {
-    errorMessage.value = e.message || 'Ошибка удаления файла'
+    errorMessage.value = e.message || t('files.errors.delete_failed')
   }
 }
 

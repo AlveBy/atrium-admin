@@ -1,9 +1,9 @@
 <script setup>
 /**
- * Рабочий стол админки — плитки-гаджеты, набор задаётся в
+ * Admin dashboard — gadget tiles; the set is configured in
  * config/atrium.php → dashboard.gadgets.
  *
- * Сами плитки живут в пакете admin-panel, здесь только раскладка.
+ * The tiles themselves live in Components/Admin/Dashboard, this is only the layout.
  */
 import { computed } from 'vue'
 import AdminLayout from '@atrium/Layouts/AdminLayout.vue'
@@ -24,15 +24,15 @@ const props = defineProps({
     },
 })
 
-// Гаджет из конфига может ссылаться на компонент, которого здесь нет, —
-// пропускаем такой, а не роняем всю страницу.
+// A gadget from the config may name a component that is not here — skip it
+// rather than break the whole page.
 const visible = computed(() => props.gadgets.filter((gadget) => COMPONENTS[gadget.component]))
 </script>
 
 <template>
-    <AdminLayout title="Рабочий стол">
+    <AdminLayout :title="$t('dashboard.title')">
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Рабочий стол</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $t('dashboard.title') }}</h1>
         </div>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

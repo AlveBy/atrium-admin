@@ -20,6 +20,7 @@ return new class extends Migration
             $table->timestamp('two_factor_sent_at')->nullable();
             $table->timestamp('two_factor_expires_at')->nullable();
             $table->boolean('is_active')->default(true)->index();
+            $table->string('locale', 10)->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

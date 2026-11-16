@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Коллекция медиабиблиотеки — папка, в которую сложены картинки.
+ * Media library collection — a folder the images are grouped in.
  */
 class MediaCollection extends Model
 {

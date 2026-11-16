@@ -11,13 +11,12 @@ class CheckboxField extends Field
     protected ?string $falseLabel = null;
 
     /**
-     * Значение, которое пишется в колонку при включённой галочке.
+     * The value written to the column when the checkbox is on.
      *
-     * В Битриксе «Забронировать», «Задать вопрос», «Выводить на главной» —
-     * это списки из одного значения, показанные флажком, а в базе лежит код
-     * варианта ('YES', 'Y'). Публичные шаблоны сравниваются именно с ним
-     * (`$item->form_order === 'YES'`), поэтому галочка в админке должна
-     * сохранять строку, а не boolean.
+     * In Bitrix, flags like "Show on home page" are single-option lists drawn as
+     * a checkbox, and the database holds the option code ('YES', 'Y'). Public
+     * templates compare against exactly that (`$item->show_on_home === 'YES'`),
+     * so the admin checkbox must store the string, not a boolean.
      */
     protected ?string $checkedValue = null;
 
@@ -58,7 +57,7 @@ class CheckboxField extends Field
     }
 
     /**
-     * Хранить не boolean, а конкретную строку (код варианта из Битрикса).
+     * Store a specific string (the Bitrix option code) instead of a boolean.
      */
     public function checkedValue(string $value): static
     {
@@ -80,8 +79,8 @@ class CheckboxField extends Field
     {
         $rules = parent::getValidationRules($context);
 
-        // Со строковым значением приходит 'YES' либо null — правило boolean
-        // такую отправку отклонило бы.
+        // With a string value the request carries 'YES' or null — the boolean
+        // rule would reject that.
         if ($this->checkedValue === null) {
             $rules[] = 'boolean';
         }

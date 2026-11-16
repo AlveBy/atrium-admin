@@ -19,10 +19,10 @@
         @dragover.prevent
         @drop="handleReorder(index)"
       >
-        <!-- Свойство «Документы» в Битриксе — тот же множественный файл, что и
-             галерея, но с расширениями doc/pdf/xls. Рисовать их через <img>
-             значит показывать битую картинку вместо файла, поэтому неизображения
-             получают плитку с иконкой и именем файла. -->
+        <!-- A "Documents" property in Bitrix is the same multiple-file property as a
+             gallery, just with doc/pdf/xls extensions. Rendering them via <img>
+             would show a broken image instead of the file, so non-images get a
+             tile with an icon and the file name. -->
         <img
           v-if="isImage(image)"
           :src="image.src"
@@ -47,6 +47,7 @@
           <button
             type="button"
             @click="removeImage(index)"
+            :title="$t('common.remove')"
             class="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
           >
             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -72,7 +73,7 @@
           <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span class="mt-1 block text-sm text-gray-500">Добавить</span>
+          <span class="mt-1 block text-sm text-gray-500">{{ $t('common.add') }}</span>
         </div>
       </div>
     </div>
@@ -93,7 +94,7 @@
       data-action="pick-from-library"
       class="mt-3 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
     >
-      Добавить из библиотеки
+      {{ $t('fields.gallery.add_from_library') }}
     </button>
 
     <FileManager
@@ -106,7 +107,7 @@
     <p v-if="hint && !error" class="mt-2 text-sm text-gray-500">{{ hint }}</p>
     <p v-if="error" class="mt-2 text-sm text-red-500">{{ error }}</p>
     <p class="mt-2 text-sm text-gray-400">
-      {{ images.length }} / {{ maxFiles }} изображений
+      {{ $tc('fields.gallery.counter', maxFiles, { current: images.length }) }}
     </p>
   </div>
 </template>
@@ -115,6 +116,7 @@
 import { ref, computed } from 'vue';
 import FileManager from '../FileManager.vue';
 import { ajaxHeaders, responseErrorMessage } from '../../../Support/csrf';
+import { t } from '@atrium/Support/i18n';
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -154,8 +156,8 @@ function entryName(entry) {
   return src.split('/').filter(Boolean).pop() || '';
 }
 
-// Картинка или документ — решаем по расширению: одно и то же поле в Битриксе
-// принимает и то, и другое (ФОТОГАЛЕРЕЯ vs ДОКУМЕНТЫ).
+// Image or document — decided by extension: the same Bitrix field type
+// accepts both (a photo gallery vs a documents property).
 function isImage(view) {
   return /\.(jpe?g|png|gif|webp|bmp|svg|avif)(\?|$)/i.test(view.src || '');
 }
@@ -176,7 +178,7 @@ function storedValueFor(result) {
 
 const canAddMore = computed(() => images.value.length < props.maxFiles);
 
-// Медиабиблиотека: добавить в галерею уже загруженную картинку.
+// Media library: add an already uploaded image to the gallery.
 const showLibrary = ref(false);
 
 function pickFromLibrary(file) {
@@ -188,7 +190,7 @@ function pickFromLibrary(file) {
     return;
   }
 
-  // Одна и та же картинка в галерее дважды — почти наверняка промах мышью.
+  // The same image twice in a gallery is almost certainly a misclick.
   if (images.value.some((entry) => entrySrc(entry) === url)) {
     return;
   }
@@ -207,7 +209,7 @@ async function handleFileSelect(event) {
     if (!canAddMore.value) break;
 
     if (file.size > props.maxSize * 1024) {
-      alert(`Файл ${file.name} превышает максимальный размер ${props.maxSize} КБ`);
+      alert(t('fields.gallery.file_too_big', { name: file.name, max: props.maxSize }));
       continue;
     }
 
@@ -229,7 +231,7 @@ async function uploadFile(file) {
     });
 
     if (!response.ok) {
-      throw new Error(await responseErrorMessage(response, `Не удалось загрузить файл ${file.name}`));
+      throw new Error(await responseErrorMessage(response, t('fields.gallery.upload_failed', { name: file.name })));
     }
 
     const result = await response.json();
@@ -237,7 +239,7 @@ async function uploadFile(file) {
     emit('update:modelValue', [...images.value, storedValueFor(result)]);
   } catch (error) {
     console.error('Upload error:', error);
-    alert(error.message || 'Ошибка загрузки файла');
+    alert(error.message || t('fields.upload.failed'));
   }
 }
 

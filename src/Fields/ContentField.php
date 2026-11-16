@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Atrium\Admin\Fields;
 
 /**
- * ContentField - поле с переключателем режимов Текст/HTML/Визуальный редактор
+ * ContentField - a field with a Text/HTML/Visual editor mode switch
  *
- * Аналог поля контента в Bitrix с тремя режимами редактирования.
+ * Counterpart of the Bitrix content field with three editing modes.
  *
  * @example
- * ContentField::make('description')->label('Описание')
- * ContentField::make('raw_html')->label('HTML код')->modes(['text', 'html'])
- * ContentField::make('embed')->label('Код вставки')->defaultMode('html')
+ * ContentField::make('description')->label('Description')
+ * ContentField::make('raw_html')->label('HTML code')->modes(['text', 'html'])
+ * ContentField::make('embed')->label('Embed code')->defaultMode('html')
  */
 class ContentField extends Field
 {
@@ -23,9 +23,9 @@ class ContentField extends Field
     protected int $rows = 6;
 
     /**
-     * 'heading' рисуется списком стилей («Обычный текст», «Заголовок 1»…),
-     * 'fontSize' — списком размеров в пунктах, как в Ворде, 'color' — цветом
-     * текста, 'image'/'file' берут файл из медиабиблиотеки.
+     * 'heading' is drawn as a style list ("Normal text", "Heading 1"…),
+     * 'fontSize' as a list of sizes in points, like in Word, 'color' sets the
+     * text colour, 'image'/'file' take a file from the media library.
      */
     protected array $toolbar = ['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table'];
 

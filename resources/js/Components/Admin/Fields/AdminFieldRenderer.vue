@@ -12,7 +12,8 @@ import ContentField from './ContentField.vue'
 import BelongsToManyField from './BelongsToManyField.vue'
 import MapField from './MapField.vue'
 import FileManager from '../FileManager.vue'
-import { ajaxHeaders, SESSION_EXPIRED_MESSAGE } from '../../../Support/csrf'
+import { ajaxHeaders, sessionExpiredMessage } from '../../../Support/csrf'
+import { t } from '@atrium/Support/i18n'
 
 const props = defineProps({
     field: {
@@ -215,8 +216,8 @@ function postFile(file) {
             }
         }
 
-        xhr.onerror = () => reject(new Error('Не удалось связаться с сервером. Проверьте соединение.'))
-        xhr.onabort = () => reject(new Error('Загрузка отменена.'))
+        xhr.onerror = () => reject(new Error(t('fields.upload.network_error')))
+        xhr.onabort = () => reject(new Error(t('fields.upload.aborted')))
 
         xhr.onload = () => {
             const status = xhr.status
@@ -226,22 +227,22 @@ function postFile(file) {
                 if (body && typeof body.url === 'string' && body.url !== '') {
                     resolve(body)
                 } else {
-                    reject(new Error('Сервер не вернул ссылку на загруженный файл.'))
+                    reject(new Error(t('fields.upload.no_url')))
                 }
                 return
             }
 
             if (status === 401 || status === 419) {
-                reject(new Error(SESSION_EXPIRED_MESSAGE))
+                reject(new Error(sessionExpiredMessage()))
                 return
             }
 
             if (status === 413) {
-                reject(new Error('Файл слишком большой — сервер отклонил загрузку.'))
+                reject(new Error(t('fields.upload.too_large')))
                 return
             }
 
-            reject(new Error(messageFrom(body) || `Ошибка загрузки файла (HTTP ${status}).`))
+            reject(new Error(messageFrom(body) || t('fields.upload.http_error', { status })))
         }
 
         xhr.send(formData)
@@ -285,7 +286,7 @@ async function handleUpload(event) {
 
     const maxSizeKb = Number(props.field.maxSize) || 0
     if (maxSizeKb > 0 && file.size > maxSizeKb * 1024) {
-        uploadError.value = `Файл больше допустимого размера (${maxSizeKb} КБ).`
+        uploadError.value = t('fields.upload.too_big', { max: maxSizeKb })
         input.value = ''
         return
     }
@@ -297,7 +298,7 @@ async function handleUpload(event) {
         const result = await postFile(file)
         value.value = storedValueFor(result)
     } catch (e) {
-        uploadError.value = e?.message || 'Не удалось загрузить файл.'
+        uploadError.value = e?.message || t('fields.upload.failed')
     } finally {
         uploading.value = false
         // Reset the input so picking the same file again re-fires `change`.
@@ -310,14 +311,14 @@ function clearValue() {
     uploadError.value = null
 }
 
-// Медиабиблиотека: выбрать уже загруженный файл вместо повторной заливки.
-// Так это и работало в Битриксе — у поля с картинкой были и «загрузить», и
-// «выбрать из медиабиблиотеки».
+// Media library: pick an already uploaded file instead of uploading it again.
+// That is how it worked in Bitrix — an image field had both "upload" and
+// "pick from media library".
 const showLibrary = ref(false)
 
 function pickFromLibrary(file) {
-    // В библиотеке лежит готовый корневой путь — ровно в таком виде значение
-    // и хранится у мигрированных элементов.
+    // The library holds a ready root-relative path — exactly the form in which
+    // migrated items store the value.
     value.value = file?.url || null
     uploadError.value = null
     showLibrary.value = false
@@ -355,9 +356,9 @@ function pickFromLibrary(file) {
         <!-- Checkbox -->
         <template v-else-if="isCheckbox">
             <div class="flex items-center">
-                <!-- checkedValue: галочка хранит строку из Битрикса ('YES'/'Y'),
-                     а не boolean — иначе публичные шаблоны, сравнивающие
-                     с этой строкой, перестанут находить значение -->
+                <!-- checkedValue: the checkbox stores the Bitrix string ('YES'/'Y'),
+                     not a boolean — otherwise public templates comparing
+                     against that string would stop finding the value -->
                 <input
                     :id="field.name"
                     v-model="value"
@@ -402,7 +403,7 @@ function pickFromLibrary(file) {
                 :class="{ 'border-red-500': error }"
             >
                 <option v-if="!field.required && field.type !== 'multiSelect'" value="">
-                    {{ field.placeholder || 'Выберите...' }}
+                    {{ field.placeholder || $t('common.select') }}
                 </option>
                 <option
                     v-for="option in field.options"
@@ -427,7 +428,7 @@ function pickFromLibrary(file) {
                         @click="clearValue"
                         :disabled="uploading"
                         data-action="remove-upload"
-                        title="Удалить"
+                        :title="$t('common.delete')"
                         class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 disabled:opacity-50"
                     >
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -451,7 +452,7 @@ function pickFromLibrary(file) {
                     data-action="pick-from-library"
                     class="shrink-0 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
                 >
-                    Из библиотеки
+                    {{ $t('fields.upload.from_library') }}
                 </button>
             </div>
 
@@ -463,7 +464,7 @@ function pickFromLibrary(file) {
                         :data-upload-progress="uploadProgress"
                     />
                 </div>
-                <p class="mt-1 text-xs text-gray-500">Загрузка… {{ uploadProgress }}%</p>
+                <p class="mt-1 text-xs text-gray-500">{{ $t('fields.upload.progress', { percent: uploadProgress }) }}</p>
             </div>
 
             <p v-if="uploadError" data-upload-error class="mt-1 text-sm text-red-600">
@@ -487,7 +488,7 @@ function pickFromLibrary(file) {
                         @click="clearValue"
                         :disabled="uploading"
                         data-action="remove-upload"
-                        title="Удалить"
+                        :title="$t('common.delete')"
                         class="p-1 text-red-500 hover:text-red-600 disabled:opacity-50"
                     >
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -511,7 +512,7 @@ function pickFromLibrary(file) {
                     data-action="pick-from-library"
                     class="shrink-0 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
                 >
-                    Из библиотеки
+                    {{ $t('fields.upload.from_library') }}
                 </button>
             </div>
 
@@ -523,7 +524,7 @@ function pickFromLibrary(file) {
                         :data-upload-progress="uploadProgress"
                     />
                 </div>
-                <p class="mt-1 text-xs text-gray-500">Загрузка… {{ uploadProgress }}%</p>
+                <p class="mt-1 text-xs text-gray-500">{{ $t('fields.upload.progress', { percent: uploadProgress }) }}</p>
             </div>
 
             <p v-if="uploadError" data-upload-error class="mt-1 text-sm text-red-600">

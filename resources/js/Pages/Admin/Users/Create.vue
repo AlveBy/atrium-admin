@@ -35,7 +35,7 @@ const getFieldComponent = (field) => {
                 <ol class="inline-flex items-center space-x-1 md:space-x-3">
                     <li class="inline-flex items-center">
                         <Link :href="route('admin.users.index')" class="text-gray-600 hover:text-blue-600">
-                            Администраторы
+                            {{ $t('menu.administrators') }}
                         </Link>
                     </li>
                     <li>
@@ -43,7 +43,7 @@ const getFieldComponent = (field) => {
                             <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                             </svg>
-                            <span class="ml-1 text-gray-500">Создание</span>
+                            <span class="ml-1 text-gray-500">{{ $t('account.users.creating') }}</span>
                         </div>
                     </li>
                 </ol>
@@ -98,13 +98,13 @@ const getFieldComponent = (field) => {
                             :href="route('admin.users.index')"
                             variant="secondary"
                         >
-                            Отмена
+                            {{ $t('common.cancel') }}
                         </AdminButton>
                         <AdminButton
                             type="submit"
                             :loading="form.processing"
                         >
-                            Создать
+                            {{ $t('common.create') }}
                         </AdminButton>
                     </div>
                 </form>

@@ -27,7 +27,7 @@
 
     <div class="grid grid-cols-2 gap-2 mt-2">
       <div>
-        <span class="block text-xs text-gray-500 mb-1">Широта</span>
+        <span class="block text-xs text-gray-500 mb-1">{{ $t('fields.map.latitude') }}</span>
         <!-- step="any" is required: the form has no novalidate, and the default
              step=1 would make 61.79862 invalid and block the whole submit. -->
         <input
@@ -45,7 +45,7 @@
       </div>
 
       <div>
-        <span class="block text-xs text-gray-500 mb-1">Долгота</span>
+        <span class="block text-xs text-gray-500 mb-1">{{ $t('fields.map.longitude') }}</span>
         <input
           type="number"
           data-map-lng
@@ -70,7 +70,7 @@
         data-map-link
         class="text-sm text-indigo-600 hover:text-indigo-800"
       >
-        Открыть на карте
+        {{ $t('fields.map.open_on_map') }}
       </a>
 
       <button
@@ -80,12 +80,12 @@
         class="text-sm text-gray-400 hover:text-red-500"
         @click="clear"
       >
-        Очистить
+        {{ $t('fields.clear') }}
       </button>
     </div>
 
     <p v-if="showParseWarning" class="mt-1 text-sm text-amber-600">
-      Не удалось разобрать координаты. Ожидается формат: широта,долгота — например 55.7558,37.6173
+      {{ $t('fields.map.parse_error', { example: '55.7558,37.6173' }) }}
     </p>
 
     <p v-if="hint && !error" class="mt-1 text-sm text-gray-500">{{ hint }}</p>

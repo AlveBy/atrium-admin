@@ -1,0 +1,102 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * The administrator's own account: profile, the administrators list and API tokens.
+ */
+return [
+    'profile' => [
+        'title' => 'Profile',
+        'subtitle' => 'Manage your account settings',
+        'info_title' => 'Basic information',
+        'info_subtitle' => 'Update your profile information',
+        'name' => 'Name',
+        'email' => 'Email',
+        'password_title' => 'Change password',
+        'password_subtitle' => 'Use a strong password to protect your account',
+        'current_password' => 'Current password',
+        'new_password' => 'New password',
+        'password_confirmation' => 'Confirm password',
+        'change_password' => 'Change password',
+        'updated' => 'Profile updated.',
+        'password_updated' => 'Password changed.',
+
+        'validation' => [
+            'name_required' => 'Name is required.',
+            'email_required' => 'Email is required.',
+            'email_invalid' => 'Enter a valid email.',
+            'email_taken' => 'This email is already in use.',
+            'current_password_required' => 'Enter your current password.',
+            'current_password_wrong' => 'The current password is wrong.',
+            'password_required' => 'Enter a new password.',
+            'password_mismatch' => 'The passwords do not match.',
+        ],
+    ],
+
+    'users' => [
+        'fields' => [
+            'id' => 'ID',
+            'name' => 'Name',
+            'email' => 'Email',
+            'password' => 'Password',
+            'password_confirmation' => 'Confirm password',
+            'is_active' => 'Active',
+            'created_at' => 'Created',
+        ],
+        'creating' => 'New',
+        'total' => 'Total records: :count',
+        'search_placeholder' => 'Search…',
+        'delete_title' => 'Confirm deletion',
+        'delete_confirm' => 'Are you sure you want to delete this record?',
+        'delete_irreversible' => 'This cannot be undone.',
+        'password_keep_placeholder' => 'Leave blank to keep the current one',
+        'password_keep_hint' => 'Leave blank if you do not want to change the password',
+    ],
+
+    'api_tokens' => [
+        'subtitle' => 'Keys for external programs: an agent or another site works with the modules through the API on your behalf, and only where you allowed it.',
+        'plain_notice' => 'New token. Copy it now: once you leave this page it will not be shown again.',
+        'docs_title' => 'Documentation',
+        'docs_subtitle' => 'Opens without a token. You can give the link to a developer or an AI agent: it lists every module, field and allowed value.',
+        'docs_page' => 'Description:',
+        'openapi_schema' => 'OpenAPI schema:',
+        'create_title' => 'Issue a token',
+        'name' => 'Name',
+        'name_placeholder' => 'For example: content AI agent',
+        'expires_at' => 'Valid until (optional)',
+        'abilities' => 'Permissions',
+        'select_read_all' => 'Read all',
+        'select_all' => 'All',
+        'clear' => 'Clear',
+        'module' => 'Module',
+        'read' => 'Read',
+        'write' => 'Change',
+        'ability_read' => ':module: read',
+        'ability_write' => ':module: change',
+        'submit' => 'Issue token',
+        'list_title' => 'Issued tokens',
+        'empty' => 'No tokens yet.',
+        'owner' => 'Issued by',
+        'last_used' => 'Last call',
+        'expiry' => 'Expires',
+        'abilities_count' => ':count permission|:count permissions',
+        'never_used' => 'never called',
+        'until' => 'until :date',
+        'expired' => '(expired)',
+        'no_expiry' => 'no expiry',
+        'revoke' => 'Revoke',
+        'revoke_title' => 'Revoke token',
+        'revoke_confirm_before' => 'The program using the token',
+        'revoke_confirm_after' => 'will lose access immediately.',
+        'created' => 'Token issued.',
+        'revoked' => 'Token revoked.',
+        'abilities_required' => 'Select at least one permission.',
+
+        'attributes' => [
+            'name' => 'name',
+            'abilities' => 'permissions',
+            'expires_at' => 'expiry date',
+        ],
+    ],
+];

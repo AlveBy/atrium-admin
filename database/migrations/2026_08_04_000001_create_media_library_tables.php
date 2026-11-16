@@ -7,18 +7,18 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Медиабиблиотека — общий склад картинок и файлов для всех полей админки.
+ * Media library — a shared store of images and files for all admin fields.
  *
- * До неё каждое поле с картинкой умело только «загрузить с компьютера», и
- * одна и та же фотография заливалась заново на каждой странице, где нужна.
- * В Битриксе для этого была медиабиблиотека (модуль fileman, таблицы
- * b_medialib_*), и контент-менеджеры ей пользовались: 6179 элементов.
+ * Before it, every image field could only "upload from computer", and the same
+ * photo was uploaded again on every page that needed it. Bitrix had a media
+ * library for this (the fileman module, b_medialib_* tables), and content
+ * managers did use it.
  *
- * `url` — то, что кладётся в поле модели: корневой путь вида
- * `/upload/medialibrary/fca/....jpg`. Он же ключ, по которому файл узнаётся
- * повторно. `disk`/`path` заполняются только для файлов, которыми управляет
- * Storage; у перенесённых из Битрикса файл лежит прямо в public/ и колонки
- * пустые.
+ * `url` is what goes into a model field: a root-relative path like
+ * `/upload/medialibrary/fca/....jpg`. It is also the key by which a file is
+ * recognised again. `disk`/`path` are filled only for files managed by
+ * Storage; files migrated from Bitrix live right in public/ and leave these
+ * columns empty.
  */
 return new class extends Migration
 {
@@ -51,7 +51,7 @@ return new class extends Migration
             $table->boolean('is_image')->default(true);
             $table->timestamps();
 
-            // Списком листают по дате и фильтруют по типу и коллекции.
+            // The list is browsed by date and filtered by type and collection.
             $table->index(['is_image', 'created_at']);
             $table->index('collection_id');
         });

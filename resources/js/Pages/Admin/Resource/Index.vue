@@ -64,14 +64,14 @@ const handleDelete = () => {
             <div>
                 <h1 :data-page-title="routeName" class="text-2xl font-bold text-gray-900">{{ title }}</h1>
                 <p class="mt-1 text-sm text-gray-600">
-                    Всего записей: {{ items.total }}
+                    {{ $t('resource.index.total', { count: items.total }) }}
                 </p>
             </div>
             <AdminButton data-action="create" :href="route(`${props.routeName}.create`)">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Создать
+                {{ $t('common.create') }}
             </AdminButton>
         </div>
 
@@ -81,14 +81,14 @@ const handleDelete = () => {
                     <input
                         v-model="search"
                         type="text"
-                        placeholder="Поиск..."
+                        :placeholder="$t('resource.index.search_placeholder')"
                         data-search-input="true"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                         @keyup.enter="handleSearch"
                     />
                 </div>
                 <AdminButton data-action="search" @click="handleSearch" variant="secondary">
-                    Найти
+                    {{ $t('resource.index.search_button') }}
                 </AdminButton>
             </div>
         </div>
@@ -105,19 +105,19 @@ const handleDelete = () => {
 
         <AdminModal
             :show="showDeleteModal"
-            title="Подтверждение удаления"
+            :title="$t('resource.delete.title')"
             @close="showDeleteModal = false"
         >
             <p class="text-gray-600">
-                Вы уверены, что хотите удалить эту запись?
+                {{ $t('resource.delete.confirm') }}
             </p>
 
             <template #footer>
                 <AdminButton data-action="delete-cancel" variant="secondary" @click="showDeleteModal = false">
-                    Отмена
+                    {{ $t('common.cancel') }}
                 </AdminButton>
                 <AdminButton data-action="delete-confirm" variant="danger" @click="handleDelete">
-                    Удалить
+                    {{ $t('common.delete') }}
                 </AdminButton>
             </template>
         </AdminModal>

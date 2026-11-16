@@ -1,8 +1,8 @@
 <script setup>
 /**
- * Раздел «API-токены».
+ * The "API tokens" section.
  *
- * Сам раздел живёт в пакете admin-panel, здесь только раскладка.
+ * The section itself lives in ApiTokensManager; this page is only the layout.
  */
 import AdminLayout from '@atrium/Layouts/AdminLayout.vue'
 import ApiTokensManager from '@atrium/Components/Admin/ApiTokens/ApiTokensManager.vue'
@@ -17,11 +17,11 @@ defineProps({
 </script>
 
 <template>
-    <AdminLayout title="API-токены">
+    <AdminLayout :title="$t('menu.api_tokens')">
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">API-токены</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $t('menu.api_tokens') }}</h1>
             <p class="mt-1 text-sm text-gray-600">
-                Ключи для внешних программ: агент или другой сайт работает с модулями через API от вашего имени и только там, где вы разрешили.
+                {{ $t('account.api_tokens.subtitle') }}
             </p>
         </div>
 

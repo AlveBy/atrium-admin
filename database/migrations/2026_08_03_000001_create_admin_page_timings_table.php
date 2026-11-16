@@ -7,15 +7,15 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Время генерации страниц публичной части.
+ * Generation time of public pages.
  *
- * Из этих строк считаются оба «зелёных» гаджета рабочего стола: «Скорость
- * сайта» (медиана) и «Монитор производительности» (страниц в секунду).
+ * Both speed gadgets of the dashboard are computed from these rows: "Site
+ * speed" (median) and "Performance monitor" (pages per second).
  *
- * Битрикс за этими числами ходил наружу — гаджет скорости постил лицензионный
- * ключ на www.1c-bitrix.ru и получал p50 оттуда, а оценку производительности
- * записывал модуль perfmon после ручного прогона теста. Ни того, ни другого у
- * нас нет, поэтому меряем сами, у себя.
+ * Bitrix fetched these numbers from outside — the speed gadget posted the
+ * licence key to its vendor and got p50 back, and the performance score was
+ * written by the perfmon module after a manual test run. We have neither, so
+ * we measure ourselves, locally.
  */
 return new class extends Migration
 {

@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Файл медиабиблиотеки.
+ * Media library file.
  *
- * `url` — то, что попадает в поле модели, и он же ключ повторного
- * использования: один и тот же файл в библиотеке ровно один раз.
+ * `url` is what ends up in a model field, and also the reuse key: the same
+ * file is in the library exactly once.
  */
 class MediaItem extends Model
 {
@@ -57,10 +57,10 @@ class MediaItem extends Model
     }
 
     /**
-     * Поиск по имени и ключевым словам.
+     * Search by name and keywords.
      *
-     * Имена файлов после Битрикса — хеши, поэтому искать надо по названию
-     * элемента («Мцхета.jpg») и ключевым словам, а не по имени на диске.
+     * File names migrated from Bitrix are hashes, so the search goes by the
+     * item title ("beach.jpg") and keywords, not by the name on disk.
      */
     public function scopeSearch(Builder $query, string $term): Builder
     {
@@ -80,11 +80,11 @@ class MediaItem extends Model
     }
 
     /**
-     * Физически удалить файл, если им управляет Storage.
+     * Physically delete the file if Storage manages it.
      *
-     * Файлы, перенесённые из Битрикса, лежат прямо в public/ и на них может
-     * ссылаться контент, который мы не контролируем, — их с диска не трогаем,
-     * только убираем из библиотеки.
+     * Files migrated from Bitrix live right in public/ and may be referenced by
+     * content we do not control — they stay on disk and are only removed from
+     * the library.
      */
     public function deleteFile(): void
     {

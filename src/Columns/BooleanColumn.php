@@ -6,9 +6,9 @@ namespace Atrium\Admin\Columns;
 
 class BooleanColumn extends Column
 {
-    protected string $trueLabel = 'Да';
+    protected ?string $trueLabel = null;
 
-    protected string $falseLabel = 'Нет';
+    protected ?string $falseLabel = null;
 
     protected string $trueColor = 'green';
 
@@ -66,8 +66,8 @@ class BooleanColumn extends Column
     protected function getColumnProps(): array
     {
         return [
-            'trueLabel' => $this->trueLabel,
-            'falseLabel' => $this->falseLabel,
+            'trueLabel' => $this->trueLabel ?? __('atrium::common.yes'),
+            'falseLabel' => $this->falseLabel ?? __('atrium::common.no'),
             'trueColor' => $this->trueColor,
             'falseColor' => $this->falseColor,
             'asIcon' => $this->asIcon,

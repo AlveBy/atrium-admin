@@ -8,6 +8,7 @@ use Atrium\Admin\Http\Controllers\Auth\LoginController;
 use Atrium\Admin\Http\Controllers\Auth\TwoFactorController;
 use Atrium\Admin\Http\Controllers\DashboardController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
+use Atrium\Admin\Http\Controllers\LocaleController;
 use Atrium\Admin\Http\Controllers\ProfileController;
 use Atrium\Admin\Http\Controllers\ResourceController;
 use Atrium\Admin\Resources\ResourceRegistry;
@@ -27,13 +28,16 @@ Route::prefix(config('atrium.prefix', 'admin'))
     ->middleware([...config('atrium.middleware', ['web']), 'atrium.inertia'])
     ->group(function () {
 
+        // Interface language — for guests on the sign-in page too.
+        Route::post('locale', [LocaleController::class, 'update'])->name('admin.locale');
+
         // Guest routes (login page)
         Route::middleware('admin.guest')->group(function () {
             Route::get('login', [LoginController::class, 'showLoginForm'])->name('admin.login');
             Route::post('login', [LoginController::class, 'login']);
 
-            // Второй шаг входа: пароль уже принят, ждём код с почты. Тоже для
-            // гостя — авторизации до кода нет.
+            // Second sign-in step: the password is accepted, waiting for the
+            // emailed code. Also for guests — there is no session before the code.
             Route::get('two-factor', [TwoFactorController::class, 'show'])->name('admin.two-factor');
             Route::post('two-factor', [TwoFactorController::class, 'store']);
             Route::post('two-factor/resend', [TwoFactorController::class, 'resend'])->name('admin.two-factor.resend');
@@ -58,7 +62,7 @@ Route::prefix(config('atrium.prefix', 'admin'))
             Route::get('filemanager', [FileManagerController::class, 'index'])->name('admin.filemanager.index');
             Route::delete('filemanager', [FileManagerController::class, 'destroy'])->name('admin.filemanager.destroy');
 
-            // API-токены для внешних программ
+            // API tokens for external programs
             Route::get('api-tokens', [ApiTokenController::class, 'index'])->name('admin.api-tokens.index');
             Route::post('api-tokens', [ApiTokenController::class, 'store'])->name('admin.api-tokens.store');
             Route::delete('api-tokens/{id}', [ApiTokenController::class, 'destroy'])->name('admin.api-tokens.destroy');

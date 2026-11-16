@@ -126,7 +126,7 @@ const tabsWithBadges = computed(() => {
                                             v-if="!fieldsByTab[tab.name]?.length"
                                             class="text-center py-12 text-gray-500"
                                         >
-                                            <p>Нет полей для отображения</p>
+                                            <p>{{ $t('resource.form.empty_tab') }}</p>
                                         </div>
                                     </div>
                                 </AdminTabPanel>
@@ -150,10 +150,10 @@ const tabsWithBadges = computed(() => {
                     <!-- Form buttons -->
                     <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t">
                         <AdminButton data-action="cancel" :href="route(`${props.routeName}.index`)" variant="secondary">
-                            Отмена
+                            {{ $t('common.cancel') }}
                         </AdminButton>
                         <AdminButton data-action="save" type="submit" :loading="form.processing">
-                            Сохранить
+                            {{ $t('common.save') }}
                         </AdminButton>
                     </div>
                 </form>

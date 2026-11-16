@@ -14,6 +14,7 @@ use Atrium\Admin\Http\Middleware\SlugRedirectMiddleware;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Services\SlugService;
+use Atrium\Admin\Support\Locales;
 use Atrium\Admin\Support\Menu;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
@@ -52,6 +53,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(ResourceRegistry::class);
         $this->app->singleton(ApiResources::class);
         $this->app->singleton(Menu::class);
+        $this->app->singleton(Locales::class);
     }
 
     public function boot(): void
@@ -101,6 +103,7 @@ final class AtriumServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'atrium');
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'atrium');
 
         if (! $this->app->runningInConsole()) {
             return;
@@ -117,6 +120,10 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/atrium'),
         ], 'atrium-views');
+
+        $this->publishes([
+            __DIR__.'/../lang' => $this->app->langPath('vendor/atrium'),
+        ], 'atrium-lang');
 
         $this->publishes([
             __DIR__.'/../dist' => public_path('vendor/atrium'),

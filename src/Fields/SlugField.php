@@ -67,10 +67,10 @@ class SlugField extends Field
             'showPreview' => $this->showPreview,
             'baseUrl' => $this->baseUrl ?? config('app.url'),
 
-            // Из чего собирается адрес под полем. Заполняет контроллер по
-            // карте `atrium.public_urls` — поле не знает своей модели,
-            // а без модели неоткуда взять ни `/countries`, ни путь раздела.
-            // Пусто = адрес сайта неизвестен, превью показывать нечего.
+            // What the address under the field is built from. Filled in by the
+            // controller from the `atrium.public_urls` map — the field doesn't know
+            // its model, and without one there is nowhere to get `/countries` or
+            // the section path from. Empty = public address unknown, no preview.
             'publicPrefix' => null,
             'parentField' => null,
             'parentPaths' => [],

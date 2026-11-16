@@ -10,9 +10,9 @@ use Inertia\Response;
 use Throwable;
 
 /**
- * Рабочий стол админки — плитки-гаджеты, как в Битриксе.
+ * Admin dashboard — gadget tiles, as in Bitrix.
  *
- * Набор задаётся в `atrium.dashboard.gadgets`.
+ * The set is configured in `atrium.dashboard.gadgets`.
  */
 class DashboardController extends Controller
 {
@@ -37,9 +37,9 @@ class DashboardController extends Controller
                 continue;
             }
 
-            // Сломанная плитка не должна уносить весь рабочий стол — тогда
-            // админка становится недоступной из-за мелочи вроде опечатки
-            // в имени модели.
+            // A broken tile must not take the whole dashboard down — otherwise
+            // the panel becomes unreachable over a trifle like a typo in a
+            // model name.
             try {
                 $gadgets[] = ['key' => 'gadget-'.$index] + $gadget->toArray();
             } catch (Throwable $e) {

@@ -39,15 +39,32 @@ final class Menu
             }
         }
 
-        if ($modules === []) {
-            return $menu;
-        }
-
         // Modules go right after the first item (the dashboard), above the
         // system entries such as administrators and API tokens.
         array_splice($menu, min(1, count($menu)), 0, $modules);
 
-        return $menu;
+        return $this->translate($menu);
+    }
+
+    /**
+     * Labels may be translation keys; plain text passes through __() as is.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function translate(array $items): array
+    {
+        return array_map(function (array $item): array {
+            if (is_string($item['label'] ?? null)) {
+                $item['label'] = __($item['label']);
+            }
+
+            if (is_array($item['children'] ?? null)) {
+                $item['children'] = $this->translate($item['children']);
+            }
+
+            return $item;
+        }, $items);
     }
 
     /**

@@ -27,6 +27,7 @@ class AdminUser extends Authenticatable implements Administrable
         'email',
         'password',
         'is_active',
+        'locale',
     ];
 
     protected $hidden = [
@@ -51,7 +52,15 @@ class AdminUser extends Authenticatable implements Administrable
      */
     public static function getAdminLabel(): string
     {
-        return 'Администраторы';
+        return __('atrium::menu.administrators');
+    }
+
+    /**
+     * The routes are admin.users.*, not the admin.admin_users.* the class name gives.
+     */
+    public static function getAdminRoutePrefix(): string
+    {
+        return 'users';
     }
 
     /**
@@ -61,31 +70,31 @@ class AdminUser extends Authenticatable implements Administrable
     {
         return [
             TextField::make('name')
-                ->label('Имя')
+                ->label(__('atrium::account.users.fields.name'))
                 ->required()
                 ->maxLength(255),
 
             TextField::make('email')
-                ->label('Email')
+                ->label(__('atrium::account.users.fields.email'))
                 ->required()
                 ->email()
                 ->unique('admin_users', 'email'),
 
             TextField::make('password')
-                ->label('Пароль')
+                ->label(__('atrium::account.users.fields.password'))
                 ->password()
                 ->required()
                 ->minLength(8)
                 ->hideOnEdit(),
 
             TextField::make('password_confirmation')
-                ->label('Подтверждение пароля')
+                ->label(__('atrium::account.users.fields.password_confirmation'))
                 ->password()
                 ->required()
                 ->hideOnEdit(),
 
             CheckboxField::make('is_active')
-                ->label('Активен')
+                ->label(__('atrium::account.users.fields.is_active'))
                 ->default(true),
         ];
     }
@@ -97,26 +106,26 @@ class AdminUser extends Authenticatable implements Administrable
     {
         return [
             TextColumn::make('id')
-                ->label('ID')
+                ->label(__('atrium::account.users.fields.id'))
                 ->sortable()
                 ->width('80px'),
 
             TextColumn::make('name')
-                ->label('Имя')
+                ->label(__('atrium::account.users.fields.name'))
                 ->sortable()
                 ->searchable(),
 
             TextColumn::make('email')
-                ->label('Email')
+                ->label(__('atrium::account.users.fields.email'))
                 ->sortable()
                 ->searchable(),
 
             BooleanColumn::make('is_active')
-                ->label('Активен')
+                ->label(__('atrium::account.users.fields.is_active'))
                 ->sortable(),
 
             DateColumn::make('created_at')
-                ->label('Создан')
+                ->label(__('atrium::account.users.fields.created_at'))
                 ->sortable()
                 ->format('d.m.Y H:i'),
         ];

@@ -1,0 +1,123 @@
+<?php
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'clear' => 'Limpar',
+
+    'content' => [
+        'mode_text' => 'Texto',
+        'mode_html' => 'HTML',
+        'mode_wysiwyg' => 'Editor visual',
+    ],
+
+    'editor' => [
+        'placeholder' => 'Comece a digitar…',
+        'format' => 'Estilo do texto',
+        'format_paragraph' => 'Texto normal',
+        'format_h1' => 'Título 1',
+        'format_h2' => 'Título 2',
+        'format_h3' => 'Título 3',
+        'format_h4' => 'Título 4',
+        'format_h5' => 'Título 5',
+        'format_h6' => 'Título 6',
+        'format_blockquote' => 'Citação',
+        'font_size' => 'Tamanho da fonte',
+        'font_size_default' => 'Tamanho',
+        'font_size_pt' => ':size pt',
+        'text_color' => 'Cor do texto',
+        'bold' => 'Negrito',
+        'bold_shortcut' => 'Negrito (Ctrl+B)',
+        'italic' => 'Itálico',
+        'italic_shortcut' => 'Itálico (Ctrl+I)',
+        'underline' => 'Sublinhado',
+        'underline_shortcut' => 'Sublinhado (Ctrl+U)',
+        'strike' => 'Tachado',
+        'link' => 'Link',
+        'link_prompt' => 'URL do link:',
+        'bullet_list' => 'Lista com marcadores',
+        'ordered_list' => 'Lista numerada',
+        'heading' => 'Título',
+        'image' => 'Imagem',
+        'file' => 'Arquivo (PDF, DOC, XLS)',
+        'align_left' => 'Alinhar à esquerda',
+        'align_center' => 'Centralizar',
+        'align_right' => 'Alinhar à direita',
+        'align_justify' => 'Justificar',
+        'table_insert' => 'Inserir tabela',
+        'table_add_row' => 'Adicionar linha',
+        'table_delete_row' => 'Excluir linha',
+        'table_add_column' => 'Adicionar coluna',
+        'table_delete_column' => 'Excluir coluna',
+        'table_merge_split' => 'Mesclar ou dividir células',
+        'table_delete' => 'Excluir tabela',
+    ],
+
+    'upload' => [
+        'from_library' => 'Da biblioteca',
+        'progress' => 'Enviando… :percent%',
+        'too_big' => 'O arquivo excede o tamanho máximo (:max KB).',
+        'too_large' => 'O arquivo é grande demais — o servidor recusou o envio.',
+        'network_error' => 'Não foi possível acessar o servidor. Verifique sua conexão.',
+        'aborted' => 'Envio cancelado.',
+        'no_url' => 'O servidor não retornou um link para o arquivo enviado.',
+        'http_error' => 'Erro ao enviar o arquivo (HTTP :status).',
+        'failed' => 'Não foi possível enviar o arquivo.',
+        'request_failed' => 'A solicitação falhou',
+        'session_expired' => 'Sua sessão expirou. Atualize a página e entre novamente.',
+    ],
+
+    'gallery' => [
+        'add_from_library' => 'Adicionar da biblioteca',
+        'counter' => ':current / :count imagem|:current / :count imagens',
+        'file_too_big' => 'O arquivo :name excede o tamanho máximo de :max KB',
+        'upload_failed' => 'Não foi possível enviar o arquivo :name',
+    ],
+
+    'belongs_to_many' => [
+        'clear_all' => 'Limpar tudo',
+        'no_options' => 'Nenhuma opção disponível',
+    ],
+
+    'map' => [
+        'latitude' => 'Latitude',
+        'longitude' => 'Longitude',
+        'open_on_map' => 'Abrir no mapa',
+        'parse_error' => 'Não foi possível interpretar as coordenadas. Formato esperado: latitude,longitude — por exemplo :example',
+    ],
+
+    'repeatable' => [
+        'item' => 'Item',
+        'item_title' => ':label nº :number',
+        'empty' => 'Nenhum item. Clique em “:add” para adicionar.',
+        'move_up' => 'Mover para cima',
+        'move_down' => 'Mover para baixo',
+    ],
+
+    'slug' => [
+        'placeholder' => 'url-slug',
+        'generate' => 'Gerar a partir do nome',
+        'url_label' => 'URL:',
+    ],
+
+    'tree' => [
+        'search_placeholder' => 'Pesquisar…',
+        'top_level' => 'Nível superior',
+    ],
+
+    'tabs' => [
+        'label' => 'Abas',
+        'main' => 'Geral',
+        'section' => 'Seção',
+        'seo' => 'SEO',
+        'additional' => 'Adicional',
+        'custom_fields' => 'Campos personalizados',
+        'element_properties' => 'Propriedades do item',
+    ],
+
+    'validation' => [
+        'own_ancestor' => 'Uma seção não pode ser colocada dentro de si mesma ou de uma de suas subseções.',
+    ],
+];

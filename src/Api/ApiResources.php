@@ -11,16 +11,16 @@ use Illuminate\Routing\Router;
 use ReflectionClass;
 
 /**
- * Какие модули админки видны через API.
+ * Which admin modules are visible through the API.
  *
- * Список не ведётся руками, а читается с маршрутов админки: всё, что
- * зарегистрировано как `admin.{ключ}.index` на наследнике AdminController,
- * открыто и в API под тем же ключом. Новый модуль из admin:make-module
- * появляется в API и в документации сам — ровно это и нужно агенту, который
- * про сайт ничего не знает.
+ * The list is not maintained by hand but read from the admin routes: anything
+ * registered as `admin.{key}.index` on an AdminController subclass is exposed
+ * in the API under the same key. A new module from admin:make-module shows up
+ * in the API and its documentation by itself — exactly what an agent that
+ * knows nothing about the site needs.
  *
- * Исключения — `atrium.api.except`: по умолчанию там администраторы,
- * их через токен заводить нельзя.
+ * Exceptions are in `atrium.api.except`: administrators by default, they
+ * cannot be created with a token.
  */
 final class ApiResources
 {
@@ -30,7 +30,7 @@ final class ApiResources
     public function __construct(private readonly Router $router, private readonly ResourceRegistry $registry) {}
 
     /**
-     * @return array<string,class-string> ключ => класс модели
+     * @return array<string,class-string> key => model class
      */
     public function all(): array
     {
@@ -76,10 +76,11 @@ final class ApiResources
     }
 
     /**
-     * Название модуля так, как его видно в меню: «Направления / Товары».
+     * Module name as it appears in the menu: "Catalog / Products".
      *
-     * Подпись модели («Каталог») заказчик не узнаёт — он ищет раздел по
-     * пункту меню. Модуль, которого в меню нет, подписан именем модели.
+     * People do not recognise the model label — they look for a section by its
+     * menu entry. A module that is not in the menu is labelled by its model.
+     * Menu labels may be translation keys, hence __().
      */
     public function label(string $key): string
     {
@@ -87,12 +88,12 @@ final class ApiResources
 
         foreach (config('atrium.menu', []) as $item) {
             if (($item['route'] ?? null) === $route) {
-                return $item['label'];
+                return __($item['label']);
             }
 
             foreach ($item['children'] ?? [] as $child) {
                 if (($child['route'] ?? null) === $route) {
-                    return $item['label'].' / '.$child['label'];
+                    return __($item['label']).' / '.__($child['label']);
                 }
             }
         }
@@ -101,8 +102,8 @@ final class ApiResources
     }
 
     /**
-     * Ключ модуля, которым открыта модель, — чтобы сослаться на него, когда
-     * вариантов поля слишком много для документации.
+     * The module key the model is exposed under — to refer to it when a field
+     * has too many options for the documentation.
      */
     public function keyOf(string $model): ?string
     {
@@ -112,7 +113,7 @@ final class ApiResources
     }
 
     /**
-     * Все права, какие можно выдать токену: «читать» и «менять» на модуль.
+     * All abilities a token can be granted: "read" and "write" per module.
      *
      * @return array<int,string>
      */

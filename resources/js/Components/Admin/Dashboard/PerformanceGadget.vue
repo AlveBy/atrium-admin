@@ -1,16 +1,16 @@
 <script setup>
 /**
- * «Монитор производительности» — плитка рабочего стола.
+ * "Performance monitor" dashboard tile.
  *
- * Повторяет вид гаджета Битрикса: зелёная карточка, кнопка «Подробнее» слева,
- * крупная оценка справа. У Битрикса за кнопкой был отдельный раздел модуля
- * perfmon, у нас — раскрывающийся список самых тяжёлых страниц: это ровно тот
- * вопрос, ради которого в тот раздел и заходили.
+ * Mirrors the Bitrix gadget: a green card, a "Details" button on the left,
+ * a large score on the right. In Bitrix the button led to a separate perfmon
+ * module section; here it expands a list of the heaviest pages — exactly the
+ * question people opened that section for.
  */
 import { ref } from 'vue'
 
 defineProps({
-    title: { type: String, default: 'Монитор производительности' },
+    title: { type: String, default: '' },
     data: { type: Object, required: true },
 })
 
@@ -19,7 +19,7 @@ const expanded = ref(false)
 
 <template>
     <div class="perf-card rounded-lg shadow px-5 py-4">
-        <div class="perf-title">{{ title }}</div>
+        <div class="perf-title">{{ title || $t('dashboard.performance.title') }}</div>
 
         <div class="mt-2 flex items-end justify-between gap-4">
             <button
@@ -30,7 +30,7 @@ const expanded = ref(false)
                 @click="expanded = !expanded"
             >
                 <span class="perf-lamp" />
-                {{ expanded ? 'Свернуть' : 'Подробнее' }}
+                {{ expanded ? $t('dashboard.performance.collapse') : $t('dashboard.performance.details') }}
             </button>
             <span v-else />
 
@@ -42,20 +42,20 @@ const expanded = ref(false)
                 </div>
             </div>
             <div v-else class="perf-caption text-right">
-                Оценка появится<br>после первых заходов на сайт
+                {{ $t('dashboard.performance.pending') }}
             </div>
         </div>
 
         <p v-if="data.rate" class="perf-note">
-            среднее время генерации {{ data.averageSeconds }} сек · {{ data.samples }} страниц за {{ data.windowDays }} дней
+            {{ $t('dashboard.performance.note', { seconds: data.averageSeconds, pages: data.samples, days: data.windowDays }) }}
         </p>
 
         <div v-if="expanded" class="perf-details">
-            <div class="perf-details-title">Самые тяжёлые страницы</div>
+            <div class="perf-details-title">{{ $t('dashboard.performance.slowest_title') }}</div>
             <ul>
                 <li v-for="row in data.slowest" :key="row.path">
                     <span class="perf-path" :title="row.path">{{ row.path }}</span>
-                    <span class="perf-ms">{{ row.ms }} мс · {{ row.hits }}</span>
+                    <span class="perf-ms">{{ $t('dashboard.performance.slowest_row', { ms: row.ms, hits: row.hits }) }}</span>
                 </li>
             </ul>
         </div>

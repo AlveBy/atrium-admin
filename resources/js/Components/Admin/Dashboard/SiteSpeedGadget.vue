@@ -1,14 +1,14 @@
 <script setup>
 /**
- * «Скорость сайта» — плитка рабочего стола.
+ * "Site speed" dashboard tile.
  *
- * Раскладка и палитра сняты с гаджета Битрикса
- * (bitrix/gadgets/bitrix/admin_sitespeed/site_speed.css): зелёная карточка,
- * крупное число справа, линейка 0…2,5 сек и пять цветных полос. Картинки
- * оттуда не тащим — рисуем своим CSS, цвета взяты как значения.
+ * Layout and palette are taken from the Bitrix gadget
+ * (bitrix/gadgets/bitrix/admin_sitespeed/site_speed.css): a green card,
+ * a large number on the right, a 0…2.5 s ruler and five coloured bands. Its
+ * images are not copied — drawn with our own CSS, only the colour values reused.
  */
 defineProps({
-    title: { type: String, default: 'Скорость сайта' },
+    title: { type: String, default: '' },
     data: { type: Object, required: true },
 })
 
@@ -19,7 +19,7 @@ const BAND_COLORS = ['#cddd62', '#afc232', '#ecd238', '#eaaa3a', '#eb8825']
     <div class="speed-card rounded-lg shadow px-5 py-4">
         <div class="flex items-start justify-between gap-4">
             <div class="speed-title">
-                {{ title }}:
+                {{ title || $t('dashboard.site_speed.title') }}:
                 <span class="speed-label">{{ data.label }}</span>
             </div>
             <div v-if="data.seconds" class="speed-num whitespace-nowrap">
@@ -55,10 +55,10 @@ const BAND_COLORS = ['#cddd62', '#afc232', '#ecd238', '#eaaa3a', '#eb8825']
 
         <p class="speed-note">
             <template v-if="data.samples">
-                медиана по {{ data.samples }} замерам за {{ data.windowDays }} дней
+                {{ $t('dashboard.site_speed.samples_note', { samples: data.samples, days: data.windowDays }) }}
             </template>
             <template v-else>
-                замеров пока нет — числа появятся после первых заходов на сайт
+                {{ $t('dashboard.site_speed.no_samples') }}
             </template>
         </p>
     </div>
@@ -142,8 +142,8 @@ const BAND_COLORS = ['#cddd62', '#afc232', '#ecd238', '#eaaa3a', '#eb8825']
     width: 1px;
 }
 
-/* Как в Битриксе — плашка со значением стоит НАД шкалой (top: -22px),
-   а не поверх полос, иначе она закрывает подпись под указателем. */
+/* As in Bitrix, the value badge sits ABOVE the scale (top: -22px), not over
+   the bands, otherwise it covers the label under the pointer. */
 .speed-pointer-value {
     background: #f3f4bc;
     border-radius: 3px;

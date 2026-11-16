@@ -1,20 +1,20 @@
 <script setup>
 /**
- * «Элементы инфоблока» — последние изменённые элементы одного раздела.
+ * "Recent items" — the most recently changed items of one module.
  *
- * Состав строки — как в гаджете Битрикса
- * (bitrix/gadgets/bitrix/admin_iblock_elements): серая дата, картинка анонса
- * слева, заголовок ссылкой на форму редактирования, внизу «Все элементы».
+ * The row layout follows the Bitrix gadget
+ * (bitrix/gadgets/bitrix/admin_iblock_elements): a grey date, the preview
+ * picture on the left, the title linking to the edit form, "All items" below.
  */
 defineProps({
-    title: { type: String, default: 'Элементы инфоблока' },
+    title: { type: String, default: '' },
     data: { type: Object, required: true },
 })
 </script>
 
 <template>
     <div class="bg-white rounded-lg shadow px-5 py-4">
-        <h2 class="text-sm font-bold text-gray-900">{{ title }}</h2>
+        <h2 class="text-sm font-bold text-gray-900">{{ title || $t('dashboard.recent.title') }}</h2>
 
         <ul v-if="data.items.length" class="mt-3 divide-y divide-gray-100">
             <li v-for="item in data.items" :key="item.id" class="flex gap-3 py-2">
@@ -38,7 +38,7 @@ defineProps({
             </li>
         </ul>
 
-        <p v-else class="mt-3 text-sm text-gray-500">Элементов пока нет.</p>
+        <p v-else class="mt-3 text-sm text-gray-500">{{ $t('dashboard.recent.empty') }}</p>
 
         <a
             v-if="data.allUrl"

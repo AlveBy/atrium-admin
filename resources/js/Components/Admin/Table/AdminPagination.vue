@@ -43,12 +43,7 @@ const pages = computed(() => {
     <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
         <div class="flex items-center justify-between">
             <div class="text-sm text-gray-700">
-                Показано
-                <span class="font-medium">{{ paginator.from }}</span>
-                -
-                <span class="font-medium">{{ paginator.to }}</span>
-                из
-                <span class="font-medium">{{ paginator.total }}</span>
+                {{ $t('resource.pagination.showing', { from: paginator.from, to: paginator.to, total: paginator.total }) }}
             </div>
             <nav class="inline-flex -space-x-px rounded-md shadow-sm">
                 <!-- Previous -->

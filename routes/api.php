@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| API модулей админки
+| Admin module API
 |--------------------------------------------------------------------------
 |
-| Документация открыта, всё остальное — по токену из раздела «API-токены».
-| Модули не перечисляются: {resource} — ключ любого модуля админки, список
-| собирает ApiResources с маршрутов admin-modules.php.
+| The documentation is public, everything else needs a token from the
+| "API tokens" section. Modules are not listed: {resource} is the key of any
+| admin module; ApiResources collects the list from admin-modules.php routes.
 |
 */
 

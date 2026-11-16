@@ -15,11 +15,11 @@ use Inertia\Response;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
- * Раздел «API-токены»: выпустить ключ для внешней программы и отозвать его.
+ * The "API tokens" section: issue a key for an external program and revoke it.
  *
- * Токен действует от имени того администратора, кто его выпустил, и только
- * в модулях, отмеченных при выпуске. Сам ключ показывается один раз — в базе
- * лежит только его хеш.
+ * A token acts on behalf of the administrator who issued it, and only in the
+ * modules ticked when it was issued. The key itself is shown once: only its
+ * hash is stored.
  */
 class ApiTokenController extends Controller
 {
@@ -66,11 +66,11 @@ class ApiTokenController extends Controller
             'abilities.*' => ['string', Rule::in($this->resources->abilities())],
             'expires_at' => ['nullable', 'date', 'after:today'],
         ], [
-            'abilities.required' => 'Отметьте хотя бы одно право.',
+            'abilities.required' => __('atrium::account.api_tokens.abilities_required'),
         ], [
-            'name' => 'название',
-            'abilities' => 'права',
-            'expires_at' => 'срок действия',
+            'name' => __('atrium::account.api_tokens.attributes.name'),
+            'abilities' => __('atrium::account.api_tokens.attributes.abilities'),
+            'expires_at' => __('atrium::account.api_tokens.attributes.expires_at'),
         ]);
 
         $token = $request->user('admin')->createToken(
@@ -82,7 +82,7 @@ class ApiTokenController extends Controller
         return redirect()
             ->route('admin.api-tokens.index')
             ->with('api_token', $token->plainTextToken)
-            ->with('success', 'Токен выпущен.');
+            ->with('success', __('atrium::account.api_tokens.created'));
     }
 
     public function destroy(int $id): RedirectResponse
@@ -94,6 +94,6 @@ class ApiTokenController extends Controller
 
         return redirect()
             ->route('admin.api-tokens.index')
-            ->with('success', 'Токен отозван.');
+            ->with('success', __('atrium::account.api_tokens.revoked'));
     }
 }

@@ -81,20 +81,19 @@ trait HasAdminSeo
      * Get default SEO description
      */
     /**
-     * Описание страницы из текста.
+     * Page description from a text.
      *
-     * Сначала простой текст, потом рез — не наоборот. Раньше было
-     * `strip_tags(mb_substr($text, 0, 160))`: если рез приходился на середину
-     * тега, strip_tags уносил вместе с обрывком и весь хвост, и у «Санатория
-     * Боржомское ущелье» от описания оставалось 55 знаков.
+     * Plain text first, then the cut — not the other way round. It used to be
+     * `strip_tags(mb_substr($text, 0, 160))`: when the cut fell inside a tag,
+     * strip_tags took the whole tail with the fragment, and some descriptions
+     * shrank to 55 characters.
      *
-     * Предел 300, а не 160. Полторы сотни — это ширина сниппета в выдаче, а не
-     * ограничение поисковика: за длинное описание не штрафуют, его просто
-     * показывают не целиком, зато по другому запросу Google может взять из
-     * него другой кусок. Резать по этой границе значило выбрасывать текст
-     * заранее и без пользы — и заметно: «мы помогаем вам делать визы
-     * (формируем…» (замечание заказчика 02.09.2026). 300 отсекает уже не
-     * сниппет, а простыню в полстраницы.
+     * The limit is 300, not 160. 160 is the snippet width in search results,
+     * not a search engine limit: a long description is not penalised, it is
+     * just shown partially, and for another query Google may take a different
+     * piece of it. Cutting at that boundary threw text away up front for
+     * nothing — and visibly, ending mid-sentence. 300 no longer trims the
+     * snippet, only a half-page wall of text.
      */
     private static function excerpt(string $html, int $limit = 300): string
     {
@@ -105,10 +104,10 @@ trait HasAdminSeo
             return $text;
         }
 
-        // Режем по концу предложения, если он попадает в разумную часть
-        // лимита: обрывок «…визы (формируем…» читается как поломка, а целая
-        // фраза — как описание. Половина лимита — чтобы не отдать вместо
-        // описания одно короткое предложение из пяти слов.
+        // Cut at the end of a sentence if it falls within a reasonable part of
+        // the limit: a fragment cut mid-phrase reads as a bug, a whole sentence
+        // reads as a description. Half the limit, so that a single five-word
+        // sentence is not served as the description.
         if (preg_match('/^(.*[.!?])\s/us', mb_substr($text, 0, $limit), $m)
             && mb_strlen($m[1]) >= intdiv($limit, 2)) {
             return $m[1];
@@ -129,9 +128,10 @@ trait HasAdminSeo
             return self::excerpt((string) $this->preview_text);
         }
 
-        // У разделов анонса нет: их собственный текст лежит в `description`
-        // и выводится на самой странице. Без этой ветки 52 раздела уходили в
-        // выдачу вообще без описания, и Google сочинял сниппет сам.
+        // Sections have no preview text: their own text lives in `description`
+        // and is shown on the page itself. Without this branch sections went to
+        // search results with no description at all, and Google made up the
+        // snippet itself.
         if (isset($this->description) && $this->description) {
             return self::excerpt((string) $this->description);
         }
@@ -213,14 +213,14 @@ trait HasAdminSeo
     }
 
     /**
-     * Имя поля формы => колонка seo_meta.
+     * Form field name => seo_meta column.
      *
-     * Считается из getSeoAdminFields(), а не пишется вторым списком: раньше
-     * список полей и карта колонок жили порознь, вкладка выросла с 4 полей до
-     * 12, а копия карты в Dusk-тесте осталась старой — и восемь полей на 31
-     * ресурсе «не сохранялись», хотя сохранялись всегда. Один источник —
-     * добавили поле в getSeoAdminFields(), и его подхватывают и контроллер,
-     * и тесты.
+     * Derived from getSeoAdminFields() rather than written as a second list:
+     * the field list and the column map used to live apart, the tab grew from
+     * 4 fields to 12, the copy of the map in a Dusk test stayed old — and eight
+     * fields on 31 resources "were not saved", although they always were. One
+     * source: add a field to getSeoAdminFields() and both the controller and
+     * the tests pick it up.
      *
      * @return array<string,string>
      */
@@ -242,70 +242,69 @@ trait HasAdminSeo
     }
 
     /**
-     * Поля вкладки SEO. Набор и порядок повторяют вкладку SEO карточки
-     * элемента в Битриксе (META TITLE / KEYWORDS / DESCRIPTION, «Заголовок
-     * элемента», блоки настроек картинок анонса и детальных, теги) — именно
-     * их заполняли на старом сайте: 206 META TITLE, 195 DESCRIPTION,
-     * 172 KEYWORDS, 137 ALT картинок анонса.
+     * Fields of the SEO tab. The set and order repeat the SEO tab of a Bitrix
+     * element (META TITLE / KEYWORDS / DESCRIPTION, element heading, preview
+     * and detail picture settings, tags) — these are what editors actually
+     * filled in on Bitrix sites.
      *
-     * Многострочные textarea у ALT/TITLE не случайность: в Битриксе эти
-     * шаблоны заполнялись построчно и доходили до 1156 символов.
+     * Multi-line textareas for ALT/TITLE are no accident: in Bitrix these
+     * templates were filled line by line and reached 1156 characters.
      */
     public static function getSeoAdminFields(): array
     {
         return [
             TextField::make('seo_title')
-                ->label('META TITLE')
+                ->label(__('atrium::resource.seo.title'))
                 ->maxLength(255)
-                ->hint('Заголовок вкладки браузера. Оставьте пустым — подставится название'),
+                ->hint(__('atrium::resource.seo.title_hint')),
 
             TextareaField::make('seo_keywords')
-                ->label('META KEYWORDS')
+                ->label(__('atrium::resource.seo.keywords'))
                 ->rows(3)
-                ->hint('Ключевые слова через запятую'),
+                ->hint(__('atrium::resource.seo.keywords_hint')),
 
             TextareaField::make('seo_description')
-                ->label('META DESCRIPTION')
+                ->label(__('atrium::resource.seo.description'))
                 ->rows(3)
-                ->hint('Описание для поисковой выдачи. Оставьте пустым — возьмётся из анонса'),
+                ->hint(__('atrium::resource.seo.description_hint')),
 
             TextField::make('seo_page_title')
-                ->label('Заголовок элемента (H1)')
+                ->label(__('atrium::resource.seo.page_title'))
                 ->maxLength(255)
-                ->hint('Заголовок на самой странице. Оставьте пустым — подставится название'),
+                ->hint(__('atrium::resource.seo.page_title_hint')),
 
             TextareaField::make('seo_preview_picture_alt')
-                ->label('Картинка анонса: ALT')
+                ->label(__('atrium::resource.seo.preview_picture_alt'))
                 ->rows(2),
 
             TextareaField::make('seo_preview_picture_title')
-                ->label('Картинка анонса: TITLE')
+                ->label(__('atrium::resource.seo.preview_picture_title'))
                 ->rows(2),
 
             TextareaField::make('seo_preview_picture_file_name')
-                ->label('Картинка анонса: имя файла')
+                ->label(__('atrium::resource.seo.preview_picture_file_name'))
                 ->rows(2),
 
             TextareaField::make('seo_detail_picture_alt')
-                ->label('Детальная картинка: ALT')
+                ->label(__('atrium::resource.seo.detail_picture_alt'))
                 ->rows(2),
 
             TextareaField::make('seo_detail_picture_title')
-                ->label('Детальная картинка: TITLE')
+                ->label(__('atrium::resource.seo.detail_picture_title'))
                 ->rows(2),
 
             TextareaField::make('seo_detail_picture_file_name')
-                ->label('Детальная картинка: имя файла')
+                ->label(__('atrium::resource.seo.detail_picture_file_name'))
                 ->rows(2),
 
             TextField::make('seo_tags')
-                ->label('Теги')
+                ->label(__('atrium::resource.seo.tags'))
                 ->maxLength(500)
-                ->hint('Слова или словосочетания через запятую'),
+                ->hint(__('atrium::resource.seo.tags_hint')),
 
             ImageField::make('seo_og_image')
-                ->label('OG изображение')
-                ->hint('Картинка для превью при репосте в соцсети'),
+                ->label(__('atrium::resource.seo.og_image'))
+                ->hint(__('atrium::resource.seo.og_image_hint')),
         ];
     }
 }

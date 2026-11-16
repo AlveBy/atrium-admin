@@ -62,10 +62,10 @@ class TextColumn extends Column
     }
 
     /**
-     * Сделать ссылкой по адресу из соседней колонки той же строки.
+     * Link to the address stored in a sibling column of the same row.
      *
-     * В отличие от url() адрес у каждой записи свой: у заявки это карточка
-     * тура, с которой её оставили. Строки без адреса остаются текстом.
+     * Unlike url(), every record has its own address: for a form submission,
+     * the page it was sent from. Rows without an address stay plain text.
      */
     public function urlFrom(string $column): static
     {

@@ -11,14 +11,14 @@ use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
- * Пишет время генерации страниц публичной части.
+ * Records generation time of public pages.
  *
- * Запись идёт в terminate(), то есть уже после того, как ответ ушёл клиенту, —
- * посетитель за замер не платит.
+ * The write happens in terminate(), after the response has gone to the
+ * client — the visitor does not pay for the measurement.
  *
- * Считаем только то, что видит посетитель: GET, успешный ответ, HTML, не
- * админка и не XHR. Иначе в медиану попадут ajax-обработчики форм и статика, и
- * «скорость сайта» перестанет означать скорость сайта.
+ * Only what a visitor sees is counted: GET, successful, HTML, not the admin
+ * panel and not XHR. Otherwise form ajax handlers and static files would get
+ * into the median and "site speed" would stop meaning site speed.
  */
 class RecordPageTiming
 {
@@ -43,8 +43,8 @@ class RecordPageTiming
             return;
         }
 
-        // Замер не стоит того, чтобы из-за него падала страница: упавшая
-        // вставка (нет таблицы, недоступна база) должна остаться незаметной.
+        // A measurement is not worth breaking the page over: a failed insert
+        // (no table, database down) must go unnoticed.
         try {
             PageTiming::create([
                 'path' => mb_substr('/'.ltrim($request->path(), '/'), 0, 255),
@@ -53,7 +53,7 @@ class RecordPageTiming
 
             $this->prune();
         } catch (Throwable) {
-            // Молча: ответ клиенту уже отдан, логировать тут нечего и некуда.
+            // Silently: the response is already sent, nothing worth logging here.
         }
     }
 
@@ -84,15 +84,15 @@ class RecordPageTiming
 
         $ms = (int) round((microtime(true) - $start) * 1000);
 
-        // Верхняя граница — чтобы одиночный таймаут не увёл шкалу в бесконечность.
+        // Upper bound, so a single timeout does not stretch the scale to infinity.
         return max(0, min($ms, 600000));
     }
 
     /**
-     * Удаляет замеры старше окна отчёта.
+     * Deletes measurements older than the report window.
      *
-     * Раз в сотню записей, чтобы не гонять DELETE на каждый хит и не заводить
-     * ради этого крон: гаджет должен работать на голой установке.
+     * Once per hundred writes, so as not to run DELETE on every hit and not to
+     * need a cron for it: the gadget must work on a bare install.
      */
     private function prune(): void
     {

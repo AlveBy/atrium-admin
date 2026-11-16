@@ -11,12 +11,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * Документация API — открытая, без токена.
+ * API documentation — public, no token.
  *
- * Её читают по ссылке: человек в браузере, ChatGPT, агент. Заголовок
- * с токеном по ссылке не передать, а в документации только устройство
- * полей и подписи разделов, которые и так видны на сайте. Сами записи —
- * только по токену.
+ * It is read by link: a person in a browser, a chat assistant, an agent. A
+ * token header cannot be passed in a link, and the documentation holds only
+ * the field structure and section labels, which are visible on the site
+ * anyway. The records themselves require a token.
  */
 class DocsController extends Controller
 {
@@ -31,8 +31,8 @@ class DocsController extends Controller
     }
 
     /**
-     * `?only=articles,news` — описание целиком велико
-     * (все модули сайта), агенту обычно нужны два-три.
+     * `?only=articles,news` — the full description is large
+     * (every module of the site), an agent usually needs two or three.
      *
      * @return array<int,string>
      */

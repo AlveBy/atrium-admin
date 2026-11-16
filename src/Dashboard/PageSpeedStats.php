@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 /**
- * Сводка по замерам времени генерации — то, из чего живут гаджеты
- * «Скорость сайта» и «Монитор производительности».
+ * Summary of page generation timings — what the "Site speed" and
+ * "Performance monitor" gadgets live on.
  *
- * Считается один раз на все гаджеты и кладётся в кэш: рабочий стол открывают
- * часто, а окно замеров — неделя, пересчитывать его на каждый заход незачем.
+ * Computed once for all gadgets and cached: the dashboard is opened often,
+ * while the window is a week, so there is no point recomputing it on every visit.
  */
 final class PageSpeedStats
 {
@@ -25,30 +25,30 @@ final class PageSpeedStats
         private readonly int $ttlSeconds = 300,
     ) {}
 
-    /** Число замеров в окне. */
+    /** Number of measurements in the window. */
     public function samples(): int
     {
         return $this->data()['samples'];
     }
 
-    /** Медиана времени генерации, мс. */
+    /** Median generation time, ms. */
     public function medianMs(): ?int
     {
         return $this->data()['median_ms'];
     }
 
-    /** Среднее время генерации, мс. */
+    /** Average generation time, ms. */
     public function averageMs(): ?float
     {
         return $this->data()['average_ms'];
     }
 
     /**
-     * Страниц в секунду.
+     * Pages per second.
      *
-     * Формула Битрикса из perfmon_panel.php: количество замеров, делённое на
-     * сумму времени. Это не 1/среднее «на глазок», а ровно то же число, что
-     * лежало в mark_php_page_rate и показывалось как «Текущая оценка».
+     * The Bitrix formula from perfmon_panel.php: number of measurements divided
+     * by the total time. Not a rough 1/average, but exactly the number Bitrix
+     * stored in mark_php_page_rate and showed as "Current score".
      */
     public function pagesPerSecond(): ?float
     {
@@ -84,8 +84,8 @@ final class PageSpeedStats
                 fn () => $this->compute()
             );
         } catch (Throwable) {
-            // Нет таблицы (миграция ещё не прогонялась) или недоступен кэш —
-            // рабочий стол должен открыться, просто без чисел.
+            // No table (the migration has not run yet) or the cache is down —
+            // the dashboard must still open, just without numbers.
             $this->data = $empty;
         }
 

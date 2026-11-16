@@ -1,21 +1,20 @@
 /*
- * Как выглядит текст внутри редактора.
+ * How text looks inside the editor.
  *
- * Tailwind сбрасывает теги под ноль: `h1,h2,h3,h4,h5,h6{font-size:inherit;
- * font-weight:inherit}`, `ol,ul{list-style:none}`, у абзацев и цитат
- * `margin:0`. Класс `prose` в разметке полей это не чинил: плагин
- * @tailwindcss/typography в проекте не стоит, и правил `.prose` в собранном
- * CSS нет ни одного — класс висел мёртвым. Поэтому заголовок любого уровня
- * выглядел в поле обычным абзацем: выбираешь «Заголовок 2», «Заголовок 6»,
- * «Обычный текст» — на экране не меняется ничего (жалоба заказчика
- * 04.09.2026: «день 1 не редактируется вне зависимости от того, что
- * выбираешь»). Списки при этом теряли маркеры, а цитата — отбивку.
+ * Tailwind resets tags to nothing: `h1,h2,h3,h4,h5,h6{font-size:inherit;
+ * font-weight:inherit}`, `ol,ul{list-style:none}`, `margin:0` on paragraphs
+ * and quotes. The `prose` class in the field markup did not fix it: the
+ * @tailwindcss/typography plugin is not installed, and the built CSS has no
+ * `.prose` rules at all — the class was dead. So a heading of any level looked
+ * like a plain paragraph in the field: pick "Heading 2", "Heading 6",
+ * "Normal text" — nothing changes on screen. Lists lost their markers too, and
+ * quotes their indent.
  *
- * Оформляем теги сами и по образцу публичной части сайта: поле-то показывает не «какой-то текст», а то, что
- * увидит посетитель, и размеры заголовков должны совпадать.
+ * We style the tags ourselves, modelled on the public site: the field shows not
+ * "some text" but what the visitor will see, so heading sizes should match.
  *
- * Стили общие для ContentField и WysiwygField — как и список расширений в
- * соседнем editor.js. Разъехавшиеся копии мы уже проходили с CSRF.
+ * The styles are shared by ContentField and WysiwygField — like the extension
+ * list in the neighbouring editor.js. Diverging copies already bit us with CSRF.
  */
 
 .ProseMirror {
@@ -48,9 +47,9 @@
     margin: 0 0 16px;
 }
 
-/* Размеры — те же, что даёт `.ark-prose` на широком экране: clamp() там
-   упирается в верхнюю границу. h5 и h6 мельче основного текста, зато жирные:
-   иначе шесть уровней не различить, а редактор их предлагает все шесть. */
+/* Sizes match the public site's article styles on a wide screen, where clamp()
+   hits its upper bound. h5 and h6 are smaller than body text but bold:
+   otherwise six levels can't be told apart, and the editor offers all six. */
 .ProseMirror h1,
 .ProseMirror h2,
 .ProseMirror h3,
@@ -106,11 +105,11 @@
 }
 
 /*
- * Таблицы. Границы рисуем принудительно: в контенте они заданы атрибутом
- * border="1", который браузер к отдельным ячейкам не применяет, — без этого
- * прайс тура выглядел бы в редакторе сплошным полотном текста. Прайсы бывают
- * на 13 столбцов, поэтому таблица не растягивается на всю ширину, а поле
- * прокручивается по горизонтали.
+ * Tables. Borders are forced: in content they are set by the border="1"
+ * attribute, which the browser doesn't apply to individual cells — without this
+ * a price table would look like a solid wall of text in the editor. Tables can
+ * have 13 columns, so the table doesn't stretch to full width; the field
+ * scrolls horizontally instead.
  */
 .ProseMirror table {
     border-collapse: collapse;
@@ -131,7 +130,7 @@
     font-weight: 600;
 }
 
-/* Выделенные ячейки — иначе не видно, что объединяешь. */
+/* Selected cells — otherwise you can't see what you are merging. */
 .ProseMirror .selectedCell::after {
     content: '';
     position: absolute;

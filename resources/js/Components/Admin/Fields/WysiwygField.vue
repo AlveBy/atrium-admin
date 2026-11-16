@@ -9,8 +9,8 @@
       class="border border-gray-300 rounded-lg overflow-hidden"
       :class="{ 'border-red-500': error, 'ring-2 ring-indigo-500': isFocused }"
     >
-      <!-- mousedown, а не click: браузер уводит фокус из редактора нажатием, и
-           после него каретку уже не спросить — см. caretPosition(). -->
+      <!-- mousedown, not click: the browser takes focus away from the editor on
+           press, and after that the caret can't be read — see caretPosition(). -->
       <div class="flex flex-wrap gap-1 p-2 bg-gray-50 border-b border-gray-300" @mousedown="rememberCaret">
         <button
           v-for="button in toolbarButtons"
@@ -55,6 +55,7 @@ import { useEditor, EditorContent } from '@tiptap/vue-3';
 import CharacterCount from '@tiptap/extension-character-count';
 import { caretPosition, editorExtensions, insertLibraryFile } from '../../../Support/editor';
 import FileManager from '../FileManager.vue';
+import { t } from '@atrium/Support/i18n';
 
 const props = defineProps({
   modelValue: String,
@@ -75,8 +76,8 @@ const emit = defineEmits(['update:modelValue']);
 const isFocused = ref(false);
 const showFileManager = ref(false);
 const fileManagerType = ref('all');
-// Куда вставлять файл. Запоминаем при нажатии на панель: к моменту, когда
-// файл выбран, редактор давно без фокуса и своей позиции может не знать.
+// Where to insert a file. Remembered when the toolbar is pressed: by the time
+// a file is picked, the editor has long lost focus and may not know its position.
 const caret = ref(null);
 
 function rememberCaret() {
@@ -94,10 +95,10 @@ function handleFileSelected(file) {
 
 const editor = useEditor({
   content: props.modelValue,
-  // Кнопок для таблиц в этом тулбаре нет, но схема их знает: иначе поле
-  // выбросило бы таблицы из уже готового контента. Набор общий с ContentField.
+  // This toolbar has no table buttons, but the schema knows tables: otherwise the
+  // field would drop them from existing content. The set is shared with ContentField.
   extensions: editorExtensions({
-    placeholder: props.placeholder || 'Начните вводить текст...',
+    placeholder: props.placeholder || t('fields.editor.placeholder'),
     extra: [CharacterCount.configure({ limit: props.maxLength })],
   }),
   onUpdate: ({ editor }) => {
@@ -119,7 +120,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('bold')) {
     buttons.push({
       name: 'bold',
-      title: 'Жирный',
+      title: t('fields.editor.bold'),
       icon: 'IconBold',
       action: () => editor.value?.chain().focus().toggleBold().run(),
       isActive: () => editor.value?.isActive('bold'),
@@ -129,7 +130,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('italic')) {
     buttons.push({
       name: 'italic',
-      title: 'Курсив',
+      title: t('fields.editor.italic'),
       icon: 'IconItalic',
       action: () => editor.value?.chain().focus().toggleItalic().run(),
       isActive: () => editor.value?.isActive('italic'),
@@ -139,7 +140,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('underline')) {
     buttons.push({
       name: 'underline',
-      title: 'Подчеркнутый',
+      title: t('fields.editor.underline'),
       icon: 'IconUnderline',
       action: () => editor.value?.chain().focus().toggleUnderline().run(),
       isActive: () => editor.value?.isActive('underline'),
@@ -149,10 +150,10 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('link')) {
     buttons.push({
       name: 'link',
-      title: 'Ссылка',
+      title: t('fields.editor.link'),
       icon: 'IconLink',
       action: () => {
-        const url = prompt('URL ссылки:');
+        const url = prompt(t('fields.editor.link_prompt'));
         if (url) {
           editor.value?.chain().focus().setLink({ href: url }).run();
         }
@@ -164,7 +165,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('bulletList')) {
     buttons.push({
       name: 'bulletList',
-      title: 'Маркированный список',
+      title: t('fields.editor.bullet_list'),
       icon: 'IconList',
       action: () => editor.value?.chain().focus().toggleBulletList().run(),
       isActive: () => editor.value?.isActive('bulletList'),
@@ -174,7 +175,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('orderedList')) {
     buttons.push({
       name: 'orderedList',
-      title: 'Нумерованный список',
+      title: t('fields.editor.ordered_list'),
       icon: 'IconListOrdered',
       action: () => editor.value?.chain().focus().toggleOrderedList().run(),
       isActive: () => editor.value?.isActive('orderedList'),
@@ -184,7 +185,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('heading')) {
     buttons.push({
       name: 'heading',
-      title: 'Заголовок',
+      title: t('fields.editor.heading'),
       icon: 'IconHeading',
       action: () => editor.value?.chain().focus().toggleHeading({ level: 2 }).run(),
       isActive: () => editor.value?.isActive('heading'),
@@ -194,7 +195,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('image') && props.allowImages) {
     buttons.push({
       name: 'image',
-      title: 'Изображение',
+      title: t('fields.editor.image'),
       icon: 'IconImage',
       action: () => openFileManager('image'),
     });
@@ -203,7 +204,7 @@ const toolbarButtons = computed(() => {
   if (props.toolbar.includes('file')) {
     buttons.push({
       name: 'file',
-      title: 'Файл (PDF, DOC, XLS)',
+      title: t('fields.editor.file'),
       icon: 'IconFile',
       action: () => openFileManager('all'),
     });
@@ -212,9 +213,9 @@ const toolbarButtons = computed(() => {
   return buttons;
 });
 
-// Вторым аргументом идут настройки: в TipTap 2 там был флаг «сообщать об
-// изменении», и голый false означал «молча». В третьей версии это объект, а
-// голый false читается как «настроек нет» — то есть наоборот, с уведомлением.
+// The second argument is options: in TipTap 2 it was an "emit update" flag, and a
+// bare false meant "silently". In v3 it is an object, and a bare false reads as
+// "no options" — i.e. the opposite, with the update emitted.
 watch(() => props.modelValue, (value) => {
   if (editor.value && value !== editor.value.getHTML()) {
     editor.value.commands.setContent(value, { emitUpdate: false });

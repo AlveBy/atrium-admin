@@ -13,7 +13,7 @@
         :class="{ 'border-red-500': error }"
       >
         <span v-if="selectedLabel" class="block truncate">{{ selectedLabel }}</span>
-        <span v-else class="block truncate text-gray-400">{{ placeholder || 'Выберите...' }}</span>
+        <span v-else class="block truncate text-gray-400">{{ placeholder || $t('common.select') }}</span>
         <span class="absolute inset-y-0 right-0 flex items-center pr-2">
           <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -30,12 +30,12 @@
             v-model="searchQuery"
             type="text"
             class="w-full border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            placeholder="Поиск..."
+            :placeholder="$t('fields.tree.search_placeholder')"
           />
         </div>
 
-        <!-- «Верхний уровень» — обычная строка списка, а не отсутствие выбора:
-             без неё непонятно, что раздел можно не вкладывать никуда. -->
+        <!-- "Top level" is an ordinary list row, not the absence of a choice:
+             without it, it is unclear that a section may be nested nowhere. -->
         <div
           v-if="showRootOption"
           class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-100 border-b"
@@ -68,7 +68,7 @@
             @click="clear"
             class="text-sm text-gray-500 hover:text-gray-700"
           >
-            Очистить
+            {{ $t('fields.clear') }}
           </button>
         </div>
 
@@ -103,7 +103,7 @@ const props = defineProps({
   clearable: { type: Boolean, default: true },
   multiple: Boolean,
   expandAll: Boolean,
-  // Подпись строки «ничего не выбрано» в начале списка. Пусто — строки нет.
+  // Label of the "nothing selected" row at the top of the list. Empty — no such row.
   rootLabel: String,
   hint: String,
   error: String,
@@ -123,8 +123,8 @@ const filteredOptions = computed(() => {
 });
 
 /**
- * Пустое значение — это «верхний уровень», а не «ещё не выбрано»: у нового
- * раздела так и есть, и подпись на кнопке должна говорить это прямо.
+ * An empty value means "top level", not "not chosen yet": that is the case for
+ * a new section, and the button label should say so plainly.
  */
 const isRootSelected = computed(
   () => props.modelValue === null || props.modelValue === undefined || props.modelValue === ''

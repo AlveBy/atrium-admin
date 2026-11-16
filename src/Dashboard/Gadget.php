@@ -5,31 +5,31 @@ declare(strict_types=1);
 namespace Atrium\Admin\Dashboard;
 
 /**
- * Гаджет рабочего стола — плитка на главной странице админки.
+ * Dashboard gadget — a tile on the admin start page.
  *
- * Повторяет устройство рабочего стола Битрикса: набор плиток задаётся
- * настройкой (`atrium.dashboard.gadgets`), каждая плитка сама решает,
- * что показать. Разница в том, что у Битрикса раскладка лежала в b_user_option
- * на пользователя и двигалась мышью, а у нас — в конфиге.
+ * Works like the Bitrix desktop: the set of tiles comes from a setting
+ * (`atrium.dashboard.gadgets`) and each tile decides what to show. The
+ * difference: Bitrix kept the layout per user in b_user_option and let it be
+ * dragged with the mouse; here it lives in the config.
  */
 abstract class Gadget
 {
     /**
-     * @param  array<string,mixed>  $options  настройки экземпляра из конфига
+     * @param  array<string,mixed>  $options  instance options from the config
      */
     public function __construct(protected array $options = []) {}
 
-    /** Имя Vue-компонента, который рисует плитку. */
+    /** Name of the Vue component that renders the tile. */
     abstract public function component(): string;
 
-    /** Заголовок плитки. */
+    /** Tile title. */
     abstract public function title(): string;
 
-    /** Данные для компонента. */
+    /** Data for the component. */
     abstract public function data(): array;
 
     /**
-     * Ширина плитки: 'half' — половина ряда, 'full' — весь ряд.
+     * Tile width: 'half' — half a row, 'full' — the whole row.
      */
     public function width(): string
     {
@@ -37,8 +37,8 @@ abstract class Gadget
     }
 
     /**
-     * Плитку можно погасить, не выкидывая из конфига, — и она сама решает,
-     * есть ли ей что показать (например, модель гаджета удалили).
+     * A tile can be switched off without removing it from the config, and it
+     * decides itself whether it has anything to show (e.g. its model was removed).
      */
     public function isVisible(): bool
     {
