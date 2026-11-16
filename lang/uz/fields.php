@@ -107,6 +107,28 @@ return [
         'top_level' => 'Yuqori daraja',
     ],
 
+    // The standard fields every Bitrix iblock has; the migrator labels
+    // generated models with them.
+    'standard' => [
+        'id' => 'ID',
+        'name' => 'Nomi',
+        'code' => 'Belgili kod',
+        'active' => 'Faol',
+        'active_from' => 'Faollik boshlanishi',
+        'active_to' => 'Faollik tugashi',
+        'sort' => 'Saralash',
+        'section' => 'Boʻlim',
+        'parent_section' => 'Yuqori boʻlim',
+        'preview_picture' => 'Eʼlon rasmi',
+        'preview_text' => 'Eʼlon matni',
+        'detail_picture' => 'Batafsil rasm',
+        'detail_text' => 'Batafsil tavsif',
+        'description' => 'Tavsif',
+        'picture' => 'Rasm',
+        'created_at' => 'Yaratilgan',
+        'updated_at' => 'Oʻzgartirilgan',
+    ],
+
     'tabs' => [
         'label' => 'Yorliqlar',
         'main' => 'Asosiy',
@@ -115,6 +137,10 @@ return [
         'additional' => 'Qoʻshimcha',
         'custom_fields' => 'Qoʻshimcha maydonlar',
         'element_properties' => 'Element xususiyatlari',
+        'preview' => 'Eʼlon',
+        'detail' => 'Batafsil',
+        'sections' => 'Boʻlimlar',
+        'description' => 'Tavsif',
     ],
 
     'validation' => [

@@ -107,6 +107,28 @@ return [
         'top_level' => 'Жоғарғы деңгей',
     ],
 
+    // The standard fields every Bitrix iblock has; the migrator labels
+    // generated models with them.
+    'standard' => [
+        'id' => 'ID',
+        'name' => 'Атауы',
+        'code' => 'Символдық код',
+        'active' => 'Белсенділік',
+        'active_from' => 'Белсенділік басталуы',
+        'active_to' => 'Белсенділік аяқталуы',
+        'sort' => 'Сұрыптау',
+        'section' => 'Бөлім',
+        'parent_section' => 'Ата-бөлім',
+        'preview_picture' => 'Анонс суреті',
+        'preview_text' => 'Анонс мәтіні',
+        'detail_picture' => 'Толық сурет',
+        'detail_text' => 'Толық сипаттама',
+        'description' => 'Сипаттама',
+        'picture' => 'Сурет',
+        'created_at' => 'Құрылған',
+        'updated_at' => 'Өзгертілген',
+    ],
+
     'tabs' => [
         'label' => 'Қойындылар',
         'main' => 'Негізгі',
@@ -115,6 +137,10 @@ return [
         'additional' => 'Қосымша',
         'custom_fields' => 'Қосымша өрістер',
         'element_properties' => 'Элемент сипаттары',
+        'preview' => 'Анонс',
+        'detail' => 'Толығырақ',
+        'sections' => 'Бөлімдер',
+        'description' => 'Сипаттама',
     ],
 
     'validation' => [

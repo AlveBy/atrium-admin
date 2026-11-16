@@ -107,6 +107,28 @@ return [
         'top_level' => 'Верхній рівень',
     ],
 
+    // The standard fields every Bitrix iblock has; the migrator labels
+    // generated models with them.
+    'standard' => [
+        'id' => 'ID',
+        'name' => 'Назва',
+        'code' => 'Символьний код',
+        'active' => 'Активність',
+        'active_from' => 'Початок активності',
+        'active_to' => 'Кінець активності',
+        'sort' => 'Сортування',
+        'section' => 'Розділ',
+        'parent_section' => 'Батьківський розділ',
+        'preview_picture' => 'Зображення анонсу',
+        'preview_text' => 'Текст анонсу',
+        'detail_picture' => 'Детальне зображення',
+        'detail_text' => 'Детальний опис',
+        'description' => 'Опис',
+        'picture' => 'Зображення',
+        'created_at' => 'Створено',
+        'updated_at' => 'Змінено',
+    ],
+
     'tabs' => [
         'label' => 'Вкладки',
         'main' => 'Загальне',
@@ -115,6 +137,10 @@ return [
         'additional' => 'Додатково',
         'custom_fields' => 'Додаткові поля',
         'element_properties' => 'Властивості елементів',
+        'preview' => 'Анонс',
+        'detail' => 'Детально',
+        'sections' => 'Розділи',
+        'description' => 'Опис',
     ],
 
     'validation' => [

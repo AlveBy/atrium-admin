@@ -107,6 +107,28 @@ return [
         'top_level' => 'Üst düzey',
     ],
 
+    // The standard fields every Bitrix iblock has; the migrator labels
+    // generated models with them.
+    'standard' => [
+        'id' => 'ID',
+        'name' => 'Ad',
+        'code' => 'Kod',
+        'active' => 'Aktif',
+        'active_from' => 'Başlangıç tarihi',
+        'active_to' => 'Bitiş tarihi',
+        'sort' => 'Sıralama',
+        'section' => 'Bölüm',
+        'parent_section' => 'Üst bölüm',
+        'preview_picture' => 'Önizleme görseli',
+        'preview_text' => 'Önizleme metni',
+        'detail_picture' => 'Ayrıntı görseli',
+        'detail_text' => 'Ayrıntılı metin',
+        'description' => 'Açıklama',
+        'picture' => 'Görsel',
+        'created_at' => 'Oluşturuldu',
+        'updated_at' => 'Değiştirildi',
+    ],
+
     'tabs' => [
         'label' => 'Sekmeler',
         'main' => 'Genel',
@@ -115,6 +137,10 @@ return [
         'additional' => 'Ek',
         'custom_fields' => 'Özel alanlar',
         'element_properties' => 'Öğe özellikleri',
+        'preview' => 'Önizleme',
+        'detail' => 'Ayrıntılar',
+        'sections' => 'Bölümler',
+        'description' => 'Açıklama',
     ],
 
     'validation' => [

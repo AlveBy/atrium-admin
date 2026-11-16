@@ -107,6 +107,28 @@ return [
         'top_level' => '最上位',
     ],
 
+    // The standard fields every Bitrix iblock has; the migrator labels
+    // generated models with them.
+    'standard' => [
+        'id' => 'ID',
+        'name' => '名前',
+        'code' => 'コード',
+        'active' => '有効',
+        'active_from' => '有効期間の開始',
+        'active_to' => '有効期間の終了',
+        'sort' => '並び順',
+        'section' => 'セクション',
+        'parent_section' => '親セクション',
+        'preview_picture' => 'プレビュー画像',
+        'preview_text' => 'プレビューテキスト',
+        'detail_picture' => '詳細画像',
+        'detail_text' => '詳細テキスト',
+        'description' => '説明',
+        'picture' => '画像',
+        'created_at' => '作成日',
+        'updated_at' => '更新日',
+    ],
+
     'tabs' => [
         'label' => 'タブ',
         'main' => '全般',
@@ -115,6 +137,10 @@ return [
         'additional' => '追加情報',
         'custom_fields' => 'カスタムフィールド',
         'element_properties' => '項目のプロパティ',
+        'preview' => 'プレビュー',
+        'detail' => '詳細',
+        'sections' => 'セクション',
+        'description' => '説明',
     ],
 
     'validation' => [

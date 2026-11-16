@@ -107,6 +107,28 @@ return [
         'top_level' => 'Oberste Ebene',
     ],
 
+    // The standard fields every Bitrix iblock has; the migrator labels
+    // generated models with them.
+    'standard' => [
+        'id' => 'ID',
+        'name' => 'Name',
+        'code' => 'Code',
+        'active' => 'Aktiv',
+        'active_from' => 'Aktiv ab',
+        'active_to' => 'Aktiv bis',
+        'sort' => 'Sortierung',
+        'section' => 'Bereich',
+        'parent_section' => 'Übergeordneter Bereich',
+        'preview_picture' => 'Vorschaubild',
+        'preview_text' => 'Vorschautext',
+        'detail_picture' => 'Detailbild',
+        'detail_text' => 'Detailtext',
+        'description' => 'Beschreibung',
+        'picture' => 'Bild',
+        'created_at' => 'Erstellt',
+        'updated_at' => 'Geändert',
+    ],
+
     'tabs' => [
         'label' => 'Tabs',
         'main' => 'Allgemein',
@@ -115,6 +137,10 @@ return [
         'additional' => 'Weitere',
         'custom_fields' => 'Benutzerdefinierte Felder',
         'element_properties' => 'Eintragseigenschaften',
+        'preview' => 'Vorschau',
+        'detail' => 'Details',
+        'sections' => 'Bereiche',
+        'description' => 'Beschreibung',
     ],
 
     'validation' => [

@@ -107,6 +107,28 @@ return [
         'top_level' => '顶级',
     ],
 
+    // The standard fields every Bitrix iblock has; the migrator labels
+    // generated models with them.
+    'standard' => [
+        'id' => 'ID',
+        'name' => '名称',
+        'code' => '代码',
+        'active' => '启用',
+        'active_from' => '启用开始',
+        'active_to' => '启用结束',
+        'sort' => '排序',
+        'section' => '分类',
+        'parent_section' => '上级分类',
+        'preview_picture' => '预览图',
+        'preview_text' => '预览文本',
+        'detail_picture' => '详情图',
+        'detail_text' => '详情文本',
+        'description' => '描述',
+        'picture' => '图片',
+        'created_at' => '创建时间',
+        'updated_at' => '更新时间',
+    ],
+
     'tabs' => [
         'label' => '标签页',
         'main' => '常规',
@@ -115,6 +137,10 @@ return [
         'additional' => '其他',
         'custom_fields' => '自定义字段',
         'element_properties' => '条目属性',
+        'preview' => '预览',
+        'detail' => '详情',
+        'sections' => '分类',
+        'description' => '描述',
     ],
 
     'validation' => [
