@@ -209,6 +209,26 @@ final class PermissionsTest extends TestCase
         $this->assertTrue($other->fresh()->isSuperadmin());
     }
 
+    public function test_a_superadmin_creates_an_administrator_without_touching_the_superadmin_box(): void
+    {
+        // What the create form sends when nobody touched the box or the roles:
+        // every field starts as its default or an empty string.
+        $this->actingAs($this->admin(), 'admin')
+            ->post('/admin/users', [
+                'name' => 'New',
+                'email' => 'new@example.com',
+                'password' => 'secret-password',
+                'password_confirmation' => 'secret-password',
+                'is_active' => true,
+                'is_superadmin' => '',
+                'roles' => '',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertFalse(AdminUser::query()->where('email', 'new@example.com')->sole()->isSuperadmin());
+    }
+
     public function test_the_last_superadmin_cannot_be_demoted_switched_off_or_deleted(): void
     {
         $boss = $this->admin();
