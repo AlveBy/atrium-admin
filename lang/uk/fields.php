@@ -81,6 +81,10 @@ return [
         'no_options' => 'Немає доступних варіантів',
     ],
 
+    'multi_select' => [
+        'nothing_found' => 'Нічого не знайдено',
+    ],
+
     'map' => [
         'latitude' => 'Широта',
         'longitude' => 'Довгота',

@@ -81,6 +81,10 @@ return [
         'no_options' => 'Kullanılabilir seçenek yok',
     ],
 
+    'multi_select' => [
+        'nothing_found' => 'Hiçbir şey bulunamadı',
+    ],
+
     'map' => [
         'latitude' => 'Enlem',
         'longitude' => 'Boylam',

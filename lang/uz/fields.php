@@ -81,6 +81,10 @@ return [
         'no_options' => 'Mavjud variantlar yoʻq',
     ],
 
+    'multi_select' => [
+        'nothing_found' => 'Hech narsa topilmadi',
+    ],
+
     'map' => [
         'latitude' => 'Kenglik',
         'longitude' => 'Uzunlik',

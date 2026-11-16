@@ -10,6 +10,7 @@ import GalleryField from './GalleryField.vue'
 import RepeatableField from './RepeatableField.vue'
 import ContentField from './ContentField.vue'
 import BelongsToManyField from './BelongsToManyField.vue'
+import MultiSelectField from './MultiSelectField.vue'
 import MapField from './MapField.vue'
 import FileManager from '../FileManager.vue'
 import { ajaxHeaders, sessionExpiredMessage } from '../../../Support/csrf'
@@ -49,6 +50,9 @@ const fieldComponents = {
 const hasSpecializedComponent = computed(() => {
     return props.field.type in fieldComponents
 })
+
+// These draw their own hint and error; the rest leave them to this component.
+const ownsHint = computed(() => hasSpecializedComponent.value && props.field.type !== 'repeatable')
 
 // Get the specialized component
 const specializedComponent = computed(() => {
@@ -112,7 +116,6 @@ const isTextarea = computed(() => props.field.type === 'textarea')
 
 // Check if field is a select
 const isSelect = computed(() => props.field.type === 'select'
-    || props.field.type === 'multiSelect'
     // A link to one record of another module: a list of its records.
     || (props.field.type === 'belongsTo' && !(props.field.searchable && props.field.searchRoute)))
 
@@ -394,6 +397,18 @@ function pickFromLibrary(file) {
             />
         </template>
 
+        <!-- Several values from a list -->
+        <template v-else-if="field.type === 'multiSelect'">
+            <MultiSelectField
+                :id="field.name"
+                v-model="value"
+                :options="field.options"
+                :placeholder="field.placeholder || $t('common.select')"
+                :disabled="field.disabled"
+                :error="error"
+            />
+        </template>
+
         <!-- Select -->
         <template v-else-if="isSelect">
             <select
@@ -401,11 +416,10 @@ function pickFromLibrary(file) {
                 v-model="value"
                 :required="field.required"
                 :disabled="field.disabled"
-                :multiple="field.type === 'multiSelect'"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
                 :class="{ 'border-red-500': error }"
             >
-                <option v-if="!field.required && field.type !== 'multiSelect'" value="">
+                <option v-if="!field.required" value="">
                     {{ field.placeholder || $t('common.select') }}
                 </option>
                 <option
@@ -554,12 +568,12 @@ function pickFromLibrary(file) {
         </template>
 
         <!-- Hint -->
-        <p v-if="field.hint && !error" class="mt-1 text-sm text-gray-500">
+        <p v-if="field.hint && !error && !ownsHint" class="mt-1 text-sm text-gray-500">
             {{ field.hint }}
         </p>
 
         <!-- Error -->
-        <p v-if="error" class="mt-1 text-sm text-red-600">
+        <p v-if="error && !ownsHint" class="mt-1 text-sm text-red-600">
             {{ error }}
         </p>
 

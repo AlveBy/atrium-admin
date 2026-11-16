@@ -81,6 +81,10 @@ return [
         'no_options' => 'Brak dostępnych opcji',
     ],
 
+    'multi_select' => [
+        'nothing_found' => 'Nic nie znaleziono',
+    ],
+
     'map' => [
         'latitude' => 'Szerokość geograficzna',
         'longitude' => 'Długość geograficzna',

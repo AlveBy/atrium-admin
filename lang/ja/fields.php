@@ -81,6 +81,10 @@ return [
         'no_options' => '選択肢がありません',
     ],
 
+    'multi_select' => [
+        'nothing_found' => '見つかりませんでした',
+    ],
+
     'map' => [
         'latitude' => '緯度',
         'longitude' => '経度',

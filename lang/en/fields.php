@@ -82,6 +82,10 @@ return [
         'no_options' => 'No options available',
     ],
 
+    'multi_select' => [
+        'nothing_found' => 'Nothing found',
+    ],
+
     'map' => [
         'latitude' => 'Latitude',
         'longitude' => 'Longitude',

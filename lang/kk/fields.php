@@ -81,6 +81,10 @@ return [
         'no_options' => 'Қолжетімді нұсқалар жоқ',
     ],
 
+    'multi_select' => [
+        'nothing_found' => 'Ештеңе табылмады',
+    ],
+
     'map' => [
         'latitude' => 'Ендік',
         'longitude' => 'Бойлық',

@@ -81,6 +81,10 @@ return [
         'no_options' => '没有可用选项',
     ],
 
+    'multi_select' => [
+        'nothing_found' => '未找到任何内容',
+    ],
+
     'map' => [
         'latitude' => '纬度',
         'longitude' => '经度',
