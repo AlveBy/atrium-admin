@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Resources;
 
 use Atrium\Admin\Contracts\Administrable;
+use Atrium\Admin\Demo\Demo;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,8 @@ use InvalidArgumentException;
  * The key of a module is the model's getAdminRoutePrefix() ("articles"), so its
  * routes are named `admin.articles.index`, `admin.articles.edit`, …
  *
- * The panel's own modules (sites, content languages) come first and need no config.
+ * The panel's own modules (sites, content languages) come first and need no config,
+ * then the demo modules when `atrium.demo` is on.
  */
 final class ResourceRegistry
 {
@@ -41,7 +43,9 @@ final class ResourceRegistry
 
         $resources = [];
 
-        foreach ([...self::BUILT_IN, ...(array) config('atrium.resources', [])] as $model) {
+        $demo = Demo::enabled() ? Demo::MODELS : [];
+
+        foreach ([...self::BUILT_IN, ...$demo, ...(array) config('atrium.resources', [])] as $model) {
             if (! is_string($model) || ! class_exists($model)) {
                 throw new InvalidArgumentException("Atrium resource [{$model}] is not a class.");
             }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Console\Commands;
 
+use Atrium\Admin\Demo\Demo;
+use Atrium\Admin\Demo\DemoSeeder;
 use Atrium\Admin\Models\AdminUser;
 use Illuminate\Console\Command;
 
@@ -16,7 +18,8 @@ final class InstallCommand extends Command
                             {--name= : Name of the first administrator}
                             {--email= : Email of the first administrator}
                             {--password= : Password of the first administrator}
-                            {--no-migrate : Do not run migrations}';
+                            {--no-migrate : Do not run migrations}
+                            {--demo : Turn on the demo modules and fill them with a small shop}';
 
     protected $description = 'Install Atrium: config, assets, migrations and the first administrator';
 
@@ -28,6 +31,10 @@ final class InstallCommand extends Command
         // API tokens need Sanctum's table; publishing is a no-op when it is already there.
         if (! glob(database_path('migrations/*_create_personal_access_tokens_table.php'))) {
             $this->components->task('Publishing Sanctum migration', fn () => $this->callSilently('vendor:publish', ['--tag' => 'sanctum-migrations']) === 0);
+        }
+
+        if ($this->option('demo')) {
+            $this->components->task('Turning on the demo (ATRIUM_DEMO=true)', fn () => $this->enableDemo());
         }
 
         if (! $this->option('no-migrate')) {
@@ -49,12 +56,64 @@ final class InstallCommand extends Command
             }
         }
 
+        if ($this->option('demo')) {
+            if ($this->option('no-migrate')) {
+                $this->components->warn('The demo needs its tables: run `php artisan migrate` and `php artisan atrium:install --demo` again.');
+            } else {
+                $this->seedDemo();
+            }
+        }
+
         $this->removeStockRobotsTxt();
 
         $this->newLine();
         $this->components->info('Atrium is ready: '.url(config('atrium.prefix', 'admin')));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * On for this run, and in .env for the next ones. Without a .env (the
+     * variables come from the server) the flag has to be set there.
+     */
+    private function enableDemo(): bool
+    {
+        Demo::register($this->laravel);
+
+        $env = $this->laravel->environmentFilePath();
+
+        if (! is_file($env)) {
+            $this->components->warn('No .env file: set ATRIUM_DEMO=true where the environment is configured.');
+
+            return true;
+        }
+
+        $contents = (string) file_get_contents($env);
+
+        $contents = preg_match('/^ATRIUM_DEMO=.*$/m', $contents)
+            ? (string) preg_replace('/^ATRIUM_DEMO=.*$/m', 'ATRIUM_DEMO=true', $contents)
+            : rtrim($contents, "\n")."\n\nATRIUM_DEMO=true\n";
+
+        return file_put_contents($env, $contents) !== false;
+    }
+
+    private function seedDemo(): void
+    {
+        // Uploaded pictures are served from storage/app/public.
+        if (! file_exists(public_path('storage'))) {
+            $this->components->task('Linking public/storage', fn () => $this->callSilently('storage:link') === 0);
+        }
+
+        $seeded = false;
+        $this->components->task('Filling the demo', function () use (&$seeded): bool {
+            $seeded = (new DemoSeeder)->run();
+
+            return true;
+        });
+
+        if (! $seeded) {
+            $this->components->info('The demo already has content; nothing was added.');
+        }
     }
 
     /**

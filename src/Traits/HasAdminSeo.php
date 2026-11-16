@@ -16,6 +16,8 @@ trait HasAdminSeo
 {
     /**
      * Get SEO meta relationship
+     *
+     * @return MorphOne<SeoMeta, $this>
      */
     public function seoMeta(): MorphOne
     {

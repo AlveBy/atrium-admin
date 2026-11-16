@@ -111,7 +111,10 @@ const isCheckbox = computed(() => props.field.type === 'checkbox')
 const isTextarea = computed(() => props.field.type === 'textarea')
 
 // Check if field is a select
-const isSelect = computed(() => props.field.type === 'select' || props.field.type === 'multiSelect')
+const isSelect = computed(() => props.field.type === 'select'
+    || props.field.type === 'multiSelect'
+    // A link to one record of another module: a list of its records.
+    || (props.field.type === 'belongsTo' && !(props.field.searchable && props.field.searchRoute)))
 
 // Check if field is an image
 const isImage = computed(() => props.field.type === 'image')

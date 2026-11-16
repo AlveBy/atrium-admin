@@ -6,6 +6,7 @@ namespace Atrium\Admin;
 
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Contracts\Sitemapable;
+use Atrium\Admin\Demo\Demo;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
 use Atrium\Admin\Http\Middleware\HandleAtriumRequests;
@@ -135,6 +136,10 @@ final class AtriumServiceProvider extends ServiceProvider
     private function registerResources(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        if (Demo::enabled()) {
+            Demo::register($this->app);
+        }
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'atrium');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'atrium');
         Blade::anonymousComponentPath(__DIR__.'/../resources/views/components', 'atrium');

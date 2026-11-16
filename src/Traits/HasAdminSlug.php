@@ -253,11 +253,11 @@ trait HasAdminSlug
         // Try cache first
         $cached = Cache::get($cacheKey);
         if ($cached && $cached['model'] === static::class) {
-            return static::find($cached['id']);
+            return static::query()->whereKey($cached['id'])->first();
         }
 
         // Query database
-        $model = static::where('code', $slug)->first();
+        $model = static::query()->where('code', $slug)->first();
 
         if ($model) {
             Cache::put($cacheKey, [
@@ -278,11 +278,7 @@ trait HasAdminSlug
             ->where('sluggable_type', static::class)
             ->first();
 
-        if ($slug) {
-            return $slug->sluggable;
-        }
-
-        return null;
+        return $slug?->sluggable instanceof static ? $slug->sluggable : null;
     }
 
     /**
@@ -294,7 +290,7 @@ trait HasAdminSlug
             ->where('sluggable_type', static::class)
             ->first();
 
-        if ($history && $history->sluggable) {
+        if ($history?->sluggable instanceof static) {
             return $history->sluggable->getFullPath();
         }
 

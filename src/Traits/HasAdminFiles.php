@@ -12,6 +12,8 @@ trait HasAdminFiles
 {
     /**
      * Get files relationship
+     *
+     * @return MorphMany<File, $this>
      */
     public function files(): MorphMany
     {

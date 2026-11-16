@@ -144,7 +144,9 @@ class BelongsToField extends Field
             'searchable' => $this->searchable,
             'clearable' => $this->clearable,
             'searchRoute' => $this->searchRoute,
-            'options' => $this->searchable ? [] : $this->getOptions(),
+            // Records are searched only through a search route; without one
+            // the form gets the whole list to choose from.
+            'options' => $this->searchable && $this->searchRoute !== null ? [] : $this->getOptions(),
         ];
     }
 
