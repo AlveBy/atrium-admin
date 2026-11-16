@@ -8,6 +8,7 @@ use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Demo\Demo;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
+use Atrium\Admin\Modules\Modules;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
@@ -22,7 +23,9 @@ use InvalidArgumentException;
  * routes are named `admin.articles.index`, `admin.articles.edit`, …
  *
  * The panel's own modules (sites, content languages) come first and need no config,
- * then the demo modules when `atrium.demo` is on.
+ * then the demo modules when `atrium.demo` is on, the installed module
+ * packages (Atrium\Admin\Modules\Modules) and the application's own. A model
+ * of a module package that is not installed is left out.
  */
 final class ResourceRegistry
 {
@@ -44,10 +47,16 @@ final class ResourceRegistry
         $resources = [];
 
         $demo = Demo::enabled() ? Demo::MODELS : [];
+        $modules = app(Modules::class);
+        $packaged = array_merge(...array_values(array_map(static fn ($module): array => $module->resources, $modules->installed())));
 
-        foreach ([...self::BUILT_IN, ...$demo, ...(array) config('atrium.resources', [])] as $model) {
+        foreach ([...self::BUILT_IN, ...$demo, ...$packaged, ...(array) config('atrium.resources', [])] as $model) {
             if (! is_string($model) || ! class_exists($model)) {
                 throw new InvalidArgumentException("Atrium resource [{$model}] is not a class.");
+            }
+
+            if (! $modules->available($model)) {
+                continue;
             }
 
             if (! is_subclass_of($model, Model::class) || ! is_subclass_of($model, Administrable::class)) {

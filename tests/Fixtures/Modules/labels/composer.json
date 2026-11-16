@@ -1,0 +1,12 @@
+{
+    "name": "acme/atrium-labels",
+    "description": "Labels to put on things: a module package for the tests",
+    "type": "atrium-module",
+    "extra": {
+        "atrium": {
+            "resources": ["Atrium\\Admin\\Tests\\Fixtures\\Modules\\Label"],
+            "public_urls": {"Atrium\\Admin\\Tests\\Fixtures\\Modules\\Label": {"prefix": "labels"}},
+            "migrations": "database/migrations"
+        }
+    }
+}

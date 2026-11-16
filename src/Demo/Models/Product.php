@@ -30,6 +30,7 @@ use Atrium\Admin\Traits\HasAdminFiles;
 use Atrium\Admin\Traits\HasAdminSeo;
 use Atrium\Admin\Traits\HasAdminSlug;
 use Atrium\Admin\Traits\HasAdminTabs;
+use Atrium\Admin\Traits\HasSoftRelations;
 use Atrium\Admin\Traits\InteractsWithAdmin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,7 +48,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Product extends Model implements Administrable
 {
-    use HasAdminFiles, HasAdminSeo, HasAdminSlug, HasAdminTabs, InteractsWithAdmin;
+    use HasAdminFiles, HasAdminSeo, HasAdminSlug, HasAdminTabs, HasSoftRelations, InteractsWithAdmin;
 
     protected $table = 'demo_products';
 
@@ -82,11 +83,11 @@ class Product extends Model implements Administrable
     }
 
     /**
-     * @return BelongsTo<Brand,$this>
+     * @return BelongsTo<covariant Model,$this>
      */
     public function brand(): BelongsTo
     {
-        return $this->belongsTo(Brand::class, 'brand_id');
+        return $this->softBelongsTo(Brand::class, 'brand_id');
     }
 
     /**

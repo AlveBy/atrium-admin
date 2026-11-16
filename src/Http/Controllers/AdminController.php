@@ -98,17 +98,24 @@ abstract class AdminController extends Controller
     public function index(Request $request): Response
     {
         $query = (new $this->model)->scopeAdminList($this->model::query());
+        $columns = $this->model::getAdministrationListColumns();
+        $related = $this->relatedColumns($columns);
+
+        // A column like `brand.name` shows a related record's attribute.
+        if ($related !== []) {
+            $query->with(array_values(array_unique(array_map(static fn (string $name): string => Str::beforeLast($name, '.'), $related))));
+        }
 
         // Apply search
         if ($search = $request->get('search')) {
             // Column::$searchable and $name are protected, so reading them as
             // properties yields null (the ?? swallows the visibility error) and
             // the filter matched nothing — search silently returned every row.
-            $searchable = collect($this->model::getAdministrationListColumns())
+            $searchable = collect($columns)
                 ->map(fn ($col) => $col->toArray())
                 ->filter(fn (array $col): bool => (bool) ($col['searchable'] ?? false))
                 ->pluck('name')
-                ->filter()
+                ->filter(fn ($name): bool => is_string($name) && $name !== '' && ! in_array($name, $related, true))
                 ->values()
                 ->toArray();
 
@@ -130,18 +137,22 @@ abstract class AdminController extends Controller
 
         // Apply sorting
         $sortBy = $request->get('sort', $this->model::getDefaultSortColumn());
+
+        if (in_array($sortBy, $related, true)) {
+            $sortBy = $this->model::getDefaultSortColumn();
+        }
         $sortDir = $request->get('direction', $this->model::getDefaultSortDirection());
         $query->orderBy($this->isTranslatable($sortBy) ? $sortBy.'->'.$this->contentLanguages()->default() : $sortBy, $sortDir);
 
         $items = $query->paginate($this->model::getAdminPerPage())->withQueryString();
 
-        if ($this->translatableAttributes() !== []) {
-            $items->through(fn (Model $item): array => $this->listRow($item));
+        if ($this->translatableAttributes() !== [] || $related !== []) {
+            $items->through(fn (Model $item): array => $this->listRow($item, $related));
         }
 
         return Inertia::render($this->getPagePrefix().'/Index', [
             'items' => $items,
-            'columns' => $this->serializeColumns($this->model::getAdministrationListColumns()),
+            'columns' => $this->serializeColumns($columns),
             'filters' => [
                 'search' => $request->get('search', ''),
                 'sort' => $sortBy,
@@ -990,7 +1001,7 @@ abstract class AdminController extends Controller
      *
      * @return array<string,mixed>
      */
-    protected function listRow(Model $item): array
+    protected function listRow(Model $item, array $related = []): array
     {
         $row = $item->toArray();
         $default = $this->contentLanguages()->default();
@@ -1001,7 +1012,30 @@ abstract class AdminController extends Controller
             }
         }
 
+        foreach ($related as $name) {
+            $record = data_get($item, Str::beforeLast($name, '.'));
+            $attribute = Str::afterLast($name, '.');
+
+            $row[$name] = $record instanceof Model && method_exists($record, 'isTranslatableAttribute') && method_exists($record, 'getTranslation') && $record->isTranslatableAttribute($attribute)
+                ? $record->getTranslation($attribute, $default)
+                : data_get($record, $attribute);
+        }
+
         return $row;
+    }
+
+    /**
+     * Names of the columns that show a related record (`brand.name`). They
+     * are neither sorted nor searched by.
+     *
+     * @param  array<int,mixed>  $columns
+     * @return array<int,string>
+     */
+    protected function relatedColumns(array $columns): array
+    {
+        $names = array_map(static fn ($column): string => (string) ($column->toArray()['name'] ?? ''), $columns);
+
+        return array_values(array_filter($names, static fn (string $name): bool => str_contains($name, '.')));
     }
 
     /**

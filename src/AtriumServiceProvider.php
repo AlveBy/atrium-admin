@@ -20,6 +20,7 @@ use Atrium\Admin\Http\Middleware\SetContentLocale;
 use Atrium\Admin\Http\Middleware\SlugRedirectMiddleware;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Language;
+use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Services\SlugService;
 use Atrium\Admin\Support\ContentLanguages;
@@ -66,6 +67,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $config->set('ziggy.groups.atrium', ['admin.*']);
 
         $this->app->singleton(SlugService::class);
+        $this->app->singleton(Modules::class);
         $this->app->singleton(ResourceRegistry::class);
         $this->app->singleton(ApiResources::class);
         $this->app->singleton(Permissions::class);
@@ -146,6 +148,12 @@ final class AtriumServiceProvider extends ServiceProvider
 
         if (Demo::enabled()) {
             Demo::register($this->app);
+        }
+
+        $modules = $this->app->make(Modules::class);
+
+        foreach ($modules->installed() as $module) {
+            $modules->wire($module);
         }
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'atrium');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'atrium');
@@ -243,6 +251,8 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\IndexMediaCommand::class,
             Console\Commands\InstallCommand::class,
             Console\Commands\MakeModuleCommand::class,
+            Console\Commands\ModuleInstallCommand::class,
+            Console\Commands\ModuleRemoveCommand::class,
             Console\Commands\SlugRegenerateCommand::class,
         ]);
     }
