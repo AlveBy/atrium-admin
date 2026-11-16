@@ -64,6 +64,12 @@ final class InstallCommand extends Command
             }
         }
 
+        // Files uploaded in the admin go to storage/app/public and are served
+        // through this link, demo or not.
+        if (! is_link(public_path('storage')) && ! file_exists(public_path('storage'))) {
+            $this->components->task('Linking public/storage', fn () => $this->callSilently('storage:link') === 0);
+        }
+
         $this->removeStockRobotsTxt();
 
         $this->newLine();
@@ -99,11 +105,6 @@ final class InstallCommand extends Command
 
     private function seedDemo(): void
     {
-        // Uploaded pictures are served from storage/app/public.
-        if (! file_exists(public_path('storage'))) {
-            $this->components->task('Linking public/storage', fn () => $this->callSilently('storage:link') === 0);
-        }
-
         $seeded = false;
         $this->components->task('Filling the demo', function () use (&$seeded): bool {
             $seeded = (new DemoSeeder)->run();

@@ -67,6 +67,15 @@ final class InstallDemoTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_install_without_demo_links_the_storage_for_uploads(): void
+    {
+        $this->artisan('atrium:install', ['--name' => 'Ada', '--email' => 'ada@example.com', '--password' => 'correct-horse'])
+            ->assertSuccessful();
+
+        $this->assertTrue(is_link($this->root.'/public/storage'));
+        $this->assertFalse(config('atrium.demo'));
+    }
+
     public function test_install_with_demo_turns_it_on_and_fills_it_once(): void
     {
         $this->assertArrayNotHasKey('demo_products', $this->app->make(ResourceRegistry::class)->all());
