@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Http\Middleware;
 
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Support\Sites;
 use Closure;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -51,6 +52,20 @@ class AuthenticateApiToken
         $user->withAccessToken($token);
         auth()->guard(config('atrium.auth.guard', 'admin'))->setUser($user);
         $request->setUserResolver(static fn () => $user);
+
+        // The token works only with the sites its owner may work with, as the
+        // admin panel does: another site is not found, and without ?site the
+        // list holds the allowed sites only.
+        $sites = app(Sites::class);
+        $allowed = $user->allowedSites();
+
+        if ($allowed->count() !== $sites->all()->count()) {
+            if ($request->filled('site') && ! $allowed->contains('code', $request->query('site'))) {
+                return response()->json(['message' => "No site [{$request->query('site')}]."], 404);
+            }
+
+            $sites->limitTo($allowed);
+        }
 
         return $next($request);
     }

@@ -26,6 +26,8 @@ final class SiteScope implements Scope
 
         if ($sites->isResolved()) {
             $builder->where($model->qualifyColumn('site_id'), $sites->current()->id);
+        } elseif ($sites->allowedIds() !== null) {
+            $builder->whereIn($model->qualifyColumn('site_id'), $sites->allowedIds());
         }
     }
 }

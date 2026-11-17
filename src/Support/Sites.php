@@ -33,6 +33,9 @@ final class Sites
 
     private bool $resolved = false;
 
+    /** @var list<int>|null */
+    private ?array $allowedIds = null;
+
     /**
      * Every site, active or not, the default one first.
      *
@@ -117,7 +120,31 @@ final class Sites
 
     public function current(): Site
     {
-        return ($this->resolved ? $this->find($this->currentId) : null) ?? $this->default();
+        return ($this->resolved ? $this->find($this->currentId) : null)
+            ?? ($this->allowedIds === null ? null : $this->find($this->allowedIds[0]))
+            ?? $this->default();
+    }
+
+    /**
+     * Keeps a request to the sites its administrator may work with: records
+     * of other sites are hidden even when no site is picked, and new ones go
+     * to the first allowed site.
+     *
+     * @param  Collection<int,Site>  $sites
+     */
+    public function limitTo(Collection $sites): void
+    {
+        $this->allowedIds = $sites->map(fn (Site $site): int => $site->id)->values()->all();
+    }
+
+    /**
+     * The sites a request is kept to, or null when it may see every site.
+     *
+     * @return list<int>|null
+     */
+    public function allowedIds(): ?array
+    {
+        return $this->allowedIds;
     }
 
     /**
@@ -141,6 +168,7 @@ final class Sites
     {
         $this->currentId = null;
         $this->resolved = false;
+        $this->allowedIds = null;
 
         app(ContentLanguages::class)->flush();
     }

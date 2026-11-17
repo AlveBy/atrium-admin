@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Http\Middleware\ResolveSite;
+use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Support\ContentLanguages;
@@ -17,6 +18,7 @@ use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Tests\Fixtures\Note;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
+use Closure;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia;
@@ -294,5 +296,118 @@ final class SitesTest extends TestCase
 
         $api()->postJson('/api/v1/notes?site=de', ['name' => 'Neu', 'code' => 'c'])->assertCreated();
         $this->assertSame($second->id, Note::query()->withoutGlobalScopes()->where('code', 'c')->sole()->site_id);
+    }
+
+    public function test_a_token_of_an_admin_limited_to_one_site_sees_only_that_site(): void
+    {
+        $second = $this->addSecondSite();
+        $main = Note::query()->create(['name' => 'Main note', 'code' => 'a', 'site_id' => $this->main()->id]);
+        Note::query()->create(['name' => 'German note', 'code' => 'b', 'site_id' => $second->id]);
+        $api = $this->limitedApi([$second]);
+
+        $api()->getJson('/api/v1/notes')->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.name', 'German note');
+        $api()->getJson('/api/v1/notes?site=de')->assertJsonPath('meta.total', 1);
+        $api()->getJson('/api/v1/notes?site=')->assertJsonPath('meta.total', 1);
+        $api()->getJson('/api/v1/notes?site=main')->assertNotFound()->assertJsonPath('message', 'No site [main].');
+
+        $api()->getJson("/api/v1/notes/{$main->id}")->assertNotFound();
+        $api()->putJson("/api/v1/notes/{$main->id}", ['name' => 'Taken', 'code' => 'a'])->assertNotFound();
+        $api()->deleteJson("/api/v1/notes/{$main->id}")->assertNotFound();
+        $this->assertSame('Main note', $main->fresh()->name, 'Neither changed nor deleted.');
+    }
+
+    public function test_a_limited_token_creates_records_on_its_own_site(): void
+    {
+        $second = $this->addSecondSite();
+        $api = $this->limitedApi([$second]);
+
+        $api()->postJson('/api/v1/notes', ['name' => 'Neu', 'code' => 'c'])->assertCreated();
+        $api()->postJson('/api/v1/notes?site=main', ['name' => 'Nope', 'code' => 'd'])->assertNotFound();
+
+        $this->assertSame($second->id, Note::query()->withoutGlobalScopes()->where('code', 'c')->sole()->site_id);
+        $this->assertFalse(Note::query()->withoutGlobalScopes()->where('code', 'd')->exists());
+    }
+
+    public function test_a_limited_token_cannot_move_a_record_to_another_site(): void
+    {
+        $second = $this->addSecondSite();
+        $note = Note::query()->create(['name' => 'German note', 'code' => 'b', 'site_id' => $second->id]);
+
+        $this->limitedApi([$second])()
+            ->putJson("/api/v1/notes/{$note->id}", ['name' => 'Moved', 'code' => 'b', 'site_id' => $this->main()->id])
+            ->assertOk();
+
+        $this->assertSame($second->id, $note->fresh()->site_id);
+    }
+
+    public function test_a_token_limited_to_several_sites_sees_all_of_them_and_no_other(): void
+    {
+        $second = $this->addSecondSite();
+        $third = Site::query()->create(['code' => 'fr', 'name' => 'France', 'domains' => ['example.fr']]);
+        Note::query()->create(['name' => 'Main note', 'code' => 'a', 'site_id' => $this->main()->id]);
+        Note::query()->create(['name' => 'German note', 'code' => 'b', 'site_id' => $second->id]);
+        Note::query()->create(['name' => 'French note', 'code' => 'c', 'site_id' => $third->id]);
+
+        $names = $this->limitedApi([$second, $third])()->getJson('/api/v1/notes')->assertOk()->json('data.*.name');
+
+        sort($names);
+        $this->assertSame(['French note', 'German note'], $names);
+    }
+
+    public function test_the_limit_of_one_token_does_not_carry_over_to_the_next_request(): void
+    {
+        $second = $this->addSecondSite();
+        Note::query()->create(['name' => 'Main note', 'code' => 'a', 'site_id' => $this->main()->id]);
+        Note::query()->create(['name' => 'German note', 'code' => 'b', 'site_id' => $second->id]);
+        $limited = $this->limitedApi([$second]);
+        $everything = AdminUser::query()->create(['name' => 'All', 'email' => 'all@example.com', 'password' => 'secret-password', 'is_active' => true]);
+        $everything->forceFill(['is_superadmin' => true])->save();
+        $token = $everything->createToken('agent', ['notes:read'])->plainTextToken;
+
+        $limited()->getJson('/api/v1/notes')->assertJsonPath('meta.total', 1);
+        $this->app['auth']->forgetGuards();
+        $this->withToken($token)->getJson('/api/v1/notes')->assertJsonPath('meta.total', 2);
+    }
+
+    public function test_an_assistant_of_a_limited_admin_sees_only_its_sites(): void
+    {
+        $second = $this->addSecondSite();
+        $main = Note::query()->create(['name' => 'Main note', 'code' => 'a', 'site_id' => $this->main()->id]);
+        Note::query()->create(['name' => 'German note', 'code' => 'b', 'site_id' => $second->id]);
+        $token = $this->limitedToken([$second]);
+        $call = fn (string $tool, array $arguments) => $this->withToken($token)
+            ->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/call', 'params' => ['name' => $tool, 'arguments' => $arguments]])
+            ->assertOk()
+            ->json('result');
+
+        $list = $call('list_records', ['module' => 'notes']);
+        $this->assertFalse($list['isError']);
+        $this->assertSame(1, json_decode($list['content'][0]['text'], true)['meta']['total']);
+
+        $this->assertTrue($call('get_record', ['module' => 'notes', 'id' => $main->id])['isError']);
+        $this->assertTrue($call('list_records', ['module' => 'notes', 'site' => 'main'])['isError']);
+    }
+
+    /**
+     * A token of an administrator who may work only with the given sites.
+     *
+     * @param  array<int,Site>  $sites
+     */
+    private function limitedToken(array $sites): string
+    {
+        $admin = $this->admin();
+        $admin->update(['site_ids' => array_map(fn (Site $site): string => (string) $site->id, $sites)]);
+
+        return $admin->createToken('agent', ['notes:read', 'notes:write'])->plainTextToken;
+    }
+
+    /**
+     * @param  array<int,Site>  $sites
+     */
+    private function limitedApi(array $sites): Closure
+    {
+        $token = $this->limitedToken($sites);
+
+        return fn () => $this->withToken($token)->withHeader('Accept', 'application/json');
     }
 }

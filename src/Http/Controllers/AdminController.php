@@ -353,6 +353,11 @@ abstract class AdminController extends Controller
 
         $validated = $this->submittedData($request, $context, $item);
 
+        // A record's site is the site the request works with (BelongsToSite),
+        // never one the client names: a sent site_id would move it to a site
+        // its administrator may not even see.
+        unset($validated['site_id']);
+
         // Hash password if present; on edit an empty one means "keep".
         if (! empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
