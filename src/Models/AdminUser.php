@@ -116,7 +116,7 @@ class AdminUser extends Authenticatable implements Administrable
                 MultiSelectField::make('site_ids')
                     ->label(__('atrium::account.users.fields.sites'))
                     ->hint(__('atrium::account.users.hints.sites'))
-                    ->options(app(Sites::class)->all()->mapWithKeys(fn ($site) => [(string) $site->id => $site->name])->all()),
+                    ->options(app(Sites::class)->all()->mapWithKeys(fn ($site) => [$site->id => $site->name])->all()),
             ] : []),
 
             // Only a superadmin hands out rights: anyone else could give
@@ -185,7 +185,7 @@ class AdminUser extends Authenticatable implements Administrable
             'roles' => ['nullable', 'array'],
             'roles.*' => ['integer', Rule::exists('admin_roles', 'id')],
             'site_ids' => ['nullable', 'array'],
-            'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->map(fn ($id) => (string) $id)->all())],
+            'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->all())],
         ];
     }
 
@@ -203,7 +203,7 @@ class AdminUser extends Authenticatable implements Administrable
             'roles' => ['nullable', 'array'],
             'roles.*' => ['integer', Rule::exists('admin_roles', 'id')],
             'site_ids' => ['nullable', 'array'],
-            'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->map(fn ($id) => (string) $id)->all())],
+            'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->all())],
         ];
     }
 
@@ -265,7 +265,7 @@ class AdminUser extends Authenticatable implements Administrable
     public function adminPermissions(): array
     {
         return $this->roles
-            ->flatMap(fn (AdminRole $role): array => (array) $role->permissions)
+            ->flatMap(fn (AdminRole $role): array => $role->permissions)
             ->unique()
             ->values()
             ->all();
