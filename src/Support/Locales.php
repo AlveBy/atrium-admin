@@ -74,10 +74,7 @@ final class Locales
         $dictionary = [];
 
         foreach (array_diff($this->groups(), ['validation']) as $group) {
-            $fallback = (array) trans("atrium::{$group}", [], self::FALLBACK);
-            $own = (array) trans("atrium::{$group}", [], $locale);
-
-            $dictionary[$group] = array_replace_recursive($fallback, $own);
+            $dictionary[$group] = array_replace_recursive($this->lines($group, self::FALLBACK), $this->lines($group, $locale));
         }
 
         /** @var array<string, string> */
@@ -117,13 +114,25 @@ final class Locales
         return array_map(static fn (string $file): string => basename($file, '.php'), $files);
     }
 
+    /**
+     * One lang file in one language; none when that language has no such file.
+     *
+     * @return array<string, mixed>
+     */
+    private function lines(string $group, string $locale): array
+    {
+        $lines = trans("atrium::{$group}", [], $locale);
+
+        return is_array($lines) ? $lines : [];
+    }
+
     private function browserAsked(Request $request, string $locale): bool
     {
-        $wanted = strtolower(str_replace('_', '-', $locale));
+        $wanted = str_replace('_', '-', $locale);
         $language = strtok($wanted, '-');
 
         foreach ($request->getLanguages() as $asked) {
-            $asked = strtolower(str_replace('_', '-', $asked));
+            $asked = str_replace('_', '-', $asked);
 
             if ($asked === $wanted || $asked === $language || strtok($asked, '-') === $language) {
                 return true;

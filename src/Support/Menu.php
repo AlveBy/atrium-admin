@@ -126,7 +126,7 @@ final class Menu
 
     /**
      * @param  array<int,array<string,mixed>>  $menu
-     * @return array<int,string>
+     * @return array<int,mixed>
      */
     private function listedRoutes(array $menu): array
     {
@@ -134,12 +134,12 @@ final class Menu
 
         foreach ($menu as $item) {
             if (isset($item['route'])) {
-                $routes[] = (string) $item['route'];
+                $routes[] = $item['route'];
             }
 
             foreach ($item['children'] ?? [] as $child) {
                 if (isset($child['route'])) {
-                    $routes[] = (string) $child['route'];
+                    $routes[] = $child['route'];
                 }
             }
         }

@@ -54,7 +54,7 @@ final class Sitemap
     public function index(): string
     {
         if ($this->parts() <= 1) {
-            return $this->part(1);
+            return $this->urlset($this->entries());
         }
 
         $xml = $this->writer();
@@ -74,8 +74,14 @@ final class Sitemap
 
     public function part(int $part): string
     {
-        $entries = array_slice($this->entries(), ($part - 1) * $this->perFile(), $this->perFile());
+        return $this->urlset(array_slice($this->entries(), ($part - 1) * $this->perFile(), $this->perFile()));
+    }
 
+    /**
+     * @param  array<int,array{loc:string,lastmod:string|null,alternates:array<string,string>}>  $entries
+     */
+    private function urlset(array $entries): string
+    {
         $xml = $this->writer();
         $xml->startElement('urlset');
         $xml->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
@@ -196,9 +202,9 @@ final class Sitemap
 
         if (count($urls) > 1) {
             $alternates = $urls;
-            $default = $this->languages->all()->first();
+            $default = $this->languages->all()->firstOrFail();
 
-            if ($default !== null && isset($urls[$default->hreflang()])) {
+            if (isset($urls[$default->hreflang()])) {
                 $alternates['x-default'] = $urls[$default->hreflang()];
             }
         }

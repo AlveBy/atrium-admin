@@ -150,6 +150,10 @@ final class ModuleSettingsTest extends TestCase
                 ->where('modules.0.name', 'acme/atrium-labels')
                 ->where('modules.0.settings', true));
         $this->assertContains('admin.modules.index', array_column($this->app->make(Menu::class)->items($setter), 'route'));
+        $this->assertSame(
+            ['label' => __('atrium::menu.modules'), 'route' => 'admin.modules.index', 'icon' => 'settings'],
+            collect($this->app->make(Menu::class)->items($setter))->firstWhere('route', 'admin.modules.index'),
+        );
     }
 
     #[DefineEnvironment('installLabels')]

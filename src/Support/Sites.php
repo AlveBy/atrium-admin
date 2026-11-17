@@ -49,7 +49,7 @@ final class Sites
 
     public function default(): Site
     {
-        return $this->all()->firstWhere('is_default', true) ?? $this->all()->first();
+        return $this->all()->firstOrFail();
     }
 
     public function find(mixed $id): ?Site
@@ -99,7 +99,7 @@ final class Sites
             ->filter(fn (Site $site): bool => $site->active && $site->folder !== null && ($site->hasDomain($host) || (array) $site->domains === []))
             ->sortBy([
                 fn (Site $a, Site $b): int => strlen((string) $b->folder) <=> strlen((string) $a->folder),
-                fn (Site $a, Site $b): int => (int) $b->hasDomain($host) <=> (int) $a->hasDomain($host),
+                fn (Site $a, Site $b): int => $b->hasDomain($host) <=> $a->hasDomain($host),
             ])
             ->unique('folder')
             ->values();
@@ -114,8 +114,10 @@ final class Sites
         $root = $request->root();
         $folder = $request->attributes->get(EnterSiteFolder::FOLDER);
 
-        return is_string($folder) && str_ends_with($root, '/'.$folder)
-            ? substr($root, 0, -strlen('/'.$folder))
+        $suffix = '/'.$folder;
+
+        return is_string($folder) && str_ends_with($root, $suffix)
+            ? substr($root, 0, -strlen($suffix))
             : $root;
     }
 

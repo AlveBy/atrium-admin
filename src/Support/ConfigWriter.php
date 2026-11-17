@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Support;
 
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
 /**
  * Small, conservative edits of the published config/atrium.php.
  *
@@ -28,7 +31,7 @@ final class ConfigWriter
             return false;
         }
 
-        $config = (string) file_get_contents($path);
+        $config = (new Filesystem)->get($path);
         $entry = '\\'.ltrim($class, '\\').'::class';
 
         if (str_contains($config, $entry)) {
@@ -90,7 +93,7 @@ final class ConfigWriter
             return false;
         }
 
-        $config = (string) file_get_contents($path);
+        $config = (new Filesystem)->get($path);
         $entry = var_export(strtolower($name), true);
         $list = "/'{$key}'\\s*=>\\s*\\[\\n(.*?)^[ \\t]*\\],/sm";
 
@@ -104,13 +107,14 @@ final class ConfigWriter
         }
 
         preg_match($list, $config, $match, PREG_OFFSET_CAPTURE);
+        [$inner, $innerAt] = $match[1];
 
-        if (preg_match('/^[ \\t]*'.preg_quote($entry, '/').',/m', $match[1][0])) {
+        if (preg_match('/^[ \\t]*'.preg_quote($entry, '/').',/m', $inner)) {
             return true;
         }
 
         // Appended: the list is the menu's order.
-        $at = $match[1][1] + strlen($match[1][0]);
+        $at = $innerAt + strlen($inner);
         self::write($path, substr($config, 0, $at)."        {$entry},\n".substr($config, $at));
 
         return true;
@@ -124,14 +128,14 @@ final class ConfigWriter
             return false;
         }
 
-        $config = (string) file_get_contents($path);
+        $config = (new Filesystem)->get($path);
 
         if (! preg_match("/'{$key}'\s*=>\s*\[\n.*?\],/s", $config, $match, PREG_OFFSET_CAPTURE)) {
             return true;
         }
 
         $line = '/^[ \t]*'.preg_quote(var_export(strtolower($name), true), '/').',[ \t]*\n/m';
-        $list = (string) preg_replace($line, '', $match[0][0]);
+        $list = Str::replaceMatches($line, '', $match[0][0]);
 
         self::write($path, substr_replace($config, $list, $match[0][1], strlen($match[0][0])));
 

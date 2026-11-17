@@ -35,7 +35,7 @@ final class PublicUrl
      */
     private const MAX_DEPTH = 20;
 
-    /** @var array<string,array<int|string,string>> */
+    /** @var array<string,array<string,array<int|string,string>>> tree class => parent column => paths */
     private static array $pathCache = [];
 
     /**
@@ -104,16 +104,14 @@ final class PublicUrl
      */
     public static function sectionPaths(string $treeClass, string $parentColumn = 'parent_id'): array
     {
-        $cacheKey = $treeClass.'|'.$parentColumn;
-
-        if (isset(self::$pathCache[$cacheKey])) {
-            return self::$pathCache[$cacheKey];
+        if (isset(self::$pathCache[$treeClass][$parentColumn])) {
+            return self::$pathCache[$treeClass][$parentColumn];
         }
 
         // Kept in the record cache until a section of the tree changes.
-        return self::$pathCache[$cacheKey] = app(RecordCache::class)->remember(
+        return self::$pathCache[$treeClass][$parentColumn] = app(RecordCache::class)->remember(
             [$treeClass, self::class],
-            'section-paths:'.$cacheKey,
+            'section-paths:'.$treeClass.'|'.$parentColumn,
             static fn (): array => self::buildSectionPaths($treeClass, $parentColumn),
             perSite: false,
         );

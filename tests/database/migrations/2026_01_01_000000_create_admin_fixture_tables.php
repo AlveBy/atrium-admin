@@ -66,6 +66,7 @@ return new class extends Migration
         Schema::create('articles', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('parent_id')->nullable();
+            $table->unsignedBigInteger('section_parent')->nullable();
             $table->string('name')->nullable();
             $table->string('title')->nullable();
             $table->string('code')->nullable();
@@ -129,6 +130,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('title')->nullable();
+            $table->string('code')->nullable();
             $table->integer('sort')->default(500);
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->unsignedBigInteger('group_id')->nullable();

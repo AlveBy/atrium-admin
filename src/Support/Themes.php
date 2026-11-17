@@ -35,6 +35,7 @@ final class Themes
         return [self::SYSTEM, ...self::THEMES];
     }
 
+    /** @phpstan-assert-if-true string $choice */
     public function isChoice(?string $choice): bool
     {
         return $choice !== null && in_array($choice, $this->choices(), true);
@@ -51,7 +52,9 @@ final class Themes
     /** The admin's own choice, otherwise the default. May be "system". */
     public function choiceFor(?AdminUser $user): string
     {
-        return $this->isChoice($user?->theme) ? (string) $user->theme : $this->default();
+        $theme = $user?->theme;
+
+        return $this->isChoice($theme) ? $theme : $this->default();
     }
 
     /**

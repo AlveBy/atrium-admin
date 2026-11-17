@@ -10,7 +10,11 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Unit;
 
 use Atrium\Admin\Support\ConfigWriter;
+use Atrium\Admin\Tests\Fixtures\OpcacheSpy;
 use PHPUnit\Framework\TestCase;
+
+// Loaded with the test: a call is looked up once, so the stand-in must be there before the first write.
+require_once dirname(__DIR__).'/Fixtures/OpcacheSpy.php';
 
 final class ConfigWriterTest extends TestCase
 {
@@ -131,5 +135,47 @@ final class ConfigWriterTest extends TestCase
         $this->assertFalse(ConfigWriter::disableModule('acme/one', $missing));
         $this->assertFalse(ConfigWriter::enableModule('acme/one', $missing));
         $this->assertFileDoesNotExist($missing);
+    }
+
+    public function test_a_resource_is_written_as_a_fully_qualified_class_name(): void
+    {
+        $this->config("    'resources' => [\n    ],\n");
+
+        $this->assertTrue(ConfigWriter::addResource('App\\Models\\Article', $this->path));
+        $this->assertTrue(ConfigWriter::addResource('\\App\\Models\\Page', $this->path));
+
+        $this->assertStringContainsString("        \\App\\Models\\Article::class,\n", (string) file_get_contents($this->path));
+        $this->assertStringContainsString("        \\App\\Models\\Page::class,\n", (string) file_get_contents($this->path));
+        $this->assertStringNotContainsString('\\\\', (string) file_get_contents($this->path));
+    }
+
+    public function test_an_entry_in_the_list_is_not_added_twice_and_one_named_like_the_list_is_added(): void
+    {
+        $this->config("    'resources' => [\n    ],\n\n    'modules' => [\n        'acme/one',\n    ],\n");
+
+        $this->assertTrue(ConfigWriter::addModule('modules', $this->path));
+        $this->assertTrue(ConfigWriter::addModule('acme/one', $this->path));
+
+        $this->assertSame(['acme/one', 'modules'], $this->read()['modules']);
+    }
+
+    public function test_the_file_is_dropped_from_the_opcache_after_every_write(): void
+    {
+        if (! function_exists('opcache_invalidate')) {
+            $this->markTestSkipped('The opcache extension is not loaded.');
+        }
+
+        OpcacheSpy::$calls = [];
+        $this->config("    'resources' => [\n    ],\n\n    'modules' => [\n    ],\n");
+
+        ConfigWriter::addModule('acme/one', $this->path);
+        $this->assertSame([[$this->path, true]], OpcacheSpy::$calls);
+
+        ConfigWriter::removeModule('acme/one', $this->path);
+        $this->assertSame([[$this->path, true], [$this->path, true]], OpcacheSpy::$calls);
+
+        // Nothing written, nothing to drop.
+        ConfigWriter::addResource('App\\Models\\Page', $this->path.'.missing');
+        $this->assertCount(2, OpcacheSpy::$calls);
     }
 }

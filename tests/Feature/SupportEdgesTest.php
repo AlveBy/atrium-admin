@@ -182,6 +182,15 @@ final class SupportEdgesTest extends TestCase
         $this->assertTrue((new Sites)->default()->exists);
     }
 
+    public function test_the_stand_in_site_is_named_after_the_app_even_when_the_name_is_not_text(): void
+    {
+        config(['app.name' => 123]);
+
+        $this->withoutTables(function (): void {
+            $this->assertSame('123', (new Sites)->default()->name);
+        });
+    }
+
     public function test_before_the_migrations_the_content_language_is_the_app_locale(): void
     {
         config(['app.locale' => 'pt_BR']);

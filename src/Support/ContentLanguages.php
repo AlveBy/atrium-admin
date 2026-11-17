@@ -48,7 +48,7 @@ final class ContentLanguages
 
     public function default(): string
     {
-        return (string) $this->all()->first()?->code;
+        return (string) $this->all()->firstOrFail()->code;
     }
 
     public function has(string $code): bool
@@ -137,10 +137,8 @@ final class ContentLanguages
         }
 
         // The site's own default language, else the panel-wide one.
-        $default = $languages->firstWhere('code', $site->default_language)
-            ?? $languages->firstWhere('is_default', true)
-            ?? $languages->first();
+        $default = $languages->firstWhere('code', $site->default_language) ?? $languages->first();
 
-        return $languages->sortBy(fn (Language $language): int => $language->is($default) ? 0 : 1)->values();
+        return $languages->reject(fn (Language $language): bool => $language->is($default))->prepend($default)->values();
     }
 }
