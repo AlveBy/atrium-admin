@@ -49,6 +49,42 @@ final class HasAdminSeoTest extends TestCase
         $this->assertSame('{price} {parent} Chair', $article->fresh()?->getSeoTitle());
     }
 
+    public function test_a_placeholder_naming_a_related_record_gives_its_name(): void
+    {
+        $parent = Handbook::query()->create(['name' => 'Furniture']);
+        $article = Handbook::query()->create(['name' => 'Chair', 'parent_id' => $parent->id]);
+        $article->updateSeoMeta(['title' => '{name} in {parent}']);
+
+        $this->assertSame('Chair in Furniture', $article->fresh()?->getSeoTitle());
+    }
+
+    public function test_a_related_record_without_a_name_leaves_its_placeholder(): void
+    {
+        $parent = Handbook::query()->create(['name' => null]);
+        $article = Handbook::query()->create(['name' => 'Chair', 'parent_id' => $parent->id]);
+        $article->updateSeoMeta(['title' => '{name} in {parent}']);
+
+        $this->assertSame('Chair in {parent}', $article->fresh()?->getSeoTitle());
+    }
+
+    public function test_the_name_of_a_related_record_is_stripped_of_tags(): void
+    {
+        $parent = Handbook::query()->create(['name' => '<b>Furniture</b>']);
+        $article = Handbook::query()->create(['name' => 'Chair', 'parent_id' => $parent->id]);
+        $article->updateSeoMeta(['title' => '{parent}']);
+
+        $this->assertSame('Furniture', $article->fresh()?->getSeoTitle());
+    }
+
+    public function test_a_list_or_a_missing_value_leaves_its_placeholder_and_numbers_and_dates_are_written_out(): void
+    {
+        $this->travelTo(now()->setDate(2026, 3, 4)->setTime(10, 20, 30));
+        $article = Handbook::query()->create(['name' => 'Chair']);
+        $article->updateSeoMeta(['title' => '{files}|{id}|{created_at}|{description}']);
+
+        $this->assertSame("{files}|{$article->id}|2026-03-04 10:20:30|{description}", $article->fresh()?->getSeoTitle());
+    }
+
     public function test_the_description_from_the_seo_tab_wins(): void
     {
         $article = Handbook::query()->create(['name' => 'Chair', 'preview_text' => 'Preview']);

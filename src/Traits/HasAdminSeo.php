@@ -15,7 +15,9 @@ use Atrium\Admin\Fields\TextareaField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Models\SeoMeta;
 use Atrium\Admin\Support\MediaUrl;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 trait HasAdminSeo
@@ -183,23 +185,17 @@ trait HasAdminSeo
      */
     protected function processSeoTemplate(string $template): string
     {
-        // Replace {field} placeholders with model values
+        // Replace {field} placeholders with model values; a related record
+        // gives its name, anything that is not text (a list, a file) leaves the
+        // placeholder as it is.
         return preg_replace_callback('/\{(\w+)\}/', function ($matches) {
-            $field = $matches[1];
+            $value = $this->getAttribute($matches[1]);
 
-            if (isset($this->$field)) {
-                return strip_tags((string) $this->$field);
+            if ($value instanceof Model) {
+                $value = $value->getAttribute('name');
             }
 
-            // Check relations
-            if (method_exists($this, $field)) {
-                $related = $this->$field;
-                if ($related && isset($related->name)) {
-                    return $related->name;
-                }
-            }
-
-            return $matches[0];
+            return is_scalar($value) || $value instanceof Carbon ? strip_tags((string) $value) : $matches[0];
         }, $template);
     }
 
