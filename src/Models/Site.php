@@ -27,6 +27,7 @@ use Atrium\Admin\Tabs\Tab;
 use Atrium\Admin\Traits\HasAdminTabs;
 use Atrium\Admin\Traits\InteractsWithAdmin;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -112,7 +113,7 @@ class Site extends Model implements Administrable
             }
 
             if ($site->exists && $site->isDirty('code')) {
-                $site->code = (string) $site->getOriginal('code');
+                $site->code = $site->getOriginal('code');
             }
 
             $site->domains = $site->normalizedDomains();
@@ -213,7 +214,7 @@ class Site extends Model implements Administrable
                 ->label(__('atrium::sites.fields.code'))
                 ->hint(__('atrium::sites.hints.code'))
                 ->required()
-                ->rules(['string', 'max:32', 'regex:/^'.self::CODE_PATTERN.'$/'])
+                ->rules(['max:32', 'regex:/^'.self::CODE_PATTERN.'$/'])
                 ->unique('admin_sites', 'code')
                 ->onlyOnCreate(),
 
@@ -272,13 +273,13 @@ class Site extends Model implements Administrable
                 ->label(__('atrium::sites.fields.google_tag_id'))
                 ->hint(__('atrium::sites.hints.google_tag_id'))
                 ->placeholder('G-XXXXXXXXXX')
-                ->rules(['string', 'max:32', 'regex:'.self::GOOGLE_TAG_PATTERN]),
+                ->rules(['max:32', 'regex:'.self::GOOGLE_TAG_PATTERN]),
 
             TextField::make('yandex_metrika_id')
                 ->label(__('atrium::sites.fields.yandex_metrika_id'))
                 ->hint(__('atrium::sites.hints.yandex_metrika_id'))
                 ->placeholder('12345678')
-                ->rules(['string', 'max:20', 'regex:/^\\s*\\d+\\s*$/']),
+                ->rules(['max:20', 'regex:/^\\s*\\d+\\s*$/']),
 
             CheckboxField::make('yandex_webvisor')
                 ->label(__('atrium::sites.fields.yandex_webvisor'))
@@ -292,17 +293,17 @@ class Site extends Model implements Administrable
             TextField::make('google_verification')
                 ->label(__('atrium::sites.fields.google_verification'))
                 ->hint(__('atrium::sites.hints.verification', ['name' => 'google-site-verification']))
-                ->rules(['string', 'max:1000']),
+                ->rules(['max:1000']),
 
             TextField::make('yandex_verification')
                 ->label(__('atrium::sites.fields.yandex_verification'))
                 ->hint(__('atrium::sites.hints.verification', ['name' => 'yandex-verification']))
-                ->rules(['string', 'max:1000']),
+                ->rules(['max:1000']),
 
             TextField::make('bing_verification')
                 ->label(__('atrium::sites.fields.bing_verification'))
                 ->hint(__('atrium::sites.hints.verification', ['name' => 'msvalidate.01']))
-                ->rules(['string', 'max:1000']),
+                ->rules(['max:1000']),
 
             TextareaField::make('head_code')
                 ->label(__('atrium::sites.fields.head_code'))
@@ -390,7 +391,7 @@ class Site extends Model implements Administrable
             $root = $request->getScheme().'://'.$domain.($standard || $port === null ? '' : ':'.$port);
         }
 
-        $path = trim(implode('/', [(string) $this->folder, trim($path, '/')]), '/');
+        $path = trim(implode('/', [$this->folder, trim($path, '/')]), '/');
 
         return $path === '' ? $root : $root.'/'.$path;
     }
@@ -452,10 +453,13 @@ class Site extends Model implements Administrable
      */
     public static function normalizeFolder(mixed $folder): ?string
     {
-        $folder = trim((string) $folder);
-        $folder = (string) preg_replace('#^[a-z][a-z0-9+.-]*://[^/]*#i', '', $folder);
-        $folder = (string) preg_replace('#[?\#].*$#', '', $folder);
-        $folder = trim((string) preg_replace('#/+#', '/', $folder), '/');
+        $folder = Str::of((string) $folder)
+            ->trim()
+            ->replaceMatches('#^[a-z][a-z0-9+.-]*://[^/]*#i', '')
+            ->replaceMatches('#[?\#].*$#', '')
+            ->replaceMatches('#/+#', '/')
+            ->trim('/')
+            ->value();
 
         return $folder === '' ? null : $folder;
     }
@@ -471,10 +475,14 @@ class Site extends Model implements Administrable
         $domains = [];
 
         foreach ((array) $this->domains as $domain) {
-            $domain = strtolower(trim((string) $domain));
-            $domain = (string) preg_replace('#^[a-z][a-z0-9+.-]*://#', '', $domain);
-            $domain = (string) preg_replace('#[/?\#].*$#', '', $domain);
-            $domain = rtrim((string) preg_replace('#:\d+$#', '', $domain), '.');
+            $domain = Str::of((string) $domain)
+                ->trim()
+                ->lower()
+                ->replaceMatches('#^[a-z][a-z0-9+.-]*://#', '')
+                ->replaceMatches('#[/?\#].*$#', '')
+                ->replaceMatches('#:\d+$#', '')
+                ->rtrim('.')
+                ->value();
 
             if ($domain !== '' && ! in_array($domain, $domains, true)) {
                 $domains[] = $domain;
@@ -547,7 +555,7 @@ class Site extends Model implements Administrable
      */
     private function guardDomains(): void
     {
-        foreach ((array) $this->domains as $domain) {
+        foreach ($this->domains as $domain) {
             if (! preg_match(self::DOMAIN_PATTERN, $domain)) {
                 throw ValidationException::withMessages(['domains' => __('atrium::sites.errors.domain_invalid', ['domain' => $domain])]);
             }
@@ -560,13 +568,13 @@ class Site extends Model implements Administrable
                 continue;
             }
 
-            $clash = array_intersect((array) $this->domains, (array) $other->domains);
+            $clash = array_intersect($this->domains, (array) $other->domains);
 
             if ($clash !== [] && $this->folder === null) {
                 throw ValidationException::withMessages(['domains' => __('atrium::sites.errors.domain_taken', ['domain' => reset($clash), 'site' => $other->name])]);
             }
 
-            if ($this->folder !== null && ($clash !== [] || ((array) $this->domains === [] && (array) $other->domains === []))) {
+            if ($this->folder !== null && ($clash !== [] || ($this->domains === [] && (array) $other->domains === []))) {
                 $address = ($clash === [] ? '' : reset($clash)).'/'.$this->folder.'/';
 
                 throw ValidationException::withMessages(['folder' => __('atrium::sites.errors.folder_taken', ['address' => $address, 'site' => $other->name])]);
