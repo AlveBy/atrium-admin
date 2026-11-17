@@ -83,11 +83,7 @@ class RecordPageTiming
 
     private function durationMs(Request $request): int
     {
-        $start = defined('LARAVEL_START')
-            ? LARAVEL_START
-            : (float) $request->server('REQUEST_TIME_FLOAT', microtime(true));
-
-        $ms = (int) round((microtime(true) - $start) * 1000);
+        $ms = (int) round((microtime(true) - $request->server('REQUEST_TIME_FLOAT', microtime(true))) * 1000);
 
         // Upper bound, so a single timeout does not stretch the scale to infinity.
         return max(0, min($ms, 600000));
