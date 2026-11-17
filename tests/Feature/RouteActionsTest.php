@@ -13,10 +13,8 @@ use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\Api\ResourceController;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Routing\Route;
 use Laravel\Sanctum\Sanctum;
 use ReflectionClass;
-use ReflectionMethod;
 
 /**
  * What a route calls is public: a module's controller extends these, and the
@@ -42,19 +40,8 @@ final class RouteActionsTest extends TestCase
         $this->withToken($token)->deleteJson("/api/v1/posts/{$second->id}")->assertNoContent();
         $this->assertSame(0, Post::query()->count());
 
-        $actions = [];
+        $actions = $this->assertRouteActionsArePublic();
 
-        foreach ($this->app['router']->getRoutes() as $route) {
-            /** @var Route $route */
-            $controller = $route->getControllerClass();
-
-            if ($controller !== null && str_starts_with($controller, 'Atrium\\')) {
-                $method = new ReflectionMethod($controller, $route->getActionMethod() === $controller ? '__invoke' : $route->getActionMethod());
-                $actions[$method->class.'::'.$method->name] = $method->isPublic();
-            }
-        }
-
-        $this->assertNotContains(false, $actions, implode(', ', array_keys(array_filter($actions, static fn (bool $public): bool => ! $public))));
         $this->assertArrayHasKey(AdminController::class.'::destroy', $actions);
         $this->assertArrayHasKey(ResourceController::class.'::destroyItem', $actions);
         $this->assertArrayHasKey(AdminController::class.'::index', $actions);

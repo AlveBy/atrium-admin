@@ -14,9 +14,11 @@ use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Routing\Route;
 use Inertia\ServiceProvider as InertiaServiceProvider;
 use Laravel\Mcp\Server\McpServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use ReflectionMethod;
 use Tighten\Ziggy\ZiggyServiceProvider;
 
 abstract class TestCase extends Orchestra
@@ -86,5 +88,32 @@ abstract class TestCase extends Orchestra
         $admin->forceFill(['is_superadmin' => true])->save();
 
         return $admin;
+    }
+
+    /**
+     * What a route of Atrium calls is public: a module's controller extends
+     * these, and the router calls a controller without Laravel's
+     * callAction() from outside. Called after the actions ran, so a change to
+     * one of them is checked by the tests that reach it.
+     *
+     * @return array<string,true> Class::method of every action
+     */
+    protected function assertRouteActionsArePublic(): array
+    {
+        $actions = [];
+
+        foreach ($this->app['router']->getRoutes() as $route) {
+            /** @var Route $route */
+            $controller = $route->getControllerClass();
+
+            if ($controller !== null && str_starts_with($controller, 'Atrium\\')) {
+                $method = new ReflectionMethod($controller, $route->getActionMethod() === $controller ? '__invoke' : $route->getActionMethod());
+                $actions[$method->class.'::'.$method->name] = $method->isPublic();
+            }
+        }
+
+        $this->assertNotContains(false, $actions, implode(', ', array_keys(array_filter($actions, static fn (bool $public): bool => ! $public))));
+
+        return $actions;
     }
 }

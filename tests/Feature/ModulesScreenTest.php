@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\Http\Controllers\ModuleController;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Modules\Catalogue;
@@ -21,6 +22,7 @@ use Atrium\Admin\Tests\TestCase;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Console\ClosureCommand;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -99,6 +101,10 @@ final class ModulesScreenTest extends TestCase
             'off acme/atrium-labels-printing', 'off acme/atrium-labels-qr', 'off acme/atrium-labels',
             'on acme/atrium-labels', 'on acme/atrium-labels-printing', 'on acme/atrium-labels-qr',
         ], $heard);
+        $actions = $this->assertRouteActionsArePublic();
+        foreach (['index', 'disable', 'enable'] as $action) {
+            $this->assertArrayHasKey(ModuleController::class.'::'.$action, $actions);
+        }
     }
 
     public function test_a_submodule_is_switched_on_only_under_a_parent_that_is_on(): void
@@ -163,10 +169,19 @@ final class ModulesScreenTest extends TestCase
         config()->set('atrium.public_urls', []);
         Schema::drop('labels');
         DB::table('migrations')->where('migration', 'like', '%create_labels_table')->delete();
+        // Someone else's migration waiting for its own deploy: not run.
+        mkdir($this->root.'/stray');
+        file_put_contents($this->root.'/stray/2026_01_01_000000_create_strays_table.php', '<?php return new class extends Illuminate\Database\Migrations\Migration { public function up(): void { Illuminate\Support\Facades\Schema::create("strays", fn ($table) => $table->id()); } };');
+        $this->app->make('migrator')->path($this->root.'/stray');
+        // Where migrate asks for confirmation unless forced (and the CSRF
+        // token is checked in tests too).
+        $this->app['env'] = 'production';
+        $this->withoutMiddleware(PreventRequestForgery::class);
 
         $this->post('/admin/modules/labels/enable')->assertSessionHas('success');
 
         $this->assertTrue(Schema::hasTable('labels'));
+        $this->assertFalse(Schema::hasTable('strays'));
         $this->assertSame($modules->find('acme/atrium-labels')->publicUrls, config('atrium.public_urls'));
     }
 

@@ -54,7 +54,8 @@ final class MakePackageCommand extends Command
         $namespace = trim(str_replace('/', '\\', (string) ($this->option('namespace') ?: Str::studly($vendor).'\\'.$class)), '\\');
         // It goes into JSON, PHP strings and Markdown alike: no quotes.
         $title = str_replace(["'", '"', '\\'], '', (string) ($this->option('title') ?: Str::headline($key)));
-        $path = (string) ($this->option('path') ?: base_path('packages/'.Str::after($name, 'atrium-')));
+        $path = $this->option('path');
+        $path = is_string($path) && $path !== '' ? $path : base_path('packages/'.Str::after($name, 'atrium-'));
 
         if ($files->isDirectory($path) && ! $files->isEmptyDirectory($path) && ! $this->option('force')) {
             $this->components->error("{$path} is not empty. Use --force to write into it.");

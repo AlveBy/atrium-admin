@@ -135,7 +135,8 @@ final class MakePackageTest extends TestCase
         $path = base_path("packages/{$name}");
 
         try {
-            $this->artisan('atrium:make-package', ['package' => $package])
+            // An empty --path is no path either.
+            $this->artisan('atrium:make-package', ['package' => $package, '--path' => ''])
                 ->expectsOutputToContain("{$package} is in")
                 ->expectsOutputToContain('Try it in this project:')
                 ->expectsOutputToContain("composer config repositories.{$name} path packages/{$name}")
