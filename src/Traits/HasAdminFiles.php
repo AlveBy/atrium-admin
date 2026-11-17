@@ -32,9 +32,8 @@ trait HasAdminFiles
     public static function bootHasAdminFiles(): void
     {
         static::deleting(function ($model) {
-            // Delete associated files from storage
+            // A file row removes its file from the disk as it goes (File::booted()).
             foreach ($model->files as $file) {
-                Storage::disk($file->disk)->delete($file->path);
                 $file->delete();
             }
         });
@@ -92,10 +91,7 @@ trait HasAdminFiles
     {
         $file = $this->files()->where('field', $field)->where('id', $fileId)->first();
 
-        if ($file) {
-            Storage::disk($file->disk)->delete($file->path);
-            $file->delete();
-        }
+        $file?->delete();
     }
 
     /**
@@ -121,16 +117,12 @@ trait HasAdminFiles
         // Delete existing files
         $existingFiles = $this->getFilesByField($field);
         foreach ($existingFiles as $file) {
-            Storage::disk($file->disk)->delete($file->path);
             $file->delete();
         }
 
         // Attach new files
-        foreach ($paths as $index => $path) {
-            $this->attachFile($field, $path, [
-                'sort' => $index + 1,
-                ...$metadata,
-            ]);
+        foreach ($paths as $path) {
+            $this->attachFile($field, $path, $metadata);
         }
     }
 
