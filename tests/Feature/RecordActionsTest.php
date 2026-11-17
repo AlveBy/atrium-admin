@@ -14,6 +14,7 @@ use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Tests\Fixtures\Chapter;
 use Atrium\Admin\Tests\Fixtures\Ledger;
+use Atrium\Admin\Tests\Fixtures\PanelAccount;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Support\Arr;
@@ -129,6 +130,18 @@ final class RecordActionsTest extends TestCase
 
         $this->delete("/admin/ledgers/{$entry->id}")->assertRedirect();
         $this->assertSame(0, Ledger::query()->count());
+    }
+
+    public function test_an_account_that_is_not_an_administrator_model_gets_every_button_of_a_writable_module(): void
+    {
+        $this->admin();
+        config(['auth.providers.admin_users.model' => PanelAccount::class]);
+        $this->actingAs(PanelAccount::query()->sole(), 'admin');
+
+        $this->get('/admin/posts')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('can', ['view' => true, 'create' => true, 'update' => true, 'delete' => true]));
+        $this->get('/admin/ledgers')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('can', ['view' => true, 'create' => false, 'update' => false, 'delete' => true]));
     }
 
     private function default(TestResponse $response, string $field, string $where = 'fieldsByTab'): mixed
