@@ -17,9 +17,7 @@ use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Tests\Fixtures\Note;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia;
 
@@ -35,19 +33,6 @@ final class FolderSitesTest extends TestCase
 
         $app['config']->set('app.url', 'http://main.test');
         $app['config']->set('atrium.resources', [Post::class, Note::class]);
-    }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        Schema::create('notes', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('site_id')->nullable()->index();
-            $table->string('name');
-            $table->string('code');
-            $table->timestamps();
-        });
     }
 
     protected function defineRoutes($router): void

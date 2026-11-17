@@ -20,7 +20,6 @@ use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Remark;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia;
 
@@ -38,30 +37,6 @@ final class SoftRelationsTest extends TestCase
         $app['config']->set('atrium.resources', [Post::class, Gadget::class]);
         // Installed from the start: its migrations run and its routes exist.
         $app['config']->set('atrium.modules', ['acme/atrium-labels']);
-    }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        Schema::create('gadgets', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->foreignId('label_id')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('gadget_label', function (Blueprint $table): void {
-            $table->foreignId('gadget_id');
-            $table->foreignId('label_id');
-        });
-
-        Schema::create('remarks', function (Blueprint $table): void {
-            $table->id();
-            $table->string('text')->nullable();
-            $table->nullableMorphs('subject');
-            $table->timestamps();
-        });
     }
 
     private function withoutLabels(): void

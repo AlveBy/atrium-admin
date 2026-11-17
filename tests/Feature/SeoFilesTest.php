@@ -14,9 +14,7 @@ use Atrium\Admin\Models\Site;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Story;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
 use SimpleXMLElement;
 
@@ -33,20 +31,6 @@ final class SeoFilesTest extends TestCase
     protected function disableRobots($app): void
     {
         $app['config']->set('atrium.robots', false);
-    }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        Schema::create('stories', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('site_id')->nullable()->index();
-            $table->json('name');
-            $table->json('code');
-            $table->boolean('active')->default(true);
-            $table->timestamps();
-        });
     }
 
     protected function defineRoutes($router): void

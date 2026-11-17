@@ -17,9 +17,7 @@ use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Tests\Fixtures\Note;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia;
 use Laravel\Sanctum\Sanctum;
@@ -40,14 +38,6 @@ final class SitesTest extends TestCase
         parent::defineDatabaseMigrations();
 
         $this->loadMigrationsFrom(dirname((string) (new ReflectionClass(Sanctum::class))->getFileName(), 2).'/database/migrations');
-
-        Schema::create('notes', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('site_id')->nullable()->index();
-            $table->string('name');
-            $table->string('code');
-            $table->timestamps();
-        });
     }
 
     protected function defineRoutes($router): void

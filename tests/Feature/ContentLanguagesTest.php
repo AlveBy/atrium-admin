@@ -15,10 +15,8 @@ use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Tests\Fixtures\Page;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia;
 use Laravel\Sanctum\Sanctum;
 use ReflectionClass;
@@ -38,14 +36,6 @@ final class ContentLanguagesTest extends TestCase
 
         // API tokens live in Sanctum's table.
         $this->loadMigrationsFrom(dirname((string) (new ReflectionClass(Sanctum::class))->getFileName(), 2).'/database/migrations');
-
-        Schema::create('pages', function (Blueprint $table): void {
-            $table->id();
-            $table->json('name');
-            $table->json('code')->nullable();
-            $table->integer('sort')->default(500);
-            $table->timestamps();
-        });
     }
 
     protected function defineRoutes($router): void
@@ -131,13 +121,14 @@ final class ContentLanguagesTest extends TestCase
 
         $page = Page::query()->sole();
 
-        // French is not a content language: not stored.
-        $this->assertSame(['en' => 'Hello', 'de' => 'Hallo'], $page->getTranslations('name'));
+        // French is not a content language: not stored. assertEquals, not
+        // assertSame: MySQL keeps the keys of a JSON column in its own order.
+        $this->assertEquals(['en' => 'Hello', 'de' => 'Hallo'], $page->getTranslations('name'));
         $this->assertSame('hallo', $page->getTranslation('code', 'de'));
 
         // Saving only English keeps the German text.
         $this->put("/admin/pages/{$page->id}", ['name' => ['en' => 'Hello there']])->assertSessionDoesntHaveErrors();
-        $this->assertSame(['en' => 'Hello there', 'de' => 'Hallo'], $page->fresh()->getTranslations('name'));
+        $this->assertEquals(['en' => 'Hello there', 'de' => 'Hallo'], $page->fresh()->getTranslations('name'));
     }
 
     public function test_only_the_default_language_is_required(): void
@@ -227,11 +218,14 @@ final class ContentLanguagesTest extends TestCase
         // A partial update of one language leaves the other alone.
         $id = Page::query()->sole()->id;
         $api()->patchJson("/api/v1/pages/{$id}", ['name' => ['de' => 'Guten Tag']])->assertOk();
-        $this->assertSame(['en' => 'Hello', 'de' => 'Guten Tag'], Page::query()->sole()->getTranslations('name'));
+        // In any key order: MySQL sorts the keys of a JSON column.
+        $this->assertEquals(['en' => 'Hello', 'de' => 'Guten Tag'], Page::query()->sole()->getTranslations('name'));
 
         $api()->getJson('/api/v1/pages?filter[code]=hallo')
             ->assertJsonPath('meta.total', 1)
-            ->assertJsonPath('data.0.name', ['en' => 'Hello', 'de' => 'Guten Tag']);
+            ->assertJsonCount(2, 'data.0.name')
+            ->assertJsonPath('data.0.name.en', 'Hello')
+            ->assertJsonPath('data.0.name.de', 'Guten Tag');
 
         $field = collect(app(ApiDocumentation::class)->modules(['pages'])['pages']['fields'])->firstWhere('name', 'name');
         $this->assertSame(['en', 'de'], array_keys($field['schema']['oneOf'][1]['properties']));
