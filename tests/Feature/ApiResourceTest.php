@@ -19,7 +19,9 @@ use Atrium\Admin\Models\Site;
 use Atrium\Admin\Tests\Fixtures\ApiArticle;
 use Atrium\Admin\Tests\Fixtures\Note;
 use Atrium\Admin\Tests\Fixtures\Page;
+use Atrium\Admin\Tests\Fixtures\PanelAccount;
 use Atrium\Admin\Tests\Fixtures\Post;
+use Atrium\Admin\Tests\Fixtures\SiteAdmin;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -91,6 +93,24 @@ final class ApiResourceTest extends TestCase
                 ]);
 
                 return ['Authorization' => 'Bearer '.$token->id.'|odd-secret'];
+            }],
+            'the configured model is not an administrator' => [static function (AdminUser $owner): array {
+                config(['atrium.auth.model' => PanelAccount::class]);
+                $token = PersonalAccessToken::query()->forceCreate([
+                    'tokenable_type' => PanelAccount::class,
+                    'tokenable_id' => $owner->id,
+                    'name' => 'odd',
+                    'token' => hash('sha256', 'odd-secret'),
+                    'abilities' => ['*'],
+                ]);
+
+                return ['Authorization' => 'Bearer '.$token->id.'|odd-secret'];
+            }],
+            'an administrator of another model than the configured one' => [static function (AdminUser $owner): array {
+                config(['atrium.auth.model' => SiteAdmin::class]);
+                $token = $owner->createToken('agent', ['posts:read']);
+
+                return ['Authorization' => 'Bearer '.$token->plainTextToken];
             }],
         ];
     }

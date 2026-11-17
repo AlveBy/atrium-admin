@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Auth\TwoFactorCode;
 use Atrium\Admin\Mail\TwoFactorCodeMail;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Tests\Fixtures\PanelAccount;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -300,6 +301,19 @@ final class TwoFactorTest extends TestCase
             ->get('/admin/two-factor')
             ->assertRedirect('/admin/login')
             ->assertSessionMissing('admin.two_factor');
+    }
+
+    public function test_a_pending_id_read_by_a_model_that_is_not_an_administrator_is_let_go(): void
+    {
+        $admin = $this->withCode('123456');
+        config(['auth.providers.admin_users.model' => PanelAccount::class]);
+
+        $this->pending($admin)
+            ->post('/admin/two-factor', ['code' => '123456'])
+            ->assertRedirect('/admin/login')
+            ->assertSessionMissing('admin.two_factor');
+
+        $this->assertGuest('admin');
     }
 
     public function test_a_new_code_is_not_sent_before_the_wait_is_over(): void

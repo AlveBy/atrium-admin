@@ -139,9 +139,10 @@ class ApiTokenController extends Controller
 
     private function admin(Request $request): AdminUser
     {
+        // Only an AdminUser gets onto this guard: the login form, the e-mail
+        // code and API tokens each refuse any other model.
+        /** @var AdminUser $user */
         $user = $request->user(config('atrium.auth.guard', 'admin'));
-
-        abort_unless($user instanceof AdminUser, 403);
 
         return $user;
     }
