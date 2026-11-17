@@ -9,7 +9,10 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
+use Atrium\Admin\Http\Requests\Auth\LoginRequest;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -219,5 +222,39 @@ final class LoginTest extends TestCase
 
         $this->getJson('/admin/posts')->assertForbidden()->assertJsonPath('message', 'Your account is deactivated.');
         $this->assertGuest('admin');
+    }
+
+    public function test_the_throttle_key_is_the_lower_case_email_and_the_address_and_it_locks_after_five_hits(): void
+    {
+        $request = LoginRequest::create('/admin/login', 'POST', ['email' => 'Admin@Example.com'], server: ['REMOTE_ADDR' => '10.1.2.3']);
+
+        $this->assertSame('admin@example.com|10.1.2.3', $request->throttleKey());
+
+        $request->ensureIsNotRateLimited();
+        for ($i = 0; $i < 4; $i++) {
+            RateLimiter::hit($request->throttleKey());
+        }
+        $request->ensureIsNotRateLimited();
+
+        RateLimiter::hit($request->throttleKey());
+        try {
+            $request->ensureIsNotRateLimited();
+            $this->fail('Five hits did not lock the key.');
+        } catch (ValidationException $e) {
+            $this->assertSame(['email' => [__('atrium::auth.throttle', ['seconds' => 60])]], $e->errors());
+        }
+    }
+
+    public function test_a_guard_whose_provider_does_not_exist_refuses_everyone_on_the_email_field(): void
+    {
+        config(['auth.guards.admin.provider' => 'nowhere']);
+        $request = LoginRequest::create('/admin/login', 'POST', ['email' => 'admin@example.com', 'password' => 'x']);
+
+        try {
+            $request->validateCredentials();
+            $this->fail('A missing provider let someone in.');
+        } catch (ValidationException $e) {
+            $this->assertSame(['email' => [__('atrium::auth.failed')]], $e->errors());
+        }
     }
 }

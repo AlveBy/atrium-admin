@@ -212,4 +212,45 @@ final class CaptchaTest extends TestCase
     {
         return Request::create('/', 'POST', array_filter(['captcha_token' => $token, 'captcha' => $answer], static fn ($value) => $value !== null));
     }
+
+    public function test_the_recaptcha_widget_is_exactly_the_script_and_the_div(): void
+    {
+        app()->setLocale('pt_BR');
+
+        $this->assertSame(
+            '<script src="https://www.google.com/recaptcha/api.js?hl=pt-BR" async defer></script><div class="g-recaptcha" data-sitekey="a&quot;b"></div>',
+            (new RecaptchaCaptcha('a"b', 'secret'))->widget()->toHtml(),
+        );
+    }
+
+    public function test_recaptcha_waits_five_seconds_for_google_and_no_more(): void
+    {
+        $options = null;
+        Http::fake(function (HttpRequest $request, array $given) use (&$options) {
+            $options = $given;
+
+            return Http::response(['success' => true]);
+        });
+
+        $this->assertTrue((new RecaptchaCaptcha('site', 'secret'))->verify(Request::create('/', 'POST', ['g-recaptcha-response' => 'answer'])));
+        $this->assertSame(5, (int) $options['timeout']);
+    }
+
+    public function test_recaptcha_needs_both_keys_and_unset_keys_count_as_empty(): void
+    {
+        config(['atrium.captcha.recaptcha' => ['site_key' => 'site-key', 'secret_key' => '']]);
+        $this->assertInstanceOf(ImageCaptcha::class, $this->captcha('recaptcha')->driver());
+
+        config(['atrium.captcha.recaptcha' => ['site_key' => '', 'secret_key' => 'secret-key']]);
+        $this->assertInstanceOf(ImageCaptcha::class, $this->captcha('recaptcha')->driver());
+
+        config(['atrium.captcha.recaptcha' => ['secret_key' => 'secret-key']]);
+        $this->assertInstanceOf(ImageCaptcha::class, $this->captcha('recaptcha')->driver());
+
+        config(['atrium.captcha.recaptcha' => ['site_key' => 'site-key']]);
+        $this->assertInstanceOf(ImageCaptcha::class, $this->captcha('recaptcha')->driver());
+
+        config(['atrium.captcha.recaptcha' => ['site_key' => 'site-key', 'secret_key' => 'secret-key']]);
+        $this->assertInstanceOf(RecaptchaCaptcha::class, $this->captcha('recaptcha')->driver());
+    }
 }
