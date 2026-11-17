@@ -8,6 +8,7 @@ import { useForm, Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import LocaleSwitcher from '../../../Components/Admin/Layout/LocaleSwitcher.vue'
 import AtriumLogo from '../../../Components/Admin/UI/AtriumLogo.vue'
+import AdminCredit from '../../../Components/Admin/UI/AdminCredit.vue'
 
 const props = defineProps({
     branding: {
@@ -145,6 +146,8 @@ const submit = () => {
                     </button>
                 </form>
             </div>
+
+            <AdminCredit class="mt-8 text-center" />
         </div>
     </div>
 </template>

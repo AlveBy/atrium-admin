@@ -44,6 +44,7 @@ const emit = defineEmits(['toggle-sidebar', 'toggle-collapse'])
 
             <!-- Collapse toggle (desktop) -->
             <button
+                data-action="collapse-sidebar"
                 @click="$emit('toggle-collapse')"
                 class="hidden lg:block p-2 rounded-md text-muted hover:text-fg hover:bg-hover"
             >

@@ -19,6 +19,7 @@ return [
     'site_hint' => 'The site whose records you are editing',
     'admin_language' => 'Admin language',
     'admin_language_hint' => 'The language of the panel menus and buttons, set for each administrator. The content language is chosen on the record form.',
+    'made_by' => 'Made by AlveSoft Solutions',
 
     'user_menu' => [
         'profile' => 'Profile',

@@ -8,6 +8,7 @@ import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import AdminMenuItem from './AdminMenuItem.vue'
 import AtriumLogo from '../UI/AtriumLogo.vue'
+import AdminCredit from '../UI/AdminCredit.vue'
 
 const props = defineProps({
     open: Boolean,
@@ -102,5 +103,13 @@ const currentRoute = computed(() => page.url)
                 </div>
             </div>
         </div>
+
+        <!-- The developer's credit, last and small. -->
+        <AdminCredit
+            on="sidebar"
+            :compact="collapsed"
+            class="border-t border-sidebar-line px-4 py-3"
+            :class="collapsed ? 'lg:px-2 lg:text-center' : ''"
+        />
     </aside>
 </template>

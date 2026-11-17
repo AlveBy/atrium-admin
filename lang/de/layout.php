@@ -18,6 +18,7 @@ return [
     'site_hint' => 'Die Website, deren Einträge Sie gerade bearbeiten',
     'admin_language' => 'Admin-Sprache',
     'admin_language_hint' => 'Sprache der Menüs und Schaltflächen des Panels, für jeden Administrator eigens. Die Sprache der Inhalte wählen Sie im Formular des Eintrags.',
+    'made_by' => 'Entwickelt von AlveSoft Solutions',
 
     'user_menu' => [
         'profile' => 'Profil',

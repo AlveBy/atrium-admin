@@ -18,6 +18,7 @@ return [
     'site_hint' => 'O site cujos registros você está editando',
     'admin_language' => 'Idioma do painel',
     'admin_language_hint' => 'Idioma dos menus e botões do painel, próprio de cada administrador. O idioma do conteúdo é escolhido no formulário do registro.',
+    'made_by' => 'Feito pela AlveSoft Solutions',
 
     'user_menu' => [
         'profile' => 'Perfil',

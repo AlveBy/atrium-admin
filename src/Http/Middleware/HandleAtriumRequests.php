@@ -76,6 +76,8 @@ final class HandleAtriumRequests extends Middleware
                 ];
             },
             'branding' => fn () => config('atrium.branding'),
+            // The "Made by AlveSoft Solutions" link; a site may switch it off.
+            'credit' => fn () => (bool) config('atrium.credit', true),
             // The colour theme the admin picked (or "system"); the page head applies it.
             'theme' => fn () => app(Themes::class)->choiceFor($this->admin($request)),
             'themes' => fn () => app(Themes::class)->choices(),

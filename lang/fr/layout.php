@@ -18,6 +18,7 @@ return [
     'site_hint' => 'Le site dont vous modifiez les éléments',
     'admin_language' => 'Langue de l’admin',
     'admin_language_hint' => 'Langue des menus et des boutons du panneau, propre à chaque administrateur. La langue du contenu se choisit dans le formulaire de l’élément.',
+    'made_by' => 'Réalisé par AlveSoft Solutions',
 
     'user_menu' => [
         'profile' => 'Profil',

@@ -310,6 +310,21 @@
     }
 }
 
+/*
+ * The AlveSoft credit (AdminCredit.vue): the colour logo on a light
+ * background, the white one on a dark background. Chosen per surface, because
+ * the sidebar is dark in most light themes. A new theme with a dark sidebar
+ * or a dark page adds itself to the list.
+ */
+[data-credit] {
+    --atrium-credit-logo: url('../images/alvesoft/logo.svg');
+}
+
+:where([data-theme='graphite'], [data-theme='night'], [data-theme='sand'], [data-theme='contrast']) [data-credit-on='sidebar'],
+:where([data-theme='night']) [data-credit-on='page'] {
+    --atrium-credit-logo: url('../images/alvesoft/logo-white.svg');
+}
+
 @layer base {
     html {
         accent-color: var(--atrium-accent);
@@ -335,7 +350,6 @@
     select:not([multiple]):not([size]) {
         appearance: none;
         background-color: var(--atrium-surface);
-        color: var(--atrium-fg);
         background-image:
             linear-gradient(45deg, transparent 50%, currentColor 50%),
             linear-gradient(135deg, currentColor 50%, transparent 50%);

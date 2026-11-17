@@ -18,6 +18,7 @@ return [
     'site_hint' => 'Witryna, której wpisy teraz edytujesz',
     'admin_language' => 'Język panelu',
     'admin_language_hint' => 'Język menu i przycisków panelu, osobny dla każdego administratora. Język treści wybiera się w formularzu wpisu.',
+    'made_by' => 'Stworzone przez AlveSoft Solutions',
 
     'user_menu' => [
         'profile' => 'Profil',

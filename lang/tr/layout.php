@@ -18,6 +18,7 @@ return [
     'site_hint' => 'Kayıtlarını düzenlediğiniz site',
     'admin_language' => 'Yönetim paneli dili',
     'admin_language_hint' => 'Panelin menü ve düğmelerinin dili, her yönetici için ayrı. İçerik dili kayıt formunda seçilir.',
+    'made_by' => 'AlveSoft Solutions tarafından yapıldı',
 
     'user_menu' => [
         'profile' => 'Profil',

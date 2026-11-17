@@ -18,6 +18,7 @@ return [
     'site_hint' => '您正在编辑其记录的站点',
     'admin_language' => '后台界面语言',
     'admin_language_hint' => '面板菜单和按钮的语言，每位管理员单独设置。内容语言在记录的表单中选择。',
+    'made_by' => '由 AlveSoft Solutions 制作',
 
     'user_menu' => [
         'profile' => '个人资料',

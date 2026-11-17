@@ -18,6 +18,7 @@ return [
     'site_hint' => 'Yozuvlari hozir tahrirlanayotgan sayt',
     'admin_language' => 'Admin panel tili',
     'admin_language_hint' => 'Panel menyusi va tugmalarining tili, har bir administratorda oʻziniki. Kontent tili yozuv shaklida tanlanadi.',
+    'made_by' => 'AlveSoft Solutions tomonidan yaratilgan',
 
     'user_menu' => [
         'profile' => 'Profil',
