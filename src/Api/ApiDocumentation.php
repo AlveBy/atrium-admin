@@ -119,7 +119,7 @@ final class ApiDocumentation
             'repeatable' => $this->set($doc, ['type' => 'array', 'items' => $this->repeatableItem($props['itemType'] ?? 'text')], $this->repeatableNote($props['itemType'] ?? 'text')),
             'select' => $this->optionsSchema($doc, $props['options'] ?? [], false),
             'multiSelect' => $this->optionsSchema($doc, $props['options'] ?? [], true),
-            'treeSelect' => $this->relationSchema($doc, $this->flattenTree($props['options'] ?? []), (bool) ($props['multiple'] ?? false), $props['modelClass'] ?? null),
+            'treeSelect' => $this->relationSchema($doc, $this->flattenTree($props['options'] ?? []), $props['multiple'], $props['modelClass'] ?? null),
             'belongsTo' => $this->relationSchema($doc, $props['options'] ?? [], false, $props['modelClass'] ?? null),
             'belongsToMany' => $this->relationSchema($doc, $props['options'] ?? [], true, $props['model'] ?? null),
             default => $doc,
@@ -245,14 +245,14 @@ final class ApiDocumentation
      * A section tree as a flat list with the full path in the label:
      * "Europe / Day trips", otherwise sections with the same name are indistinguishable.
      *
-     * @return array<int,array{value:mixed,label:string}>
+     * @return array<int,array{value:mixed,label:mixed}>
      */
     private function flattenTree(array $nodes, string $prefix = ''): array
     {
         $flat = [];
 
         foreach ($nodes as $node) {
-            $label = $prefix === '' ? (string) $node['label'] : $prefix.' / '.$node['label'];
+            $label = $prefix === '' ? $node['label'] : $prefix.' / '.$node['label'];
             $flat[] = ['value' => $node['value'], 'label' => $label];
 
             if (! empty($node['children'])) {
