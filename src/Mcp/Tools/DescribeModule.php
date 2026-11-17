@@ -36,7 +36,7 @@ class DescribeModule extends ApiTool
             return Response::error("No module \"{$module}\" for this token. See list_modules.");
         }
 
-        $description = $docs->modules([$module])[$module];
+        $description = $docs->module($module);
 
         return Response::json([
             'module' => $module,

@@ -48,30 +48,49 @@ final class ApiDocumentation
                 continue;
             }
 
-            $fields = array_filter(
-                AdminController::fieldsOf($model),
-                static fn (Field $field): bool => $field->shouldShowOnCreate() || $field->shouldShowOnEdit()
-            );
-
-            $instance = new $model;
-            $translatable = Hook::apply(
-                'atrium.module.translatable',
-                method_exists($instance, 'getTranslatableAttributes') ? $instance->getTranslatableAttributes() : [],
-                $model,
-            );
-
-            $modules[$key] = [
-                'label' => $this->resources->label($key),
-                'fields' => array_values(array_map(
-                    fn (Field $field): array => in_array($field->getName(), $translatable, true)
-                        ? $this->translatable($this->describe($field))
-                        : $this->describe($field),
-                    $fields
-                )),
-            ];
+            $modules[$key] = $this->describeModule($key, $model);
         }
 
         return $modules;
+    }
+
+    /**
+     * One module of the API by its key; the key must be one of the API's.
+     *
+     * @return array{label:string,fields:array<int,array<string,mixed>>}
+     */
+    public function module(string $key): array
+    {
+        return $this->describeModule($key, $this->resources->all()[$key]);
+    }
+
+    /**
+     * @param  class-string  $model
+     * @return array{label:string,fields:array<int,array<string,mixed>>}
+     */
+    private function describeModule(string $key, string $model): array
+    {
+        $fields = array_filter(
+            AdminController::fieldsOf($model),
+            static fn (Field $field): bool => $field->shouldShowOnCreate() || $field->shouldShowOnEdit()
+        );
+
+        $instance = new $model;
+        $translatable = Hook::apply(
+            'atrium.module.translatable',
+            method_exists($instance, 'getTranslatableAttributes') ? $instance->getTranslatableAttributes() : [],
+            $model,
+        );
+
+        return [
+            'label' => $this->resources->label($key),
+            'fields' => array_values(array_map(
+                fn (Field $field): array => in_array($field->getName(), $translatable, true)
+                    ? $this->translatable($this->describe($field))
+                    : $this->describe($field),
+                $fields
+            )),
+        ];
     }
 
     /**

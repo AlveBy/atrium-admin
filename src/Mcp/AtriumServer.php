@@ -56,6 +56,6 @@ class AtriumServer extends Server
      */
     protected function boot(): void
     {
-        $this->tools = array_values(array_unique([...$this->tools, ...(array) config('atrium.mcp.tools', [])]));
+        $this->tools = array_unique([...$this->tools, ...(array) config('atrium.mcp.tools', [])]);
     }
 }

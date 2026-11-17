@@ -46,7 +46,7 @@ abstract class ApiTool extends Tool
 
     protected function unknownModule(Request $request): Response
     {
-        return Response::error('No module "'.(string) $request->get('module', '').'". See list_modules.');
+        return Response::error('No module "'.$request->get('module', '').'". See list_modules.');
     }
 
     /**

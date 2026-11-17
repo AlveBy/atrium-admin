@@ -280,6 +280,137 @@ final class McpTest extends TestCase
         );
     }
 
+    public function test_every_tool_describes_its_arguments_exactly(): void
+    {
+        $module = ['description' => 'Module key from list_modules, e.g. "articles".', 'type' => 'string'];
+        $site = ['description' => 'Site code, when the record belongs to another site than this address.', 'type' => 'string'];
+        $id = ['description' => 'Record id.', 'type' => 'integer'];
+
+        $expected = [
+            'list_modules' => [],
+            'describe_module' => ['properties' => ['module' => $module], 'required' => ['module']],
+            'list_records' => ['properties' => [
+                'module' => $module,
+                'site' => $site,
+                'search' => ['description' => 'Text to look for in the searchable columns.', 'type' => 'string'],
+                'filter' => ['description' => 'Exact column values, e.g. {"active": 1, "section_id": 4}.', 'type' => 'object'],
+                'sort' => ['description' => 'Column to sort by. Default: id.', 'type' => 'string'],
+                'direction' => ['description' => 'Default: asc.', 'enum' => ['asc', 'desc'], 'type' => 'string'],
+                'page' => ['description' => 'Page number, from 1.', 'type' => 'integer'],
+                'per_page' => ['description' => 'Records per page, 1 to 100. Default: 20.', 'type' => 'integer'],
+            ], 'required' => ['module']],
+            'get_record' => ['properties' => ['module' => $module, 'site' => $site, 'id' => $id], 'required' => ['module', 'id']],
+            'create_record' => ['properties' => [
+                'module' => $module,
+                'site' => $site,
+                'data' => ['description' => 'Field values keyed by field name.', 'type' => 'object'],
+            ], 'required' => ['module', 'data']],
+            'update_record' => ['properties' => [
+                'module' => $module,
+                'site' => $site,
+                'id' => $id,
+                'data' => ['description' => 'The fields to change, keyed by field name.', 'type' => 'object'],
+            ], 'required' => ['module', 'id', 'data']],
+            'delete_record' => ['properties' => ['module' => $module, 'site' => $site, 'id' => $id], 'required' => ['module', 'id']],
+        ];
+
+        $tools = $this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools');
+        $actual = [];
+        foreach ($tools as $tool) {
+            $schema = $tool['inputSchema'];
+            unset($schema['type']);
+            $actual[$tool['name']] = $schema === ['properties' => []] ? [] : $schema;
+        }
+
+        $this->assertSame(array_keys($expected), array_keys($actual));
+        foreach ($expected as $name => $schema) {
+            $this->assertEquals($schema, $actual[$name], $name);
+            $this->assertSame(array_keys($schema['properties'] ?? []), array_keys($actual[$name]['properties'] ?? []), "{$name}: order");
+        }
+    }
+
+    public function test_a_module_that_is_not_a_string_is_still_refused_by_name(): void
+    {
+        $token = $this->token(['posts.view'], ['posts:read']);
+
+        $this->mcp($token, 'tools/call', ['name' => 'list_records', 'arguments' => ['module' => 123]])
+            ->assertJsonPath('result.isError', true)
+            ->assertJsonPath('result.content.0.text', 'No module "123". See list_modules.');
+        $this->mcp($token, 'tools/call', ['name' => 'describe_module', 'arguments' => ['module' => 123]])
+            ->assertJsonPath('result.isError', true)
+            ->assertJsonPath('result.content.0.text', 'No module "123" for this token. See list_modules.');
+    }
+
+    public function test_an_empty_or_missing_site_adds_nothing_to_the_query(): void
+    {
+        $token = $this->token(['posts.view']);
+
+        foreach ([['site' => ''], ['site' => null], []] as $extra) {
+            $this->assertSame(0, $this->callTool($token, 'list_records', ['module' => 'posts'] + $extra)['meta']['total']);
+        }
+    }
+
+    public function test_unknown_modules_stay_closed_even_for_a_token_that_may_do_anything(): void
+    {
+        $owner = AdminUser::query()->forceCreate([
+            'name' => 'Root', 'email' => 'root@example.com', 'password' => 'secret-password', 'is_active' => true, 'is_superadmin' => true,
+        ]);
+        $token = $owner->createToken('all', ['*'])->plainTextToken;
+
+        $this->mcp($token, 'tools/call', ['name' => 'describe_module', 'arguments' => ['module' => 'nope']])
+            ->assertJsonPath('result.isError', true)
+            ->assertJsonPath('result.content.0.text', 'No module "nope" for this token. See list_modules.');
+        $this->assertSame('Posts', $this->callTool($token, 'describe_module', ['module' => 'posts'])['label']);
+    }
+
+    public function test_get_update_and_delete_take_the_id_as_a_number(): void
+    {
+        $post = Post::query()->create(['name' => 'Hello']);
+        $token = $this->token(['posts.view', 'posts.update', 'posts.delete'], ['posts:read', 'posts:write']);
+
+        // Whatever arrives is made an integer first, so it can never add anything to the address.
+        $id = $post->id + 0.5;
+
+        $this->assertSame($post->id, $this->callTool($token, 'get_record', ['module' => 'posts', 'id' => $id])['data']['id']);
+        $this->assertSame('Hi', $this->callTool($token, 'update_record', ['module' => 'posts', 'id' => $id, 'data' => ['name' => 'Hi']])['data']['name']);
+        $this->mcp($token, 'tools/call', ['name' => 'delete_record', 'arguments' => ['module' => 'posts', 'id' => $id]])
+            ->assertJsonPath('result.isError', false);
+        $this->assertSame(0, Post::query()->count());
+    }
+
+    public function test_list_records_sends_only_what_was_asked_for(): void
+    {
+        foreach (['B', 'A'] as $i => $name) {
+            Post::query()->create(['name' => $name, 'sort' => $i]);
+        }
+        $token = $this->token(['posts.view']);
+
+        // Empty values must not reach the API as filters: "sort" of "" would be an invalid column.
+        $found = $this->callTool($token, 'list_records', ['module' => 'posts', 'sort' => '', 'direction' => '', 'page' => null, 'per_page' => null, 'search' => null, 'filter' => []]);
+        $this->assertSame(['B', 'A'], array_column($found['data'], 'name'));
+
+        $this->assertSame(['A', 'B'], array_column($this->callTool($token, 'list_records', ['module' => 'posts', 'sort' => 'name'])['data'], 'name'));
+        $this->assertSame(['B'], array_column($this->callTool($token, 'list_records', ['module' => 'posts', 'page' => 1, 'per_page' => 1])['data'], 'name'));
+        $this->assertSame(['A'], array_column($this->callTool($token, 'list_records', ['module' => 'posts', 'page' => 2, 'per_page' => 1])['data'], 'name'));
+        $this->assertSame(['B', 'A'], array_column($this->callTool($token, 'list_records', ['module' => 'posts', 'sort' => 'sort', 'direction' => 'asc'])['data'], 'name'));
+    }
+
+    public function test_a_config_without_extra_tools_changes_nothing(): void
+    {
+        $token = $this->token(['posts.view']);
+
+        foreach ([null, []] as $value) {
+            config()->set('atrium.mcp.tools', $value);
+
+            $names = array_column($this->mcp($token, 'tools/list')->json('result.tools'), 'name');
+
+            $this->assertSame(
+                ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record'],
+                $names,
+            );
+        }
+    }
+
     /**
      * @param  array<int,string>  $permissions
      * @param  array<int,string>  $abilities

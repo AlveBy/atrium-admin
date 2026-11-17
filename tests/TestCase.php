@@ -12,13 +12,17 @@ namespace Atrium\Admin\Tests;
 use Atrium\Admin\AtriumServiceProvider;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Tests\Fixtures\Post;
+use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Illuminate\Routing\Router;
 use Inertia\ServiceProvider as InertiaServiceProvider;
 use Laravel\Mcp\Server\McpServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use ReflectionMethod;
+use Symfony\Component\HttpFoundation\Response;
 use Tighten\Ziggy\ZiggyServiceProvider;
 
 abstract class TestCase extends Orchestra
@@ -115,5 +119,31 @@ abstract class TestCase extends Orchestra
         $this->assertNotContains(false, $actions, implode(', ', array_keys(array_filter($actions, static fn (bool $public): bool => ! $public))));
 
         return $actions;
+    }
+
+    /**
+     * A router that dispatches nothing: it keeps the request it was given in
+     * ->seen and answers with whatever the closure returns.
+     *
+     * @param  Closure(Request):Response  $answer
+     */
+    protected function recordingRouter(Closure $answer): Router
+    {
+        return new class($this->app['events'], $answer) extends Router
+        {
+            public ?Request $seen = null;
+
+            public function __construct($events, private readonly Closure $answer)
+            {
+                parent::__construct($events);
+            }
+
+            public function dispatch(Request $request)
+            {
+                $this->seen = $request;
+
+                return ($this->answer)($request);
+            }
+        };
     }
 }

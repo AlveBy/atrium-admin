@@ -11,9 +11,7 @@ namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Mcp\ApiGateway;
 use Atrium\Admin\Tests\TestCase;
-use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Request as RequestFacade;
 use Laravel\Mcp\Response;
 use RuntimeException;
@@ -33,7 +31,7 @@ final class ApiGatewayTest extends TestCase
         request()->headers->set('Authorization', 'Bearer abc');
         config()->set('atrium.api.prefix', '/api/v1/');
 
-        $router = $this->router(fn (Request $r) => new HttpResponse('{}', 200));
+        $router = $this->recordingRouter(fn (Request $r) => new HttpResponse('{}', 200));
         (new ApiGateway($router))->call('GET', '/posts/5', ['page' => 2]);
 
         $sub = $router->seen;
@@ -48,7 +46,7 @@ final class ApiGatewayTest extends TestCase
     {
         config()->set('atrium.api.prefix', 'v2');
 
-        $router = $this->router(fn (Request $r) => new HttpResponse('{}', 200));
+        $router = $this->recordingRouter(fn (Request $r) => new HttpResponse('{}', 200));
         (new ApiGateway($router))->call('GET', 'posts');
 
         $this->assertSame('/v2/posts', $router->seen->getPathInfo());
@@ -58,7 +56,7 @@ final class ApiGatewayTest extends TestCase
     {
         $this->app->instance('request', Request::create('/mcp', 'POST'));
 
-        $router = $this->router(fn (Request $r) => new HttpResponse('{}', 200));
+        $router = $this->recordingRouter(fn (Request $r) => new HttpResponse('{}', 200));
         (new ApiGateway($router))->call('GET', 'posts');
 
         $this->assertSame('', $router->seen->headers->get('Authorization'));
@@ -66,7 +64,7 @@ final class ApiGatewayTest extends TestCase
 
     public function test_the_body_goes_as_json_with_unicode_and_slashes_as_they_are(): void
     {
-        $router = $this->router(fn (Request $r) => new HttpResponse('{}', 200));
+        $router = $this->recordingRouter(fn (Request $r) => new HttpResponse('{}', 200));
         (new ApiGateway($router))->call('POST', 'posts', [], ['name' => 'Café / bar']);
 
         $this->assertSame('{"name":"Café / bar"}', $router->seen->getContent());
@@ -74,7 +72,7 @@ final class ApiGatewayTest extends TestCase
 
     public function test_no_body_means_no_content(): void
     {
-        $router = $this->router(fn (Request $r) => new HttpResponse('{}', 200));
+        $router = $this->recordingRouter(fn (Request $r) => new HttpResponse('{}', 200));
         (new ApiGateway($router))->call('GET', 'posts');
 
         $this->assertSame('', $router->seen->getContent());
@@ -82,7 +80,7 @@ final class ApiGatewayTest extends TestCase
 
     public function test_a_body_that_cannot_be_encoded_is_sent_empty_instead_of_failing(): void
     {
-        $router = $this->router(fn (Request $r) => new HttpResponse('{}', 200));
+        $router = $this->recordingRouter(fn (Request $r) => new HttpResponse('{}', 200));
         (new ApiGateway($router))->call('POST', 'posts', [], ['name' => "\xB1"]);
 
         $this->assertSame('', $router->seen->getContent());
@@ -95,7 +93,7 @@ final class ApiGatewayTest extends TestCase
         RequestFacade::path(); // the facade has resolved the original by now
 
         $inside = [];
-        $router = $this->router(function (Request $sub) use (&$inside) {
+        $router = $this->recordingRouter(function (Request $sub) use (&$inside) {
             $inside = [app('request') === $sub, RequestFacade::path(), url()->getRequest() === $sub];
 
             return new HttpResponse('{}', 200);
@@ -110,7 +108,7 @@ final class ApiGatewayTest extends TestCase
         $original = Request::create('/mcp', 'POST');
         $this->app->instance('request', $original);
 
-        $router = $this->router(fn (Request $r) => new HttpResponse('{}', 200));
+        $router = $this->recordingRouter(fn (Request $r) => new HttpResponse('{}', 200));
         (new ApiGateway($router))->call('GET', 'posts');
 
         $this->assertSame($original, app('request'));
@@ -122,7 +120,7 @@ final class ApiGatewayTest extends TestCase
     {
         $original = Request::create('/mcp', 'POST');
         $this->app->instance('request', $original);
-        $router = $this->router(fn () => throw new RuntimeException('boom'));
+        $router = $this->recordingRouter(fn () => throw new RuntimeException('boom'));
 
         try {
             (new ApiGateway($router))->call('GET', 'posts');
@@ -198,29 +196,6 @@ final class ApiGatewayTest extends TestCase
 
     private function gateway(HttpResponse $answer): Response
     {
-        return (new ApiGateway($this->router(fn () => $answer)))->call('GET', 'posts');
-    }
-
-    /**
-     * @param  Closure(Request):HttpResponse  $answer
-     */
-    private function router(Closure $answer): Router
-    {
-        return new class($this->app['events'], $answer) extends Router
-        {
-            public ?Request $seen = null;
-
-            public function __construct($events, private readonly Closure $answer)
-            {
-                parent::__construct($events);
-            }
-
-            public function dispatch(Request $request)
-            {
-                $this->seen = $request;
-
-                return ($this->answer)($request);
-            }
-        };
+        return (new ApiGateway($this->recordingRouter(fn () => $answer)))->call('GET', 'posts');
     }
 }
