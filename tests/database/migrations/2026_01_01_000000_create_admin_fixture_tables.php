@@ -63,6 +63,19 @@ return new class extends Migration
             $table->foreignId('label_id');
         });
 
+        Schema::create('articles', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('parent_id')->nullable();
+            $table->string('name')->nullable();
+            $table->string('title')->nullable();
+            $table->string('code')->nullable();
+            $table->text('preview_text')->nullable();
+            $table->text('description')->nullable();
+            $table->string('preview_picture')->nullable();
+            $table->string('detail_picture')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('remarks', function (Blueprint $table): void {
             $table->id();
             $table->string('text')->nullable();
@@ -125,7 +138,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['sections', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
+        foreach (['sections', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
             Schema::dropIfExists($table);
         }
     }
