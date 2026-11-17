@@ -56,7 +56,7 @@ class CacheController extends Controller
                 ->values(),
             'sites' => $this->sites->all()
                 ->filter(fn (Site $site): bool => $site->exists)
-                ->map(fn (Site $site): array => ['id' => $site->getKey(), 'name' => (string) $site->name])
+                ->map(fn (Site $site): array => ['id' => $site->getKey(), 'name' => $site->name])
                 ->values(),
         ]);
     }

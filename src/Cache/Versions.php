@@ -34,6 +34,11 @@ final class Versions
     /** Counters live a month; one that expires restarts at a random number. */
     private const TTL = 2592000;
 
+    /** A counter starts somewhere in 1 … START_MAX, never near the top: it only ever goes up. */
+    private const START_MIN = 1;
+
+    private const START_MAX = PHP_INT_MAX >> 1;
+
     /** @var array<string,string> */
     private array $memo = [];
 
@@ -45,7 +50,7 @@ final class Versions
      */
     public function get(array $names): array
     {
-        $names = array_values(array_unique($names));
+        $names = array_unique($names);
         $missing = array_values(array_filter($names, fn (string $name): bool => ! isset($this->memo[$name])));
 
         if ($missing !== []) {
@@ -88,8 +93,8 @@ final class Versions
             // ours never are 1, so that means it was not there.
             $value = $this->store->increment($key);
 
-            if ($value === false || (int) $value <= 1) {
-                $this->store->put($key, random_int(1, PHP_INT_MAX >> 1), self::TTL);
+            if ($value === false || $value <= 1) {
+                $this->store->put($key, random_int(self::START_MIN, self::START_MAX), self::TTL);
             }
 
             unset($this->memo[$name]);
@@ -108,7 +113,7 @@ final class Versions
     private function start(string $name): string
     {
         $key = self::PREFIX.$name;
-        $this->store->add($key, random_int(1, PHP_INT_MAX >> 1), self::TTL);
+        $this->store->add($key, random_int(self::START_MIN, self::START_MAX), self::TTL);
 
         return (string) $this->store->get($key);
     }

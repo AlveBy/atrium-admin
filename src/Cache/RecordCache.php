@@ -13,7 +13,6 @@ use Atrium\Admin\Contracts\Cacheable;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Support\Sites;
-use BackedEnum;
 use Closure;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -57,7 +56,7 @@ final class RecordCache
 
     private int $bulk = 0;
 
-    /** @var array<string,true> */
+    /** @var array<string,string> class => class: the classes saved during a bulk, as a set */
     private array $bulkTouched = [];
 
     private bool $bulkEverything = false;
@@ -65,13 +64,13 @@ final class RecordCache
     /** @var array<int,Closure(string):iterable<string>> */
     private array $warmers = [];
 
-    /** @var array<string,true> version names the current request has read through */
+    /** @var array<string,string> name => name: the version names the current request has read through, as a set */
     private array $read = [];
 
     /** @var array{hits:int,misses:int} */
     private array $stats = ['hits' => 0, 'misses' => 0];
 
-    /** @var array<string,true> */
+    /** @var array<string,array<int|string,true>> class => keys of the records being changed right now */
     private array $changing = [];
 
     public function __construct(
@@ -113,7 +112,7 @@ final class RecordCache
      */
     public function cards(string $class, iterable $ids, ?string $locale = null): array
     {
-        $ids = array_values(array_unique(array_map(self::normalizeId(...), is_array($ids) ? $ids : iterator_to_array($ids, false))));
+        $ids = array_unique(array_map(self::normalizeId(...), is_array($ids) ? $ids : iterator_to_array($ids, false)));
 
         if ($ids === []) {
             return [];
@@ -182,13 +181,13 @@ final class RecordCache
             $key = $model->getQualifiedKeyName();
 
             if ($perPage === null) {
-                $ids = (clone $query)->toBase()->pluck($key)->all();
+                $ids = $query->toBase()->pluck($key)->all();
 
                 return ['ids' => $ids, 'total' => count($ids)];
             }
 
-            $total = (clone $query)->toBase()->getCountForPagination();
-            $ids = $total > 0 ? (clone $query)->forPage(max(1, (int) $page), $perPage)->toBase()->pluck($key)->all() : [];
+            $total = $query->toBase()->getCountForPagination();
+            $ids = $total > 0 ? (clone $query)->forPage((int) $page, $perPage)->toBase()->pluck($key)->all() : [];
 
             return ['ids' => $ids, 'total' => $total];
         };
@@ -208,11 +207,10 @@ final class RecordCache
         $this->markRead($names);
 
         $hash = hash('xxh128', implode("\n", [
-            $class,
             $query->toSql(),
             json_encode(array_map(self::binding(...), $query->getBindings())),
-            (string) $perPage,
-            (string) $page,
+            $perPage,
+            $page,
             app()->getLocale(),
         ]));
         $key = 'ids:'.$this->versions->stamp($names).':'.$hash;
@@ -301,18 +299,18 @@ final class RecordCache
         }
 
         if ($this->bulk > 0) {
-            $this->bulkTouched[$class] = true;
+            $this->bulkTouched[$class] = $class;
 
             return;
         }
 
-        $guard = $class.'#'.$record->getKey();
+        $key = $record->getKey();
 
-        if (isset($this->changing[$guard])) {
+        if ($this->changing[$class][$key] ?? false) {
             return;
         }
 
-        $this->changing[$guard] = true;
+        $this->changing[$class][$key] = true;
 
         try {
             $this->versions->bump('list:'.$class);
@@ -340,7 +338,7 @@ final class RecordCache
             // A cache that is down must not fail the save.
             report($e);
         } finally {
-            unset($this->changing[$guard]);
+            unset($this->changing[$class][$key]);
         }
     }
 
@@ -389,7 +387,7 @@ final class RecordCache
             return $callback();
         } finally {
             if (--$this->bulk === 0) {
-                $touched = array_keys($this->bulkTouched);
+                $touched = $this->bulkTouched;
                 $all = $this->bulkEverything;
                 $this->bulkTouched = [];
                 $this->bulkEverything = false;
@@ -511,7 +509,7 @@ final class RecordCache
      */
     public function dontKeepPage(): void
     {
-        $this->read[self::NO_PAGE] = true;
+        $this->read[self::NO_PAGE] = self::NO_PAGE;
     }
 
     public function pageKeepable(): bool
@@ -525,7 +523,7 @@ final class RecordCache
     public function markRead(array $names): void
     {
         foreach ($names as $name) {
-            $this->read[$name] = true;
+            $this->read[$name] = $name;
         }
     }
 
@@ -549,7 +547,7 @@ final class RecordCache
      */
     public function persistStats(): void
     {
-        if (! config('atrium.cache.stats', true) || ($this->stats['hits'] + $this->stats['misses']) === 0) {
+        if (! config('atrium.cache.stats', true)) {
             return;
         }
 
@@ -643,12 +641,12 @@ final class RecordCache
     private function knownSites(): array
     {
         try {
-            $ids = app(Sites::class)->all()->pluck('id')->filter()->map(static fn (mixed $id): int => (int) $id)->all();
+            $ids = app(Sites::class)->all()->pluck('id')->filter()->all();
         } catch (Throwable) {
             $ids = [];
         }
 
-        return array_values(array_unique([0, ...$ids]));
+        return array_unique([0, ...$ids]);
     }
 
     /**
@@ -662,7 +660,7 @@ final class RecordCache
             $codes = [];
         }
 
-        return array_values(array_unique([app()->getLocale(), (string) config('app.locale'), ...$codes]));
+        return array_unique([app()->getLocale(), ...$codes]);
     }
 
     private function site(): int
@@ -704,7 +702,6 @@ final class RecordCache
     {
         return match (true) {
             $value instanceof DateTimeInterface => $value->format('Y-m-d H:i:s.u'),
-            $value instanceof BackedEnum => $value->value,
             is_object($value) && method_exists($value, '__toString') => (string) $value,
             default => $value,
         };

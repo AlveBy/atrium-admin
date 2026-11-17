@@ -49,7 +49,7 @@ final class CacheDebug
         $response = $next($request);
 
         $stats = $this->cache->requestStats();
-        $page = (string) $response->headers->get(CachePages::HEADER, 'off');
+        $page = $response->headers->get(CachePages::HEADER, 'off');
         $line = sprintf(
             'queries=%d (%.1f ms); cache hits=%d misses=%d; page cache=%s; %.1f ms',
             self::$queries,
@@ -73,8 +73,8 @@ final class CacheDebug
 
     public static function enabled(): bool
     {
-        return (bool) config('atrium.cache.debug', true)
-            && (bool) config('app.debug', false)
+        return config('atrium.cache.debug', true)
+            && config('app.debug', false)
             && app()->environment('local');
     }
 
@@ -88,7 +88,7 @@ final class CacheDebug
 
         DB::listen(static function ($query): void {
             self::$queries++;
-            self::$queryMs += (float) $query->time;
+            self::$queryMs += $query->time;
         });
     }
 }

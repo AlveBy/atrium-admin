@@ -74,11 +74,13 @@ final class CachePages
 
         $response = $next($request);
 
-        if (! $this->storable($response)) {
+        $body = $response->getContent();
+
+        if (! is_string($body) || ! $this->storable($response, $body)) {
             return $response;
         }
 
-        $entry = $this->entry($request, $response);
+        $entry = $this->entry($request, $response, $body);
         $this->safely(fn () => $this->store->put('pages', $key, $entry, max(1, (int) config('atrium.cache.ttl.pages', 600))));
 
         return $this->serve($request, $entry, 'MISS', $response);
@@ -112,7 +114,7 @@ final class CachePages
 
         // An admin sees the edit bar and unpublished things; a signed-in
         // visitor sees their own name.
-        foreach (array_unique([(string) config('atrium.auth.guard', 'admin'), (string) config('auth.defaults.guard', 'web')]) as $guard) {
+        foreach ([config('atrium.auth.guard', 'admin'), config('auth.defaults.guard', 'web')] as $guard) {
             try {
                 if (auth()->guard($guard)->check()) {
                     return false;
@@ -125,7 +127,7 @@ final class CachePages
         if ($request->hasSession()) {
             $session = $request->session();
 
-            if ($session->has('errors') || (array) $session->get('_flash.old', []) !== [] || $session->hasOldInput()) {
+            if ($session->has('errors') || $session->get('_flash.old', []) !== [] || $session->hasOldInput()) {
                 return false;
             }
         }
@@ -146,9 +148,9 @@ final class CachePages
      */
     private function fresh(array $entry): bool
     {
-        $versions = (array) ($entry['versions'] ?? []);
+        $versions = $entry['versions'] ?? [];
 
-        if ($versions === []) {
+        if (! is_array($versions) || $versions === []) {
             return false;
         }
 
@@ -157,7 +159,7 @@ final class CachePages
         return $now !== null && $now == $versions;
     }
 
-    private function storable(Response $response): bool
+    private function storable(Response $response, string $body): bool
     {
         if ($response->getStatusCode() !== 200 || $response->headers->has('Content-Disposition')) {
             return false;
@@ -185,15 +187,14 @@ final class CachePages
             return false;
         }
 
-        return is_string($response->getContent()) && $response->getContent() !== '';
+        return $body !== '';
     }
 
     /**
      * @return array<string,mixed>
      */
-    private function entry(Request $request, Response $response): array
+    private function entry(Request $request, Response $response, string $body): array
     {
-        $body = (string) $response->getContent();
         $token = $request->hasSession() ? (string) $request->session()->token() : '';
         $hasToken = $token !== '' && str_contains($body, $token);
 
@@ -207,12 +208,11 @@ final class CachePages
             $names[] = 'list:'.$class;
         }
 
-        $names = array_values(array_unique($names));
         sort($names);
 
         return [
             'body' => $body,
-            'type' => (string) $response->headers->get('Content-Type'),
+            'type' => $response->headers->get('Content-Type'),
             'token' => $hasToken,
             'etag' => sha1($body),
             'time' => time(),

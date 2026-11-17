@@ -234,7 +234,7 @@ final class Card implements ArrayAccess, JsonSerializable
             $model->setLocale($locale);
         }
 
-        foreach ((array) ($data['relations'] ?? []) as $name => $related) {
+        foreach ($data['relations'] ?? [] as $name => $related) {
             if ($related === null) {
                 $model->setRelation($name, null);
             } elseif (array_is_list($related)) {

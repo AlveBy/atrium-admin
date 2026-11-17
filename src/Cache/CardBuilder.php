@@ -40,7 +40,7 @@ final class CardBuilder
     /** @var array<string,array<string,array<int,string>>> */
     private array $mediaFields = [];
 
-    /** @var array<string,array<int,mixed>> */
+    /** @var array<string,array<int|string,mixed>> */
     private array $fields = [];
 
     /**
@@ -225,7 +225,7 @@ final class CardBuilder
                 continue;
             }
 
-            $translations = (array) $model->getTranslations($attribute);
+            $translations = $model->getTranslations($attribute);
             $kept = array_intersect_key($translations, array_flip([$locale, $default]));
             $raw[$attribute] = json_encode($kept, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
@@ -298,7 +298,7 @@ final class CardBuilder
                     continue;
                 }
 
-                $path = is_array($item) ? (string) ($item['path'] ?? $item['url'] ?? '') : (string) $item;
+                $path = (string) (is_array($item) ? ($item['path'] ?? $item['url'] ?? '') : $item);
                 $name = is_array($item) && isset($item['name']) ? (string) $item['name'] : rawurldecode(basename((string) parse_url($url, PHP_URL_PATH)));
 
                 $items[] = [
@@ -338,11 +338,11 @@ final class CardBuilder
     }
 
     /**
-     * @return array<int,mixed>
+     * @return array<int|string,mixed>
      */
     private function fieldsOf(string $class): array
     {
-        return $this->fields[$class] ??= method_exists($class, 'getAdministrationFields') ? array_values((array) $class::getAdministrationFields()) : [];
+        return $this->fields[$class] ??= method_exists($class, 'getAdministrationFields') ? $class::getAdministrationFields() : [];
     }
 
     /**
@@ -352,10 +352,6 @@ final class CardBuilder
      */
     private function list(mixed $value): array
     {
-        if ($value === null || $value === '' || $value === []) {
-            return [];
-        }
-
         if (is_string($value) && str_starts_with(ltrim($value), '[')) {
             $decoded = json_decode($value, true);
 

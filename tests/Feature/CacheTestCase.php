@@ -9,10 +9,13 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
+use Atrium\Admin\Cache\CacheStore;
 use Atrium\Admin\Cache\RecordCache;
+use Atrium\Admin\Cache\Versions;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Tests\Fixtures\Cache\Book;
 use Atrium\Admin\Tests\Fixtures\Cache\Shelf;
+use Atrium\Admin\Tests\Fixtures\Cache\SpyRepository;
 use Atrium\Admin\Tests\Fixtures\Cache\Tag;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
@@ -60,6 +63,21 @@ abstract class CacheTestCase extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('cache_codes', function (Blueprint $table): void {
+            $table->string('code')->primary();
+        });
+
+        Schema::create('cache_nodes', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name')->nullable();
+        });
+
+        Schema::create('cache_parts', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name')->nullable();
+            $table->unsignedBigInteger('parent_id')->nullable();
+        });
+
         Schema::create('cache_book_tag', function (Blueprint $table): void {
             $table->foreignId('book_id');
             $table->foreignId('tag_id');
@@ -104,6 +122,20 @@ abstract class CacheTestCase extends TestCase
     protected function resetRequest(): void
     {
         $this->app->make(RecordCache::class)->reset();
+    }
+
+    /**
+     * A record cache of its own on a store that writes down every call, to
+     * read the keys and the times to live it uses. Without tags by default:
+     * then a key is `atrium:` and what the cache made of it.
+     *
+     * @return array{0:RecordCache,1:SpyRepository}
+     */
+    protected function spyCache(bool $tags = false): array
+    {
+        $repository = new SpyRepository;
+
+        return [new RecordCache(new CacheStore($repository, $tags), new Versions($repository)), $repository];
     }
 
     /**

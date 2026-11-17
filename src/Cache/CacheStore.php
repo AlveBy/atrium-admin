@@ -45,7 +45,7 @@ final class CacheStore
     public static function fromConfig(): self
     {
         $repository = cache()->store(config('atrium.cache.store'));
-        $strategy = (string) config('atrium.cache.strategy', 'auto');
+        $strategy = config('atrium.cache.strategy', 'auto');
         $taggable = $repository instanceof CacheRepository && $repository->getStore() instanceof TaggableStore;
 
         return new self($repository, $taggable && $strategy !== 'versions');
@@ -92,7 +92,7 @@ final class CacheStore
             if ($store instanceof RedisStore) {
                 $connection = $store->connection();
                 $size['entries'] = (int) $connection->command('dbsize');
-                $info = (array) $connection->command('info', ['memory']);
+                $info = $connection->command('info', ['memory']);
                 $memory = $info['Memory'] ?? $info;
                 $size['bytes'] = isset($memory['used_memory']) ? (int) $memory['used_memory'] : null;
             } elseif ($store instanceof FileStore) {
@@ -106,7 +106,7 @@ final class CacheStore
 
                 $size = ['entries' => $entries, 'bytes' => $bytes];
             } elseif ($store instanceof DatabaseStore) {
-                $size['entries'] = $store->getConnection()->table((string) config('cache.stores.'.config('atrium.cache.store', config('cache.default')).'.table', 'cache'))->count();
+                $size['entries'] = $store->getConnection()->table((string) config('cache.stores.'.(config('atrium.cache.store') ?? config('cache.default')).'.table', 'cache'))->count();
             }
         } catch (Throwable) {
             // A number on a screen is not worth an error.

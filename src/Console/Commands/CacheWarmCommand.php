@@ -58,7 +58,6 @@ class CacheWarmCommand extends Command
             }
 
             $sites->setCurrent($site);
-            $languages->forgetActive();
             $codes = $languages->codes();
             $base = $this->base($site);
 
@@ -106,7 +105,7 @@ class CacheWarmCommand extends Command
         $built = 0;
 
         // Modules of the panel, and the models the theme gives addresses to.
-        $classes = [...array_values($resources->modules()), ...array_keys((array) config('atrium.public_urls', []))];
+        $classes = [...$resources->modules(), ...array_keys((array) config('atrium.public_urls', []))];
 
         foreach (array_unique($classes) as $class) {
             if (! is_string($class) || ! class_exists($class)) {
@@ -137,9 +136,9 @@ class CacheWarmCommand extends Command
      */
     private function base(Site $site): string
     {
-        $url = rtrim((string) config('app.url', 'http://localhost'), '/');
-        $scheme = (string) (parse_url($url, PHP_URL_SCHEME) ?: 'http');
-        $domain = ((array) $site->domains)[0] ?? null;
+        $url = (string) config('app.url', 'http://localhost');
+        $scheme = parse_url($url, PHP_URL_SCHEME) ?: 'http';
+        $domain = ($site->domains)[0] ?? null;
         $root = is_string($domain) && $domain !== '' ? $scheme.'://'.$domain : $url;
 
         return rtrim($root, '/').($site->folder ? '/'.trim((string) $site->folder, '/') : '');
