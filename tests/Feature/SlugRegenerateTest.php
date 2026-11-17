@@ -22,6 +22,7 @@ use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Artisan;
 
 /**
  * atrium:slug:regenerate: cached addresses built again, for one model or
@@ -155,13 +156,14 @@ final class SlugRegenerateTest extends TestCase
         $this->model('RegenFlyer', 'namespace App\\Models; class RegenFlyer extends \\Atrium\\Admin\\Tests\\Fixtures\\Leaflet {}');
         $this->model('Blog/RegenBooklet', 'namespace App\\Models\\Blog; class RegenBooklet extends \\Atrium\\Admin\\Tests\\Fixtures\\Leaflet {}');
         $this->model('RegenPlain', 'namespace App\\Models; class RegenPlain extends \\Illuminate\\Database\\Eloquent\\Model {}');
-        file_put_contents($this->appPath.'/Models/helpers.php', "<?php\n\n// no class here\n");
+        file_put_contents($this->appPath.'/Models/Aardvark.php', "<?php\n\n// no class here\n");
 
         RegenFlyer::query()->create(['name' => 'Flyer', 'code' => 'flyer']);
         RegenBooklet::query()->create(['name' => 'Booklet', 'code' => 'booklet']);
         Slug::query()->delete();
 
         $this->artisan('atrium:slug:regenerate', ['--all' => true])
+            ->expectsOutput('Scanning for models with HasSlug...')
             ->expectsOutput('Found 2 model(s)')
             ->expectsOutput('Processing App\\Models\\Blog\\RegenBooklet...')
             ->expectsOutput('  - Regenerated 2 slugs')
@@ -174,12 +176,23 @@ final class SlugRegenerateTest extends TestCase
         $this->assertSame(4, Slug::query()->count());
     }
 
+    public function test_all_leaves_a_blank_line_before_the_total(): void
+    {
+        $this->model('RegenFlyer', 'namespace App\\Models; class RegenFlyer extends \\Atrium\\Admin\\Tests\\Fixtures\\Leaflet {}');
+        RegenFlyer::query()->create(['name' => 'Flyer', 'code' => 'flyer']);
+
+        Artisan::call('atrium:slug:regenerate', ['--all' => true]);
+
+        $this->assertStringContainsString("slugs\n\nTotal: regenerated", Artisan::output());
+    }
+
     public function test_all_without_app_models_finds_nothing(): void
     {
         (new Filesystem)->deleteDirectory($this->appPath.'/Models');
 
         $this->artisan('atrium:slug:regenerate', ['--all' => true])
             ->expectsOutput('No models found with HasSlug trait')
+            ->doesntExpectOutputToContain('Found 0')
             ->assertSuccessful();
     }
 

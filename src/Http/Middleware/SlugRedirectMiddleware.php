@@ -44,7 +44,7 @@ class SlugRedirectMiddleware
         $redirect = SlugHistory::findRedirectPath($path);
 
         if ($redirect && $redirect !== $path) {
-            return redirect('/'.$redirect, 301);
+            return redirect($redirect, 301);
         }
 
         // Try just the last segment as slug: it is replaced by the current

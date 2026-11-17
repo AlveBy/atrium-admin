@@ -127,6 +127,21 @@ final class SlugRedirectTest extends TestCase
         $this->get('/draft')->assertNotFound();
     }
 
+    public function test_the_root_is_never_redirected_whatever_the_history_says(): void
+    {
+        $this->history($this->guide('setup', 'guides'), 'root', '/');
+
+        $this->get('/')->assertNotFound();
+    }
+
+    public function test_a_page_that_is_served_stays_served_although_its_address_is_in_the_history(): void
+    {
+        $this->guide('setup', 'guides');
+        $this->history($this->guide('fresh', 'news'), 'setup', 'guides/setup');
+
+        $this->get('/guides/setup')->assertOk()->assertSeeText('Guide setup');
+    }
+
     public function test_only_a_404_is_redirected(): void
     {
         $this->history($this->guide('setup', 'guides'), 'install', 'manuals/install');

@@ -147,7 +147,7 @@ class SlugRegenerateCommand extends Command
         $modelsPath = app_path('Models');
 
         if (! File::isDirectory($modelsPath)) {
-            return $models;
+            return [];
         }
 
         $files = File::allFiles($modelsPath);
@@ -155,7 +155,7 @@ class SlugRegenerateCommand extends Command
         foreach ($files as $file) {
             $relativePath = str_replace(
                 [$modelsPath.DIRECTORY_SEPARATOR, '.php'],
-                ['', ''],
+                '',
                 $file->getPathname()
             );
 

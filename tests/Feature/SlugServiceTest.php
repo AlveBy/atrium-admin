@@ -13,9 +13,11 @@ use Atrium\Admin\Models\Slug;
 use Atrium\Admin\Models\SlugHistory;
 use Atrium\Admin\Services\SlugService;
 use Atrium\Admin\Tests\Fixtures\Handbook;
+use Atrium\Admin\Tests\Fixtures\Leaflet;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class SlugServiceTest extends TestCase
@@ -69,6 +71,71 @@ final class SlugServiceTest extends TestCase
         // The record being saved does not block its own code.
         $this->assertSame('chair-1', $this->service()->ensureUnique('chair', Handbook::class, $taken->id, 1));
         $this->assertSame('chair-1', $this->service()->generateUnique('Chair', Handbook::class, $taken->id));
+    }
+
+    public function test_a_unique_slug_of_a_record_that_is_not_saved_yet_is_not_blocked_by_an_id_of_zero(): void
+    {
+        Handbook::query()->insert(['id' => 0, 'name' => 'Zero', 'code' => 'zero']);
+
+        $this->assertSame('zero-1', (new Handbook(['name' => 'Zero']))->generateSlug());
+        $this->assertSame('zero-1', $this->service()->generateUnique('Zero', Handbook::class));
+    }
+
+    public function test_a_unique_slug_starts_without_a_counter_and_counts_from_one(): void
+    {
+        $this->assertSame('free', $this->service()->ensureUnique('free', Handbook::class));
+
+        Handbook::query()->create(['name' => 'Free', 'code' => 'free']);
+        Handbook::query()->create(['name' => 'Free', 'code' => 'free-1']);
+        Handbook::query()->create(['name' => 'Free', 'code' => 'free--1']);
+        Handbook::query()->create(['name' => 'Free', 'code' => 'free-0']);
+
+        $this->assertSame('free-2', $this->service()->ensureUnique('free', Handbook::class));
+    }
+
+    public function test_syncing_a_slug_leaves_the_slug_of_another_model_with_the_same_id_alone(): void
+    {
+        $handbook = Handbook::query()->create(['name' => 'Handbook', 'code' => 'handbook']);
+        $leaflet = Leaflet::query()->create(['name' => 'Leaflet', 'code' => 'leaflet']);
+        $this->assertSame($handbook->id, $leaflet->id);
+
+        $handbook->code = 'manual';
+        $this->service()->syncSlug($handbook);
+
+        $this->assertSame(
+            ['leaflet', 'manual'],
+            Slug::query()->orderBy('slug')->pluck('slug')->all(),
+        );
+    }
+
+    /**
+     * @return array<string,array{int,int}>
+     */
+    public static function chunks(): array
+    {
+        return [
+            'one short of a page' => [99, 1],
+            'exactly a page, then an empty one' => [100, 2],
+        ];
+    }
+
+    #[DataProvider('chunks')]
+    public function test_regenerating_reads_the_records_a_hundred_at_a_time(int $records, int $reads): void
+    {
+        Leaflet::query()->insert(array_map(
+            fn (int $number): array => ['name' => "Leaflet {$number}", 'code' => "leaflet-{$number}"],
+            range(1, $records),
+        ));
+
+        $selects = 0;
+        DB::listen(function ($query) use (&$selects): void {
+            if (str_starts_with($query->sql, 'select') && preg_match('/["`]leaflets["`]/', $query->sql) === 1) {
+                $selects++;
+            }
+        });
+
+        $this->assertSame($records, $this->service()->regenerateAll(Leaflet::class));
+        $this->assertSame($reads, $selects);
     }
 
     public function test_find_by_slug_reads_the_database_then_the_cache(): void

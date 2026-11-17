@@ -64,7 +64,7 @@ class SlugService
      */
     public function ensureUnique(string $slug, string $modelClass, ?int $excludeId = null, int $counter = 0): string
     {
-        $testSlug = $counter > 0 ? "{$slug}-{$counter}" : $slug;
+        $testSlug = $counter !== 0 ? "{$slug}-{$counter}" : $slug;
 
         $query = $modelClass::where('code', $testSlug);
 
@@ -165,10 +165,7 @@ class SlugService
         }
 
         $model->slugModel()->updateOrCreate(
-            [
-                'sluggable_type' => get_class($model),
-                'sluggable_id' => $model->getKey(),
-            ],
+            [],
             [
                 'slug' => $model->getAttribute('code'),
                 'full_path' => $model->getFullPath(),

@@ -125,10 +125,10 @@ trait HasAdminSlug
      */
     protected function ensureUniqueSlug(string $slug, int $counter = 0): string
     {
-        $testSlug = $counter > 0 ? "{$slug}-{$counter}" : $slug;
+        $testSlug = $counter !== 0 ? "{$slug}-{$counter}" : $slug;
 
         $exists = static::where('code', $testSlug)
-            ->where('id', '!=', $this->id ?? 0)
+            ->where('id', '!=', $this->id)
             ->exists();
 
         if ($exists) {
@@ -188,7 +188,7 @@ trait HasAdminSlug
     protected function updateSlugRecord(): void
     {
         $this->slugModel()->updateOrCreate(
-            ['sluggable_type' => static::class, 'sluggable_id' => $this->id],
+            [],
             [
                 'slug' => $this->code,
                 'full_path' => $this->getFullPath(),
