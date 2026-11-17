@@ -13,6 +13,7 @@ use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Tests\TestCase;
 use Composer\Autoload\ClassLoader;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 use ReflectionClass;
 use Symfony\Component\Process\Process;
 
@@ -83,15 +84,19 @@ final class MakePackageTest extends TestCase
     public function test_the_package_tests_pass_as_they_come(): void
     {
         $this->artisan('atrium:make-package', [
-            'package' => 'acme/atrium-shop-extras',
+            'package' => ' Acme/Atrium-Shop-Extras ',
             '--model' => 'Badge',
-            '--namespace' => 'Acme\\ShopExtras',
-            '--title' => 'Shop badges',
+            '--namespace' => '\\Acme/ShopExtras\\',
+            '--title' => 'Shop "badges" it\'s \\',
             '--path' => $this->root.'/extras',
         ])->assertSuccessful();
 
         $path = $this->root.'/extras';
         $this->assertStringContainsString("protected \$table = 'shop_extras_badges';", (string) file_get_contents($path.'/src/Models/Badge.php'));
+        $module = Module::fromPath($path);
+        $this->assertSame('acme/atrium-shop-extras', $module?->name);
+        $this->assertSame('Shop badges its ', $module->label());
+        $this->assertSame(['Acme\\ShopExtras\\Models\\Badge'], $module->resources);
 
         // The package's own suite, with this repository's vendor folder in
         // place of its own `composer install`.
@@ -108,7 +113,9 @@ final class MakePackageTest extends TestCase
 
     public function test_it_refuses_a_bad_name_and_a_folder_that_is_not_empty(): void
     {
-        $this->artisan('atrium:make-package', ['package' => 'Reviews', '--path' => $this->root.'/bad'])->assertFailed();
+        $this->artisan('atrium:make-package', ['package' => 'Reviews', '--path' => $this->root.'/bad'])
+            ->expectsOutputToContain('reviews is not a Composer package name')
+            ->assertFailed();
         $this->assertDirectoryDoesNotExist($this->root.'/bad');
 
         mkdir($this->root.'/taken', 0777, true);
@@ -118,6 +125,29 @@ final class MakePackageTest extends TestCase
             ->expectsOutputToContain('is not empty')
             ->assertFailed();
         $this->assertSame(['keep.txt'], $this->files($this->root.'/taken'));
+    }
+
+    public function test_it_goes_into_packages_and_says_how_to_try_it(): void
+    {
+        // A name of its own: tests of other processes may run at the same time.
+        $name = 'tmp'.uniqid();
+        $package = "acme/atrium-{$name}";
+        $path = base_path("packages/{$name}");
+
+        try {
+            $this->artisan('atrium:make-package', ['package' => $package])
+                ->expectsOutputToContain("{$package} is in")
+                ->expectsOutputToContain('Try it in this project:')
+                ->expectsOutputToContain("composer config repositories.{$name} path packages/{$name}")
+                ->expectsOutputToContain("composer require {$package}:@dev")
+                ->expectsOutputToContain("php artisan atrium:module:install {$package} --demo")
+                ->expectsOutputToContain("Its own tests: cd packages/{$name} && composer install && vendor/bin/phpunit")
+                ->assertSuccessful();
+
+            $this->assertSame(Str::headline($name), Module::fromPath($path)?->label());
+        } finally {
+            (new Filesystem)->deleteDirectory($path);
+        }
     }
 
     /**

@@ -367,7 +367,7 @@ final class Modules
      */
     private function installedNames(): array
     {
-        return array_values(array_diff($this->listedNames(), $this->disabledNames()));
+        return array_diff($this->listedNames(), $this->disabledNames());
     }
 
     /**

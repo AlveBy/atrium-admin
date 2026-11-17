@@ -67,8 +67,9 @@ final class Catalogue
             }
         }
 
-        $packages = array_values($found);
+        $packages = $found;
 
+        // usort() numbers them from 0 again.
         usort($packages, static fn (array $a, array $b): int => [! str_starts_with($a['name'], self::VENDOR), -$a['downloads'], $a['name']]
             <=> [! str_starts_with($b['name'], self::VENDOR), -$b['downloads'], $b['name']]);
 
@@ -81,7 +82,7 @@ final class Catalogue
      * Every page of one search, or null when Packagist does not answer.
      *
      * @param  array<string,string>  $query
-     * @return array<int,array<string,mixed>>|null
+     * @return array<int,mixed>|null
      */
     private function search(array $query): ?array
     {
@@ -100,7 +101,8 @@ final class Catalogue
                 return null;
             }
 
-            array_push($results, ...array_values(array_filter((array) $response->json('results', []), 'is_array')));
+            // Anything but a package has no name and is skipped below.
+            array_push($results, ...(array) $response->json('results', []));
             $next = $response->json('next');
             $url = is_string($next) && $next !== '' ? $next : null;
         }

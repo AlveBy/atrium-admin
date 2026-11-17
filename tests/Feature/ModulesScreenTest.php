@@ -22,8 +22,11 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Console\ClosureCommand;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia;
 
 /**
@@ -68,11 +71,15 @@ final class ModulesScreenTest extends TestCase
             $heard[] = 'on '.$module->name;
         });
         $modules = $this->app->make(Modules::class);
+        $label = $modules->find('acme/atrium-labels')->label();
+        $this->assertSame('labels', $this->app->make(ResourceRegistry::class)->keyOf(Label::class));
+        $this->assertFalse($modules->isDisabled('acme/atrium-labels'));
 
-        $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels/disable')->assertSessionHas('success');
+        $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels/disable')
+            ->assertSessionHas('success', __('atrium::modules.disabled', ['module' => $label]));
 
         $this->assertFalse($modules->isInstalled('acme/atrium-labels'));
-        $this->assertTrue($modules->isDisabled('acme/atrium-labels'));
+        $this->assertTrue($modules->isDisabled('ACME/Atrium-Labels'));
         $this->assertNull($this->app->make(ResourceRegistry::class)->keyOf(Label::class));
         $this->assertStringContainsString("'disabled_modules' => [\n        'acme/atrium-labels-printing',\n        'acme/atrium-labels-qr',\n        'acme/atrium-labels',", (string) file_get_contents(config_path('atrium.php')));
 
@@ -81,10 +88,11 @@ final class ModulesScreenTest extends TestCase
             ->where('modules.0.enabled', false)
             ->where('modules.0.settings', false));
 
-        $this->post('/admin/modules/labels/enable')->assertSessionHas('success');
+        $this->post('/admin/modules/labels/enable')->assertSessionHas('success', __('atrium::modules.enabled', ['module' => $label]));
 
         $this->assertTrue($modules->isInstalled('acme/atrium-labels'));
         $this->assertTrue($modules->isInstalled('acme/atrium-labels-qr'));
+        $this->assertSame([], config('atrium.disabled_modules'));
         $this->assertSame('labels', $this->app->make(ResourceRegistry::class)->keyOf(Label::class));
         $this->assertStringNotContainsString("        'acme/atrium-labels',\n    ],\n", (string) file_get_contents(config_path('atrium.php')));
         $this->assertSame([
@@ -98,23 +106,98 @@ final class ModulesScreenTest extends TestCase
         $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
         $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels/disable');
 
-        $this->post('/admin/modules/labels_qr/enable')->assertSessionHas('error');
+        $this->post('/admin/modules/labels_qr/enable')
+            ->assertSessionHas('error', __('atrium::modules.parent_off', ['parent' => $this->app->make(Modules::class)->find('acme/atrium-labels')->label()]));
 
         $this->assertTrue($this->app->make(Modules::class)->isDisabled('acme/atrium-labels-qr'));
+    }
+
+    public function test_only_a_module_in_the_other_state_is_switched(): void
+    {
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels-printing'])->assertSuccessful();
+        $this->actingAs($this->admin(), 'admin');
+
+        $this->post('/admin/modules/labels/enable')->assertNotFound();
+        $this->post('/admin/modules/labels_printing/disable')->assertNotFound();
+        $this->post('/admin/modules/labels_printing/enable')->assertNotFound();
+        $this->post('/admin/modules/nothing/disable')->assertNotFound();
+
+        $this->post('/admin/modules/labels_qr/disable')->assertSessionHas('success');
+        $this->post('/admin/modules/labels_qr/disable')->assertNotFound();
+    }
+
+    public function test_the_list_of_modules_switched_off_stays_in_order(): void
+    {
+        $modules = $this->app->make(Modules::class);
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        $printing = $modules->find('acme/atrium-labels-printing');
+        $qr = $modules->find('acme/atrium-labels-qr');
+
+        $modules->disable($printing);
+        $modules->disable($qr);
+        $this->assertSame(['acme/atrium-labels-printing', 'acme/atrium-labels-qr'], array_keys($modules->disabled()));
+
+        $this->assertTrue($modules->enable($printing));
+        $this->assertSame(['acme/atrium-labels-qr'], config('atrium.disabled_modules'));
+
+        $modules->disable($printing);
+        $this->assertTrue($modules->install($qr));
+        $this->assertSame(['acme/atrium-labels-printing'], config('atrium.disabled_modules'));
+
+        $modules->disable($qr);
+        $this->assertTrue($modules->remove('ACME/Atrium-Labels-Printing'));
+        $this->assertSame(['acme/atrium-labels-qr'], config('atrium.disabled_modules'));
+        $this->assertFalse($modules->isDisabled('acme/atrium-labels-printing'));
+        $this->assertFalse($modules->isInstalled('acme/atrium-labels-printing'));
+    }
+
+    public function test_a_module_switched_on_gets_its_pages_and_the_migrations_it_got_while_off(): void
+    {
+        $modules = $this->app->make(Modules::class);
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels/disable');
+
+        // As after a boot with the module off, and a migration that came
+        // with an update.
+        config()->set('atrium.public_urls', []);
+        Schema::drop('labels');
+        DB::table('migrations')->where('migration', 'like', '%create_labels_table')->delete();
+
+        $this->post('/admin/modules/labels/enable')->assertSessionHas('success');
+
+        $this->assertTrue(Schema::hasTable('labels'));
+        $this->assertSame($modules->find('acme/atrium-labels')->publicUrls, config('atrium.public_urls'));
     }
 
     public function test_switching_a_module_on_leaves_its_removed_submodules_out(): void
     {
         $modules = $this->app->make(Modules::class);
         $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
-        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels-qr'])->assertSuccessful();
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels-printing'])->assertSuccessful();
 
         $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels/disable');
         $this->post('/admin/modules/labels/enable')->assertSessionHas('success');
 
-        $this->assertTrue($modules->isInstalled('acme/atrium-labels-printing'));
-        $this->assertFalse($modules->isInstalled('acme/atrium-labels-qr'));
+        $this->assertTrue($modules->isInstalled('acme/atrium-labels-qr'));
+        $this->assertFalse($modules->isInstalled('acme/atrium-labels-printing'));
+        $this->assertFalse($modules->isDisabled('acme/atrium-labels-printing'));
+    }
+
+    public function test_removing_a_module_removes_its_submodules_switched_off_too(): void
+    {
+        $modules = $this->app->make(Modules::class);
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels-printing'])->assertSuccessful();
+        $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels_qr/disable');
+
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels', '--keep-data' => true])
+            ->doesntExpectOutputToContain('acme/atrium-labels-printing is not installed')
+            ->assertSuccessful();
+
         $this->assertFalse($modules->isDisabled('acme/atrium-labels-qr'));
+        $this->assertSame([], config('atrium.disabled_modules'));
+        $this->assertSame([], config('atrium.modules'));
     }
 
     public function test_nothing_changes_when_the_config_file_cannot_be_edited(): void
@@ -156,6 +239,9 @@ final class ModulesScreenTest extends TestCase
 
         $this->post('/admin/modules/labels_qr/enable')->assertSessionHas('success');
         $this->assertSame(['config:cache', 'route:cache'], $built);
+
+        $this->post('/admin/modules/labels_qr/disable')->assertSessionHas('success');
+        $this->assertSame(['config:cache', 'route:cache', 'config:cache', 'route:cache'], $built);
     }
 
     public function test_only_a_superadmin_switches_modules(): void
@@ -195,10 +281,22 @@ final class ModulesScreenTest extends TestCase
     public function test_the_screen_lists_modules_required_but_not_installed(): void
     {
         Http::fake(['packagist.org/*' => Http::response(['results' => []])]);
+        $acme = static fn ($required): array => array_values(array_filter($required->all(), static fn (array $module): bool => str_starts_with($module['name'], 'acme/')));
 
         $this->actingAs($this->admin(), 'admin')->get('/admin/modules')->assertInertia(fn (AssertableInertia $page) => $page
             ->where('canManage', true)
-            ->where('required', fn ($required): bool => array_values(array_filter(array_column($required->all(), 'name'), static fn (string $name): bool => str_starts_with($name, 'acme/'))) === ['acme/atrium-labels', 'acme/atrium-labels-printing', 'acme/atrium-labels-qr']));
+            ->where('required', fn ($required): bool => array_column($acme($required), 'name') === ['acme/atrium-labels', 'acme/atrium-labels-printing', 'acme/atrium-labels-qr']));
+
+        // Installed or switched off is not "required".
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels-printing'])->assertSuccessful();
+        $this->post('/admin/modules/labels_qr/disable');
+        $printing = $this->app->make(Modules::class)->find('acme/atrium-labels-printing');
+
+        $this->get('/admin/modules')->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('required', fn ($required): bool => $acme($required) === [
+                ['name' => 'acme/atrium-labels-printing', 'label' => $printing->label(), 'description' => $printing->description],
+            ]));
     }
 
     public function test_the_catalogue_lists_alveby_first_with_what_each_module_is_here(): void
@@ -213,9 +311,11 @@ final class ModulesScreenTest extends TestCase
             'packagist.org/search.json?tags=atrium-module*' => Http::response(['results' => [
                 ['name' => 'acme/atrium-labels', 'description' => 'Labels', 'downloads' => 3],
                 ['name' => 'acme/atrium-labels-qr', 'description' => 'QR', 'downloads' => 2],
+                ['name' => 'acme/atrium-labels-printing', 'description' => 'Printing', 'downloads' => 1],
             ]]),
         ]);
         $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels-printing'])->assertSuccessful();
         $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels_qr/disable');
 
         $this->get('/admin/modules')->assertInertia(fn (AssertableInertia $page) => $page
@@ -228,11 +328,52 @@ final class ModulesScreenTest extends TestCase
                 ->where('catalogue.packages.2.status', 'installed')
                 ->where('catalogue.packages.3.name', 'acme/atrium-labels-qr')
                 ->where('catalogue.packages.3.status', 'disabled')
-                ->count('catalogue.packages', 4)));
+                ->where('catalogue.packages.4.name', 'acme/atrium-labels-printing')
+                ->where('catalogue.packages.4.status', 'required')
+                ->count('catalogue.packages', 5)));
 
         // Asked once, then cached.
         $this->app->make(Catalogue::class)->packages();
         Http::assertSentCount(2);
+    }
+
+    public function test_the_catalogue_follows_the_pages_and_cleans_up_what_packagist_sends(): void
+    {
+        Cache::forget('atrium.modules.catalogue');
+        Http::fake(function (Request $request) {
+            return match ($request->url()) {
+                'https://packagist.org/search.json?type=atrium-module&per_page=100' => Http::response(['results' => [
+                    'not a package',
+                    ['name' => '', 'downloads' => 100],
+                    ['name' => 'someone/atrium-gone', 'downloads' => 100, 'abandoned' => 'someone/atrium-new'],
+                    ['name' => 'Someone/Atrium-Upper', 'description' => 'Upper', 'url' => 'https://example.com/upper', 'downloads' => '12'],
+                    ['name' => 'someone/atrium-bare'],
+                ], 'next' => 'https://packagist.org/search.json?type=atrium-module&page=2']),
+                'https://packagist.org/search.json?type=atrium-module&page=2' => Http::response(['results' => [
+                    ['name' => 'someone/atrium-second', 'description' => 42, 'downloads' => 1],
+                ], 'next' => '']),
+                'https://packagist.org/search.json?tags=atrium-module&per_page=100' => Http::response(['results' => [
+                    ['name' => 'someone/atrium-upper', 'description' => 'Upper', 'url' => 'https://example.com/upper', 'downloads' => 12],
+                ]]),
+                default => Http::response('', 404),
+            };
+        });
+
+        $this->assertSame([
+            ['name' => 'someone/atrium-upper', 'description' => 'Upper', 'url' => 'https://example.com/upper', 'downloads' => 12],
+            ['name' => 'someone/atrium-second', 'description' => '42', 'url' => 'https://packagist.org/packages/someone/atrium-second', 'downloads' => 1],
+            ['name' => 'someone/atrium-bare', 'description' => '', 'url' => 'https://packagist.org/packages/someone/atrium-bare', 'downloads' => 0],
+        ], $this->app->make(Catalogue::class)->packages());
+        Http::assertSentCount(3);
+    }
+
+    public function test_the_catalogue_asks_for_five_pages_at_most(): void
+    {
+        Cache::forget('atrium.modules.catalogue');
+        Http::fake(fn (Request $request) => Http::response(['results' => [], 'next' => $request->url().'&more']));
+
+        $this->assertSame([], $this->app->make(Catalogue::class)->packages());
+        Http::assertSentCount(10);
     }
 
     public function test_the_catalogue_says_so_when_packagist_does_not_answer_and_asks_again_next_time(): void

@@ -78,7 +78,7 @@ final class MakePackageCommand extends Command
 
         $stubs = dirname(__DIR__, 3).'/stubs/module';
 
-        foreach (Finder::create()->files()->in($stubs)->ignoreDotFiles(false)->ignoreVCS(false)->name('/\.stub$/')->sortByName() as $stub) {
+        foreach (Finder::create()->files()->in($stubs)->ignoreDotFiles(false)->name('/\.stub$/')->sortByName() as $stub) {
             $target = $path.'/'.strtr(substr($stub->getRelativePathname(), 0, -strlen('.stub')), $names);
             $files->ensureDirectoryExists(dirname($target));
             $files->put($target, strtr($stub->getContents(), $values));

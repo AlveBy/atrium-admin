@@ -113,7 +113,7 @@ class ModuleController extends Controller
             return back()->with('error', __('atrium::modules.parent_off', ['parent' => $parent->label()]));
         }
 
-        foreach ([$found, ...array_values($this->modules->childrenOf($found))] as $each) {
+        foreach ([$found, ...$this->modules->childrenOf($found)] as $each) {
             if (! $this->modules->isDisabled($each->name)) {
                 continue;
             }
@@ -143,7 +143,7 @@ class ModuleController extends Controller
     {
         $found = $this->manageable($request, $module, disabled: false);
 
-        foreach ([...array_values($this->modules->childrenOf($found)), $found] as $each) {
+        foreach ([...$this->modules->childrenOf($found), $found] as $each) {
             if (! $this->modules->isInstalled($each->name)) {
                 continue;
             }
