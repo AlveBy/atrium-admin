@@ -138,7 +138,7 @@ final class PageSpeedStats
 
         return [
             'samples' => $samples,
-            'median_ms' => $median === null ? null : (int) $median,
+            'median_ms' => $median,
             'average_ms' => $totalMs / $samples,
             'rate' => $totalMs > 0 ? $samples / ($totalMs / 1000) : null,
             'slowest' => $slowest,
