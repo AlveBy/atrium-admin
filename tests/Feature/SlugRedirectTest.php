@@ -78,6 +78,28 @@ final class SlugRedirectTest extends TestCase
         $this->get('/prices')->assertStatus(301)->assertRedirect('/pricing');
     }
 
+    public function test_an_old_last_segment_of_a_page_in_a_folder_becomes_its_current_code_only(): void
+    {
+        $this->history($this->guide('setup', 'guides'), 'install', 'manuals/install');
+
+        $this->get('/shop/install')->assertStatus(301)->assertRedirect('/shop/setup');
+        $this->get('/install')->assertStatus(301)->assertRedirect('/setup');
+    }
+
+    public function test_a_last_segment_already_current_is_not_redirected_to_itself(): void
+    {
+        $this->history($this->guide('setup', 'guides', active: false), 'setup', 'manuals/setup');
+
+        $this->get('/shop/setup')->assertNotFound();
+    }
+
+    public function test_a_page_without_a_code_is_not_a_redirect_target(): void
+    {
+        $this->history($this->guide(''), 'old', 'shop/old');
+
+        $this->get('/shop/old')->assertNotFound();
+    }
+
     public function test_an_unknown_address_stays_a_404(): void
     {
         $this->history($this->guide('setup', 'guides'), 'install', 'manuals/install');

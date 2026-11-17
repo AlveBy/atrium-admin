@@ -47,19 +47,18 @@ class SlugRedirectMiddleware
             return redirect('/'.$redirect, 301);
         }
 
-        // Try just the last segment as slug
+        // Try just the last segment as slug: it is replaced by the current
+        // code, the last segment of the record's path, and the rest stays.
         $segments = explode('/', $path);
-        $slug = end($segments);
+        $redirect = SlugHistory::findRedirect(array_pop($segments));
 
-        $redirect = SlugHistory::findRedirect($slug);
-
-        if ($redirect && $redirect !== $path) {
-            // Replace last segment with new slug
-            array_pop($segments);
-            $segments[] = $redirect;
+        if (($redirect ?? '') !== '') {
+            $segments[] = basename($redirect);
             $newPath = implode('/', $segments);
 
-            return redirect('/'.$newPath, 301);
+            if ($newPath !== $path) {
+                return redirect($newPath, 301);
+            }
         }
 
         return $response;
