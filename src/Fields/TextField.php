@@ -50,6 +50,15 @@ class TextField extends Field
     }
 
     /**
+     * The longest value that is saved: the one set with maxLength(), or the
+     * TEXT ceiling when none was set (see $maxLengthExplicit).
+     */
+    public function getMaxLength(): int
+    {
+        return $this->maxLengthExplicit ? $this->maxLength : 65535;
+    }
+
+    /**
      * Set input type (text, email, tel, url)
      */
     public function inputType(string $type): static
@@ -135,7 +144,7 @@ class TextField extends Field
     {
         $rules = parent::getValidationRules($context);
         $rules[] = 'string';
-        $rules[] = $this->maxLengthExplicit ? "max:{$this->maxLength}" : 'max:65535';
+        $rules[] = 'max:'.$this->getMaxLength();
 
         return $rules;
     }

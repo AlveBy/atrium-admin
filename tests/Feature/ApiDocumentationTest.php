@@ -146,7 +146,7 @@ final class ApiDocumentationTest extends TestCase
 
         $this->assertSame([
             'name' => 'code', 'label' => 'Code', 'required' => false, 'hint' => 'Unique | per site',
-            'schema' => ['type' => 'string', 'maxLength' => 255], 'note' => 'Create only.', 'options' => null, 'options_from' => null,
+            'schema' => ['type' => 'string', 'maxLength' => 65535], 'note' => 'Create only.', 'options' => null, 'options_from' => null,
         ], $fields['code']);
 
         $expected = [

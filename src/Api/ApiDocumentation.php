@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Api;
 
 use Atrium\Admin\Fields\Field;
+use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Support\ContentLanguages;
 
@@ -119,8 +120,9 @@ final class ApiDocumentation
             default => $doc,
         };
 
-        if ($type === 'text' && ($props['maxLength'] ?? null)) {
-            $doc['schema']['maxLength'] = $props['maxLength'];
+        // What validation enforces, not the input's maxlength hint (255).
+        if ($field instanceof TextField) {
+            $doc['schema']['maxLength'] = $field->getMaxLength();
         }
 
         return $doc;
