@@ -129,6 +129,24 @@ final class PermissionsTest extends TestCase
         $this->assertFalse(AdminRole::query()->where('name', 'Mine')->exists());
     }
 
+    public function test_a_module_keeps_its_screens_for_superadmins(): void
+    {
+        // Empty and non-string prefixes are skipped: '' would close every screen.
+        config(['atrium.superadmin_routes' => ['', 42, 'admin.backups.']]);
+        $permissions = app(Permissions::class);
+        $everything = $this->editor($permissions->all());
+
+        $this->assertFalse($permissions->allowsRoute($everything, 'admin.backups.index'));
+        $this->assertTrue($permissions->allowsRoute($this->admin(), 'admin.backups.index'));
+        $this->assertTrue($permissions->allowsRoute($everything, 'admin.backupsx'));
+        $this->assertTrue($permissions->allowsRoute($everything, 'admin.dashboard'));
+        $this->assertTrue($permissions->allowsRoute($everything, 'admin.posts.index'));
+
+        // One prefix written as a string, not a list.
+        config(['atrium.superadmin_routes' => 'admin.backups.']);
+        $this->assertFalse($permissions->allowsRoute($everything, 'admin.backups.index'));
+    }
+
     public function test_a_superadmin_creates_edits_and_deletes_a_role(): void
     {
         $this->actingAs($this->admin(), 'admin')

@@ -26,7 +26,8 @@ use Illuminate\Support\Str;
  * menu and the API are built from, so a new module can be granted at once.
  *
  * Roles themselves are managed by superadmins only: whoever can edit roles
- * can give themselves anything.
+ * can give themselves anything. A module can keep its own screens for
+ * superadmins too, by route-name prefix in `atrium.superadmin_routes`.
  */
 final class Permissions
 {
@@ -243,6 +244,13 @@ final class Permissions
 
         if (str_starts_with($routeName, 'admin.roles.')) {
             return self::SUPERADMIN;
+        }
+
+        // Screens a module keeps for superadmins (backups: a restore replaces everything).
+        foreach ((array) config('atrium.superadmin_routes', []) as $prefix) {
+            if (is_string($prefix) && $prefix !== '' && str_starts_with($routeName, $prefix)) {
+                return self::SUPERADMIN;
+            }
         }
 
         if (str_starts_with($routeName, 'admin.api-tokens.')) {

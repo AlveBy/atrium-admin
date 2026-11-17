@@ -205,6 +205,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Superadmin-only Routes
+    |--------------------------------------------------------------------------
+    |
+    | Route-name prefixes only superadmins may open, like the roles screen.
+    | Modules add their own here (the backup module adds `admin.backups.`).
+    |
+    */
+    'superadmin_routes' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | Upload Settings
     |--------------------------------------------------------------------------
     |
