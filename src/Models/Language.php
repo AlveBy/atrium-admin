@@ -69,7 +69,7 @@ class Language extends Model implements Administrable
             }
 
             if ($language->exists && $language->isDirty('code')) {
-                $language->code = (string) $language->getOriginal('code');
+                $language->code = $language->getOriginal('code');
             }
         });
 
@@ -126,7 +126,7 @@ class Language extends Model implements Administrable
                 ->label(__('atrium::languages.fields.code'))
                 ->hint(__('atrium::languages.hints.code'))
                 ->required()
-                ->rules(['string', 'max:12', 'regex:/^'.self::CODE_PATTERN.'$/'])
+                ->rules(['max:12', 'regex:/^'.self::CODE_PATTERN.'$/'])
                 ->unique('admin_languages', 'code')
                 ->onlyOnCreate(),
 
