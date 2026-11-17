@@ -15,6 +15,8 @@ use Atrium\Admin\Captcha\ImageCaptcha;
 use Atrium\Admin\Captcha\NoCaptcha;
 use Atrium\Admin\Captcha\RecaptchaCaptcha;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Contracts\Cache\Repository as Cache;
+use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
@@ -87,6 +89,33 @@ final class CaptchaTest extends TestCase
         [$token, $answer] = $this->question($captcha);
         $this->travel(11)->minutes();
         $this->assertFalse($captcha->verify($this->request($token, $answer)), 'expired');
+    }
+
+    public function test_without_gd_the_sum_is_written_as_text_and_no_picture_is_drawn(): void
+    {
+        $captcha = new ImageCaptcha(app(Encrypter::class), app(Cache::class), false);
+
+        $html = (string) $captcha->widget();
+        $token = $this->token($html);
+        $question = Crypt::decrypt($token);
+
+        $this->assertStringContainsString('<span>'.$question['q'].' = ?</span>', $html);
+        $this->assertStringNotContainsString('<img', $html);
+        $this->assertNull($captcha->image($token));
+        $this->assertTrue($captcha->verify($this->request($token, (string) $question['a'])), 'the answer still counts');
+    }
+
+    public function test_with_gd_the_sum_is_a_picture_and_not_text(): void
+    {
+        $captcha = new ImageCaptcha(app(Encrypter::class), app(Cache::class), true);
+
+        $html = (string) $captcha->widget();
+        $token = $this->token($html);
+
+        $this->assertStringContainsString('<img', $html);
+        $this->assertStringNotContainsString('<span>'.Crypt::decrypt($token)['q'], $html);
+        $this->assertStringStartsWith("\x89PNG", (string) $captcha->image($token));
+        $this->assertNull($captcha->image('forged'));
     }
 
     public function test_the_rule_puts_the_error_on_the_captcha_field(): void

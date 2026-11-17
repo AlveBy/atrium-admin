@@ -33,7 +33,10 @@ final class ImageCaptcha implements CaptchaDriver
 
     private const HEIGHT = 50;
 
-    public function __construct(private readonly Encrypter $encrypter, private readonly Cache $cache) {}
+    /**
+     * @param  bool|null  $gd  Whether the picture can be drawn; null asks PHP whether GD is there.
+     */
+    public function __construct(private readonly Encrypter $encrypter, private readonly Cache $cache, private readonly ?bool $gd = null) {}
 
     public function widget(): HtmlString
     {
@@ -49,7 +52,7 @@ final class ImageCaptcha implements CaptchaDriver
         ]);
 
         $id = 'atrium-captcha-'.Str::random(6);
-        $question = extension_loaded('gd')
+        $question = $this->draws()
             ? '<img src="'.e(route('atrium.captcha.image', ['t' => $token])).'" width="'.self::WIDTH.'" height="'.self::HEIGHT.'" alt="'.e(__('atrium::captcha.image')).'">'
             : '<span>'.e("$a + $b = ?").'</span>';
 
@@ -87,7 +90,12 @@ final class ImageCaptcha implements CaptchaDriver
     {
         $question = $this->question($token);
 
-        return $question === null || ! extension_loaded('gd') ? null : $this->draw($question['q'].' = ?');
+        return $question === null || ! $this->draws() ? null : $this->draw($question['q'].' = ?');
+    }
+
+    private function draws(): bool
+    {
+        return $this->gd ?? extension_loaded('gd');
     }
 
     /**
