@@ -24,8 +24,8 @@ use Atrium\Admin\Dashboard\PageSpeedStats;
  */
 final class SiteSpeedGadget extends Gadget
 {
-    /** Top of the ruler, ms. From the gadget: siteIndexPercent = p50 / 2500 * 100. */
-    private const SCALE_MS = 2500;
+    /** Top of the ruler, s. From the gadget: siteIndexPercent = p50 / 2500 * 100, in ms. */
+    private const SCALE_SECONDS = 2.5;
 
     /** Band thresholds, ms => label key. From intervals[] in the gadget's index.php. */
     private const BANDS = [
@@ -70,14 +70,14 @@ final class SiteSpeedGadget extends Gadget
             'samples' => $this->stats->samples(),
             'windowDays' => $this->stats->windowDays(),
             'bands' => array_map(self::bandLabel(...), array_values(self::BANDS)),
-            'scaleSeconds' => number_format(self::SCALE_MS / 1000, 1, ',', ' '),
+            'scaleSeconds' => number_format(self::SCALE_SECONDS, 1, ',', ' '),
         ];
     }
 
     /** Pointer position, %. Bitrix clamped it to 4…98 so it does not slide off the edges. */
     private function pointerPercent(int $ms): float
     {
-        return round(min(max($ms / self::SCALE_MS * 100, 4), 98), 2);
+        return min(max($ms * 100 / (self::SCALE_SECONDS * 1000), 4), 98);
     }
 
     private function band(int $ms): string

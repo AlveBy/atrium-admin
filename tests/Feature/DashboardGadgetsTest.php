@@ -23,6 +23,8 @@ use Atrium\Admin\Tests\TestCase;
 use Atrium\Admin\Traits\InteractsWithAdmin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 
@@ -137,6 +139,78 @@ final class DashboardGadgetsTest extends TestCase
         Cache::flush();
 
         $this->assertSame(1, $stats->samples());
+    }
+
+    public function test_the_summary_is_kept_for_five_minutes_by_default(): void
+    {
+        $this->timings([100]);
+        $this->assertSame(1, (new PageSpeedStats)->samples());
+
+        $this->timings([200]);
+        $this->travel(299)->seconds();
+        $this->assertSame(1, (new PageSpeedStats)->samples());
+
+        $this->travel(1)->seconds();
+        $this->assertSame(2, (new PageSpeedStats)->samples());
+    }
+
+    public function test_an_empty_window_is_a_result_too_and_is_kept(): void
+    {
+        $this->assertSame(0, (new PageSpeedStats)->samples());
+
+        $this->assertSame(
+            ['samples' => 0, 'median_ms' => null, 'average_ms' => null, 'rate' => null, 'slowest' => []],
+            Cache::get('atrium.page-speed.7'),
+        );
+    }
+
+    public function test_the_summary_has_the_right_types_when_the_database_hands_everything_over_as_text(): void
+    {
+        // MySQL and PostgreSQL return aggregates as strings; SQLite can be made to do the same.
+        $pdo = DB::connection()->getPdo();
+        $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, true);
+        $this->beforeApplicationDestroyed(fn () => $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false));
+        $this->timings([10, 10, 11, 11, 10], '/a');
+        $this->timings([20, 20], '/10');
+
+        $stats = new PageSpeedStats;
+
+        $this->assertSame(7, $stats->samples());
+        $this->assertSame(11, $stats->medianMs());
+        $this->assertSame(
+            [
+                'samples' => 7,
+                'median_ms' => 11,
+                'average_ms' => 92 / 7,
+                'rate' => 7 / (92 / 1000),
+                // 10.4 rounds down and 20 stays: a slowest list by average, rounded, not rounded up.
+                'slowest' => [['path' => '/10', 'ms' => 20, 'hits' => 2], ['path' => '/a', 'ms' => 10, 'hits' => 5]],
+            ],
+            Cache::get('atrium.page-speed.7'),
+        );
+        $this->assertSame(
+            [['path' => '/10', 'ms' => 20, 'hits' => 2], ['path' => '/a', 'ms' => 10, 'hits' => 5]],
+            $stats->slowest(),
+        );
+    }
+
+    public function test_the_average_is_a_float_even_when_it_is_whole(): void
+    {
+        $this->timings([100, 300]);
+
+        $this->assertSame(200.0, (new PageSpeedStats)->averageMs());
+        $this->assertSame(200.0, Cache::get('atrium.page-speed.7')['average_ms']);
+    }
+
+    public function test_the_gadgets_use_the_summary_they_are_given(): void
+    {
+        $this->timings([100]);
+        $stats = new PageSpeedStats(3);
+
+        $this->assertSame(3, (new SiteSpeedGadget([], $stats))->data()['windowDays']);
+        $this->assertSame(3, (new PerformanceGadget([], $stats))->data()['windowDays']);
+        $this->assertSame(7, (new SiteSpeedGadget)->data()['windowDays']);
+        $this->assertSame(7, (new PerformanceGadget)->data()['windowDays']);
     }
 
     public function test_a_broken_cache_leaves_the_dashboard_without_numbers(): void

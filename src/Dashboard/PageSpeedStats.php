@@ -106,20 +106,20 @@ final class PageSpeedStats
 
         $totals = PageTiming::where('created_at', '>=', $since)
             ->selectRaw('COUNT(*) AS samples, SUM(duration_ms) AS total_ms')
-            ->first();
+            ->toBase()
+            ->sole();
 
-        $samples = (int) ($totals->samples ?? 0);
+        $samples = (int) $totals->samples;
 
         if ($samples === 0) {
             return ['samples' => 0, 'median_ms' => null, 'average_ms' => null, 'rate' => null, 'slowest' => []];
         }
 
-        $totalMs = (float) ($totals->total_ms ?? 0);
+        $totalMs = (float) $totals->total_ms;
 
         $median = PageTiming::where('created_at', '>=', $since)
             ->orderBy('duration_ms')
             ->skip(intdiv($samples, 2))
-            ->take(1)
             ->value('duration_ms');
 
         $slowest = PageTiming::where('created_at', '>=', $since)
@@ -130,7 +130,7 @@ final class PageSpeedStats
             ->toBase()
             ->get()
             ->map(fn (object $row): array => [
-                'path' => (string) $row->path,
+                'path' => $row->path,
                 'ms' => (int) round((float) $row->avg_ms),
                 'hits' => (int) $row->hits,
             ])
