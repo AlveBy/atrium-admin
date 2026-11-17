@@ -10,7 +10,6 @@ declare(strict_types=1);
 use Atrium\Admin\Http\Controllers\AdminUserController;
 use Atrium\Admin\Http\Controllers\ApiTokenController;
 use Atrium\Admin\Http\Controllers\Auth\LoginController;
-use Atrium\Admin\Http\Controllers\Auth\TwoFactorController;
 use Atrium\Admin\Http\Controllers\DashboardController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Http\Controllers\LocaleController;
@@ -44,13 +43,6 @@ Route::prefix(config('atrium.prefix', 'admin'))
         Route::middleware('admin.guest')->group(function () {
             Route::get('login', [LoginController::class, 'showLoginForm'])->name('admin.login');
             Route::post('login', [LoginController::class, 'login']);
-
-            // Second sign-in step: the password is accepted, waiting for the
-            // emailed code. Also for guests — there is no session before the code.
-            Route::get('two-factor', [TwoFactorController::class, 'show'])->name('admin.two-factor');
-            Route::post('two-factor', [TwoFactorController::class, 'store']);
-            Route::post('two-factor/resend', [TwoFactorController::class, 'resend'])->name('admin.two-factor.resend');
-            Route::post('two-factor/cancel', [TwoFactorController::class, 'cancel'])->name('admin.two-factor.cancel');
         });
 
         // Authenticated routes; admin.can checks the administrator's roles.

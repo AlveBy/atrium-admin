@@ -9,16 +9,15 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Http\Controllers\Auth;
 
-use Atrium\Admin\Auth\TwoFactorCode;
+use Atrium\Admin\Auth\SignIn;
 use Atrium\Admin\Http\Controllers\Controller;
 use Atrium\Admin\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class LoginController extends Controller
 {
@@ -28,47 +27,25 @@ class LoginController extends Controller
     public function showLoginForm(): Response
     {
         return Inertia::render('Admin/Auth/Login', [
-            'branding' => config('atrium.branding'),
+            // Buttons of the sign-in modules that are switched on: social
+            // accounts, a passkey, a code by e-mail.
+            'methods' => app(SignIn::class)->methods((string) config('atrium.auth.guard', 'admin')),
         ]);
     }
 
     /**
      * Handle an incoming authentication request.
      */
-    public function login(LoginRequest $request): RedirectResponse
+    public function login(LoginRequest $request): HttpResponse
     {
-        // The password matches, but nobody gets in yet: the e-mailed code comes first.
-        if (TwoFactorCode::enabled()) {
-            $user = $request->validateCredentials();
-
-            try {
-                TwoFactorCode::send($user, force: true);
-            } catch (\Throwable $e) {
-                Log::error('Could not send the admin sign-in code: '.$e->getMessage());
-
-                throw ValidationException::withMessages([
-                    'email' => TwoFactorCode::mailFailedMessage(),
-                ]);
-            }
-
-            // The session holds only the pending user's id: the actual sign-in
-            // happens after the code. The session id is regenerated right here
-            // so the code step cannot run on a session id planted in advance.
-            $request->session()->regenerate();
-            $request->session()->put('admin.two_factor', [
-                'id' => $user->getAuthIdentifier(),
-                'remember' => $request->boolean('remember'),
-            ]);
-
-            return redirect()->route('admin.two-factor');
-        }
-
-        $request->authenticate();
-
-        $request->session()->regenerate();
-
-        return redirect()->intended(
-            route(config('atrium.auth.redirect_after_login', 'admin.dashboard'))
+        // The password matches. Whether a second step follows is up to the
+        // sign-in modules (alveby/atrium-2fa): SignIn asks them.
+        return app(SignIn::class)->start(
+            $request,
+            $request->validateCredentials(),
+            (string) config('atrium.auth.guard', 'admin'),
+            'password',
+            $request->boolean('remember'),
         );
     }
 

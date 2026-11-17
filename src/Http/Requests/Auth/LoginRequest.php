@@ -51,25 +51,11 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
-     *
-     * @throws ValidationException
-     */
-    public function authenticate(): void
-    {
-        $user = $this->validateCredentials();
-
-        Auth::guard(config('atrium.auth.guard', 'admin'))
-            ->login($user, $this->boolean('remember'));
-    }
-
-    /**
      * Check the email and password without letting anyone in.
      *
-     * Separate from `authenticate()` because a second step, the e-mailed code,
-     * now sits between the password check and the sign-in. This used to be
-     * `attempt()`, which opened the session at once; now the session is opened
-     * by whoever gets to the end.
+     * A second step (alveby/atrium-2fa) may sit between the password check
+     * and the sign-in: the session is opened by whoever gets to the end,
+     * through Atrium\Admin\Auth\SignIn.
      *
      * @throws ValidationException
      */

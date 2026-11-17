@@ -11,6 +11,7 @@ namespace Atrium\Admin;
 
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
+use Atrium\Admin\Auth\SignIn;
 use Atrium\Admin\Captcha\CaptchaManager;
 use Atrium\Admin\Contracts\Sitemapable;
 use Atrium\Admin\Hooks\Hooks;
@@ -38,6 +39,7 @@ use Atrium\Admin\Support\Sites;
 use Closure;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -87,6 +89,16 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(ContentLanguages::class);
         $this->app->singleton(Sites::class);
         $this->app->singleton(Sitemap::class);
+        $this->app->singleton(SignIn::class);
+        $this->app->afterResolving(SignIn::class, function (SignIn $signIn): void {
+            // How an administrator is let in once every sign-in step is passed.
+            $signIn->finishUsing((string) config('atrium.auth.guard', 'admin'), function ($request, $user, bool $remember) {
+                // The session guard renews the session id and the CSRF token itself.
+                Auth::guard((string) config('atrium.auth.guard', 'admin'))->login($user, $remember);
+
+                return redirect()->intended(route(config('atrium.auth.redirect_after_login', 'admin.dashboard')));
+            });
+        });
     }
 
     public function boot(): void

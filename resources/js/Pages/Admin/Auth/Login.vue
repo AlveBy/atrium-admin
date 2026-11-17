@@ -4,7 +4,7 @@
  * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
  */
 
-import { useForm, Head } from '@inertiajs/vue3'
+import { useForm, usePage, Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import LocaleSwitcher from '../../../Components/Admin/Layout/LocaleSwitcher.vue'
 import AtriumLogo from '../../../Components/Admin/UI/AtriumLogo.vue'
@@ -14,6 +14,14 @@ const props = defineProps({
     branding: {
         type: Object,
         default: () => ({})
+    },
+    // Other ways in that the sign-in modules switched on (alveby/atrium-2fa,
+    // alveby/atrium-social-login): [{ key, label, url, icon }]. The icon is
+    // the module's own SVG; the label always says what the button does, so
+    // nobody has to tell the services apart by their colours.
+    methods: {
+        type: Array,
+        default: () => []
     }
 })
 
@@ -22,6 +30,10 @@ const form = useForm({
     password: '',
     remember: false,
 })
+
+// A way in that sent the person back here with a refusal (a social account
+// with no administrator behind it) left its message on the e-mail field.
+form.setError({ ...(usePage().props.errors || {}) })
 
 const showPassword = ref(false)
 
@@ -145,6 +157,26 @@ const submit = () => {
                         {{ form.processing ? $t('auth.login.submitting') : $t('auth.login.submit') }}
                     </button>
                 </form>
+
+                <div v-if="methods.length" class="mt-6" dusk="login-methods">
+                    <div class="flex items-center gap-3 text-sm text-muted" aria-hidden="true">
+                        <span class="h-px flex-1 bg-line"></span>
+                        {{ $t('auth.login.or') }}
+                        <span class="h-px flex-1 bg-line"></span>
+                    </div>
+                    <ul class="mt-4 space-y-2">
+                        <li v-for="method in methods" :key="method.key">
+                            <a
+                                :href="method.url"
+                                :dusk="`login-method-${method.key}`"
+                                class="w-full flex items-center justify-center gap-2 py-2 px-4 border border-field rounded-md text-sm font-medium text-fg bg-surface hover:bg-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-focus"
+                            >
+                                <span v-if="method.icon" class="h-5 w-5 shrink-0" aria-hidden="true" v-html="method.icon"></span>
+                                {{ method.label }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <AdminCredit class="mt-8 text-center" />

@@ -83,14 +83,14 @@ return [
         'redirect_after_logout' => 'admin.login',
 
         /*
-        | Sign-in confirmation with a code sent by email.
+        | The second sign-in step: a code sent by email, an authenticator app,
+        | a passkey or an SMS. It lives in alveby/atrium-2fa (see its
+        | config/atrium-2fa.php); without that package the password is enough.
         |
-        | A password lives until someone changes it; the code goes to the
-        | mailbox and is valid for minutes. Turn it off only where there is no
-        | mail — in browser tests, for example.
-        |
-        | ttl — how many minutes the code is valid, resend_after — after how
-        | many seconds a new email may be requested.
+        | `enabled` false switches the e-mailed code off for administrators —
+        | in browser tests, for example, where there is no mail. ttl — how
+        | many minutes the code is valid, resend_after — after how many
+        | seconds a new email may be requested.
         */
         'two_factor' => [
             'enabled' => (bool) env('ATRIUM_2FA_ENABLED', true),
