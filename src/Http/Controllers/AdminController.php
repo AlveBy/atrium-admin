@@ -19,6 +19,7 @@ use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
+use Atrium\Admin\Support\Like;
 use Atrium\Admin\Support\PublicUrl;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Traits\BelongsToSite;
@@ -178,7 +179,7 @@ abstract class AdminController extends Controller
                         if ($this->isTranslatable($column)) {
                             $q->orWhere(fn ($w) => $w->whereTranslationLike($column, $search, $codes));
                         } else {
-                            $q->orWhere($column, 'like', "%{$search}%");
+                            Like::contains($q, $column, $search, 'or');
                         }
                     }
                 });

@@ -35,9 +35,11 @@ final class RouteActionsTest extends TestCase
     {
         $admin = $this->admin();
         [$first, $second] = [Post::query()->create(['name' => 'First']), Post::query()->create(['name' => 'Second'])];
-        $this->actingAs($admin, 'admin')->delete("/admin/posts/{$first->id}")->assertRedirect();
-        $this->withToken($admin->createToken('agent', ['posts:write'])->plainTextToken)
-            ->deleteJson("/api/v1/posts/{$second->id}")->assertNoContent();
+        $this->actingAs($admin, 'admin')->get('/admin/posts')->assertOk();
+        $this->delete("/admin/posts/{$first->id}")->assertRedirect();
+        $token = $admin->createToken('agent', ['posts:read', 'posts:write'])->plainTextToken;
+        $this->withToken($token)->getJson('/api/v1/posts')->assertOk()->assertJsonCount(1, 'data');
+        $this->withToken($token)->deleteJson("/api/v1/posts/{$second->id}")->assertNoContent();
         $this->assertSame(0, Post::query()->count());
 
         $actions = [];
@@ -55,5 +57,7 @@ final class RouteActionsTest extends TestCase
         $this->assertNotContains(false, $actions, implode(', ', array_keys(array_filter($actions, static fn (bool $public): bool => ! $public))));
         $this->assertArrayHasKey(AdminController::class.'::destroy', $actions);
         $this->assertArrayHasKey(ResourceController::class.'::destroyItem', $actions);
+        $this->assertArrayHasKey(AdminController::class.'::index', $actions);
+        $this->assertArrayHasKey(ResourceController::class.'::listItems', $actions);
     }
 }

@@ -14,6 +14,7 @@ use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Support\Like;
 use Atrium\Admin\Support\PublicUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -72,7 +73,7 @@ class ResourceController extends AdminController
                     if ($this->isTranslatable($column)) {
                         $q->orWhere(fn ($w) => $w->whereTranslationLike($column, $search, $codes));
                     } else {
-                        $q->orWhere($column, 'like', "%{$search}%");
+                        Like::contains($q, $column, $search, 'or');
                     }
                 }
             });

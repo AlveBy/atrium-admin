@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Models;
 
+use Atrium\Admin\Support\Like;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -67,7 +68,7 @@ class MediaItem extends Model
      * File names migrated from Bitrix are hashes, so the search goes by the
      * item title ("beach.jpg") and keywords, not by the name on disk.
      */
-    public function scopeSearch(Builder $query, string $term): Builder
+    protected function scopeSearch(Builder $query, string $term): Builder
     {
         $term = trim($term);
 
@@ -75,12 +76,10 @@ class MediaItem extends Model
             return $query;
         }
 
-        $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $term).'%';
-
-        return $query->where(function (Builder $q) use ($like): void {
-            $q->where('name', 'like', $like)
-                ->orWhere('keywords', 'like', $like)
-                ->orWhere('description', 'like', $like);
+        return $query->where(function (Builder $q) use ($term): void {
+            foreach (['name', 'keywords', 'description'] as $column) {
+                Like::contains($q, $column, $term, 'or');
+            }
         });
     }
 

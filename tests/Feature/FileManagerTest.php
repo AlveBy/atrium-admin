@@ -677,6 +677,43 @@ final class FileManagerTest extends TestCase
     }
 
     /**
+     * @return array<string, array{string, string}>
+     */
+    public static function literalSearches(): array
+    {
+        return [
+            'a percent sign is a percent sign' => ['50%', '50% off'],
+            'an underscore is an underscore' => ['a_c', 'a_c'],
+            'the escape character is a character' => ['Sale!', 'Big Sale!'],
+            'the escape character alone' => ['!', 'Big Sale!'],
+            'capitals find small letters' => ['APPLE', 'Apple'],
+        ];
+    }
+
+    #[DataProvider('literalSearches')]
+    public function test_the_media_search_takes_the_words_literally_and_ignores_case(string $search, string $found): void
+    {
+        $collection = MediaCollection::query()->create(['name' => 'Everything']);
+        foreach (['50% off', '500 rooms', 'a_c', 'abc', 'Big Sale!', 'Big Sales', 'Apple'] as $i => $name) {
+            $this->item($collection, "file{$i}.jpg", true, ['name' => $name]);
+        }
+
+        $this->assertSame([$found], array_column($this->files(['search' => $search])->json('files'), 'filename'));
+    }
+
+    #[DataProvider('literalSearches')]
+    public function test_the_media_search_looks_in_keywords_and_description_too(string $search, string $found): void
+    {
+        $collection = MediaCollection::query()->create(['name' => 'Everything']);
+        foreach (['50% off', '500 rooms', 'a_c', 'abc', 'Big Sale!', 'Big Sales', 'Apple'] as $i => $name) {
+            $this->item($collection, "k{$i}.jpg", true, ['name' => "k{$i}.jpg", 'keywords' => $name]);
+            $this->item($collection, "d{$i}.jpg", true, ['name' => "d{$i}.jpg", 'description' => $name]);
+        }
+
+        $this->assertSame(2, $this->files(['search' => $search])->json('total'));
+    }
+
+    /**
      * @param  array<string,mixed>  $attributes
      */
     private function item(MediaCollection $collection, string $name, bool $image, array $attributes = []): MediaItem

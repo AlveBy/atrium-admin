@@ -236,6 +236,17 @@ final class McpTest extends TestCase
         $this->assertSame(4, $this->callTool($token, 'list_records', ['module' => 'posts', 'search' => '', 'filter' => [], 'sort' => null])['meta']['total']);
     }
 
+    public function test_list_records_takes_the_search_literally_and_ignores_case(): void
+    {
+        foreach (['50% off', '500 rooms', 'a_c', 'abc', 'Big Sale!', 'Big Sales', 'Apple'] as $name) {
+            Post::query()->create(['name' => $name]);
+        }
+        $token = $this->token(['posts.view']);
+
+        $this->assertSame(['50% off'], array_column($this->callTool($token, 'list_records', ['module' => 'posts', 'search' => '50%'])['data'], 'name'));
+        $this->assertSame(['Apple'], array_column($this->callTool($token, 'list_records', ['module' => 'posts', 'search' => 'APPLE'])['data'], 'name'));
+    }
+
     public function test_a_missing_record_comes_back_as_an_error(): void
     {
         $token = $this->token(['posts.view']);

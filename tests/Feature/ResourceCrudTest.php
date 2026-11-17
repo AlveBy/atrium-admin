@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Inertia\Testing\AssertableInertia;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class ResourceCrudTest extends TestCase
 {
@@ -45,6 +46,34 @@ final class ResourceCrudTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('items.total', 1)
                 ->where('items.data.0.name', 'Banana'));
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function literalSearches(): array
+    {
+        return [
+            'a percent sign is a percent sign' => ['50%', '50% off'],
+            'an underscore is an underscore' => ['a_c', 'a_c'],
+            'the escape character is a character' => ['Sale!', 'Big Sale!'],
+            'the escape character alone' => ['!', 'Big Sale!'],
+            'capitals find small letters' => ['APPLE', 'Apple'],
+        ];
+    }
+
+    #[DataProvider('literalSearches')]
+    public function test_the_search_takes_the_words_literally_and_ignores_case(string $search, string $found): void
+    {
+        foreach (['50% off', '500 rooms', 'a_c', 'abc', 'Big Sale!', 'Big Sales', 'Apple'] as $name) {
+            Post::query()->create(['name' => $name]);
+        }
+
+        $this->actingAs($this->admin(), 'admin')
+            ->get('/admin/posts?search='.urlencode($search))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('items.total', 1)
+                ->where('items.data.0.name', $found));
     }
 
     public function test_create_store_edit_update_destroy(): void

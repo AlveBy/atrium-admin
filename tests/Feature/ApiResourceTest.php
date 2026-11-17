@@ -207,6 +207,41 @@ final class ApiResourceTest extends TestCase
         $this->assertSame(['Garden chair', 'Kitchen table', 'Садовый стул'], $this->names('/api/v1/posts?search='));
     }
 
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function literalSearches(): array
+    {
+        return [
+            'a percent sign is a percent sign' => ['50%', '50% off'],
+            'an underscore is an underscore' => ['a_c', 'a_c'],
+            'the escape character is a character' => ['Sale!', 'Big Sale!'],
+            'the escape character alone' => ['!', 'Big Sale!'],
+            'capitals find small letters' => ['APPLE', 'Apple'],
+        ];
+    }
+
+    #[DataProvider('literalSearches')]
+    public function test_the_search_takes_the_words_literally_and_ignores_case(string $search, string $found): void
+    {
+        foreach (['50% off', '500 rooms', 'a_c', 'abc', 'Big Sale!', 'Big Sales', 'Apple'] as $name) {
+            Post::query()->create(['name' => $name]);
+        }
+
+        $this->assertSame([$found], $this->names('/api/v1/posts?search='.urlencode($search)));
+    }
+
+    #[DataProvider('literalSearches')]
+    public function test_a_translatable_column_takes_the_words_literally_and_ignores_case(string $search, string $found): void
+    {
+        Language::query()->create(['code' => 'de', 'name' => 'Deutsch', 'sort' => 200]);
+        foreach (['50% off', '500 rooms', 'a_c', 'abc', 'Big Sale!', 'Big Sales', 'Apple'] as $name) {
+            Page::query()->create(['name' => ['en' => 'Page', 'de' => $name]]);
+        }
+
+        $this->assertSame([$found], array_column($this->withToken($this->token(['pages:read']))->getJson('/api/v1/pages?search='.urlencode($search))->json('data.*.name'), 'de'));
+    }
+
     public function test_a_translatable_column_is_searched_and_sorted_in_every_language(): void
     {
         Language::query()->create(['code' => 'de', 'name' => 'Deutsch', 'sort' => 200]);

@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Traits;
 
 use Atrium\Admin\Support\ContentLanguages;
+use Atrium\Admin\Support\Like;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Translatable\HasTranslations;
 
@@ -42,7 +43,7 @@ trait Translatable
      *
      * @param  array<int,string>|null  $locales  the site's content languages by default
      */
-    public function scopeWhereTranslationLike(Builder $query, string $column, string $search, ?array $locales = null): void
+    protected function scopeWhereTranslationLike(Builder $query, string $column, string $search, ?array $locales = null): void
     {
         $locales ??= app(ContentLanguages::class)->codes();
 
@@ -51,8 +52,7 @@ trait Translatable
                 $query->orWhere(function (Builder $query) use ($column, $locale, $search): void {
                     $selector = "{$column}->{$locale}";
 
-                    $query->whereNotNull($selector)
-                        ->whereRaw('lower('.$query->getGrammar()->wrap($selector).') like lower(?)', ['%'.$search.'%']);
+                    Like::contains($query->whereNotNull($selector), $selector, $search);
                 });
             }
         });
