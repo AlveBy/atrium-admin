@@ -12,12 +12,17 @@ namespace Atrium\Admin;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Auth\SignIn;
+use Atrium\Admin\Cache\CacheStore;
+use Atrium\Admin\Cache\RecordCache;
+use Atrium\Admin\Cache\Versions;
 use Atrium\Admin\Captcha\CaptchaManager;
 use Atrium\Admin\Contracts\Sitemapable;
 use Atrium\Admin\Hooks\Hooks;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
 use Atrium\Admin\Http\Middleware\AuthorizeAdminRoute;
+use Atrium\Admin\Http\Middleware\CacheDebug;
+use Atrium\Admin\Http\Middleware\CachePages;
 use Atrium\Admin\Http\Middleware\EnterSiteFolder;
 use Atrium\Admin\Http\Middleware\HandleAtriumRequests;
 use Atrium\Admin\Http\Middleware\RecordPageTiming;
@@ -38,6 +43,9 @@ use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
 use Closure;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
@@ -99,6 +107,9 @@ final class AtriumServiceProvider extends ServiceProvider
                 return redirect()->intended(route(config('atrium.auth.redirect_after_login', 'admin.dashboard')));
             });
         });
+        $this->app->singleton(CacheStore::class, fn (): CacheStore => CacheStore::fromConfig());
+        $this->app->singleton(Versions::class, fn ($app): Versions => new Versions($app->make(CacheStore::class)->repository()));
+        $this->app->singleton(RecordCache::class);
     }
 
     public function boot(): void
@@ -109,6 +120,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerLocalizedRoutes();
         $this->registerSitemapFlush();
+        $this->registerCache();
         $this->registerCommands();
         $this->registerCdnAssets();
     }
@@ -159,6 +171,12 @@ final class AtriumServiceProvider extends ServiceProvider
         // The folder goes before routing, so the kernel's global stack.
         $this->app->make(HttpKernel::class)->pushMiddleware(EnterSiteFolder::class);
         $this->appendToWebGroup(ResolveSite::class);
+
+        // The full-page cache (off by default) wraps the page once the site
+        // is known; the debug line goes around everything to count hits too.
+        // Both check their settings on every request and step aside.
+        $this->appendToWebGroup(CachePages::class);
+        $this->app->make(HttpKernel::class)->pushMiddleware(CacheDebug::class);
 
         // Page timings feed the dashboard gadgets. Added here so the gadgets
         // work right after install, without editing bootstrap/app.php.
@@ -272,6 +290,69 @@ final class AtriumServiceProvider extends ServiceProvider
         Event::listen('eloquent.deleted: *', $flush);
     }
 
+    /**
+     * The record cache: query macros, dropping what a saved record showed,
+     * a clean slate for every request and job.
+     */
+    private function registerCache(): void
+    {
+        Builder::macro('cachedIds', function (?int $perPage = null, ?int $page = null, array $dependsOn = []) {
+            /** @var Builder<Model> $this */
+            return app(RecordCache::class)->ids($this, $perPage, $page, $dependsOn);
+        });
+
+        Builder::macro('cachedPaginate', function (int $perPage = 20, string $pageName = 'page', ?int $page = null, ?string $locale = null, array $dependsOn = []) {
+            /** @var Builder<Model> $this */
+            return app(RecordCache::class)->paginate($this, $perPage, $pageName, $page, $locale, $dependsOn);
+        });
+
+        Builder::macro('cachedCards', function (?string $locale = null, array $dependsOn = []) {
+            /** @var Builder<Model> $this */
+            $cache = app(RecordCache::class);
+
+            return $cache->cards($this->getModel()::class, $cache->ids($this, dependsOn: $dependsOn)->ids, $locale);
+        });
+
+        // A cached page depends on the class of every model it read.
+        Event::listen('eloquent.retrieved: *', function (string $event): void {
+            if (config('atrium.cache.pages.enabled', false)) {
+                $this->app->make(RecordCache::class)->markRead(['list:'.substr($event, 20)]);
+            }
+        });
+
+        $changed = function (string $event, array $payload): void {
+            if (($payload[0] ?? null) instanceof Model) {
+                $this->app->make(RecordCache::class)->changed($payload[0]);
+            }
+        };
+
+        foreach (['saved', 'deleted', 'restored', 'forceDeleted'] as $event) {
+            Event::listen('eloquent.'.$event.': *', $changed);
+        }
+
+        $reset = function (): void {
+            if ($this->app->resolved(RecordCache::class)) {
+                $cache = $this->app->make(RecordCache::class);
+                $cache->persistStats();
+                $cache->reset();
+            }
+        };
+
+        $this->app->terminating($reset);
+        Event::listen(JobProcessing::class, $reset);
+
+        // The monitoring module reads this request's hits and misses at the
+        // very end, after reset() may already have closed them.
+        $this->app->make(Hooks::class)->filter('atrium.cache.stats', function (array $stats): array {
+            $own = $this->app->make(RecordCache::class)->finishedStats();
+
+            return [
+                'hits' => (int) ($stats['hits'] ?? 0) + $own['hits'],
+                'misses' => (int) ($stats['misses'] ?? 0) + $own['misses'],
+            ] + $stats;
+        });
+    }
+
     private function registerCommands(): void
     {
         if (! $this->app->runningInConsole()) {
@@ -279,6 +360,7 @@ final class AtriumServiceProvider extends ServiceProvider
         }
 
         $this->commands([
+            Console\Commands\CacheWarmCommand::class,
             Console\Commands\CdnPurgeCommand::class,
             Console\Commands\CreateAdminCommand::class,
             Console\Commands\IndexMediaCommand::class,

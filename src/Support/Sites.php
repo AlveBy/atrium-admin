@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Support;
 
+use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Http\Middleware\EnterSiteFolder;
 use Atrium\Admin\Models\Site;
 use Illuminate\Database\QueryException;
@@ -189,7 +190,9 @@ final class Sites
     private function load(): Collection
     {
         try {
-            $sites = Site::query()->orderByDesc('is_default')->orderBy('sort')->orderBy('id')->get();
+            // Every request needs the sites: kept in the record cache until one is saved.
+            $rows = app(RecordCache::class)->remember(Site::class, 'sites', static fn (): array => Site::query()->orderByDesc('is_default')->orderBy('sort')->orderBy('id')->toBase()->get()->map(static fn (object $row): array => (array) $row)->all(), perSite: false);
+            $sites = Site::hydrate($rows);
         } catch (QueryException) {
             $sites = new Collection;
         }

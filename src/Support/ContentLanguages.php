@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Support;
 
+use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Models\Language;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
@@ -96,12 +97,16 @@ final class ContentLanguages
     private function load(): Collection
     {
         try {
-            $languages = Language::query()
+            $rows = app(RecordCache::class)->remember(Language::class, 'languages', static fn (): array => Language::query()
                 ->where('active', true)
                 ->orderByDesc('is_default')
                 ->orderBy('sort')
                 ->orderBy('id')
-                ->get();
+                ->toBase()
+                ->get()
+                ->map(static fn (object $row): array => (array) $row)
+                ->all(), perSite: false);
+            $languages = Language::hydrate($rows);
         } catch (QueryException) {
             $languages = new Collection;
         }

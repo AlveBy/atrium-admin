@@ -10,6 +10,7 @@ declare(strict_types=1);
 use Atrium\Admin\Http\Controllers\AdminUserController;
 use Atrium\Admin\Http\Controllers\ApiTokenController;
 use Atrium\Admin\Http\Controllers\Auth\LoginController;
+use Atrium\Admin\Http\Controllers\CacheController;
 use Atrium\Admin\Http\Controllers\DashboardController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Http\Controllers\LocaleController;
@@ -71,6 +72,10 @@ Route::prefix(config('atrium.prefix', 'admin'))
             Route::get('api-tokens', [ApiTokenController::class, 'index'])->name('admin.api-tokens.index');
             Route::post('api-tokens', [ApiTokenController::class, 'store'])->name('admin.api-tokens.store');
             Route::delete('api-tokens/{id}', [ApiTokenController::class, 'destroy'])->whereNumber('id')->name('admin.api-tokens.destroy');
+
+            // The record cache: hit rate, size, clearing — superadmins only
+            Route::get('cache', [CacheController::class, 'index'])->name('admin.cache.index');
+            Route::post('cache/clear', [CacheController::class, 'clear'])->name('admin.cache.clear');
 
             // Admin Users (Administrators)
             Route::resource('users', AdminUserController::class)->except(['show'])->names([

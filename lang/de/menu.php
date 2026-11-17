@@ -14,6 +14,7 @@ return [
     'administrators' => 'Administratoren',
     'roles' => 'Rollen',
     'api_tokens' => 'API-Tokens',
+    'cache' => 'Cache',
     'languages' => 'Sprachen',
     'sites' => 'Websites',
     'modules' => 'Module',

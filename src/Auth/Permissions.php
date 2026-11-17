@@ -242,7 +242,7 @@ final class Permissions
             return null;
         }
 
-        if (str_starts_with($routeName, 'admin.roles.')) {
+        if (str_starts_with($routeName, 'admin.roles.') || str_starts_with($routeName, 'admin.cache.')) {
             return self::SUPERADMIN;
         }
 

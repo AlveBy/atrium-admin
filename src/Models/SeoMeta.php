@@ -9,12 +9,15 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Models;
 
+use Atrium\Admin\Cache\TouchesOwner;
 use Atrium\Admin\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class SeoMeta extends Model
 {
+    use TouchesOwner;
+
     protected $table = 'seo_meta';
 
     protected $fillable = [
@@ -113,5 +116,10 @@ class SeoMeta extends Model
         $this->robots = 'index, follow';
 
         return $this;
+    }
+
+    protected function ownerMorphName(): string
+    {
+        return 'seoable';
     }
 }

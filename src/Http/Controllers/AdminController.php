@@ -11,6 +11,7 @@ namespace Atrium\Admin\Http\Controllers;
 
 use Atrium\Admin\Actions\CreateFromRecord;
 use Atrium\Admin\Auth\Permissions;
+use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Fields\CheckboxField;
@@ -428,6 +429,9 @@ abstract class AdminController extends Controller
 
             return $record;
         }, attempts: 3);
+
+        // Pivot syncs and SEO rows fire no event of the record itself.
+        DB::afterCommit(static fn () => app(RecordCache::class)->changed($saved));
 
         // Listeners send mail and queue jobs: only for what was committed,
         // after the outermost transaction if the caller opened one.

@@ -10,6 +10,7 @@ declare(strict_types=1);
 use Atrium\Admin\Dashboard\Gadgets\PerformanceGadget;
 use Atrium\Admin\Dashboard\Gadgets\SiteSpeedGadget;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Models\PageTiming;
 
 return [
     /*
@@ -211,6 +212,11 @@ return [
         [
             'label' => 'atrium::menu.api_tokens',
             'route' => 'admin.api-tokens.index',
+            'icon' => 'settings',
+        ],
+        [
+            'label' => 'atrium::menu.cache',
+            'route' => 'admin.cache.index',
             'icon' => 'settings',
         ],
     ],
@@ -519,5 +525,52 @@ return [
     'mcp' => [
         'enabled' => (bool) env('ATRIUM_MCP_ENABLED', true),
         'path' => 'mcp',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache
+    |--------------------------------------------------------------------------
+    |
+    | The record cache (docs/cache.md): lists answer with ids, records come
+    | from cards built once per language, and saving a record in the admin
+    | drops what showed it. Works on every Laravel store; Redis is the one to
+    | use in production (one MGET per list, tags free memory at once).
+    |
+    | store     a store of config/cache.php, the default one when null
+    | strategy  auto: tags where the store has them (Redis, Memcached),
+    |           version keys elsewhere; versions: version keys everywhere
+    | ttl       seconds: cards, lists of ids, full pages
+    | time_step lists that compare with "now" (active from/to) see time in
+    |           steps of this many seconds, so their keys stay the same
+    | ignore    models whose saves never touch the cache
+    | pages     full-page cache for visitors who are not logged in to the
+    |           admin; off by default (see docs/cache.md before turning on)
+    | debug     a line under public pages with queries and cache hits, in
+    |           the local environment with APP_DEBUG on
+    |
+    */
+    'cache' => [
+        'enabled' => (bool) env('ATRIUM_CACHE_ENABLED', true),
+        'store' => env('ATRIUM_CACHE_STORE'),
+        'strategy' => env('ATRIUM_CACHE_STRATEGY', 'auto'),
+        'ttl' => [
+            'cards' => (int) env('ATRIUM_CACHE_TTL_CARDS', 86400),
+            'lists' => (int) env('ATRIUM_CACHE_TTL_LISTS', 3600),
+            'pages' => (int) env('ATRIUM_CACHE_TTL_PAGES', 600),
+        ],
+        'time_step' => 60,
+        'stats' => true,
+        'ignore' => [
+            PageTiming::class,
+        ],
+        'pages' => [
+            'enabled' => (bool) env('ATRIUM_PAGE_CACHE', false),
+            // Seconds a CDN may keep a page without the session's form token.
+            'shared_max_age' => (int) env('ATRIUM_PAGE_CACHE_SHARED_MAX_AGE', 60),
+            // Paths never cached, as Request::is() patterns.
+            'except' => [],
+        ],
+        'debug' => (bool) env('ATRIUM_CACHE_DEBUG', true),
     ],
 ];

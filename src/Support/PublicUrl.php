@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Support;
 
+use Atrium\Admin\Cache\RecordCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 
@@ -109,7 +110,22 @@ final class PublicUrl
             return self::$pathCache[$cacheKey];
         }
 
+        // Kept in the record cache until a section of the tree changes.
+        return self::$pathCache[$cacheKey] = app(RecordCache::class)->remember(
+            $treeClass,
+            'section-paths:'.$parentColumn,
+            static fn (): array => self::buildSectionPaths($treeClass, $parentColumn),
+            perSite: false,
+        );
+    }
+
+    /**
+     * @return array<int|string,string>
+     */
+    private static function buildSectionPaths(string $treeClass, string $parentColumn): array
+    {
         $rows = $treeClass::query()
+            ->withoutGlobalScopes()
             ->get(['id', $parentColumn, 'code'])
             ->keyBy('id');
 
@@ -131,7 +147,7 @@ final class PublicUrl
             $paths[$id] = implode('/', $parts);
         }
 
-        return self::$pathCache[$cacheKey] = $paths;
+        return $paths;
     }
 
     /**

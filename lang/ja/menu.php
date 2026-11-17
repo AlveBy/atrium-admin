@@ -14,6 +14,7 @@ return [
     'administrators' => '管理者',
     'roles' => 'ロール',
     'api_tokens' => 'API トークン',
+    'cache' => 'キャッシュ',
     'languages' => '言語',
     'sites' => 'サイト',
     'modules' => 'モジュール',

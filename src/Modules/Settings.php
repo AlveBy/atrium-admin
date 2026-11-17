@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Modules;
 
+use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Support\Sites;
 use Illuminate\Database\QueryException;
@@ -80,14 +81,22 @@ final class Settings
     public function stored(string $module, int $siteId = 0): array
     {
         if (! isset($this->stored[$module])) {
-            $this->stored[$module] = [];
-
             try {
-                foreach (DB::table(self::TABLE)->where('module', $module)->get(['site_id', 'values']) as $row) {
-                    $this->stored[$module][(int) $row->site_id] = (array) json_decode((string) $row->values, true);
-                }
+                // Kept in the record cache: public pages read settings on
+                // every request. Not migrated yet throws past remember(), so
+                // an empty answer is never kept.
+                $this->stored[$module] = app(RecordCache::class)->remember(self::class, 'settings:'.$module, static function () use ($module): array {
+                    $stored = [];
+
+                    foreach (DB::table(self::TABLE)->where('module', $module)->get(['site_id', 'values']) as $row) {
+                        $stored[(int) $row->site_id] = (array) json_decode((string) $row->values, true);
+                    }
+
+                    return $stored;
+                }, perSite: false);
             } catch (QueryException) {
                 // Not migrated yet: nothing is saved.
+                $this->stored[$module] = [];
             }
         }
 
@@ -123,6 +132,7 @@ final class Settings
         }
 
         $this->stored[$module][$siteId] = $values;
+        app(RecordCache::class)->flushClass(self::class);
     }
 
     /**
@@ -163,5 +173,9 @@ final class Settings
     public function flush(): void
     {
         $this->stored = $this->declarations = $this->defaults = [];
+
+        if (app()->resolved(RecordCache::class)) {
+            app(RecordCache::class)->flushClass(self::class);
+        }
     }
 }

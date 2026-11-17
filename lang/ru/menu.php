@@ -12,6 +12,7 @@ return [
     'administrators' => 'Администраторы',
     'roles' => 'Роли',
     'api_tokens' => 'API-токены',
+    'cache' => 'Кеш',
     'languages' => 'Языки',
     'sites' => 'Сайты',
     'modules' => 'Модули',

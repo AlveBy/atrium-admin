@@ -14,6 +14,7 @@ return [
     'administrators' => 'Yöneticiler',
     'roles' => 'Roller',
     'api_tokens' => 'API tokenları',
+    'cache' => 'Önbellek',
     'languages' => 'Diller',
     'sites' => 'Siteler',
     'modules' => 'Modüller',

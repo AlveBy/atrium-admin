@@ -14,6 +14,7 @@ return [
     'administrators' => '管理员',
     'roles' => '角色',
     'api_tokens' => 'API 令牌',
+    'cache' => '缓存',
     'languages' => '语言',
     'sites' => '站点',
     'modules' => '模块',

@@ -12,6 +12,7 @@ return [
     'administrators' => 'Administrators',
     'roles' => 'Roles',
     'api_tokens' => 'API tokens',
+    'cache' => 'Cache',
     'languages' => 'Languages',
     'sites' => 'Sites',
     'modules' => 'Modules',

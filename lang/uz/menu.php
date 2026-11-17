@@ -14,6 +14,7 @@ return [
     'administrators' => 'Administratorlar',
     'roles' => 'Rollar',
     'api_tokens' => 'API tokenlari',
+    'cache' => 'Kesh',
     'languages' => 'Tillar',
     'sites' => 'Saytlar',
     'modules' => 'Modullar',

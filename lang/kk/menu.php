@@ -14,6 +14,7 @@ return [
     'administrators' => 'Әкімшілер',
     'roles' => 'Рөлдер',
     'api_tokens' => 'API токендері',
+    'cache' => 'Кэш',
     'languages' => 'Тілдер',
     'sites' => 'Сайттар',
     'modules' => 'Модульдер',

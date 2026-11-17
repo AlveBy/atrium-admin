@@ -69,6 +69,7 @@ final class ModuleRemoveCommand extends ModuleCommand
 
         if (! $keep && Schema::hasTable(Settings::TABLE)) {
             DB::table(Settings::TABLE)->where('module', $module->key())->delete();
+            $this->laravel->make(Settings::class)->flush();
         }
 
         if (($keys !== [] || $own !== []) && Schema::hasTable('admin_roles')) {

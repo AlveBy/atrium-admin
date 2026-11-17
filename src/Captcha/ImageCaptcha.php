@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Captcha;
 
+use Atrium\Admin\Cache\RecordCache;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Contracts\Encryption\Encrypter;
@@ -36,6 +37,9 @@ final class ImageCaptcha implements CaptchaDriver
 
     public function widget(): HtmlString
     {
+        // A question is used up on the first answer: a kept page would give
+        // every visitor the same one.
+        app(RecordCache::class)->dontKeepPage();
         [$a, $b] = [random_int(1, 9), random_int(1, 9)];
         $token = $this->encrypter->encrypt([
             'q' => "$a + $b",

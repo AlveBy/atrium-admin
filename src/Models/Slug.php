@@ -9,11 +9,14 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Models;
 
+use Atrium\Admin\Cache\TouchesOwner;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Slug extends Model
 {
+    use TouchesOwner;
+
     protected $table = 'slugs';
 
     protected $fillable = [
@@ -77,5 +80,10 @@ class Slug extends Model
         $slugModel = static::findByPath($path, $type);
 
         return $slugModel?->sluggable;
+    }
+
+    protected function ownerMorphName(): string
+    {
+        return 'sluggable';
     }
 }
