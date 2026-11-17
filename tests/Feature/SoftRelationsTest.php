@@ -20,8 +20,12 @@ use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Remark;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia;
+use Laravel\Sanctum\Sanctum;
+use ReflectionClass;
 
 /**
  * Links to a module that may not be installed: Atrium\Admin\Modules\Soft and
@@ -37,6 +41,13 @@ final class SoftRelationsTest extends TestCase
         $app['config']->set('atrium.resources', [Post::class, Gadget::class]);
         // Installed from the start: its migrations run and its routes exist.
         $app['config']->set('atrium.modules', ['acme/atrium-labels']);
+    }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        parent::defineDatabaseMigrations();
+
+        $this->loadMigrationsFrom(dirname((string) (new ReflectionClass(Sanctum::class))->getFileName(), 2).'/database/migrations');
     }
 
     private function withoutLabels(): void
@@ -71,6 +82,26 @@ final class SoftRelationsTest extends TestCase
         $this->assertSame([], Soft::when([Label::class, Post::class], ['anything']));
         $this->assertSame(['anything'], Soft::when(Post::class, ['anything']));
         $this->assertSame([], Soft::when('Acme\\Gone\\Thing', ['anything']));
+    }
+
+    public function test_the_api_list_reads_the_tags_of_every_record_in_one_query(): void
+    {
+        $label = Label::query()->create(['name' => 'Red']);
+
+        foreach (['Kettle', 'Toaster', 'Lamp'] as $name) {
+            Gadget::query()->create(['name' => $name, 'label_id' => $label->id])->tags()->attach($label->id);
+        }
+
+        $token = $this->admin()->createToken('robot', ['gadgets:read'])->plainTextToken;
+        $queries = 0;
+        DB::listen(static function (QueryExecuted $query) use (&$queries): void {
+            $queries += str_contains($query->sql, 'gadget_label') ? 1 : 0;
+        });
+
+        $rows = $this->withToken($token)->getJson('/api/v1/gadgets')->assertOk()->json('data');
+
+        $this->assertSame([[$label->id], [$label->id], [$label->id]], array_column($rows, 'tags'));
+        $this->assertSame(1, $queries);
     }
 
     public function test_relations_find_the_records_with_the_module(): void

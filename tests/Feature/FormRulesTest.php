@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
+use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\SeoMeta;
 use Atrium\Admin\Tests\Fixtures\ApiArticle;
@@ -18,6 +19,8 @@ use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Topic;
 use Atrium\Admin\Tests\TestCase;
 use Inertia\Testing\AssertableInertia;
+use Laravel\Sanctum\Sanctum;
+use ReflectionClass;
 
 /**
  * What a module's form checks and keeps: hand-written unique rules on edit,
@@ -32,6 +35,13 @@ final class FormRulesTest extends TestCase
 
         $app['config']->set('app.locale', 'en');
         $app['config']->set('atrium.resources', [Post::class, Page::class, Topic::class, ApiArticle::class, Chapter::class]);
+    }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        parent::defineDatabaseMigrations();
+
+        $this->loadMigrationsFrom(dirname((string) (new ReflectionClass(Sanctum::class))->getFileName(), 2).'/database/migrations');
     }
 
     protected function setUp(): void
@@ -96,6 +106,23 @@ final class FormRulesTest extends TestCase
         $this->post('/admin/topics', ['name' => 'New', 'related_posts' => [$post->id]])->assertSessionHasNoErrors()->assertRedirect();
 
         $this->assertSame('New', Topic::query()->sole()->name);
+    }
+
+    public function test_the_edit_form_opens_with_a_many_to_many_field_that_has_no_relation(): void
+    {
+        $topic = Topic::query()->create(['name' => 'Old']);
+
+        $this->get("/admin/topics/{$topic->id}/edit")->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('item.name', 'Old')->missing('item.related_posts'));
+    }
+
+    public function test_the_api_reads_a_module_with_a_many_to_many_field_that_has_no_relation(): void
+    {
+        $topic = Topic::query()->create(['name' => 'Old']);
+        $token = AdminUser::query()->firstOrFail()->createToken('robot', ['topics:read'])->plainTextToken;
+
+        $this->withToken($token)->getJson('/api/v1/topics')->assertOk()->assertJsonPath('data.0.name', 'Old');
+        $this->withToken($token)->getJson("/api/v1/topics/{$topic->id}")->assertOk()->assertJsonPath('data.name', 'Old');
     }
 
     public function test_the_edit_form_gets_the_address_of_a_record_that_has_one(): void

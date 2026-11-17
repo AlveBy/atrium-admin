@@ -733,9 +733,12 @@ abstract class AdminController extends Controller
 
         foreach ($fields as $field) {
             $fieldArray = $field->toArray();
-            if ($fieldArray['type'] === 'belongsToMany') {
-                // Convert snake_case field name to camelCase relationship method name
-                $relations[] = Str::camel($fieldArray['name']);
+            // snake_case field name, camelCase relation method; a field with
+            // no relation behind it is left out, as extractRelationValues() does.
+            $method = Str::camel($fieldArray['name']);
+
+            if ($fieldArray['type'] === 'belongsToMany' && method_exists($this->model, $method)) {
+                $relations[] = $method;
             }
         }
 
