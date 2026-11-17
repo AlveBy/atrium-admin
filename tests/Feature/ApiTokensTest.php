@@ -236,6 +236,16 @@ final class ApiTokensTest extends TestCase
         $this->assertSame(1, PersonalAccessToken::query()->count());
     }
 
+    public function test_an_address_that_is_not_a_token_number_is_not_found(): void
+    {
+        $admin = $this->admin();
+        $admin->createToken('robot', ['posts:read']);
+
+        $this->actingAs($admin, 'admin')->delete('/admin/api-tokens/robot')->assertNotFound();
+
+        $this->assertSame(1, PersonalAccessToken::query()->count());
+    }
+
     public function test_tokens_of_other_kinds_of_users_are_never_listed_or_revoked(): void
     {
         $admin = $this->admin();

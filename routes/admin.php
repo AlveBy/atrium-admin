@@ -78,7 +78,7 @@ Route::prefix(config('atrium.prefix', 'admin'))
             // API tokens for external programs
             Route::get('api-tokens', [ApiTokenController::class, 'index'])->name('admin.api-tokens.index');
             Route::post('api-tokens', [ApiTokenController::class, 'store'])->name('admin.api-tokens.store');
-            Route::delete('api-tokens/{id}', [ApiTokenController::class, 'destroy'])->name('admin.api-tokens.destroy');
+            Route::delete('api-tokens/{id}', [ApiTokenController::class, 'destroy'])->whereNumber('id')->name('admin.api-tokens.destroy');
 
             // Admin Users (Administrators)
             Route::resource('users', AdminUserController::class)->except(['show'])->names([
