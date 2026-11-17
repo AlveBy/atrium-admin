@@ -31,7 +31,15 @@ final class ModulePermissionsTest extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app->resolving(Modules::class, static fn (Modules $modules) => $modules->add(Label::module()));
+        $app->resolving(Modules::class, static function (Modules $modules): void {
+            $modules->add(Label::module());
+            $modules->add(Module::fromComposer(['name' => 'acme/atrium-shop', 'type' => Modules::TYPE, 'extra' => ['atrium' => ['key' => 'store', 'permissions' => [
+                'refund' => 'Refund orders',
+                'reports.export' => ['label' => 'Export reports'],
+                'reports.archive' => 'atrium::menu',
+                'reports.quiet' => '',
+            ]]]], '/tmp'));
+        });
 
         $this->root = sys_get_temp_dir().'/atrium-permissions-'.uniqid();
         mkdir($this->root.'/config', 0777, true);
@@ -111,6 +119,29 @@ final class ModulePermissionsTest extends TestCase
         $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels', '--keep-data' => true])->assertSuccessful();
 
         $this->assertSame(['posts.view', 'posts.update'], $editor->fresh()->permissions);
+    }
+
+    #[DefineEnvironment('installShop')]
+    public function test_a_permission_of_a_section_nobody_else_owns_opens_a_row_of_its_own_with_its_labels(): void
+    {
+        $sections = collect($this->app->make(Permissions::class)->sections())->keyBy('key');
+
+        // "refund" is the module's own: a row under the module's name.
+        $this->assertSame(['key' => 'store', 'label' => 'Store', 'actions' => ['refund'], 'labels' => ['refund' => 'Refund orders']], $sections['store']);
+        // "reports" is nobody's key: a row headlined from its name, in the order declared.
+        $this->assertSame(
+            ['key' => 'reports', 'label' => 'Reports', 'actions' => ['export', 'archive', 'quiet'], 'labels' => ['export' => 'Export reports', 'archive' => 'atrium::menu']],
+            $sections['reports'],
+        );
+        $this->assertContains('reports.quiet', $this->app->make(Permissions::class)->all());
+    }
+
+    /**
+     * Installed before the app boots, so its routes are there.
+     */
+    protected function installShop($app): void
+    {
+        $app['config']->set('atrium.modules', ['acme/atrium-shop']);
     }
 
     /**

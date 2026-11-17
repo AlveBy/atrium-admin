@@ -96,7 +96,7 @@ final class Permissions
             }
 
             foreach ($module->declaredPermissions as $name => $permission) {
-                [$section, $action] = explode('.', $name, 2);
+                [$section, $action] = explode('.', $name);
                 $sections[$section] ??= ['key' => $section, 'label' => $section === $key ? $module->label() : Str::headline($section), 'actions' => []];
 
                 if (! in_array($action, $sections[$section]['actions'], true)) {
@@ -104,12 +104,11 @@ final class Permissions
                 }
 
                 if ($permission['label'] !== '') {
-                    $sections[$section]['labels'][$action] = (string) __($permission['label']);
+                    $line = __($permission['label']);
+                    $sections[$section]['labels'][$action] = is_string($line) ? $line : $permission['label'];
                 }
             }
         }
-
-        $sections = array_values($sections);
 
         usort($sections, static fn (array $a, array $b): int => strnatcasecmp($a['label'], $b['label']));
 

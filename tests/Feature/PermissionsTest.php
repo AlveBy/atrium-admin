@@ -495,4 +495,59 @@ final class PermissionsTest extends TestCase
             $menu,
         ))));
     }
+
+    public function test_only_the_exact_admin_route_names_of_a_module_need_its_permission(): void
+    {
+        $nobody = $this->editor([]);
+        $permissions = app(Permissions::class);
+
+        // Another route that merely ends in the name of a module route, or starts with it.
+        $this->assertTrue($permissions->allowsRoute($nobody, 'admin.nested.admin.posts.index'));
+        $this->assertTrue($permissions->allowsRoute($nobody, 'admin.posts.index.extra'));
+        $this->assertTrue($permissions->allowsRoute($nobody, 'admin.posts.index1'));
+        $this->assertFalse($permissions->allowsRoute($nobody, 'admin.posts.index'));
+    }
+
+    public function test_the_settings_of_any_module_open_the_modules_screen_to_a_role_with_exactly_that_permission(): void
+    {
+        $permissions = app(Permissions::class);
+
+        $this->assertTrue($permissions->canSetUpAnything($this->editor(['labels.settings'])));
+        $this->assertTrue($permissions->canSetUpAnything($this->admin()));
+        $this->assertFalse($permissions->canSetUpAnything($this->editor(['labelsettings', 'posts.view'], 'other@example.com')));
+        $this->assertFalse($permissions->canSetUpAnything($this->editor([], 'none@example.com')));
+        $this->assertTrue($permissions->canSetUp($this->editor(['labels.settings'], 'third@example.com'), 'labels'));
+    }
+
+    public function test_a_token_may_read_what_the_owner_may_view_and_write_what_the_owner_may_change(): void
+    {
+        $permissions = app(Permissions::class);
+
+        $this->assertSame(
+            ['posts' => ['read' => true, 'write' => false]],
+            Arr::only($permissions->tokenModes($this->editor(['posts.view'])), ['posts']),
+        );
+        $this->assertSame(
+            ['posts' => ['read' => true, 'write' => true]],
+            Arr::only($permissions->tokenModes($this->editor(['posts.view', 'posts.delete'], 'b@example.com')), ['posts']),
+        );
+        $this->assertArrayNotHasKey('posts', $permissions->tokenModes($this->editor(['posts.update'], 'c@example.com')));
+    }
+
+    public function test_the_sections_of_the_role_form_are_in_alphabetical_order_and_end_with_the_api_tokens(): void
+    {
+        $sections = app(Permissions::class)->sections();
+        $labels = array_column($sections, 'label');
+        $own = array_slice($labels, 0, -1);
+        $sorted = $own;
+        usort($sorted, strnatcasecmp(...));
+
+        $this->assertSame($sorted, $own);
+        $this->assertNotSame('Posts', $own[0]);
+        $this->assertSame(
+            ['key' => 'api-tokens', 'label' => __('atrium::menu.api_tokens'), 'actions' => ['use']],
+            end($sections),
+        );
+        $this->assertSame(array_keys($sections), range(0, count($sections) - 1));
+    }
 }
