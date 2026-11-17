@@ -61,7 +61,7 @@ final class ApiShowcase extends Model implements Administrable
 
     public static function getAdminLabel(): string
     {
-        return 'Showcase | of <b>fields</b>';
+        return "Showcase | of <b>fields</b>\n";
     }
 
     public static function getAdministrationFields(): array
@@ -69,7 +69,7 @@ final class ApiShowcase extends Model implements Administrable
         return [
             TextField::make('name')->label('Name')->required()->maxLength(120),
             TextField::make('code')->label('Code')->hint('Unique | per site')->onlyOnCreate(),
-            TextareaField::make('notes')->label('Notes')->onlyOnEdit(),
+            TextareaField::make('notes')->label(" Notes\r\nfor the team")->onlyOnEdit(),
             TextField::make('secret')->label('Never in a form')->hideOnCreate()->hideOnEdit(),
             NumberField::make('price')->label('Price'),
             CheckboxField::make('active')->label('Active'),

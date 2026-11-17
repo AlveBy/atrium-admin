@@ -269,13 +269,26 @@ final class ApiDocumentationTest extends TestCase
         $this->assertStringEndsWith("\n", $markdown);
     }
 
-    public function test_html_and_pipes_in_labels_do_not_break_the_markdown_table(): void
+    public function test_html_and_pipes_in_labels_are_kept_as_text_and_do_not_break_the_markdown(): void
     {
         config()->set('atrium.menu', []);
 
         $markdown = app(ApiDocumentation::class)->markdown(['api_showcases']);
 
-        $this->assertStringContainsString('| Showcase \| of fields | `api_showcases` |', $markdown);
+        // The panel shows a label as text, so do the docs: kept, not stripped,
+        // and escaped so no viewer takes it for HTML.
+        $this->assertStringContainsString('| Showcase \| of \<b\>fields\</b\> | `api_showcases` |', $markdown);
+        $this->assertStringContainsString("\n## Showcase | of \\<b\\>fields\\</b\\>\n", $markdown);
+        $this->assertStringNotContainsString('<b>', $markdown);
+    }
+
+    public function test_a_label_on_several_lines_stays_on_its_row(): void
+    {
+        config()->set('atrium.menu', []);
+
+        $markdown = app(ApiDocumentation::class)->markdown(['api_showcases']);
+
+        $this->assertStringContainsString("\n| `notes` | string |  | Notes for the team. Edit only. |\n", $markdown);
     }
 
     public function test_the_maps_key_never_reaches_the_public_documentation(): void

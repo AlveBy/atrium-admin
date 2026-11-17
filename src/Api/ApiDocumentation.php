@@ -324,7 +324,7 @@ final class ApiDocumentation
         }
 
         foreach ($modules as $key => $module) {
-            array_push($lines, '', "## {$module['label']}", '', "`GET|POST /{$key}`, `GET|PATCH|DELETE /{$key}/{id}`", '');
+            array_push($lines, '', '## '.$this->text($module['label']), '', "`GET|POST /{$key}`, `GET|PATCH|DELETE /{$key}/{id}`", '');
             $lines[] = '| Field | Type | Required | Description |';
             $lines[] = '|---|---|---|---|';
 
@@ -541,8 +541,17 @@ final class ApiDocumentation
         };
     }
 
+    /**
+     * A label or hint as the panel shows it, as text: on one line, and with
+     * < and > escaped so that no Markdown viewer takes it for HTML.
+     */
+    private function text(string $text): string
+    {
+        return trim(str_replace(['<', '>', "\n", "\r"], ['\\<', '\\>', ' ', ''], $text));
+    }
+
     private function cell(string $text): string
     {
-        return trim(str_replace(['|', "\n", "\r"], ['\\|', ' ', ''], strip_tags($text)));
+        return str_replace('|', '\\|', $this->text($text));
     }
 }
