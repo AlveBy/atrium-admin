@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'label' => '{{ title }}',
+    'create' => 'New record',
+    'fields' => [
+        'name' => 'Name',
+        'text' => 'Text',
+    ],
+];

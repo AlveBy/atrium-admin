@@ -1,0 +1,24 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Tests\Feature;
+
+use {{ namespace }}\Models\{{ model }};
+use {{ namespace }}\Tests\TestCase;
+use Atrium\Admin\Modules\Modules;
+
+final class DemoTest extends TestCase
+{
+    public function test_the_demo_fills_the_module_once(): void
+    {
+        $modules = app(Modules::class);
+        $module = $modules->find('{{ package }}');
+
+        $this->assertNotNull($module);
+        $this->assertTrue($modules->seedDemo($module));
+        $this->assertSame(3, {{ model }}::query()->count());
+        $this->assertFalse($modules->seedDemo($module));
+        $this->assertSame(3, {{ model }}::query()->count());
+    }
+}

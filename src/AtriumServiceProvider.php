@@ -257,6 +257,7 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\IndexMediaCommand::class,
             Console\Commands\InstallCommand::class,
             Console\Commands\MakeModuleCommand::class,
+            Console\Commands\MakePackageCommand::class,
             Console\Commands\ModuleInstallCommand::class,
             Console\Commands\ModuleRemoveCommand::class,
             Console\Commands\SlugRegenerateCommand::class,

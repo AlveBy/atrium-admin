@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Illuminate\Support\ServiceProvider;
+
+/**
+ * The models, the migrations and the demo content come from extra.atrium in
+ * composer.json, once `php artisan atrium:module:install {{ package }}` has
+ * run. Here: what the manifest does not cover.
+ */
+final class {{ class }}ServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        $this->loadTranslationsFrom(__DIR__.'/../lang', '{{ key }}');
+    }
+}

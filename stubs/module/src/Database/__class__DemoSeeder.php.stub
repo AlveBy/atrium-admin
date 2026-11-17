@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Database;
+
+use {{ namespace }}\Models\{{ model }};
+use Atrium\Admin\Modules\DemoSeeder;
+use Atrium\Admin\Support\Sites;
+
+/**
+ * Demo content: `php artisan atrium:module:install {{ package }} --demo`.
+ * Returns false when there is content already, so a second run adds nothing.
+ */
+final class {{ class }}DemoSeeder extends DemoSeeder
+{
+    public function run(): bool
+    {
+        if ({{ model }}::query()->withoutGlobalScopes()->exists()) {
+            return false;
+        }
+
+        $site = app(Sites::class)->default();
+
+        foreach (['First', 'Second', 'Third'] as $index => $name) {
+            {{ model }}::query()->create([
+                'site_id' => $site->id,
+                'name' => ['en' => "{$name} example"],
+                'text' => ['en' => "<p>The text of the {$name} example.</p>"],
+                'sort' => ($index + 1) * 100,
+            ]);
+        }
+
+        return true;
+    }
+}

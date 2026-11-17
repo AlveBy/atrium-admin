@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Tests\Feature;
+
+use {{ namespace }}\Models\{{ model }};
+use {{ namespace }}\Tests\TestCase;
+use Inertia\Testing\AssertableInertia;
+
+final class AdminTest extends TestCase
+{
+    public function test_the_module_has_its_list_in_the_admin(): void
+    {
+        $this->actingAs($this->admin(), 'admin')
+            ->get('/admin/{{ table }}')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Admin/Resource/Index')
+                ->where('title', '{{ title }}'));
+    }
+
+    public function test_records_are_created_edited_and_deleted(): void
+    {
+        $this->actingAs($this->admin(), 'admin')
+            ->post('/admin/{{ table }}', ['name' => ['en' => 'First'], 'text' => ['en' => '<p>Hello</p>'], 'active' => true, 'sort' => 10])
+            ->assertSessionDoesntHaveErrors()
+            ->assertRedirect(route('admin.{{ table }}.index'));
+
+        $record = {{ model }}::query()->sole();
+        $this->assertSame('First', $record->getTranslation('name', 'en'));
+
+        $this->put("/admin/{{ table }}/{$record->id}", ['name' => ['en' => 'Renamed'], 'active' => true, 'sort' => 10])
+            ->assertSessionDoesntHaveErrors();
+        $this->assertSame('Renamed', $record->fresh()?->getTranslation('name', 'en'));
+
+        $this->delete("/admin/{{ table }}/{$record->id}")->assertRedirect(route('admin.{{ table }}.index'));
+        $this->assertSame(0, {{ model }}::query()->count());
+    }
+
+    public function test_a_record_needs_a_name(): void
+    {
+        $this->actingAs($this->admin(), 'admin')
+            ->post('/admin/{{ table }}', ['name' => ['en' => '']])
+            ->assertSessionHasErrors(['name.en']);
+    }
+}

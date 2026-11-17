@@ -1,0 +1,49 @@
+{
+    "name": "{{ package }}",
+    "description": "{{ title }} for Atrium",
+    "type": "atrium-module",
+    "license": "MIT",
+    "keywords": [
+        "atrium-module",
+        "laravel",
+        "admin"
+    ],
+    "require": {
+        "php": "^8.3",
+        "alveby/atrium": "^0.1"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "{{ namespace_json }}\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "{{ namespace_json }}\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "atrium": {
+            "title": "{{ title }}",
+            "resources": [
+                "{{ namespace_json }}\\Models\\{{ model }}"
+            ],
+            "migrations": "database/migrations",
+            "demo": "{{ namespace_json }}\\Database\\{{ class }}DemoSeeder"
+        },
+        "laravel": {
+            "providers": [
+                "{{ namespace_json }}\\{{ class }}ServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

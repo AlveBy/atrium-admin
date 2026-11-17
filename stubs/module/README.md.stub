@@ -1,0 +1,32 @@
+# {{ title }}
+
+A module for [Atrium](https://github.com/AlveBy/atrium).
+
+## Install
+
+```bash
+composer require {{ package }}
+php artisan atrium:module:install {{ package }}
+```
+
+Add `--demo` to fill it with three example records. `php artisan atrium:module:remove {{ package }}` takes it out and asks whether to keep its data.
+
+## What is inside
+
+- `composer.json`: the manifest in `extra.atrium` (models, migrations, demo seeder). Add `settings`, `permissions`, `public_urls`, `search` or `submodules` there as the module grows: see the [module docs](https://github.com/AlveBy/atrium/blob/main/docs/modules.md).
+- `src/Models/{{ model }}.php`: the model, with its admin form and list.
+- `database/migrations`: its table.
+- `src/Database/{{ class }}DemoSeeder.php`: the demo content.
+- `tests`: Orchestra Testbench tests that install the module in a bare Atrium.
+- `.github/workflows/tests.yml`: the tests on PHP 8.3 and 8.4.
+
+## Tests
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+## Publishing
+
+The `"type": "atrium-module"` and the `atrium-module` keyword put the package in the catalogue on every Atrium site's Modules screen once it is on [Packagist](https://packagist.org/packages/submit).
