@@ -10,12 +10,17 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use App\Models\Blog\RegenBooklet;
+use App\Models\RegenCard;
 use App\Models\RegenFlyer;
+use App\Models\RegenLeaf;
+use App\Models\RegenPamphlet;
 use Atrium\Admin\Models\Slug;
 use Atrium\Admin\Models\SlugHistory;
+use Atrium\Admin\Services\SlugService;
 use Atrium\Admin\Tests\Fixtures\Leaflet;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 
 /**
@@ -70,6 +75,58 @@ final class SlugRegenerateTest extends TestCase
             ->assertSuccessful();
 
         $this->assertSame(['hours', 'prices', 'untitled'], Slug::query()->orderBy('slug')->pluck('slug')->all());
+    }
+
+    public function test_a_model_with_the_trait_but_not_the_contract_gets_its_addresses_back_too(): void
+    {
+        $this->model('RegenPamphlet', 'namespace App\\Models; class RegenPamphlet extends \\Illuminate\\Database\\Eloquent\\Model { use \\Atrium\\Admin\\Traits\\HasAdminSlug; protected $table = "leaflets"; protected $fillable = ["name", "code"]; }');
+        RegenPamphlet::query()->create(['name' => 'Opening hours', 'code' => 'hours']);
+        RegenPamphlet::query()->create(['name' => 'Price list', 'code' => 'prices']);
+        Slug::query()->delete();
+
+        $this->artisan('atrium:slug:regenerate', ['model' => RegenPamphlet::class])
+            ->expectsOutput('Regenerated 2 slugs')
+            ->assertSuccessful();
+
+        $this->assertSame(['hours', 'prices'], Slug::query()->orderBy('slug')->pluck('slug')->all());
+        $this->assertSame(['hours', 'prices'], Slug::query()->orderBy('slug')->pluck('full_path')->all());
+    }
+
+    public function test_all_regenerates_a_model_with_the_trait_but_not_the_contract(): void
+    {
+        $this->model('RegenLeaf', 'namespace App\\Models; class RegenLeaf extends \\Illuminate\\Database\\Eloquent\\Model { use \\Atrium\\Admin\\Traits\\HasAdminSlug; protected $table = "leaflets"; protected $fillable = ["name", "code"]; }');
+        RegenLeaf::query()->create(['name' => 'Leaf', 'code' => 'leaf']);
+        Slug::query()->delete();
+
+        $this->artisan('atrium:slug:regenerate', ['--all' => true])
+            ->expectsOutput('Total: regenerated 1 slugs')
+            ->assertSuccessful();
+
+        $this->assertSame(['leaf'], Slug::query()->pluck('slug')->all());
+    }
+
+    public function test_a_model_with_the_contract_but_not_the_trait_gets_its_addresses_back(): void
+    {
+        $this->model('RegenCard', 'namespace App\\Models; class RegenCard extends \\Illuminate\\Database\\Eloquent\\Model implements \\Atrium\\Admin\\Contracts\\HasSlug { protected $table = "leaflets"; protected $fillable = ["name", "code"]; public function slugModel(): \\Illuminate\\Database\\Eloquent\\Relations\\MorphOne { return $this->morphOne(\\Atrium\\Admin\\Models\\Slug::class, "sluggable"); } public function getSlug(): string { return (string) $this->code; } public function getFullPath(): string { return "cards/".$this->code; } public function getSlugSourceField(): string { return "name"; } public function generateSlug(): string { return "card"; } public function updateSlug(string $newSlug): void {} }');
+        RegenCard::query()->create(['name' => 'Card', 'code' => 'birthday']);
+
+        $this->artisan('atrium:slug:regenerate', ['model' => RegenCard::class])
+            ->expectsOutput('Regenerated 1 slugs')
+            ->assertSuccessful();
+
+        $this->assertSame(['cards/birthday'], Slug::query()->pluck('full_path')->all());
+    }
+
+    public function test_the_service_regenerates_nothing_for_a_model_without_addresses(): void
+    {
+        Post::query()->create(['name' => 'Hello']);
+
+        $this->assertSame(0, app(SlugService::class)->regenerateAll(Post::class));
+        app(SlugService::class)->syncSlug(new class(['code' => 'bye']) extends Model
+        {
+            protected $guarded = [];
+        });
+        $this->assertSame(0, Slug::query()->count());
     }
 
     public function test_a_model_is_required_unless_all_is_asked(): void

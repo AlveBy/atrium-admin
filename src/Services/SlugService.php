@@ -12,6 +12,7 @@ namespace Atrium\Admin\Services;
 use Atrium\Admin\Contracts\HasSlug;
 use Atrium\Admin\Models\Slug;
 use Atrium\Admin\Models\SlugHistory;
+use Atrium\Admin\Traits\HasAdminSlug;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -159,7 +160,7 @@ class SlugService
      */
     public function syncSlug(Model $model): void
     {
-        if (! $model instanceof HasSlug || empty($model->getAttribute('code'))) {
+        if (! $this->hasSlug($model) || empty($model->getAttribute('code'))) {
             return;
         }
 
@@ -220,7 +221,7 @@ class SlugService
 
         $modelClass::chunk(100, function ($models) use (&$count) {
             foreach ($models as $model) {
-                if ($model instanceof Model && $model instanceof HasSlug) {
+                if ($this->hasSlug($model)) {
                     $this->syncSlug($model);
                     $count++;
                 }
@@ -228,6 +229,17 @@ class SlugService
         });
 
         return $count;
+    }
+
+    /**
+     * Implements the contract or only uses the trait, as the models of the
+     * modules and of the Bitrix migrator do: the trait has every method of it.
+     *
+     * @phpstan-assert-if-true Model&HasSlug $model
+     */
+    private function hasSlug(Model $model): bool
+    {
+        return $model instanceof HasSlug || isset(class_uses_recursive($model)[HasAdminSlug::class]);
     }
 
     /**
