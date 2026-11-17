@@ -34,6 +34,7 @@ return [
         'remove_failed' => '":name" kitaplıktan kaldırılamadı',
         'delete_failed' => 'Dosya silinemedi',
         'type_not_allowed' => 'Bu dosya türüne izin verilmiyor. İzin verilenler: :types',
+        'content_mismatch' => 'Dosyanın içeriği uzantısıyla (:type) uyuşmuyor.',
         'not_found' => 'Dosya bulunamadı.',
     ],
 

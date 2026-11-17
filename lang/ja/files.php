@@ -34,6 +34,7 @@ return [
         'remove_failed' => '「:name」をライブラリから除去できませんでした',
         'delete_failed' => 'ファイルを削除できませんでした',
         'type_not_allowed' => 'このファイル形式は許可されていません。許可されている形式: :types',
+        'content_mismatch' => 'ファイルの内容が拡張子（:type）と一致しません。',
         'not_found' => 'ファイルが見つかりません。',
     ],
 

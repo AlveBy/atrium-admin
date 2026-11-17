@@ -34,6 +34,7 @@ return [
         'remove_failed' => 'Impossibile rimuovere ":name" dalla libreria',
         'delete_failed' => 'Impossibile eliminare il file',
         'type_not_allowed' => 'Tipo di file non consentito. Consentiti: :types',
+        'content_mismatch' => 'Il contenuto del file non corrisponde alla sua estensione (:type).',
         'not_found' => 'File non trovato.',
     ],
 

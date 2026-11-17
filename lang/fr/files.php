@@ -34,6 +34,7 @@ return [
         'remove_failed' => 'Impossible de retirer « :name » de la médiathèque',
         'delete_failed' => 'Impossible de supprimer le fichier',
         'type_not_allowed' => 'Type de fichier non autorisé. Types autorisés : :types',
+        'content_mismatch' => 'Le contenu du fichier ne correspond pas à son extension (:type).',
         'not_found' => 'Fichier introuvable.',
     ],
 

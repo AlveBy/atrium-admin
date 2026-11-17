@@ -20,6 +20,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\Mime\MimeTypes;
 
 /**
  * Media library: list, upload, delete.
@@ -33,6 +34,21 @@ use Illuminate\Support\Str;
  */
 class FileManagerController extends Controller
 {
+    /**
+     * Formats finfo names only by the container they are built on.
+     */
+    private const CONTAINERS = [
+        'application/zip' => ['docx', 'xlsx'],
+        'application/x-ole-storage' => ['doc', 'xls'],
+    ];
+
+    /**
+     * What makes an SVG run something when it is opened: a script, an event
+     * handler, a javascript: link, embedded HTML, or entities that could
+     * spell any of these.
+     */
+    private const ACTIVE_SVG = '/<script|<foreignObject|\son[a-z]+\s*=|javascript:|&#|<!ENTITY/i';
+
     private const PER_PAGE = 24;
 
     /**
@@ -72,6 +88,12 @@ class FileManagerController extends Controller
             ], 422);
         }
 
+        if (! $this->isWhatItsNameSays($file, $extension)) {
+            return response()->json([
+                'message' => __('atrium::files.errors.content_mismatch', ['type' => $extension]),
+            ], 422);
+        }
+
         $disk = config('atrium.uploads.disk', 'public');
         $directory = config('atrium.uploads.directory', 'uploads').'/'.date('Y/m');
 
@@ -104,6 +126,23 @@ class FileManagerController extends Controller
             'is_image' => $item->is_image,
             'id' => $item->id,
         ]);
+    }
+
+    /**
+     * Whether the file is what its name says, judged by its content (finfo),
+     * not by the name the client sent: a script called photo.jpg is refused.
+     * Office files finfo knows only by their container — a zip, an OLE store —
+     * count as the formats built on it. An SVG may carry a script, so one with
+     * anything that runs is refused.
+     */
+    private function isWhatItsNameSays(UploadedFile $file, string $extension): bool
+    {
+        $types = MimeTypes::getDefault();
+        $type = $types->guessMimeType($file->getRealPath()) ?? '';
+        $extensions = [...$types->getExtensions($type), ...self::CONTAINERS[$type] ?? []];
+
+        return in_array($extension, $extensions, true)
+            && ($type !== 'image/svg+xml' || preg_match(self::ACTIVE_SVG, (string) $file->getContent()) === 0);
     }
 
     /**

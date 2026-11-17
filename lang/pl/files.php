@@ -34,6 +34,7 @@ return [
         'remove_failed' => 'Nie udało się usunąć „:name” z biblioteki',
         'delete_failed' => 'Nie udało się usunąć pliku',
         'type_not_allowed' => 'Niedozwolony typ pliku. Dozwolone: :types',
+        'content_mismatch' => 'Zawartość pliku nie pasuje do jego rozszerzenia (:type).',
         'not_found' => 'Nie znaleziono pliku.',
     ],
 

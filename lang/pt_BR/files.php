@@ -34,6 +34,7 @@ return [
         'remove_failed' => 'Não foi possível remover ":name" da biblioteca',
         'delete_failed' => 'Não foi possível excluir o arquivo',
         'type_not_allowed' => 'Tipo de arquivo não permitido. Permitidos: :types',
+        'content_mismatch' => 'O conteúdo do arquivo não corresponde à sua extensão (:type).',
         'not_found' => 'Arquivo não encontrado.',
     ],
 

@@ -443,7 +443,7 @@ final class ApiResourceTest extends TestCase
         Storage::fake('public');
 
         $this->withToken($this->token(['posts:read', 'posts:write'], ['posts.view', 'posts.create']))
-            ->postJson('/api/v1/files', ['file' => UploadedFile::fake()->create('offer.pdf', 1)])
+            ->postJson('/api/v1/files', ['file' => UploadedFile::fake()->createWithContent('offer.pdf', "%PDF-1.4\n%%EOF\n")])
             ->assertOk()
             ->assertJsonPath('filename', 'offer.pdf')
             ->assertJsonPath('extension', 'pdf');
@@ -456,7 +456,7 @@ final class ApiResourceTest extends TestCase
         Storage::fake('public');
         $token = $this->admin()->createToken('agent', ['posts:write'])->plainTextToken;
 
-        $this->withToken($token)->postJson('/api/v1/files', ['file' => UploadedFile::fake()->create('offer.pdf', 1)])->assertOk();
+        $this->withToken($token)->postJson('/api/v1/files', ['file' => UploadedFile::fake()->createWithContent('offer.pdf', "%PDF-1.4\n%%EOF\n")])->assertOk();
 
         $this->assertSame(1, MediaItem::query()->count());
     }
@@ -466,7 +466,7 @@ final class ApiResourceTest extends TestCase
         Storage::fake('public');
 
         $this->withToken($this->token(['posts:read', 'pages:read'], ['posts.view', 'posts.create']))
-            ->postJson('/api/v1/files', ['file' => UploadedFile::fake()->create('offer.pdf', 1)])
+            ->postJson('/api/v1/files', ['file' => UploadedFile::fake()->createWithContent('offer.pdf', "%PDF-1.4\n%%EOF\n")])
             ->assertForbidden()
             ->assertJsonPath('message', 'The token is not allowed to change anything.');
 

@@ -34,6 +34,7 @@ return [
         'remove_failed' => '„:name“ konnte nicht aus der Mediathek entfernt werden',
         'delete_failed' => 'Die Datei konnte nicht gelöscht werden',
         'type_not_allowed' => 'Dateityp nicht zulässig. Zulässig: :types',
+        'content_mismatch' => 'Der Inhalt der Datei passt nicht zur Endung (:type).',
         'not_found' => 'Datei nicht gefunden.',
     ],
 

@@ -35,6 +35,7 @@ return [
         'remove_failed' => 'Could not remove ":name" from the library',
         'delete_failed' => 'Could not delete the file',
         'type_not_allowed' => 'File type not allowed. Allowed: :types',
+        'content_mismatch' => 'The content of the file does not match its extension (:type).',
         'not_found' => 'File not found.',
     ],
 

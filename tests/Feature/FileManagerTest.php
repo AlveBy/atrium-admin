@@ -16,6 +16,7 @@ use Atrium\Admin\Models\MediaItem;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -79,6 +80,19 @@ final class FileManagerTest extends TestCase
         $this->assertSame(100, $item->collection->sort);
     }
 
+    public function test_an_image_no_copy_can_be_made_from_is_still_saved_without_one(): void
+    {
+        // A JPEG by its header, so it passes the content check, but with
+        // nothing after it that an image library could read. Not an error
+        // either: nothing goes to the log.
+        Log::spy();
+        $this->upload(UploadedFile::fake()->createWithContent('beach.jpg', "\xFF\xD8\xFF\xE0".str_repeat("\0", 1020)))->assertOk();
+
+        Storage::disk('public')->assertExists('uploads/2026/11/00000000-0000-4000-8000-000000000001.jpg');
+        Storage::disk('public')->assertMissing('uploads/2026/11/00000000-0000-4000-8000-000000000001.jpg.webp');
+        Log::shouldNotHaveReceived('warning');
+    }
+
     public function test_a_lighter_webp_copy_is_put_next_to_an_uploaded_image(): void
     {
         $this->upload(UploadedFile::fake()->image('beach.jpg', 400, 300))->assertOk();
@@ -98,7 +112,7 @@ final class FileManagerTest extends TestCase
 
     public function test_a_document_is_kept_as_a_document_without_a_webp_copy(): void
     {
-        $this->upload(UploadedFile::fake()->create('price list.pdf', 12, 'application/pdf'))
+        $this->upload($this->file('price list.pdf', 12))
             ->assertOk()
             ->assertJsonPath('is_image', false)
             ->assertJsonPath('extension', 'pdf')
@@ -135,7 +149,7 @@ final class FileManagerTest extends TestCase
     #[DataProvider('names')]
     public function test_only_the_allowed_types_are_kept(string $name, ?string $extension): void
     {
-        $response = $this->upload(UploadedFile::fake()->create($name, 4));
+        $response = $this->upload($this->file($name, 4));
 
         if ($extension !== null) {
             $response->assertOk()->assertJsonPath('extension', $extension);
@@ -149,12 +163,128 @@ final class FileManagerTest extends TestCase
         }
     }
 
+    /**
+     * @return array<string,array{0:string,1:string}>
+     */
+    public static function disguised(): array
+    {
+        return [
+            'PHP behind a jpg' => ['photo.jpg', '<?php system($_GET["c"]);'],
+            'HTML behind a png' => ['logo.png', '<!DOCTYPE html><html><body><script>alert(1)</script></body></html>'],
+            'text behind a pdf' => ['offer.pdf', 'Plain text.'],
+            'a png behind a jpg' => ['photo.jpg', 'PNG'],
+            'an SVG behind a png' => ['logo.png', 'SVG'],
+            'a plain zip behind a doc' => ['offer.doc', 'ZIP'],
+            'an OLE store behind a docx' => ['offer.docx', 'OLE'],
+        ];
+    }
+
+    #[DataProvider('disguised')]
+    public function test_a_file_whose_content_is_not_what_its_name_says_is_refused(string $name, string $content): void
+    {
+        $content = match ($content) {
+            'PNG' => self::content('png'),
+            'SVG' => self::content('svg'),
+            'ZIP' => self::zip('word/document.xml'),
+            'OLE' => self::content('doc'),
+            default => $content,
+        };
+        $extension = pathinfo($name, PATHINFO_EXTENSION);
+
+        $this->upload(UploadedFile::fake()->createWithContent($name, $content))
+            ->assertStatus(422)
+            ->assertExactJson(['message' => __('atrium::files.errors.content_mismatch', ['type' => $extension])]);
+
+        $this->assertSame([], Storage::disk('public')->allFiles());
+        $this->assertSame(0, MediaItem::query()->count());
+    }
+
+    public function test_the_content_check_names_the_type_in_the_language_of_the_admin(): void
+    {
+        $admin = $this->admin();
+        $admin->update(['locale' => 'ru']);
+
+        $this->upload(UploadedFile::fake()->createWithContent('photo.jpg', 'Plain text.'), $admin)
+            ->assertStatus(422)
+            ->assertExactJson(['message' => 'Содержимое файла не соответствует расширению (jpg).']);
+    }
+
+    /**
+     * @return array<string,array{0:string}>
+     */
+    public static function officeFiles(): array
+    {
+        return [
+            'Word' => ['offer.doc'],
+            'Excel' => ['prices.xls'],
+            'Word 2007' => ['offer.docx'],
+            'Excel 2007' => ['prices.xlsx'],
+        ];
+    }
+
+    #[DataProvider('officeFiles')]
+    public function test_office_files_known_only_by_their_container_are_kept(string $name): void
+    {
+        $this->upload($this->file($name))->assertOk()->assertJsonPath('is_image', false);
+    }
+
+    public function test_a_picture_with_script_text_inside_is_still_a_picture(): void
+    {
+        $this->upload(UploadedFile::fake()->createWithContent('photo.png', self::content('png').'<script>alert(1)</script>'))
+            ->assertOk()
+            ->assertJsonPath('is_image', true);
+    }
+
+    public function test_a_clean_svg_is_kept_when_the_config_allows_svg(): void
+    {
+        config()->set('atrium.uploads.allowed_extensions', ['svg']);
+
+        $this->upload($this->file('logo.svg'))->assertOk()->assertJsonPath('extension', 'svg');
+    }
+
+    /**
+     * @return array<string,array{0:string}>
+     */
+    public static function activeSvg(): array
+    {
+        return [
+            'a script' => ['<script>alert(1)</script>'],
+            'a script in capitals' => ['<SCRIPT>alert(1)</SCRIPT>'],
+            'an event handler' => ['<rect width="1" height="1" onload="alert(1)"/>'],
+            'an event handler after a line break' => ["<rect width=\"1\"\nonclick = \"alert(1)\"/>"],
+            'a javascript: link' => ['<a href="javascript:alert(1)"><rect width="1" height="1"/></a>'],
+            'embedded HTML' => ['<foreignObject><iframe src="https://example.com"></iframe></foreignObject>'],
+            'an entity' => ['<a href="&#106;avascript:alert(1)"><rect width="1" height="1"/></a>'],
+            'a declared entity' => ['<!DOCTYPE svg [<!ENTITY x "y">]><rect width="1" height="1"/>'],
+        ];
+    }
+
+    #[DataProvider('activeSvg')]
+    public function test_an_svg_that_can_run_something_is_refused(string $inside): void
+    {
+        config()->set('atrium.uploads.allowed_extensions', ['svg']);
+
+        $this->upload(UploadedFile::fake()->createWithContent('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg">'.$inside.'</svg>'))
+            ->assertStatus(422)
+            ->assertExactJson(['message' => __('atrium::files.errors.content_mismatch', ['type' => 'svg'])]);
+
+        $this->assertSame(0, MediaItem::query()->count());
+    }
+
+    public function test_an_svg_attribute_that_only_starts_like_a_handler_is_fine(): void
+    {
+        config()->set('atrium.uploads.allowed_extensions', ['svg']);
+
+        $this->upload(UploadedFile::fake()->createWithContent('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" contentScriptType="text/ecmascript"><text font-weight="bold" opacity="1">on line</text></svg>'))
+            ->assertOk();
+    }
+
     public function test_the_allowed_types_come_from_the_config(): void
     {
         config()->set('atrium.uploads.allowed_extensions', ['txt']);
 
-        $this->upload(UploadedFile::fake()->create('notes.txt', 1))->assertOk();
-        $this->upload(UploadedFile::fake()->create('beach.jpg', 1))
+        $this->upload($this->file('notes.txt', 1))->assertOk();
+        $this->upload($this->file('beach.jpg', 1))
             ->assertStatus(422)
             ->assertJsonPath('message', __('atrium::files.errors.type_not_allowed', ['types' => 'txt']));
     }
@@ -165,7 +295,7 @@ final class FileManagerTest extends TestCase
         config()->set('atrium.uploads.disk', 'media');
         config()->set('atrium.uploads.directory', 'files');
 
-        $this->upload(UploadedFile::fake()->create('offer.pdf', 1))
+        $this->upload($this->file('offer.pdf', 1))
             ->assertOk()
             ->assertJsonPath('path', 'files/2026/11/00000000-0000-4000-8000-000000000001.pdf');
 
@@ -190,7 +320,7 @@ final class FileManagerTest extends TestCase
     {
         config()->set('atrium.uploads.max_size', 20);
 
-        $response = $this->upload(UploadedFile::fake()->create('offer.pdf', $kilobytes));
+        $response = $this->upload($this->file('offer.pdf', $kilobytes));
 
         if ($kept) {
             $response->assertOk();
@@ -204,7 +334,7 @@ final class FileManagerTest extends TestCase
     {
         config()->set('atrium.uploads.max_size', 1536);
 
-        $this->upload(UploadedFile::fake()->create('offer.pdf', 1537))
+        $this->upload($this->file('offer.pdf', 1537))
             ->assertJsonValidationErrors(['file' => 'The file is too large. Maximum size: 1.5 MB.']);
     }
 
@@ -240,7 +370,9 @@ final class FileManagerTest extends TestCase
     #[DataProvider('clientNames')]
     public function test_the_name_on_disk_never_comes_from_the_visitor(string $name, string $title): void
     {
-        $this->upload(UploadedFile::fake()->create($name, 1))
+        config()->set('atrium.uploads.webp', false);
+
+        $this->upload($this->file($name, 1))
             ->assertOk()
             ->assertJsonPath('path', 'uploads/2026/11/00000000-0000-4000-8000-000000000001.jpg')
             ->assertJsonPath('filename', $title);
@@ -250,7 +382,7 @@ final class FileManagerTest extends TestCase
 
     public function test_a_very_long_name_is_cut_to_250_characters(): void
     {
-        $this->upload(UploadedFile::fake()->create(str_repeat('a', 300).'.pdf', 1))->assertOk();
+        $this->upload($this->file(str_repeat('a', 300).'.pdf', 1))->assertOk();
 
         $this->assertSame(str_repeat('a', 250), MediaItem::query()->sole()->name);
     }
@@ -260,8 +392,8 @@ final class FileManagerTest extends TestCase
         $admin = $this->admin();
         $admin->update(['locale' => 'ru']);
 
-        $this->upload(UploadedFile::fake()->create('one.pdf', 1), $admin)->assertOk();
-        $this->upload(UploadedFile::fake()->create('two.pdf', 1), $admin)->assertOk();
+        $this->upload($this->file('one.pdf', 1), $admin)->assertOk();
+        $this->upload($this->file('two.pdf', 1), $admin)->assertOk();
 
         $this->assertSame(['Uploaded in the admin panel'], MediaCollection::query()->pluck('name')->all());
         $this->assertSame(2, MediaCollection::query()->sole()->items()->count());
@@ -269,18 +401,18 @@ final class FileManagerTest extends TestCase
 
     public function test_uploading_needs_a_right_to_create_or_edit_something(): void
     {
-        $this->upload(UploadedFile::fake()->create('one.pdf', 1), $this->editor(['posts.view']))->assertForbidden();
+        $this->upload($this->file('one.pdf', 1), $this->editor(['posts.view']))->assertForbidden();
         $this->assertSame(0, MediaItem::query()->count());
 
-        $this->upload(UploadedFile::fake()->create('one.pdf', 1), $this->editor(['posts.update'], 'writer@example.com'))->assertOk();
-        $this->upload(UploadedFile::fake()->create('two.pdf', 1), $this->editor(['posts.create'], 'creator@example.com'))->assertOk();
-        $this->upload(UploadedFile::fake()->create('three.pdf', 1), $this->editor(['labels.settings'], 'setup@example.com'))->assertOk();
+        $this->upload($this->file('one.pdf', 1), $this->editor(['posts.update'], 'writer@example.com'))->assertOk();
+        $this->upload($this->file('two.pdf', 1), $this->editor(['posts.create'], 'creator@example.com'))->assertOk();
+        $this->upload($this->file('three.pdf', 1), $this->editor(['labels.settings'], 'setup@example.com'))->assertOk();
         $this->assertSame(3, MediaItem::query()->count());
     }
 
     public function test_guests_cannot_upload(): void
     {
-        $this->postJson('/admin/upload', ['file' => UploadedFile::fake()->create('one.pdf', 1)])->assertUnauthorized();
+        $this->postJson('/admin/upload', ['file' => $this->file('one.pdf', 1)])->assertUnauthorized();
         $this->assertSame(0, MediaItem::query()->count());
     }
 
@@ -474,6 +606,59 @@ final class FileManagerTest extends TestCase
             ->assertForbidden();
 
         $this->assertSame(1, MediaItem::query()->count());
+    }
+
+    /**
+     * An upload whose content is what its name says, $kilobytes long: a real
+     * picture, a PDF, an Office file, or text for any other name.
+     */
+    private function file(string $name, int $kilobytes = 1): UploadedFile
+    {
+        $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        $content = self::content($extension);
+        $padding = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'docx', 'xlsx', 'doc', 'xls'], true) ? "\0" : ' ';
+
+        return UploadedFile::fake()->createWithContent($name, str_pad($content, max(strlen($content), $kilobytes * 1024), $padding));
+    }
+
+    private static function content(string $extension): string
+    {
+        $picture = imagecreatetruecolor(2, 2);
+        ob_start();
+
+        match ($extension) {
+            'jpg', 'jpeg' => imagejpeg($picture),
+            'png' => imagepng($picture),
+            'gif' => imagegif($picture),
+            'webp' => imagewebp($picture),
+            default => null,
+        };
+
+        $image = (string) ob_get_clean();
+
+        return match ($extension) {
+            'jpg', 'jpeg', 'png', 'gif', 'webp' => $image,
+            'pdf' => "%PDF-1.4\n%%EOF\n",
+            'docx' => self::zip('word/document.xml'),
+            'xlsx' => self::zip('xl/workbook.xml'),
+            'doc', 'xls' => "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1",
+            'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1"/></svg>',
+            default => 'Plain text.',
+        };
+    }
+
+    private static function zip(string $part): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'office');
+        $zip = new \ZipArchive;
+        $zip->open($path, \ZipArchive::OVERWRITE);
+        $zip->addFromString('[Content_Types].xml', '<Types/>');
+        $zip->addFromString($part, '<part/>');
+        $zip->close();
+        $content = (string) file_get_contents($path);
+        unlink($path);
+
+        return $content;
     }
 
     private function upload(UploadedFile $file, ?AdminUser $user = null): TestResponse

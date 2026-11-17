@@ -34,6 +34,7 @@ return [
         'remove_failed' => '“:name” faylini kutubxonadan olib tashlab boʻlmadi',
         'delete_failed' => 'Faylni oʻchirib boʻlmadi',
         'type_not_allowed' => 'Bu turdagi faylga ruxsat yoʻq. Ruxsat etilganlar: :types',
+        'content_mismatch' => 'Fayl mazmuni kengaytmasiga (:type) mos kelmaydi.',
         'not_found' => 'Fayl topilmadi.',
     ],
 

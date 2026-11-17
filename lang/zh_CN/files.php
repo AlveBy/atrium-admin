@@ -34,6 +34,7 @@ return [
         'remove_failed' => '无法从媒体库中移除“:name”',
         'delete_failed' => '无法删除文件',
         'type_not_allowed' => '不允许的文件类型。允许的类型：:types',
+        'content_mismatch' => '文件内容与扩展名（:type）不符。',
         'not_found' => '未找到文件。',
     ],
 

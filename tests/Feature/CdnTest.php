@@ -265,7 +265,7 @@ final class CdnTest extends TestCase
         $this->withoutDefer();
 
         $upload = $this->actingAs($this->admin(), 'admin')
-            ->post('/admin/upload', ['file' => UploadedFile::fake()->create('photo.pdf', 10, 'application/pdf')])
+            ->post('/admin/upload', ['file' => UploadedFile::fake()->createWithContent('photo.pdf', "%PDF-1.4\n".str_repeat(' ', 10240))])
             ->assertOk();
 
         // Host-independent: the CDN is put in front when the page is drawn.
@@ -286,7 +286,7 @@ final class CdnTest extends TestCase
         $this->withoutDefer();
 
         $upload = $this->actingAs($this->admin(), 'admin')
-            ->post('/admin/upload', ['file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')]);
+            ->post('/admin/upload', ['file' => UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\n".str_repeat(' ', 10240))]);
         $this->deleteJson('/admin/filemanager', ['id' => $upload->json('id')])->assertOk();
 
         Storage::disk('public')->assertMissing($upload->json('path'));
@@ -342,7 +342,7 @@ final class CdnTest extends TestCase
         $this->withoutDefer();
 
         $upload = $this->actingAs($this->admin(), 'admin')
-            ->post('/admin/upload', ['file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')]);
+            ->post('/admin/upload', ['file' => UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\n".str_repeat(' ', 10240))]);
         $this->deleteJson('/admin/filemanager', ['id' => $upload->json('id')])->assertOk();
 
         Http::assertNothingSent();
@@ -667,7 +667,7 @@ final class CdnTest extends TestCase
     {
         Storage::fake('public');
         $path = (string) $this->actingAs($this->admin(), 'admin')
-            ->post('/admin/upload', ['file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')])
+            ->post('/admin/upload', ['file' => UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\n".str_repeat(' ', 10240))])
             ->json('path');
 
         $response = app(FileManagerController::class)->destroy(HttpRequest::create('/admin/filemanager', 'DELETE', ['path' => $path]));
@@ -682,7 +682,7 @@ final class CdnTest extends TestCase
         Storage::fake('public');
         $this->actingAs($this->admin(), 'admin');
 
-        $response = app(FileManagerController::class)->upload(HttpRequest::create('/admin/upload', 'POST', [], [], ['file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')]));
+        $response = app(FileManagerController::class)->upload(HttpRequest::create('/admin/upload', 'POST', [], [], ['file' => UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\n".str_repeat(' ', 10240))]));
 
         $path = (string) $response->getData(true)['path'];
         $this->assertSame(200, $response->getStatusCode());
