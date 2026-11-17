@@ -207,6 +207,45 @@ class RecordCacheTest extends CacheTestCase
         $this->assertSame([], Book::query()->where('price', '>', 500)->cachedIds()->ids);
     }
 
+    public function test_a_save_in_a_transaction_drops_again_once_committed(): void
+    {
+        [$book] = $this->books(1);
+        $versions = $this->app->make(RecordCache::class)->versions();
+        $name = 'list:'.Book::class;
+        $before = $versions->get([$name])[$name];
+        $during = null;
+
+        DB::transaction(function () use ($book, $versions, $name, &$during): void {
+            $book->update(['price' => 5]);
+            // The request that saves reads its own change at once.
+            $during = $versions->get([$name])[$name];
+        });
+
+        $this->assertNotSame($before, $during);
+        // A visitor may have kept the old row between the save and the commit.
+        $this->assertNotSame($during, $versions->get([$name])[$name]);
+    }
+
+    public function test_a_rolled_back_save_drops_nothing_more(): void
+    {
+        [$book] = $this->books(1);
+        $versions = $this->app->make(RecordCache::class)->versions();
+        $name = 'list:'.Book::class;
+        $during = null;
+
+        try {
+            DB::transaction(function () use ($book, $versions, $name, &$during): void {
+                $book->update(['price' => 5]);
+                $during = $versions->get([$name])[$name];
+
+                throw new \RuntimeException('rolled back');
+            });
+        } catch (\RuntimeException) {
+        }
+
+        $this->assertSame($during, $versions->get([$name])[$name]);
+    }
+
     public function test_a_bulk_import_drops_the_cache_once_at_the_end(): void
     {
         [$book] = $this->books(1);

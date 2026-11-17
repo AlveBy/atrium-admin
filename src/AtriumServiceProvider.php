@@ -321,8 +321,14 @@ final class AtriumServiceProvider extends ServiceProvider
         });
 
         $changed = function (string $event, array $payload): void {
-            if (($payload[0] ?? null) instanceof Model) {
-                $this->app->make(RecordCache::class)->changed($payload[0]);
+            $record = $payload[0] ?? null;
+
+            if ($record instanceof Model) {
+                $cache = $this->app->make(RecordCache::class);
+                $cache->changed($record);
+                // Again once committed: a visitor who read between the save
+                // and the commit kept the old row under the new version.
+                $record->getConnection()->afterCommit(static fn () => $cache->changed($record));
             }
         };
 

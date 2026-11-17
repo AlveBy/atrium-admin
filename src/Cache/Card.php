@@ -224,7 +224,9 @@ final class Card implements ArrayAccess, JsonSerializable
     {
         /** @var class-string<Model> $type */
         $type = $data['type'];
-        $model = (new $type)->newFromBuilder($data['raw']);
+        $prototype = new $type;
+        // Named like a model read by a query, so is() and the connection agree.
+        $model = $prototype->newFromBuilder($data['raw'], $prototype->getConnection()->getName());
 
         // Translated attributes read in the card's language, whatever the
         // app's language is now.

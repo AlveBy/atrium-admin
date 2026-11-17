@@ -58,7 +58,7 @@ class CacheWarmCommand extends Command
             }
 
             $sites->setCurrent($site);
-            $languages->flush();
+            $languages->forgetActive();
             $codes = $languages->codes();
             $base = $this->base($site);
 

@@ -112,8 +112,8 @@ final class PublicUrl
 
         // Kept in the record cache until a section of the tree changes.
         return self::$pathCache[$cacheKey] = app(RecordCache::class)->remember(
-            $treeClass,
-            'section-paths:'.$parentColumn,
+            [$treeClass, self::class],
+            'section-paths:'.$cacheKey,
             static fn (): array => self::buildSectionPaths($treeClass, $parentColumn),
             perSite: false,
         );
@@ -180,5 +180,6 @@ final class PublicUrl
     public static function forgetPaths(): void
     {
         self::$pathCache = [];
+        app(RecordCache::class)->flushClass(self::class);
     }
 }

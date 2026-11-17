@@ -86,7 +86,20 @@ final class ContentLanguages
         return route('localized.'.$name, ['locale' => $code, ...$parameters], $absolute);
     }
 
+    /**
+     * The languages changed behind the models' back: read them anew.
+     */
     public function flush(): void
+    {
+        $this->forgetActive();
+        app(RecordCache::class)->flushClass(Language::class);
+    }
+
+    /**
+     * Another site became current: its languages are picked anew from the
+     * kept list.
+     */
+    public function forgetActive(): void
     {
         $this->active = null;
     }

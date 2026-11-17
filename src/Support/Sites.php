@@ -162,7 +162,7 @@ final class Sites
         $this->currentId = $site->id;
         $this->resolved = true;
 
-        app(ContentLanguages::class)->flush();
+        app(ContentLanguages::class)->forgetActive();
     }
 
     public function forgetCurrent(): void
@@ -171,7 +171,7 @@ final class Sites
         $this->resolved = false;
         $this->allowedIds = null;
 
-        app(ContentLanguages::class)->flush();
+        app(ContentLanguages::class)->forgetActive();
     }
 
     public function isMultisite(): bool
@@ -182,6 +182,7 @@ final class Sites
     public function flush(): void
     {
         $this->all = null;
+        app(RecordCache::class)->flushClass(Site::class);
     }
 
     /**
