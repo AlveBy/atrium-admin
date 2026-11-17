@@ -42,3 +42,5 @@
 @if ($site->head_code)
 {!! $site->head_code !!}
 @endif
+{{-- Modules add tags of their own: robots, hreflang, structured data. --}}
+{!! \Atrium\Admin\Facades\Hook::apply('atrium.head', '') !!}

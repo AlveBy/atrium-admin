@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Traits;
 
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Fields\ImageField;
 use Atrium\Admin\Fields\TextareaField;
 use Atrium\Admin\Fields\TextField;
@@ -253,7 +254,9 @@ trait HasAdminSeo
      */
     public static function getSeoAdminFields(): array
     {
-        return [
+        // Modules add fields of their own (a robots select from the SEO
+        // module); a field named seo_x is saved to the seo_x column.
+        return Hook::apply('atrium.seo.fields', [
             TextField::make('seo_title')
                 ->label(__('atrium::resource.seo.title'))
                 ->maxLength(255)
@@ -311,6 +314,6 @@ trait HasAdminSeo
             ImageField::make('seo_og_image')
                 ->label(__('atrium::resource.seo.og_image'))
                 ->hint(__('atrium::resource.seo.og_image_hint')),
-        ];
+        ], static::class);
     }
 }

@@ -239,6 +239,7 @@ final class SupportEdgesTest extends TestCase
             'loc' => 'http://localhost/en/notes/shown',
             'lastmod' => $shown->updated_at?->format(DateTimeInterface::ATOM),
             'alternates' => [],
+            'language' => 'en',
         ], $entries[1]);
         $this->assertCount(2, $entries);
     }

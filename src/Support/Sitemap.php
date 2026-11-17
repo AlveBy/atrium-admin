@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Support;
 
 use Atrium\Admin\Contracts\Sitemapable;
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Closure;
 use DateTimeInterface;
@@ -107,7 +108,7 @@ final class Sitemap
     /**
      * Every address of the current site, as it is served on this host.
      *
-     * @return array<int,array{loc:string,lastmod:string|null,alternates:array<string,string>}>
+     * @return array<int,array{loc:string,lastmod:string|null,alternates:array<string,string>,language?:string}>
      */
     public function entries(): array
     {
@@ -138,7 +139,7 @@ final class Sitemap
     }
 
     /**
-     * @return array<int,array{loc:string,lastmod:string|null,alternates:array<string,string>}>
+     * @return array<int,array{loc:string,lastmod:string|null,alternates:array<string,string>,language?:string}>
      */
     private function build(): array
     {
@@ -175,17 +176,19 @@ final class Sitemap
      * One entry per language the record has a page in; each lists all of them.
      *
      * @param  Closure(string): ?string  $urlIn
-     * @return array<int,array{loc:string,lastmod:string|null,alternates:array<string,string>}>
+     * @return array<int,array{loc:string,lastmod:string|null,alternates:array<string,string>,language?:string}>
      */
     private function entriesOf(Model $record, Closure $urlIn): array
     {
         $urls = [];
+        $codes = [];
 
         foreach ($this->languages->all() as $language) {
             $url = $urlIn($language->code);
 
             if ($url !== null && $url !== '') {
                 $urls[$language->hreflang()] = $url;
+                $codes[$language->hreflang()] = $language->code;
             }
         }
 
@@ -203,10 +206,14 @@ final class Sitemap
         $updated = $record->usesTimestamps() ? $record->getAttribute($record->getUpdatedAtColumn()) : null;
         $lastmod = $updated instanceof DateTimeInterface ? $updated->format(DateTimeInterface::ATOM) : null;
 
-        return array_map(
-            static fn (string $url): array => ['loc' => $url, 'lastmod' => $lastmod, 'alternates' => $alternates],
-            array_values($urls),
-        );
+        $entries = [];
+
+        foreach ($urls as $hreflang => $url) {
+            $entries[] = ['loc' => $url, 'lastmod' => $lastmod, 'alternates' => $alternates, 'language' => $codes[$hreflang]];
+        }
+
+        // Modules drop a record kept out of search engines or add its pictures.
+        return Hook::apply('atrium.sitemap.entries', $entries, $record);
     }
 
     private function perFile(): int

@@ -9,11 +9,15 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
+use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\ImageField;
+use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Models\SeoMeta;
 use Atrium\Admin\Tests\TestCase;
 use Atrium\Admin\Traits\HasAdminSeo;
 use Illuminate\Database\Eloquent\Model;
+use ReflectionMethod;
 
 final class SeoMetaTest extends TestCase
 {
@@ -44,6 +48,27 @@ final class SeoMetaTest extends TestCase
         foreach ($data as $column => $value) {
             $this->assertSame($value, $saved->getAttribute($column), $column);
         }
+    }
+
+    public function test_a_module_adds_a_field_to_the_seo_tab(): void
+    {
+        $names = static fn (): array => array_map(static fn (Field $field): string => $field->getName(), SeoPost::getSeoAdminFields());
+        $before = $names();
+
+        $this->assertSame('seo_title', $before[0]);
+        $this->assertNotContains('seo_robots', $before);
+
+        $heard = null;
+        Hook::filter('atrium.seo.fields', static function (array $fields, string $model) use (&$heard): array {
+            $heard = $model;
+
+            return [...$fields, TextField::make('seo_robots')];
+        });
+
+        $this->assertSame([...$before, 'seo_robots'], $names());
+        $this->assertSame(SeoPost::class, $heard);
+        // The panel reads the tab from outside the model.
+        $this->assertTrue((new ReflectionMethod(SeoPost::class, 'getSeoAdminFields'))->isPublic());
     }
 }
 
