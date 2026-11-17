@@ -142,12 +142,12 @@ final class IndexMediaTest extends TestCase
         $this->assertSame('text/plain', $terms->mime_type);
     }
 
-    public function test_a_missing_public_folder_is_named(): void
+    public function test_a_missing_public_folder_is_named_and_fails(): void
     {
         $this->artisan('atrium:media:index', ['--path' => 'nowhere'])
             ->expectsOutput('Folder does not exist: '.$this->public.'/nowhere')
-            ->expectsOutput('No files found.')
-            ->assertSuccessful();
+            ->doesntExpectOutput('No files found.')
+            ->assertFailed();
 
         $this->assertSame(0, MediaItem::query()->count());
     }

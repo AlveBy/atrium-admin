@@ -38,11 +38,17 @@ class IndexMediaCommand extends Command
     public function handle(): int
     {
         $dryRun = (bool) $this->option('dry-run');
-        $relative = (string) ($this->option('path') ?? '');
+        $relative = trim((string) ($this->option('path') ?? ''), '/');
 
-        [$files, $prefix] = $relative === ''
-            ? $this->storageFiles()
-            : $this->publicFiles($relative);
+        if ($relative === '') {
+            [$files, $prefix] = $this->storageFiles();
+        } elseif (is_dir(public_path($relative))) {
+            [$files, $prefix] = $this->publicFiles($relative);
+        } else {
+            $this->error('Folder does not exist: '.public_path($relative));
+
+            return self::FAILURE;
+        }
 
         if ($files === []) {
             $this->warn('No files found.');
@@ -126,14 +132,7 @@ class IndexMediaCommand extends Command
      */
     private function publicFiles(string $relative): array
     {
-        $relative = trim($relative, '/');
         $root = public_path($relative);
-
-        if (! is_dir($root)) {
-            $this->error('Folder does not exist: '.$root);
-
-            return [[], ''];
-        }
 
         $files = [];
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
