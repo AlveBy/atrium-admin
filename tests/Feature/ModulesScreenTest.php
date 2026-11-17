@@ -18,7 +18,10 @@ use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Console\ClosureCommand;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
@@ -98,6 +101,61 @@ final class ModulesScreenTest extends TestCase
         $this->post('/admin/modules/labels_qr/enable')->assertSessionHas('error');
 
         $this->assertTrue($this->app->make(Modules::class)->isDisabled('acme/atrium-labels-qr'));
+    }
+
+    public function test_switching_a_module_on_leaves_its_removed_submodules_out(): void
+    {
+        $modules = $this->app->make(Modules::class);
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels-qr'])->assertSuccessful();
+
+        $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels/disable');
+        $this->post('/admin/modules/labels/enable')->assertSessionHas('success');
+
+        $this->assertTrue($modules->isInstalled('acme/atrium-labels-printing'));
+        $this->assertFalse($modules->isInstalled('acme/atrium-labels-qr'));
+        $this->assertFalse($modules->isDisabled('acme/atrium-labels-qr'));
+    }
+
+    public function test_nothing_changes_when_the_config_file_cannot_be_edited(): void
+    {
+        $modules = $this->app->make(Modules::class);
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-labels-printing'])->assertSuccessful();
+        $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels_qr/disable');
+        unlink(config_path('atrium.php'));
+
+        $this->post('/admin/modules/labels/disable')->assertSessionHas('error', __('atrium::modules.config_locked'));
+        $this->assertTrue($modules->isInstalled('acme/atrium-labels'));
+
+        $this->post('/admin/modules/labels_qr/enable')->assertSessionHas('error', __('atrium::modules.config_locked'));
+        $this->assertFalse($modules->install($modules->find('acme/atrium-labels-qr')));
+        $this->assertTrue($modules->isDisabled('acme/atrium-labels-qr'));
+
+        $this->assertFalse($modules->install($modules->find('acme/atrium-labels-printing')));
+        $this->assertFalse($modules->isInstalled('acme/atrium-labels-printing'));
+    }
+
+    public function test_cached_config_and_routes_are_built_again_after_a_switch(): void
+    {
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-labels'])->assertSuccessful();
+        // Stand-ins for the real commands, which would cache the test app.
+        $built = [];
+        foreach (['config:cache', 'route:cache'] as $name) {
+            $this->app->make(ConsoleKernel::class)->registerCommand(new ClosureCommand($name, function () use (&$built, $name): void {
+                $built[] = $name;
+            }));
+        }
+
+        $this->actingAs($this->admin(), 'admin')->post('/admin/modules/labels_qr/disable')->assertSessionHas('success');
+        $this->assertSame([], $built, 'Nothing was cached, so nothing is built.');
+
+        // What Laravel looks at to tell cached config and routes.
+        $this->app->instance('config_loaded_from_cache', true);
+        $this->app->instance('routes.cached', true);
+
+        $this->post('/admin/modules/labels_qr/enable')->assertSessionHas('success');
+        $this->assertSame(['config:cache', 'route:cache'], $built);
     }
 
     public function test_only_a_superadmin_switches_modules(): void
@@ -184,6 +242,10 @@ final class ModulesScreenTest extends TestCase
 
         $this->assertNull($this->app->make(Catalogue::class)->packages());
         $this->assertNull(Cache::get('atrium.modules.catalogue'));
+
+        Http::fake(fn () => throw new ConnectionException('Packagist is down'));
+
+        $this->assertNull($this->app->make(Catalogue::class)->packages());
     }
 
     private static function fixture(string $folder): Module
