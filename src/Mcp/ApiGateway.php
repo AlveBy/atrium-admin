@@ -39,7 +39,7 @@ final class ApiGateway
             $method,
             $query,
             server: ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'],
-            content: $body === null ? null : (string) json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            content: $body === null ? null : json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         );
         $sub->headers->set('Authorization', (string) $current->headers->get('Authorization'));
 
@@ -54,7 +54,6 @@ final class ApiGateway
             // The MCP response still belongs to the original request.
             app()->instance('request', $current);
             Facade::clearResolvedInstance('request');
-            url()->setRequest($current);
         }
 
         $status = $response->getStatusCode();
@@ -75,7 +74,7 @@ final class ApiGateway
      */
     private static function message(int $status, array $data): string
     {
-        $message = (string) ($data['message'] ?? 'The request failed.');
+        $message = $data['message'] ?? 'The request failed.';
 
         foreach ((array) ($data['errors'] ?? []) as $field => $errors) {
             $message .= "\n- {$field}: ".implode(' ', (array) $errors);
