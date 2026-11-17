@@ -17,6 +17,7 @@ use Atrium\Admin\Modules\Catalogue;
 use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Resources\ResourceRegistry;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
@@ -37,6 +38,8 @@ use Inertia\Testing\AssertableInertia;
  */
 final class ModulesScreenTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     private string $root;
 
     protected function defineEnvironment($app): void

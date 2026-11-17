@@ -11,6 +11,7 @@ namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\TextField;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Handbook;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Model;
 
 final class AdminTraitsTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     /**
      * @param  array<string,array<int,Field>>  $grouped
      * @return array<string,array<int,string>>

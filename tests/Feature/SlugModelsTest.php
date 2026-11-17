@@ -11,6 +11,7 @@ namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Models\Slug;
 use Atrium\Admin\Models\SlugHistory;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Handbook;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Model;
 
 final class SlugModelsTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     public function test_a_slug_is_found_by_its_code_and_type(): void
     {
         $article = Handbook::query()->create(['name' => 'Chair', 'code' => 'chair']);

@@ -14,6 +14,7 @@ use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Support\Sites;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\Fixtures\Modules\LabelSettings;
 use Atrium\Admin\Tests\Fixtures\Modules\NoteSettings;
@@ -32,6 +33,8 @@ use Inertia\Testing\AssertableInertia;
  */
 final class ModuleControllerExactnessTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     private string $root;
 
     protected function defineEnvironment($app): void

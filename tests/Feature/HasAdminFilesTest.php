@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Models\File;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Handbook;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class HasAdminFilesTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function setUp(): void
     {
         parent::setUp();

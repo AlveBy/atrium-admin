@@ -13,6 +13,7 @@ use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\MediaCollection;
 use Atrium\Admin\Models\MediaItem;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
@@ -29,6 +30,8 @@ use Ramsey\Uuid\Uuid;
  */
 final class FileManagerTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function setUp(): void
     {
         parent::setUp();

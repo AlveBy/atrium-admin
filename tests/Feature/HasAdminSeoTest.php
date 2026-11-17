@@ -11,12 +11,15 @@ namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Models\SeoMeta;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Handbook;
 use Atrium\Admin\Tests\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class HasAdminSeoTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     public function test_the_title_from_the_seo_tab_wins_and_fills_its_placeholders(): void
     {
         $article = Handbook::query()->create(['name' => '<b>Chair</b>', 'code' => 'chair']);

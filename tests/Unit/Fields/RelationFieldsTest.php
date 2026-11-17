@@ -13,6 +13,7 @@ use Atrium\Admin\Fields\BelongsToField;
 use Atrium\Admin\Fields\BelongsToManyField;
 use Atrium\Admin\Fields\FieldContext;
 use Atrium\Admin\Fields\TreeSelectField;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Section;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,6 +25,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 final class RelationFieldsTest extends FieldTestCase
 {
+    use PinsExtensionSurface;
+
     public function test_a_belongs_to_field_without_a_model_offers_nothing(): void
     {
         $field = BelongsToField::make('post_id');

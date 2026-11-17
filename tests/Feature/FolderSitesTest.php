@@ -14,6 +14,7 @@ use Atrium\Admin\Models\Site;
 use Atrium\Admin\Models\SlugHistory;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Sites;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Note;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
@@ -27,6 +28,8 @@ use Inertia\Testing\AssertableInertia;
  */
 final class FolderSitesTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

@@ -11,6 +11,7 @@ namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Models\Slug;
 use Atrium\Admin\Models\SlugHistory;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Handbook;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
@@ -19,6 +20,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class HasAdminSlugTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     /**
      * @return array<string,array{string,string}>
      */

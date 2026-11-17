@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Actions\CreateFromRecord;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Chapter;
 use Atrium\Admin\Tests\Fixtures\Ledger;
 use Atrium\Admin\Tests\Fixtures\PanelAccount;
@@ -27,6 +28,8 @@ use Inertia\Testing\AssertableInertia;
  */
 final class RecordActionsTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

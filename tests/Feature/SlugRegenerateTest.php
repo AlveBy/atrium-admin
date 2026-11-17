@@ -17,6 +17,7 @@ use App\Models\RegenPamphlet;
 use Atrium\Admin\Models\Slug;
 use Atrium\Admin\Models\SlugHistory;
 use Atrium\Admin\Services\SlugService;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Leaflet;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
@@ -30,6 +31,8 @@ use Illuminate\Support\Facades\Artisan;
  */
 final class SlugRegenerateTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     private string $appPath;
 
     protected function setUp(): void

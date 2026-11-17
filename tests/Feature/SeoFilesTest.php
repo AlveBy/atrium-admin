@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Support\Sitemap;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Story;
 use Atrium\Admin\Tests\TestCase;
@@ -24,6 +25,8 @@ use SimpleXMLElement;
 
 final class SeoFilesTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

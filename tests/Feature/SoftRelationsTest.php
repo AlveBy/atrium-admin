@@ -15,6 +15,7 @@ use Atrium\Admin\Models\Site;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Modules\Soft;
 use Atrium\Admin\Resources\ResourceRegistry;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Gadget;
 use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\Fixtures\Post;
@@ -33,6 +34,8 @@ use ReflectionClass;
  */
 final class SoftRelationsTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

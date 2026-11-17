@@ -16,6 +16,7 @@ use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\MediaItem;
 use Atrium\Admin\Models\SeoMeta;
 use Atrium\Admin\Models\Site;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\ApiArticle;
 use Atrium\Admin\Tests\Fixtures\Note;
 use Atrium\Admin\Tests\Fixtures\Page;
@@ -36,6 +37,8 @@ use ReflectionClass;
  */
 final class ApiResourceTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

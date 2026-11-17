@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Support\Arr;
@@ -25,6 +26,8 @@ use ReflectionClass;
 
 final class PermissionsTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineDatabaseMigrations(): void
     {
         parent::defineDatabaseMigrations();

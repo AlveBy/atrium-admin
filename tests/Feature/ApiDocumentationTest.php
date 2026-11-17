@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Api\ApiDocumentation;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Models\Language;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\ApiAisle;
 use Atrium\Admin\Tests\Fixtures\ApiShowcase;
 use Atrium\Admin\Tests\Fixtures\Post;
@@ -24,6 +25,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 final class ApiDocumentationTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

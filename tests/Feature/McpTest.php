@@ -13,6 +13,7 @@ use Atrium\Admin\Mcp\Tools\GetRecord;
 use Atrium\Admin\Mcp\Tools\ListModules;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Testing\TestResponse;
@@ -26,6 +27,8 @@ use ReflectionClass;
  */
 final class McpTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineDatabaseMigrations(): void
     {
         parent::defineDatabaseMigrations();

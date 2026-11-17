@@ -9,10 +9,13 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\TestCase;
 
 final class ThemeTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     public function test_the_page_is_rendered_in_the_configured_theme(): void
     {
         config(['atrium.admin.theme' => 'sand']);

@@ -22,6 +22,7 @@ use Atrium\Admin\Support\MediaUrl;
 use Atrium\Admin\Support\Menu;
 use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Note;
 use Atrium\Admin\Tests\TestCase;
 use DateTimeInterface;
@@ -35,6 +36,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class SupportEdgesTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     private function editor(): AdminUser
     {
         return AdminUser::query()->create(['name' => 'Editor', 'email' => 'editor@example.com', 'password' => 'secret-password', 'is_active' => true]);

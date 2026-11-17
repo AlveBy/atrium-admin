@@ -13,6 +13,7 @@ use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\MediaCollection;
 use Atrium\Admin\Models\MediaItem;
 use Atrium\Admin\Models\SeoMeta;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Handbook;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Support\Facades\Storage;
@@ -20,6 +21,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class MediaAndSeoModelsTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     public function test_the_effective_title_and_description_fall_back_in_order(): void
     {
         $meta = new SeoMeta(['title' => 'Title', 'og_title' => 'Share title', 'description' => 'Text', 'og_description' => 'Share text']);

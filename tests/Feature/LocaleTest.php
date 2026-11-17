@@ -10,10 +10,13 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Support\Locales;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\TestCase;
 
 final class LocaleTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     public function test_a_guest_gets_the_browser_language_when_the_panel_has_it(): void
     {
         $response = $this->get('/admin/login', ['Accept-Language' => 'ru-RU,ru;q=0.9,en;q=0.8']);

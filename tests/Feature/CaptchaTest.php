@@ -14,6 +14,7 @@ use Atrium\Admin\Captcha\CaptchaManager;
 use Atrium\Admin\Captcha\ImageCaptcha;
 use Atrium\Admin\Captcha\NoCaptcha;
 use Atrium\Admin\Captcha\RecaptchaCaptcha;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Encryption\Encrypter;
@@ -27,6 +28,8 @@ use Illuminate\Support\HtmlString;
 
 final class CaptchaTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     public function test_off_by_default_the_forms_draw_and_ask_nothing(): void
     {
         $captcha = $this->captcha();

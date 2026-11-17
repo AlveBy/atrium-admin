@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia;
@@ -20,6 +21,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 final class ProfileTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     public function test_the_profile_shows_the_administrator_without_secrets(): void
     {
         $admin = $this->admin();
