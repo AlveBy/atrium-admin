@@ -17,6 +17,7 @@ use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Support\Themes;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Inertia\Inertia;
 use Inertia\Middleware;
 use Symfony\Component\HttpFoundation\Response;
@@ -53,7 +54,7 @@ final class HandleAtriumRequests extends Middleware
     {
         $manifest = public_path('vendor/atrium/manifest.json');
 
-        return is_file($manifest) ? (string) md5_file($manifest) : null;
+        return is_file($manifest) ? md5(File::get($manifest)) : null;
     }
 
     /**
