@@ -74,6 +74,8 @@ class CacheDebugTest extends CacheTestCase
     protected function tearDown(): void
     {
         Clock::$instants = [];
+        // Back to local: the database is refreshed without asking for confirmation.
+        $this->app['env'] = 'local';
 
         parent::tearDown();
     }

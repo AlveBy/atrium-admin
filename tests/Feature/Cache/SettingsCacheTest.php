@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature\Cache;
 
 use Atrium\Admin\Cache\RecordCache;
+use Atrium\Admin\Models\Site;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Modules\Settings;
 use Atrium\Admin\Tests\Fixtures\Modules\Label;
@@ -92,14 +93,17 @@ final class SettingsCacheTest extends TestCase
 
     public function test_the_cache_holds_the_values_of_every_site_of_the_module(): void
     {
+        // Real sites: MySQL and PostgreSQL hold the settings to them.
+        $shop = Site::query()->create(['code' => 'shop', 'name' => 'Shop', 'folder' => 'shop']);
+        $blog = Site::query()->create(['code' => 'blog', 'name' => 'Blog', 'folder' => 'blog']);
         DB::table(Settings::TABLE)->insert([
             ['module' => 'labels', 'site_id' => null, 'values' => '{"color":"red"}', 'created_at' => now(), 'updated_at' => now()],
-            ['module' => 'labels', 'site_id' => 7, 'values' => '{"color":"blue"}', 'created_at' => now(), 'updated_at' => now()],
+            ['module' => 'labels', 'site_id' => $shop->id, 'values' => '{"color":"blue"}', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
-        $this->assertSame(['color' => 'blue'], $this->settings()->stored('labels', 7));
+        $this->assertSame(['color' => 'blue'], $this->settings()->stored('labels', $shop->id));
         $this->assertSame(['color' => 'red'], $this->settings()->stored('labels'));
-        $this->assertSame([], $this->settings()->stored('labels', 8));
+        $this->assertSame([], $this->settings()->stored('labels', $blog->id));
     }
 
     public function test_a_row_with_something_else_than_a_list_of_values_reads_as_an_array(): void

@@ -91,7 +91,10 @@ class RecordCacheTest extends CacheTestCase
         $this->assertSame(1000, $en['price']);
 
         // A card keeps the card's language and the default one, not all of them.
-        $this->assertSame(['en', 'de'], array_keys(json_decode($de->raw()['name'], true)));
+        // MySQL keeps the keys of a JSON column in an order of its own.
+        $languages = array_keys(json_decode($de->raw()['name'], true));
+        sort($languages);
+        $this->assertSame(['de', 'en'], $languages);
     }
 
     public function test_saving_a_record_drops_its_cards_in_every_language(): void
