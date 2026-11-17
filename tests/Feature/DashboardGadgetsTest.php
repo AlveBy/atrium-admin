@@ -19,6 +19,7 @@ use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\PageTiming;
 use Atrium\Admin\Tests\Fixtures\Handbook;
 use Atrium\Admin\Tests\Fixtures\Post;
+use Atrium\Admin\Tests\Fixtures\Untimed;
 use Atrium\Admin\Tests\TestCase;
 use Atrium\Admin\Traits\InteractsWithAdmin;
 use Illuminate\Database\Eloquent\Model;
@@ -488,6 +489,19 @@ final class DashboardGadgetsTest extends TestCase
 
         $this->assertSame([$second->id, $first->id], array_column($items, 'id'));
         $this->assertSame([null, null], array_column($items, 'date'));
+    }
+
+    public function test_a_model_that_keeps_no_timestamps_sorts_by_key_even_if_its_table_has_the_columns(): void
+    {
+        $first = Untimed::query()->create(['name' => '5', 'updated_at' => '2026-08-04 10:00:00']);
+        $second = Untimed::query()->create(['name' => '0', 'updated_at' => '2026-08-01 10:00:00']);
+
+        $items = (new RecentElementsGadget(['model' => Untimed::class]))->data()['items'];
+
+        $this->assertSame([$second->id, $first->id], array_column($items, 'id'));
+        $this->assertSame([null, null], array_column($items, 'date'));
+        // The name is always text; an empty one (here: 0) shows the key instead.
+        $this->assertSame(['#'.$second->id, '5'], array_column($items, 'name'));
     }
 
     public function test_the_recent_items_gadget_survives_a_missing_table(): void
