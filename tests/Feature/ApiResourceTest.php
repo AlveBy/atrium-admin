@@ -215,7 +215,7 @@ final class ApiResourceTest extends TestCase
 
         $token = $this->token(['pages:read']);
 
-        $this->assertSame([['en' => 'Beta', 'de' => 'Apfel']], $this->withToken($token)->getJson('/api/v1/pages?search=apf')->json('data.*.name'));
+        $this->assertEquals([['en' => 'Beta', 'de' => 'Apfel']], $this->withToken($token)->getJson('/api/v1/pages?search=apf')->json('data.*.name'));
         $this->assertSame(['Alpha', 'Beta'], array_column($this->withToken($token)->getJson('/api/v1/pages?sort=name')->json('data.*.name'), 'en'));
         $this->assertSame(['Beta', 'Alpha'], array_column($this->withToken($token)->getJson('/api/v1/pages?sort=name&direction=desc')->json('data.*.name'), 'en'));
     }

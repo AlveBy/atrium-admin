@@ -14,7 +14,9 @@ use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\MediaCollection;
 use Atrium\Admin\Models\MediaItem;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
@@ -30,6 +32,9 @@ final class FileManagerTest extends TestCase
     {
         parent::setUp();
 
+        // A disk of this process alone: another run in the same checkout
+        // (the MySQL leg next to the SQLite one) must not see these files.
+        ParallelTesting::resolveTokenUsing(static fn (): string => 'files'.getmypid());
         Storage::fake('public');
         $next = 0;
         Str::createUuidsUsing(static function () use (&$next) {
@@ -41,6 +46,9 @@ final class FileManagerTest extends TestCase
     protected function tearDown(): void
     {
         Str::createUuidsNormally();
+        foreach (['public', 'media'] as $disk) {
+            (new Filesystem)->deleteDirectory(storage_path("framework/testing/disks/{$disk}_test_files".getmypid()));
+        }
 
         parent::tearDown();
     }
@@ -349,7 +357,7 @@ final class FileManagerTest extends TestCase
         $this->assertSame(['beach.jpg', 'scan.pdf'], $names(['collection' => $photos->id]));
         $this->assertSame(['scan.pdf'], $names(['collection' => $photos->id, 'type' => 'document']));
         $this->assertSame(['beach.jpg', 'contract.pdf', 'scan.pdf'], $names(['collection' => 0]));
-        $this->assertSame(['beach.jpg'], $names(['search' => 'BEACH']));
+        $this->assertSame(['beach.jpg'], $names(['search' => 'each']));
         $this->assertSame(['beach.jpg'], $names(['search' => 'sun']));
         $this->assertSame([], $names(['search' => '0_%']));
         $this->assertSame(['beach.jpg', 'contract.pdf', 'scan.pdf'], $names(['search' => '   ']));

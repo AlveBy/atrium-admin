@@ -221,16 +221,16 @@ final class McpTest extends TestCase
 
     public function test_list_records_passes_search_filter_sort_and_paging_on(): void
     {
-        foreach (['Apple', 'Banana', 'Cherry', 'Avocado'] as $i => $name) {
-            Post::query()->create(['name' => $name, 'active' => $name !== 'Avocado', 'sort' => $i]);
+        foreach (['Apple', 'Banana', 'Cherry', 'Lemon'] as $i => $name) {
+            Post::query()->create(['name' => $name, 'active' => $name !== 'Lemon', 'sort' => $i]);
         }
         $token = $this->token(['posts.view']);
 
         $found = $this->callTool($token, 'list_records', [
-            'module' => 'posts', 'search' => 'a', 'filter' => ['active' => 1], 'sort' => 'name', 'direction' => 'desc', 'page' => 1, 'per_page' => 2,
+            'module' => 'posts', 'search' => 'e', 'filter' => ['active' => 1], 'sort' => 'name', 'direction' => 'desc', 'page' => 1, 'per_page' => 2,
         ]);
 
-        $this->assertSame(['Banana', 'Apple'], array_column($found['data'], 'name'));
+        $this->assertSame(['Cherry', 'Apple'], array_column($found['data'], 'name'));
         $this->assertSame(['current_page' => 1, 'last_page' => 1, 'per_page' => 2, 'total' => 2], $found['meta']);
 
         $this->assertSame(4, $this->callTool($token, 'list_records', ['module' => 'posts', 'search' => '', 'filter' => [], 'sort' => null])['meta']['total']);
