@@ -69,11 +69,53 @@ return new class extends Migration
             $table->nullableMorphs('subject');
             $table->timestamps();
         });
+        Schema::create('api_aisles', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->foreignId('parent_id')->nullable();
+            $table->integer('sort')->default(500);
+            $table->timestamps();
+        });
+
+        Schema::create('chapters', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->unsignedBigInteger('section_id')->nullable();
+            $table->string('kind')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('guides', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->string('code');
+            $table->string('folder')->nullable();
+            $table->boolean('active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('topics', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->string('code')->nullable();
+            $table->string('slug')->nullable();
+            $table->string('note')->nullable();
+            $table->unsignedBigInteger('page_id')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('leaflets', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->string('code')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
-        foreach (['remarks', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
+        foreach (['leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
             Schema::dropIfExists($table);
         }
     }

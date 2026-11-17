@@ -15,7 +15,6 @@ use Atrium\Admin\Tests\TestCase;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
@@ -117,11 +116,21 @@ final class PageTimingTest extends TestCase
         $this->assertSame('/'.str_repeat('a', 254), PageTiming::query()->value('path'));
     }
 
-    public function test_a_broken_table_does_not_break_the_page(): void
+    public function test_a_failed_write_goes_unnoticed(): void
     {
-        Schema::drop('admin_page_timings');
+        $default = config('database.default');
+        config([
+            'database.connections.broken' => ['driver' => 'sqlite', 'database' => '/nonexistent/atrium/timings.sqlite', 'prefix' => ''],
+            'database.default' => 'broken',
+        ]);
 
-        $this->get('/news')->assertOk()->assertSee('News', false);
+        try {
+            $this->terminate(microtime(true));
+        } finally {
+            config(['database.default' => $default]);
+        }
+
+        $this->assertSame(0, PageTiming::query()->count());
     }
 
     public function test_handle_passes_the_response_through_untouched(): void

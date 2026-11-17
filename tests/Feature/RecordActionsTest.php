@@ -16,9 +16,7 @@ use Atrium\Admin\Tests\Fixtures\Chapter;
 use Atrium\Admin\Tests\Fixtures\Ledger;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
 
@@ -33,20 +31,6 @@ final class RecordActionsTest extends TestCase
         parent::defineEnvironment($app);
 
         $app['config']->set('atrium.resources', [Post::class, Chapter::class, Ledger::class]);
-    }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        Schema::create('chapters', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->unsignedBigInteger('parent_id')->nullable();
-            $table->unsignedBigInteger('section_id')->nullable();
-            $table->string('kind')->nullable();
-            $table->timestamps();
-        });
     }
 
     public function test_an_action_is_its_name_label_and_fill_map(): void

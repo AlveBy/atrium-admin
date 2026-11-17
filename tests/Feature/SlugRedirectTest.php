@@ -12,10 +12,8 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Models\SlugHistory;
 use Atrium\Admin\Tests\Fixtures\Guide;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * A page that moved answers its old address with a permanent redirect
@@ -23,20 +21,6 @@ use Illuminate\Support\Facades\Schema;
  */
 final class SlugRedirectTest extends TestCase
 {
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        Schema::create('guides', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->string('code');
-            $table->string('folder')->nullable();
-            $table->boolean('active')->default(true);
-            $table->timestamps();
-        });
-    }
-
     protected function defineRoutes($router): void
     {
         Route::middleware('slug.redirect')->group(function (): void {

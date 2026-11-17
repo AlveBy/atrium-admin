@@ -21,9 +21,7 @@ use Atrium\Admin\Tests\Fixtures\Note;
 use Atrium\Admin\Tests\Fixtures\Page;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
@@ -48,22 +46,6 @@ final class ApiResourceTest extends TestCase
         parent::defineDatabaseMigrations();
 
         $this->loadMigrationsFrom(dirname((string) (new ReflectionClass(Sanctum::class))->getFileName(), 2).'/database/migrations');
-
-        Schema::create('pages', function (Blueprint $table): void {
-            $table->id();
-            $table->json('name');
-            $table->json('code')->nullable();
-            $table->integer('sort')->default(500);
-            $table->timestamps();
-        });
-
-        Schema::create('notes', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('site_id')->nullable()->index();
-            $table->string('name');
-            $table->string('code');
-            $table->timestamps();
-        });
     }
 
     /**

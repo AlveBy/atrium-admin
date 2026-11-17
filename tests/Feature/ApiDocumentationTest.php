@@ -16,8 +16,6 @@ use Atrium\Admin\Tests\Fixtures\ApiAisle;
 use Atrium\Admin\Tests\Fixtures\ApiShowcase;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
@@ -39,19 +37,6 @@ final class ApiDocumentationTest extends TestCase
                 ['label' => 'Витрина', 'route' => 'admin.api_showcases.index'],
             ]],
         ]);
-    }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        Schema::create('api_aisles', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->foreignId('parent_id')->nullable();
-            $table->integer('sort')->default(500);
-            $table->timestamps();
-        });
     }
 
     protected function setUp(): void
