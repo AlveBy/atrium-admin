@@ -9,12 +9,15 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
+use Atrium\Admin\Mcp\Tools\GetRecord;
+use Atrium\Admin\Mcp\Tools\ListModules;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionClass;
 
 /**
@@ -127,6 +130,143 @@ final class McpTest extends TestCase
                 ->assertJsonPath('result.isError', true)
                 ->assertSee('See list_modules.');
         }
+    }
+
+    /**
+     * @return array<string,array{0:string,1:array<string,mixed>}>
+     */
+    public static function toolsWithAModule(): array
+    {
+        return [
+            'list_records' => ['list_records', []],
+            'get_record' => ['get_record', ['id' => 1]],
+            'create_record' => ['create_record', ['data' => ['name' => 'x']]],
+            'update_record' => ['update_record', ['id' => 1, 'data' => ['name' => 'x']]],
+            'delete_record' => ['delete_record', ['id' => 1]],
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $arguments
+     */
+    #[DataProvider('toolsWithAModule')]
+    public function test_every_tool_refuses_a_module_that_is_not_in_the_api(string $tool, array $arguments): void
+    {
+        $post = Post::query()->create(['name' => 'Hello']);
+        $token = $this->token(['posts.view', 'posts.create', 'posts.update', 'posts.delete'], ['posts:read', 'posts:write']);
+
+        foreach (['nope', 'users', '', '../posts'] as $module) {
+            $this->mcp($token, 'tools/call', ['name' => $tool, 'arguments' => ['module' => $module] + $arguments])
+                ->assertJsonPath('result.isError', true)
+                ->assertJsonPath('result.content.0.text', 'No module "'.$module.'". See list_modules.');
+        }
+
+        $this->assertSame('Hello', $post->fresh()->name);
+    }
+
+    #[DataProvider('toolsWithAModule')]
+    public function test_every_tool_works_on_a_module_of_the_api(string $tool, array $arguments): void
+    {
+        $post = Post::query()->create(['name' => 'Hello']);
+        $token = $this->token(['posts.view', 'posts.create', 'posts.update', 'posts.delete'], ['posts:read', 'posts:write']);
+        $arguments = array_map(static fn ($value) => $value === 1 ? $post->id : $value, $arguments);
+
+        $this->mcp($token, 'tools/call', ['name' => $tool, 'arguments' => ['module' => 'posts'] + $arguments])
+            ->assertJsonPath('result.isError', false);
+    }
+
+    public function test_a_token_that_may_use_nothing_is_told_so(): void
+    {
+        $token = $this->token([], ['posts:read']);
+
+        $this->mcp($token, 'tools/call', ['name' => 'list_modules', 'arguments' => []])
+            ->assertJsonPath('result.isError', true)
+            ->assertSee('This token may not use any module.');
+    }
+
+    public function test_list_modules_needs_both_the_ability_and_the_permission(): void
+    {
+        // The owner may write, the token only read: only "view" is offered.
+        $token = $this->token(['posts.view', 'posts.create', 'posts.delete'], ['posts:read']);
+
+        $this->assertSame([['module' => 'posts', 'label' => 'Posts', 'allowed' => ['view']]], $this->callTool($token, 'list_modules'));
+    }
+
+    public function test_describe_module_refuses_what_the_token_may_not_read(): void
+    {
+        $token = $this->token(['posts.view']);
+
+        foreach (['users', 'nope'] as $module) {
+            $this->mcp($token, 'tools/call', ['name' => 'describe_module', 'arguments' => ['module' => $module]])
+                ->assertJsonPath('result.isError', true)
+                ->assertJsonPath('result.content.0.text', "No module \"{$module}\" for this token. See list_modules.");
+        }
+    }
+
+    public function test_describe_module_needs_the_read_ability(): void
+    {
+        $this->mcp($this->token(['posts.view', 'posts.create'], ['posts:write']), 'tools/call', ['name' => 'describe_module', 'arguments' => ['module' => 'posts']])
+            ->assertJsonPath('result.isError', true)
+            ->assertJsonPath('result.content.0.text', 'No module "posts" for this token. See list_modules.');
+    }
+
+    public function test_describe_module_names_the_module_and_what_the_token_may_do(): void
+    {
+        $module = $this->callTool($this->token(['posts.view', 'posts.update'], ['posts:read', 'posts:write']), 'describe_module', ['module' => 'posts']);
+
+        $this->assertSame('posts', $module['module']);
+        $this->assertSame('Posts', $module['label']);
+        $this->assertSame(['view', 'update'], $module['allowed']);
+    }
+
+    public function test_list_records_passes_search_filter_sort_and_paging_on(): void
+    {
+        foreach (['Apple', 'Banana', 'Cherry', 'Avocado'] as $i => $name) {
+            Post::query()->create(['name' => $name, 'active' => $name !== 'Avocado', 'sort' => $i]);
+        }
+        $token = $this->token(['posts.view']);
+
+        $found = $this->callTool($token, 'list_records', [
+            'module' => 'posts', 'search' => 'a', 'filter' => ['active' => 1], 'sort' => 'name', 'direction' => 'desc', 'page' => 1, 'per_page' => 2,
+        ]);
+
+        $this->assertSame(['Banana', 'Apple'], array_column($found['data'], 'name'));
+        $this->assertSame(['current_page' => 1, 'last_page' => 1, 'per_page' => 2, 'total' => 2], $found['meta']);
+
+        $this->assertSame(4, $this->callTool($token, 'list_records', ['module' => 'posts', 'search' => '', 'filter' => [], 'sort' => null])['meta']['total']);
+    }
+
+    public function test_a_missing_record_comes_back_as_an_error(): void
+    {
+        $token = $this->token(['posts.view']);
+
+        $this->mcp($token, 'tools/call', ['name' => 'get_record', 'arguments' => ['module' => 'posts', 'id' => 999]])
+            ->assertJsonPath('result.isError', true)
+            ->assertSee('HTTP 404.');
+    }
+
+    public function test_the_site_argument_picks_another_site(): void
+    {
+        $token = $this->token(['posts.view']);
+
+        $this->mcp($token, 'tools/call', ['name' => 'list_records', 'arguments' => ['module' => 'posts', 'site' => 'nope']])
+            ->assertJsonPath('result.isError', true)
+            ->assertSee('HTTP 404. No site [nope].');
+
+        $this->assertSame(0, $this->callTool($token, 'list_records', ['module' => 'posts', 'site' => 'main'])['meta']['total']);
+    }
+
+    public function test_tools_of_other_packages_join_the_server(): void
+    {
+        config()->set('atrium.mcp.tools', [ListModules::class, GetRecord::class]);
+
+        $names = array_column($this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools'), 'name');
+
+        $this->assertSame(
+            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record'],
+            $names,
+            'Listed once, in the order given.',
+        );
     }
 
     /**
