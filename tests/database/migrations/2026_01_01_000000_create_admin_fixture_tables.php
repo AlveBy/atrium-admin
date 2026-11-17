@@ -111,11 +111,21 @@ return new class extends Migration
             $table->string('code')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('sections', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->string('title')->nullable();
+            $table->integer('sort')->default(500);
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->unsignedBigInteger('group_id')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
-        foreach (['leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
+        foreach (['sections', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
             Schema::dropIfExists($table);
         }
     }
