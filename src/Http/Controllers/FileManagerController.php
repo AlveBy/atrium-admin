@@ -17,7 +17,6 @@ use Atrium\Admin\Support\WebpCopy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
@@ -153,9 +152,9 @@ class FileManagerController extends Controller
      * made only by the scheduled `images:webp` command, so an image uploaded in
      * the panel was served heavy until the next run.
      *
-     * A failure is swallowed: a missing copy is a pity, refusing to save the
-     * image because of it is far worse. The reason goes to the log, and the
-     * scheduled command catches up later anyway.
+     * WebpCopy::make() reports what it could not do instead of throwing: a
+     * missing copy is a pity, refusing to save the image because of it would be
+     * far worse.
      */
     private function makeWebpCopy(string $disk, string $path): void
     {
@@ -165,11 +164,7 @@ class FileManagerController extends Controller
             return;
         }
 
-        try {
-            WebpCopy::make(Storage::disk($disk)->path($path));
-        } catch (\Throwable $e) {
-            Log::warning('Could not make a webp copy of '.$path.': '.$e->getMessage());
-        }
+        WebpCopy::make(Storage::disk($disk)->path($path));
     }
 
     /**
