@@ -146,7 +146,7 @@ final class WebpCopy
             return $image;
         }
 
-        $height = (int) round(imagesy($image) * $maxWidth / $width);
+        $height = max(1, (int) round(imagesy($image) * $maxWidth / $width));
         $resized = imagecreatetruecolor($maxWidth, $height);
 
         imagealphablending($resized, false);

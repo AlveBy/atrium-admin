@@ -119,6 +119,15 @@ final class WebpCopyTest extends TestCase
         $this->assertSame([100, 51], array_slice((array) getimagesize($source.'.webp'), 0, 2));
     }
 
+    public function test_a_strip_so_wide_that_it_scales_to_under_half_a_pixel_keeps_one_pixel_of_height(): void
+    {
+        // 1 * 100 / 300 = 0.33: no picture is zero pixels high.
+        $source = $this->photo('strip.png', 300, 1);
+
+        $this->assertSame('made', WebpCopy::make($source, 82, 100)['status']);
+        $this->assertSame([100, 1], array_slice((array) getimagesize($source.'.webp'), 0, 2));
+    }
+
     public function test_a_picture_at_the_width_or_with_no_limit_keeps_its_size(): void
     {
         $exact = $this->photo('exact.png', 100, 40);
