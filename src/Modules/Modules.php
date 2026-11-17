@@ -26,6 +26,10 @@ use Illuminate\Database\Seeder;
  * site. A model a module lists stays out of the panel while that module is
  * not installed, even when its service provider pushes it to
  * `atrium.resources`.
+ *
+ * An installed module can be switched off (`atrium.disabled_modules`): its
+ * tables, records and settings stay, and everything else treats it as not
+ * installed until it is switched on again.
  */
 final class Modules
 {
@@ -96,9 +100,40 @@ final class Modules
         return null;
     }
 
+    /**
+     * Installed and switched on.
+     */
     public function isInstalled(string $name): bool
     {
         return in_array(strtolower($name), $this->installedNames(), true);
+    }
+
+    /**
+     * Installed, but switched off.
+     */
+    public function isDisabled(string $name): bool
+    {
+        $name = strtolower($name);
+
+        return in_array($name, $this->listedNames(), true) && in_array($name, $this->disabledNames(), true);
+    }
+
+    /**
+     * The installed modules that are switched off, by name.
+     *
+     * @return array<string,Module>
+     */
+    public function disabled(): array
+    {
+        $disabled = [];
+
+        foreach ($this->listedNames() as $name) {
+            if ($this->isDisabled($name) && ($module = $this->find($name))) {
+                $disabled[$name] = $module;
+            }
+        }
+
+        return $disabled;
     }
 
     /**
@@ -190,11 +225,17 @@ final class Modules
      */
     public function install(Module $module): bool
     {
-        if (! $this->isInstalled($module->name) && ! ConfigWriter::addModule($module->name)) {
+        if (! in_array($module->name, $this->listedNames(), true) && ! ConfigWriter::addModule($module->name)) {
             return false;
         }
 
-        $this->setInstalled([...$this->installedNames(), $module->name]);
+        // Installing a module that is switched off switches it on.
+        if ($this->isDisabled($module->name) && ! ConfigWriter::enableModule($module->name)) {
+            return false;
+        }
+
+        $this->app['config']->set('atrium.disabled_modules', array_values(array_diff($this->disabledNames(), [$module->name])));
+        $this->setInstalled([...$this->listedNames(), $module->name]);
         $this->wire($module);
 
         return true;
@@ -202,11 +243,43 @@ final class Modules
 
     public function remove(string $name): bool
     {
-        if (! ConfigWriter::removeModule($name)) {
+        $name = strtolower($name);
+
+        if (! ConfigWriter::removeModule($name) || ! ConfigWriter::enableModule($name)) {
             return false;
         }
 
-        $this->setInstalled(array_diff($this->installedNames(), [strtolower($name)]));
+        $this->app['config']->set('atrium.disabled_modules', array_values(array_diff($this->disabledNames(), [$name])));
+        $this->setInstalled(array_diff($this->listedNames(), [$name]));
+
+        return true;
+    }
+
+    /**
+     * Switch an installed module off, in config/atrium.php and in this
+     * request. False when the config file could not be edited.
+     */
+    public function disable(Module $module): bool
+    {
+        if (! ConfigWriter::disableModule($module->name)) {
+            return false;
+        }
+
+        $this->app['config']->set('atrium.disabled_modules', [...$this->disabledNames(), $module->name]);
+        $this->setInstalled($this->listedNames());
+
+        return true;
+    }
+
+    public function enable(Module $module): bool
+    {
+        if (! ConfigWriter::enableModule($module->name)) {
+            return false;
+        }
+
+        $this->app['config']->set('atrium.disabled_modules', array_values(array_diff($this->disabledNames(), [$module->name])));
+        $this->setInstalled($this->listedNames());
+        $this->wire($module);
 
         return true;
     }
@@ -288,11 +361,31 @@ final class Modules
     }
 
     /**
+     * Installed and switched on, in menu order.
+     *
      * @return array<int,string>
      */
     private function installedNames(): array
     {
+        return array_values(array_diff($this->listedNames(), $this->disabledNames()));
+    }
+
+    /**
+     * Everything in `atrium.modules`, switched on or off.
+     *
+     * @return array<int,string>
+     */
+    private function listedNames(): array
+    {
         return array_values(array_map('strtolower', array_map('strval', (array) $this->app['config']->get('atrium.modules', []))));
+    }
+
+    /**
+     * @return array<int,string>
+     */
+    private function disabledNames(): array
+    {
+        return array_values(array_map('strtolower', array_map('strval', (array) $this->app['config']->get('atrium.disabled_modules', []))));
     }
 
     /**

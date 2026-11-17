@@ -51,6 +51,12 @@ return [
         // 'alveby/atrium-brands',
     ],
 
+    // Installed modules switched off on the Modules screen: their data and
+    // settings stay, but they are out of the panel, the API and the site
+    // until switched on again.
+    'disabled_modules' => [
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Admin Panel Middleware

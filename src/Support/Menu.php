@@ -62,7 +62,7 @@ final class Menu
         array_splice($menu, min(1, count($menu)), 0, $modules);
 
         // The installed module packages and their settings, last.
-        if (! in_array('admin.modules.index', $listed, true) && app(Modules::class)->installed() !== []) {
+        if (! in_array('admin.modules.index', $listed, true) && (app(Modules::class)->installed() !== [] || app(Modules::class)->disabled() !== [])) {
             $menu[] = ['label' => 'atrium::menu.modules', 'route' => 'admin.modules.index', 'icon' => 'settings'];
         }
 

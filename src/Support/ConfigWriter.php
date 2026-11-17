@@ -12,7 +12,8 @@ namespace Atrium\Admin\Support;
 /**
  * Small, conservative edits of the published config/atrium.php.
  *
- * Only touches the `'resources' => [` and `'modules' => [` lists and only
+ * Only touches the `'resources' => [`, `'modules' => [` and
+ * `'disabled_modules' => [` lists and only
  * when it can find them; otherwise it reports failure and the caller tells
  * the user what to add. A config published before modules existed gets the
  * `'modules'` list right after `'resources'`.
@@ -51,6 +52,38 @@ final class ConfigWriter
      */
     public static function addModule(string $name, ?string $path = null): bool
     {
+        return self::addToList('modules', 'resources', 'Installed module packages (atrium:module:install).', $name, $path);
+    }
+
+    /**
+     * Take a package name out of `'modules' => [`. True when it is not
+     * there (any more).
+     */
+    public static function removeModule(string $name, ?string $path = null): bool
+    {
+        return self::removeFromList('modules', $name, $path);
+    }
+
+    /**
+     * Add a package name to `'disabled_modules' => [`: installed, switched
+     * off.
+     */
+    public static function disableModule(string $name, ?string $path = null): bool
+    {
+        return self::addToList('disabled_modules', 'modules', 'Installed modules switched off on the Modules screen.', $name, $path);
+    }
+
+    public static function enableModule(string $name, ?string $path = null): bool
+    {
+        return self::removeFromList('disabled_modules', $name, $path);
+    }
+
+    /**
+     * A config published before the list existed gets it right after the
+     * `$after` list.
+     */
+    private static function addToList(string $key, string $after, string $comment, string $name, ?string $path): bool
+    {
         $path ??= config_path('atrium.php');
 
         if (! is_file($path)) {
@@ -59,15 +92,15 @@ final class ConfigWriter
 
         $config = (string) file_get_contents($path);
         $entry = var_export(strtolower($name), true);
-        $list = "/'modules'\\s*=>\\s*\\[\\n(.*?)^[ \\t]*\\],/sm";
+        $list = "/'{$key}'\\s*=>\\s*\\[\\n(.*?)^[ \\t]*\\],/sm";
 
         if (! preg_match($list, $config)) {
-            if (! preg_match("/\\n    'resources'\\s*=>\\s*\\[.*?\\n    \\],\\n/s", $config, $match, PREG_OFFSET_CAPTURE)) {
+            if (! preg_match("/\\n    '{$after}'\\s*=>\\s*\\[.*?\\n    \\],\\n/s", $config, $match, PREG_OFFSET_CAPTURE)) {
                 return false;
             }
 
             $at = $match[0][1] + strlen($match[0][0]);
-            $config = substr($config, 0, $at)."\n    // Installed module packages (atrium:module:install).\n    'modules' => [\n    ],\n".substr($config, $at);
+            $config = substr($config, 0, $at)."\n    // {$comment}\n    '{$key}' => [\n    ],\n".substr($config, $at);
         }
 
         preg_match($list, $config, $match, PREG_OFFSET_CAPTURE);
@@ -83,11 +116,7 @@ final class ConfigWriter
         return true;
     }
 
-    /**
-     * Take a package name out of `'modules' => [`. True when it is not
-     * there (any more).
-     */
-    public static function removeModule(string $name, ?string $path = null): bool
+    private static function removeFromList(string $key, string $name, ?string $path): bool
     {
         $path ??= config_path('atrium.php');
 
@@ -97,7 +126,7 @@ final class ConfigWriter
 
         $config = (string) file_get_contents($path);
 
-        if (! preg_match("/'modules'\s*=>\s*\[\n.*?\],/s", $config, $match, PREG_OFFSET_CAPTURE)) {
+        if (! preg_match("/'{$key}'\s*=>\s*\[\n.*?\],/s", $config, $match, PREG_OFFSET_CAPTURE)) {
             return true;
         }
 

@@ -34,7 +34,7 @@ final class ModuleRemoveCommand extends ModuleCommand
     {
         $name = $this->packageName();
 
-        if (! $modules->isInstalled($name)) {
+        if (! $modules->isInstalled($name) && ! $modules->isDisabled($name)) {
             $this->components->info("{$name} is not installed.");
 
             return self::SUCCESS;
@@ -54,7 +54,7 @@ final class ModuleRemoveCommand extends ModuleCommand
 
         // Its submodules go first, with the same answer about the data.
         foreach ($module === null ? [] : $modules->childrenOf($module) as $child) {
-            if ($modules->isInstalled($child->name)) {
+            if ($modules->isInstalled($child->name) || $modules->isDisabled($child->name)) {
                 $this->call('atrium:module:remove', ['package' => $child->name, $keep ? '--keep-data' : '--delete-data' => true]);
             }
         }

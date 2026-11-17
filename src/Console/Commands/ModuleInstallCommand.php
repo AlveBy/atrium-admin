@@ -51,7 +51,7 @@ final class ModuleInstallCommand extends ModuleCommand
             $this->callSilently('vendor:publish', ['--tag' => 'atrium-config']);
         }
 
-        $already = $modules->isInstalled($name);
+        $already = $modules->isInstalled($name) || $modules->isDisabled($name);
 
         if (! $modules->install($module)) {
             $this->components->error("config/atrium.php could not be edited: add '{$name}' to its 'modules' list and run this command again.");
