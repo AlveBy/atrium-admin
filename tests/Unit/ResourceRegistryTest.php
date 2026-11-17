@@ -46,4 +46,24 @@ final class ResourceRegistryTest extends TestCase
 
         (new ResourceRegistry)->all();
     }
+
+    public function test_a_name_that_is_not_a_class_is_rejected(): void
+    {
+        config(['atrium.resources' => ['No\\Such\\Model']]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Atrium resource [No\\Such\\Model] is not a class.');
+
+        (new ResourceRegistry)->all();
+    }
+
+    public function test_a_resource_that_is_not_a_name_is_rejected(): void
+    {
+        config(['atrium.resources' => [Post::class, 42]]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Atrium resource [42] is not a class.');
+
+        (new ResourceRegistry)->all();
+    }
 }

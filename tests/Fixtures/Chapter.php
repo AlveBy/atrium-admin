@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A module with a button that opens a subchapter's create form, a section
- * to preselect and fields on tabs.
+ * to preselect, fields on tabs and an address of its own.
  */
 final class Chapter extends Model implements Administrable
 {
@@ -58,6 +58,11 @@ final class Chapter extends Model implements Administrable
             'not an action',
             CreateFromRecord::make('sibling')->label('Same kind')->fill(['kind' => 'kind']),
         ];
+    }
+
+    public function getFullPath(): string
+    {
+        return 'chapters/'.$this->id;
     }
 
     public function section(): BelongsTo

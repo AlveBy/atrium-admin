@@ -374,6 +374,59 @@ final class PermissionsTest extends TestCase
         $this->assertTrue(AdminUser::query()->where('email', 'old@example.com')->sole()->isSuperadmin());
     }
 
+    public function test_a_role_opens_for_editing_with_only_the_permissions_that_still_exist(): void
+    {
+        $role = AdminRole::query()->create(['name' => 'Editor', 'permissions' => ['posts.view', 'gone.view', 'posts.delete']]);
+
+        $this->actingAs($this->admin(), 'admin')
+            ->get("/admin/roles/{$role->id}/edit")
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Admin/Roles/Edit')
+                ->where('role', ['id' => $role->id, 'name' => 'Editor', 'permissions' => ['posts.view', 'posts.delete']])
+                ->where('title', __('atrium::permissions.edit_title', ['name' => 'Editor'])));
+
+        $this->get('/admin/roles/'.($role->id + 1).'/edit')->assertNotFound();
+    }
+
+    public function test_an_administrator_is_deleted_and_so_is_a_superadmin_while_another_active_one_stays(): void
+    {
+        $boss = $this->admin();
+        $editor = $this->editor(['posts.view']);
+        $deputy = $this->editor([], 'deputy@example.com');
+        $deputy->forceFill(['is_superadmin' => true])->save();
+
+        $this->actingAs($boss, 'admin');
+        $this->delete("/admin/users/{$editor->id}")->assertRedirect()->assertSessionMissing('error');
+        $this->delete("/admin/users/{$deputy->id}")->assertRedirect()->assertSessionMissing('error');
+
+        $this->assertSame([$boss->id], AdminUser::query()->pluck('id')->all());
+    }
+
+    public function test_a_switched_off_superadmin_does_not_count_as_another_one(): void
+    {
+        $boss = $this->admin();
+        $sleeper = $this->editor([], 'sleeper@example.com');
+        $sleeper->forceFill(['is_superadmin' => true, 'is_active' => false])->save();
+
+        $this->actingAs($boss, 'admin')
+            ->delete("/admin/users/{$boss->id}")
+            ->assertSessionHas('error', __('atrium::permissions.last_superadmin'));
+
+        $this->assertSame(2, AdminUser::query()->count());
+    }
+
+    public function test_routes_outside_the_panel_need_no_permission(): void
+    {
+        $nobody = $this->editor([]);
+        $permissions = app(Permissions::class);
+
+        $this->assertTrue($permissions->allowsRoute($nobody, null));
+        $this->assertTrue($permissions->allowsRoute($nobody, 'home'));
+        $this->assertTrue($permissions->allowsRoute($nobody, 'administrator.posts.index'));
+        $this->assertFalse($permissions->allowsRoute($nobody, 'admin.posts.index'));
+    }
+
     /**
      * An administrator with one role holding these permissions.
      *

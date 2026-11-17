@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Captcha\CaptchaDriver;
 use Atrium\Admin\Captcha\CaptchaManager;
 use Atrium\Admin\Captcha\ImageCaptcha;
+use Atrium\Admin\Captcha\NoCaptcha;
 use Atrium\Admin\Captcha\RecaptchaCaptcha;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Http\Client\Request as HttpRequest;
@@ -31,6 +32,15 @@ final class CaptchaTest extends TestCase
         $this->assertFalse($captcha->enabled());
         $this->assertSame([], $captcha->rules());
         $this->assertSame('', trim(Blade::render('<x-atrium::captcha />')));
+    }
+
+    public function test_the_switched_off_driver_draws_nothing_and_lets_every_request_through(): void
+    {
+        $driver = new NoCaptcha;
+
+        $this->assertSame('', $driver->widget()->toHtml());
+        $this->assertTrue($driver->verify(Request::create('/form', 'POST')));
+        $this->assertTrue($driver->verify(Request::create('/form', 'POST', ['captcha' => 'wrong', 'captcha_token' => 'forged'])));
     }
 
     public function test_the_image_captcha_asks_a_sum_drawn_as_a_picture(): void
