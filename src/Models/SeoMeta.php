@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Models;
 
+use Atrium\Admin\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -91,15 +92,7 @@ class SeoMeta extends Model
      */
     public function getOgImageUrlAttribute(): ?string
     {
-        if (! $this->og_image) {
-            return null;
-        }
-
-        if (str_starts_with($this->og_image, 'http')) {
-            return $this->og_image;
-        }
-
-        return asset('storage/'.$this->og_image);
+        return MediaUrl::to($this->og_image);
     }
 
     /**

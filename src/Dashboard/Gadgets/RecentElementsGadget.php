@@ -12,6 +12,7 @@ namespace Atrium\Admin\Dashboard\Gadgets;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Dashboard\Gadget;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -165,13 +166,8 @@ final class RecentElementsGadget extends Gadget
 
     private function imageUrl(mixed $value): ?string
     {
-        if (! is_string($value) || $value === '') {
-            return null;
-        }
-
-        return str_starts_with($value, 'http') || str_starts_with($value, '/')
-            ? $value
-            : asset('storage/'.$value);
+        // Shown small: 2× for sharp screens.
+        return MediaUrl::to($value, 160);
     }
 
     /**

@@ -41,6 +41,7 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
 final class AtriumServiceProvider extends ServiceProvider
@@ -97,6 +98,19 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->registerLocalizedRoutes();
         $this->registerSitemapFlush();
         $this->registerCommands();
+        $this->registerCdnAssets();
+    }
+
+    /**
+     * Built scripts and styles from the CDN too, when asked for
+     * (ATRIUM_CDN_ASSETS): the CDN must then send CORS headers, browsers load
+     * Vite's module scripts and fonts across origins only with them.
+     */
+    private function registerCdnAssets(): void
+    {
+        if (config('atrium.cdn.assets') && Support\Cdn::enabled()) {
+            Vite::createAssetPathsUsing(Support\Cdn::asset(...));
+        }
     }
 
     /**
@@ -253,6 +267,7 @@ final class AtriumServiceProvider extends ServiceProvider
         }
 
         $this->commands([
+            Console\Commands\CdnPurgeCommand::class,
             Console\Commands\CreateAdminCommand::class,
             Console\Commands\IndexMediaCommand::class,
             Console\Commands\InstallCommand::class,

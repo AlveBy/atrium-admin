@@ -11,6 +11,8 @@ namespace Atrium\Admin\Http\Controllers;
 
 use Atrium\Admin\Models\MediaCollection;
 use Atrium\Admin\Models\MediaItem;
+use Atrium\Admin\Support\CdnPurge;
+use Atrium\Admin\Support\MediaUrl;
 use Atrium\Admin\Support\WebpCopy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -81,7 +83,7 @@ class FileManagerController extends Controller
         $item = MediaItem::create([
             'collection_id' => $this->uploadsCollection()->id,
             'name' => Str::limit($file->getClientOriginalName(), 250, ''),
-            'url' => '/storage/'.ltrim($path, '/'),
+            'url' => MediaUrl::forStored($disk, $path),
             'disk' => $disk,
             'path' => $path,
             'extension' => $extension,
@@ -118,7 +120,9 @@ class FileManagerController extends Controller
      */
     private function makeWebpCopy(string $disk, string $path): void
     {
-        if (! config('atrium.uploads.webp', true) || ! WebpCopy::convertible($path)) {
+        // Only for a disk on this server: the swap is the web server's.
+        // WebpCopy::make() skips what it does not compress.
+        if (! config('atrium.uploads.webp', true) || config("filesystems.disks.{$disk}.driver") !== 'local') {
             return;
         }
 
@@ -198,10 +202,37 @@ class FileManagerController extends Controller
         // The file is erased from disk only if we manage it. Files migrated from
         // Bitrix live in public/upload and may be embedded in page texts
         // directly — deleting them would leave broken images in the content.
+        // Addresses on the CDN, taken while the record still says where it was.
+        $cached = $item->disk !== null && $item->path !== null ? CdnPurge::addressesOf($item->url) : [];
+
         $item->deleteFile();
         $item->delete();
 
+        $this->purgeFromCdn($cached);
+
         return response()->json(['message' => __('atrium::files.removed')]);
+    }
+
+    /**
+     * Without a purge the CDN keeps serving a deleted file until its cache
+     * expires. After the response, and a CDN that refuses only gets logged:
+     * the file is gone from the site either way.
+     *
+     * @param  array<int,string>  $urls
+     */
+    private function purgeFromCdn(array $urls): void
+    {
+        if (! CdnPurge::configured() || ! config('atrium.cdn.purge.on_delete', true)) {
+            return;
+        }
+
+        defer(static function () use ($urls): void {
+            try {
+                CdnPurge::urls($urls);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        });
     }
 
     /**

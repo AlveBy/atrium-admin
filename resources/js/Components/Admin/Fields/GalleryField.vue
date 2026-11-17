@@ -175,6 +175,10 @@ const imageViews = computed(() =>
 // is not the host the browser is on, so storing it would bake an unroutable
 // hostname into the database.
 function storedValueFor(result) {
+  // A full address comes only from a remote upload disk (S3 and the like).
+  if (typeof result?.url === 'string' && /^https?:\/\//i.test(result.url)) {
+    return result.url;
+  }
   if (result && typeof result.path === 'string' && result.path !== '') {
     return '/storage/' + result.path.replace(/^\/+/, '');
   }

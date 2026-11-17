@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Columns;
 
+use Atrium\Admin\Support\MediaUrl;
+
 class ImageColumn extends Column
 {
     protected int $imgWidth = 50;
@@ -92,10 +94,7 @@ class ImageColumn extends Column
             return $this->defaultImage;
         }
 
-        if (str_starts_with($value, 'http')) {
-            return $value;
-        }
-
-        return asset('storage/'.$value);
+        // 2× the cell for sharp screens, when the CDN resizes images.
+        return MediaUrl::to($value, $this->imgWidth * 2);
     }
 }

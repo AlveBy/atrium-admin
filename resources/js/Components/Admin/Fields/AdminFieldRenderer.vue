@@ -272,6 +272,12 @@ function postFile(file) {
 // database. `path` is host-independent, so a root-relative value works
 // everywhere and matches how migrated Bitrix values look ("/upload/iblock/...").
 function storedValueFor(result) {
+    // A full address comes only from a remote upload disk (S3 and the like,
+    // its AWS_URL often the CDN): there is no /storage/ path to build.
+    if (typeof result?.url === 'string' && /^https?:\/\//i.test(result.url)) {
+        return result.url
+    }
+
     if (result && typeof result.path === 'string' && result.path !== '') {
         return '/storage/' + result.path.replace(/^\/+/, '')
     }

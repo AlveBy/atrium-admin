@@ -223,7 +223,8 @@ return [
     |
     */
     'uploads' => [
-        'disk' => 'public',
+        // A bucket (s3) works too: set its AWS_URL to the CDN. See docs/cdn.md.
+        'disk' => env('ATRIUM_UPLOADS_DISK', 'public'),
         'directory' => 'uploads',
         'max_size' => 5120, // KB
         'image_max_size' => 2048, // KB
@@ -234,6 +235,71 @@ return [
         // Turn it off only where there is no such rule: the copies would take
         // disk space and never reach visitors.
         'webp' => env('ATRIUM_UPLOADS_WEBP', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | CDN
+    |--------------------------------------------------------------------------
+    |
+    | Off until `url` is set. Then every image and file address the admin and
+    | the theme build points at the CDN (a pull zone whose origin is this
+    | site), with ?v= of the file's time so a changed file gets a new address.
+    | See docs/cdn.md.
+    |
+    */
+    'cdn' => [
+        // https://cdn.example.com — no trailing slash. Empty: off.
+        'url' => env('ATRIUM_CDN_URL'),
+
+        // Root-relative paths served through the CDN, in addresses and inside
+        // the HTML of texts.
+        'paths' => ['/storage/', '/upload/'],
+
+        // Built JS and CSS (Vite) from the CDN too. Needs CORS on the CDN:
+        // module scripts and fonts are loaded cross-origin.
+        'assets' => env('ATRIUM_CDN_ASSETS', false),
+
+        // ?v= with the file's modification time on local files.
+        'version' => env('ATRIUM_CDN_VERSION', true),
+
+        // Resizing by the CDN instead of PHP: null, cloudflare, bunny,
+        // imgproxy or template.
+        'images' => [
+            'driver' => env('ATRIUM_CDN_IMAGES'),
+            // imgproxy's own address; for the others the CDN's.
+            'url' => env('ATRIUM_CDN_IMAGES_URL'),
+            // auto (the CDN picks WebP or AVIF by the browser), webp or avif.
+            'format' => env('ATRIUM_CDN_IMAGES_FORMAT', 'auto'),
+            'quality' => (int) env('ATRIUM_CDN_IMAGES_QUALITY', 82),
+            // A requested width is rounded up to one of these: fewer copies
+            // in the CDN's cache.
+            'widths' => [320, 640, 960, 1280, 1920],
+            // imgproxy: hex key and salt (IMGPROXY_KEY / IMGPROXY_SALT).
+            'key' => env('ATRIUM_IMGPROXY_KEY'),
+            'salt' => env('ATRIUM_IMGPROXY_SALT'),
+            // template: {url} {path} {width} {format} {quality}, e.g.
+            // https://img.example.com/{width}x/{path}
+            'template' => env('ATRIUM_CDN_IMAGES_TEMPLATE'),
+        ],
+
+        // Removing deleted files from the CDN's cache: null, cloudflare or
+        // bunny. The owner creates the API token in the CDN's dashboard.
+        'purge' => [
+            'driver' => env('ATRIUM_CDN_PURGE'),
+            'on_delete' => env('ATRIUM_CDN_PURGE_ON_DELETE', true),
+            'cloudflare' => [
+                'zone' => env('CLOUDFLARE_ZONE_ID'),
+                // A token with the "Cache Purge" permission for the zone.
+                'token' => env('CLOUDFLARE_API_TOKEN'),
+            ],
+            'bunny' => [
+                // Account API key (Account settings → API).
+                'key' => env('BUNNY_API_KEY'),
+                // Pull zone id, for purging everything.
+                'pull_zone' => env('BUNNY_PULL_ZONE_ID'),
+            ],
+        ],
     ],
 
     /*
