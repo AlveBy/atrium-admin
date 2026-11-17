@@ -19,9 +19,7 @@ use Atrium\Admin\Tests\Fixtures\Cache\SpyRepository;
 use Atrium\Admin\Tests\Fixtures\Cache\Tag;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * Books on shelves with tags, translated, with pictures and SEO: what the
@@ -34,54 +32,6 @@ abstract class CacheTestCase extends TestCase
         parent::defineEnvironment($app);
 
         $app['config']->set('atrium.resources', [Post::class, Book::class]);
-    }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        Schema::create('cache_shelves', function (Blueprint $table): void {
-            $table->id();
-            $table->json('name')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('cache_tags', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
-
-        Schema::create('cache_books', function (Blueprint $table): void {
-            $table->id();
-            $table->json('name')->nullable();
-            $table->boolean('active')->default(true);
-            $table->integer('price')->nullable();
-            $table->foreignId('shelf_id')->nullable();
-            $table->string('cover')->nullable();
-            $table->json('photos')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('cache_codes', function (Blueprint $table): void {
-            $table->string('code')->primary();
-        });
-
-        Schema::create('cache_nodes', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name')->nullable();
-        });
-
-        Schema::create('cache_parts', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name')->nullable();
-            $table->unsignedBigInteger('parent_id')->nullable();
-        });
-
-        Schema::create('cache_book_tag', function (Blueprint $table): void {
-            $table->foreignId('book_id');
-            $table->foreignId('tag_id');
-        });
     }
 
     protected function setUp(): void

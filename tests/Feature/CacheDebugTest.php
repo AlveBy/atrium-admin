@@ -203,7 +203,7 @@ class CacheDebugTest extends CacheTestCase
         $line = e((string) $response->headers->get(CacheDebug::HEADER));
 
         $this->assertSame(
-            '<html><body>quiet<div data-atrium-debug style="position:fixed;left:0;bottom:0;z-index:2147483647;padding:2px 8px;font:12px/1.6 ui-monospace,monospace;background:#111;color:#eee;opacity:.85">Atrium: '.$line.'</div></body></html>',
+            '<html><body>quiet<div data-atrium-debug style="position:fixed;left:0;bottom:0;z-index:2147483647;padding:2px 8px;font:12px/1.6 ui-monospace,monospace;background:#111;color:#eee;opacity:.85;pointer-events:none">Atrium: '.$line.'</div></body></html>',
             $response->getContent(),
         );
     }

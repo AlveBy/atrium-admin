@@ -96,6 +96,8 @@ final class CacheStoreTest extends TestCase
 
     private function databaseRepository(string $table): CacheRepository
     {
+        // DDL is not rolled back on MySQL: a table left by an earlier run goes first.
+        Schema::dropIfExists($table);
         Schema::create($table, function (Blueprint $blueprint): void {
             $blueprint->string('key')->primary();
             $blueprint->mediumText('value');

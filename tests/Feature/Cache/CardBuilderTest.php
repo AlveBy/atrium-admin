@@ -29,10 +29,8 @@ use Atrium\Admin\Tests\Fixtures\Cards\SeoLoose;
 use Atrium\Admin\Tests\Fixtures\Cards\SeoTitleOnly;
 use Error;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Exceptions;
-use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 
@@ -43,53 +41,6 @@ use RuntimeException;
  */
 final class CardBuilderTest extends CacheTestCase
 {
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        Schema::create('card_owners', function (Blueprint $table): void {
-            $table->id();
-            $table->json('name')->nullable();
-        });
-
-        Schema::create('card_labels', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-        });
-
-        Schema::create('card_sections', function (Blueprint $table): void {
-            $table->id();
-            $table->unsignedBigInteger('parent_id')->nullable();
-            $table->string('code')->nullable();
-        });
-
-        Schema::create('card_items', function (Blueprint $table): void {
-            $table->id();
-            $table->json('name')->nullable();
-            $table->json('summary')->nullable();
-            $table->string('code')->nullable();
-            $table->unsignedBigInteger('owner_id')->nullable();
-            $table->unsignedBigInteger('link_id')->nullable();
-            $table->unsignedBigInteger('section_id')->nullable();
-            $table->unsignedBigInteger('site_id')->nullable();
-            $table->string('subject_type')->nullable();
-            $table->unsignedBigInteger('subject_id')->nullable();
-            $table->string('picture')->nullable();
-            $table->text('files')->nullable();
-            $table->text('docs')->nullable();
-        });
-
-        Schema::create('card_item_label', function (Blueprint $table): void {
-            $table->unsignedBigInteger('item_id');
-            $table->unsignedBigInteger('label_id');
-        });
-
-        Schema::create('card_item_related', function (Blueprint $table): void {
-            $table->unsignedBigInteger('item_id');
-            $table->unsignedBigInteger('related_id');
-        });
-    }
-
     protected function tearDown(): void
     {
         Item::forget();

@@ -301,7 +301,7 @@ final class Modules
             }
         }
 
-        PublicUrl::forgetPaths();
+        PublicUrl::forgetMemo();
     }
 
     /**

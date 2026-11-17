@@ -64,7 +64,7 @@ final class CacheDebug
         $content = $response->getContent();
 
         if (is_string($content) && str_contains((string) $response->headers->get('Content-Type'), 'text/html') && ($at = strripos($content, '</body>')) !== false) {
-            $bar = '<div data-atrium-debug style="position:fixed;left:0;bottom:0;z-index:2147483647;padding:2px 8px;font:12px/1.6 ui-monospace,monospace;background:#111;color:#eee;opacity:.85">Atrium: '.e($line).'</div>';
+            $bar = '<div data-atrium-debug style="position:fixed;left:0;bottom:0;z-index:2147483647;padding:2px 8px;font:12px/1.6 ui-monospace,monospace;background:#111;color:#eee;opacity:.85;pointer-events:none">Atrium: '.e($line).'</div>';
             $response->setContent(substr($content, 0, $at).$bar.substr($content, $at));
         }
 

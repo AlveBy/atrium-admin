@@ -19,13 +19,11 @@ use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Unwarmable;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Exceptions;
-use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use stdClass;
@@ -66,18 +64,6 @@ class CacheWarmCommandTest extends CacheTestCase
         parent::defineEnvironment($app);
 
         $app['config']->set('atrium.resources', [Post::class, Book::class, Zebra::class]);
-    }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        parent::defineDatabaseMigrations();
-
-        foreach (['cache_screen_zebras', 'cache_screen_aardvarks'] as $name) {
-            Schema::create($name, function (Blueprint $table): void {
-                $table->id();
-                $table->string('name')->nullable();
-            });
-        }
     }
 
     /**

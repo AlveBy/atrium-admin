@@ -175,11 +175,22 @@ final class PublicUrl
     }
 
     /**
-     * Forget the cached section paths (for tests and after a data import).
+     * Forget the cached section paths, the kept ones too: after a data
+     * import that went past Eloquent, and in tests.
      */
     public static function forgetPaths(): void
     {
-        self::$pathCache = [];
+        self::forgetMemo();
         app(RecordCache::class)->flushClass(self::class);
+    }
+
+    /**
+     * Forget the paths this request worked out. The kept trees stay: a
+     * saved section drops them by itself, and the rules of the modules do
+     * not shape them. Runs at boot, so it must not write to the cache.
+     */
+    public static function forgetMemo(): void
+    {
+        self::$pathCache = [];
     }
 }
