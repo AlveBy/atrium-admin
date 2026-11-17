@@ -49,7 +49,7 @@ final class EnterSiteFolder
             return $next($request);
         }
 
-        $rest = substr($path, strlen('/'.$site->folder)) ?: '/';
+        $rest = substr($path, strlen($site->folder) + 1) ?: '/';
 
         if ($this->isPanel($rest)) {
             return $next($request);
@@ -79,17 +79,17 @@ final class EnterSiteFolder
 
     /**
      * Symfony keeps the base URL and the path of a request in properties of
-     * its own and offers no setter. Both are worked out first, then the
-     * folder moves from one to the other.
+     * its own and offers no setter. The path is worked out (with the base URL)
+     * by the caller, the base path here, then the folder moves from one to
+     * the other.
      */
     private function move(Request $request, string $folder, string $rest): void
     {
-        $request->getBaseUrl();
         $request->getBasePath();
 
         (function (string $folder, string $rest): void {
             $this->baseUrl .= $folder;
-            $this->basePath = rtrim((string) $this->basePath, '/').$folder;
+            $this->basePath .= $folder;
             $this->pathInfo = $rest;
         })->call($request, $folder, $rest);
     }
