@@ -23,6 +23,7 @@ use Atrium\Admin\Modules\Settings;
 use Atrium\Admin\Support\Sites;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Artisan;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -183,11 +184,11 @@ class ModuleController extends Controller
 
         foreach ($fields as $field) {
             $name = $field->getName();
-            $rules[$name] = $field->getValidationRules(FieldContext::edit(null, $request->file($name) ?? $request->input($name), $request->has($name)));
+            $rules[$name] = $field->getValidationRules(FieldContext::edit(null, Arr::get($request->all(), $name), $request->has($name)));
             $attributes[$name] = $field->getLabel();
         }
 
-        $request->validate(array_filter($rules), [], array_filter($attributes));
+        $request->validate($rules, [], array_filter($attributes));
 
         $values = [];
 
