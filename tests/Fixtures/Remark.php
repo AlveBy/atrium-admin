@@ -35,4 +35,12 @@ final class Remark extends Model
     {
         return $this->softMorphTo();
     }
+
+    /**
+     * @return MorphTo<covariant Model,$this>
+     */
+    public function other(): MorphTo
+    {
+        return $this->softMorphTo('subject');
+    }
 }

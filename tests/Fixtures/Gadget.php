@@ -66,6 +66,40 @@ final class Gadget extends Model implements Administrable
         return $this->softHasMany(Label::class, 'id', 'label_id');
     }
 
+    /**
+     * Keys left to their defaults.
+     *
+     * @return BelongsTo<covariant Model,$this>
+     */
+    public function label2(): BelongsTo
+    {
+        return $this->softBelongsTo(Label::class);
+    }
+
+    /**
+     * @return BelongsTo<covariant Model,$this>
+     */
+    public function named(): BelongsTo
+    {
+        return $this->softBelongsTo(Label::class, 'label_id', null, 'chosen');
+    }
+
+    /**
+     * @return BelongsToMany<covariant Model,$this>
+     */
+    public function tags2(): BelongsToMany
+    {
+        return $this->softBelongsToMany(Label::class, 'gadget_label', 'gadget_id');
+    }
+
+    /**
+     * @return BelongsToMany<covariant Model,$this>
+     */
+    public function namedTags(): BelongsToMany
+    {
+        return $this->softBelongsToMany(Label::class, 'gadget_label', 'gadget_id', 'shade_id', 'chosen');
+    }
+
     public static function getAdminLabel(): string
     {
         return 'Gadgets';

@@ -43,7 +43,7 @@ trait HasSoftRelations
      */
     protected function softBelongsTo(string $related, ?string $foreignKey = null, ?string $ownerKey = null, ?string $relation = null): BelongsTo
     {
-        $relation ??= debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+        $relation ??= $this->guessBelongsToRelation();
 
         if (Soft::available($related)) {
             return $this->belongsTo($related, $foreignKey, $ownerKey, $relation);
@@ -61,7 +61,7 @@ trait HasSoftRelations
      */
     protected function softBelongsToMany(string $related, string $table, ?string $foreignPivotKey = null, ?string $relatedPivotKey = null, ?string $relation = null): BelongsToMany
     {
-        $relation ??= debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+        $relation ??= $this->guessBelongsToRelation();
 
         if (Soft::available($related)) {
             return $this->belongsToMany($related, $table, $foreignPivotKey, $relatedPivotKey, null, null, $relation);
@@ -93,7 +93,7 @@ trait HasSoftRelations
      */
     protected function softMorphTo(?string $name = null, ?string $type = null, ?string $id = null): MorphTo
     {
-        $name ??= debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+        $name ??= $this->guessBelongsToRelation();
 
         [$type, $id] = $this->getMorphs(Str::snake($name), $type, $id);
 

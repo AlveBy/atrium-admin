@@ -153,6 +153,57 @@ final class SoftRelationsTest extends TestCase
         $this->assertSame([null, $post->id, null], $remarks->map(static fn (Remark $remark) => $remark->subject?->getKey())->all());
     }
 
+    public function test_a_relation_is_named_after_the_method_that_declares_it_unless_it_is_given_a_name(): void
+    {
+        [, $gadget] = $this->gadget();
+        $remark = Remark::query()->make();
+
+        foreach ([true, false] as $installed) {
+            if (! $installed) {
+                $this->withoutLabels();
+            }
+
+            $this->assertSame('label', $gadget->label()->getRelationName(), 'installed: '.json_encode($installed));
+            $this->assertSame('tags', $gadget->tags()->getRelationName());
+            $this->assertSame('chosen', $gadget->named()->getRelationName());
+            $this->assertSame('chosen', $gadget->namedTags()->getRelationName());
+            $this->assertSame('subject', $remark->subject()->getRelationName());
+            $this->assertSame('subject', $remark->other()->getRelationName());
+        }
+    }
+
+    public function test_the_link_keys_come_from_the_names_unless_they_are_given(): void
+    {
+        [, $gadget] = $this->gadget();
+
+        foreach ([true, false] as $installed) {
+            if (! $installed) {
+                $this->withoutLabels();
+            }
+
+            $why = 'installed: '.json_encode($installed);
+            $this->assertSame('label_id', $gadget->label()->getForeignKeyName(), $why);
+            $this->assertSame('label2_id', $gadget->label2()->getForeignKeyName(), $why);
+            $this->assertSame('label_id', $gadget->named()->getForeignKeyName(), $why);
+            $this->assertSame('shade_id', $gadget->namedTags()->getRelatedPivotKeyName(), $why);
+            $this->assertSame(['gadget_id', 'label_id'], [$gadget->tags()->getForeignPivotKeyName(), $gadget->tags()->getRelatedPivotKeyName()], $why);
+            $this->assertSame(['gadget_id', 'label_id'], [$gadget->tags2()->getForeignPivotKeyName(), $gadget->tags2()->getRelatedPivotKeyName()], $why);
+        }
+    }
+
+    public function test_a_record_of_a_missing_module_is_kept_out_by_the_query_itself(): void
+    {
+        $onGone = Remark::query()->create(['text' => 'Gone', 'subject_type' => 'Acme\\Gone\\Thing', 'subject_id' => 1]);
+        [$label] = $this->gadget();
+        $onLabel = Remark::query()->create(['text' => 'Nice', 'subject_type' => Label::class, 'subject_id' => $label->id]);
+
+        $this->assertStringContainsString('1 = 0', $onGone->subject()->toSql());
+        $this->assertStringNotContainsString('1 = 0', $onLabel->subject()->toSql());
+
+        $this->withoutLabels();
+        $this->assertStringContainsString('1 = 0', $onLabel->fresh()->subject()->toSql());
+    }
+
     public function test_the_list_shows_an_attribute_of_the_linked_record(): void
     {
         $this->gadget();
