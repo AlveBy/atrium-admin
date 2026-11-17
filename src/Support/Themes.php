@@ -36,9 +36,9 @@ final class Themes
     }
 
     /** @phpstan-assert-if-true string $choice */
-    public function isChoice(?string $choice): bool
+    public function isChoice(mixed $choice): bool
     {
-        return $choice !== null && in_array($choice, $this->choices(), true);
+        return in_array($choice, $this->choices(), true);
     }
 
     /** The configured default, or graphite when the config names no theme. */
@@ -46,7 +46,7 @@ final class Themes
     {
         $configured = config('atrium.admin.theme');
 
-        return is_string($configured) && $this->isChoice($configured) ? $configured : self::FALLBACK;
+        return $this->isChoice($configured) ? $configured : self::FALLBACK;
     }
 
     /** The admin's own choice, otherwise the default. May be "system". */
