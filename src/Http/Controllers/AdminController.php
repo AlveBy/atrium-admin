@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -334,7 +335,8 @@ abstract class AdminController extends Controller
     /**
      * Validate the request and write it to $item — one path for the form and
      * for the API, so a record saved by an agent is saved exactly like one
-     * saved by hand.
+     * saved by hand. The record, its relations and its SEO are saved whole or
+     * not at all; `atrium.record.saved` is heard after the commit only.
      *
      * ignoreCurrentRecord() inside resolveRules() handles unique-ignore on
      * edit for every attribute, not just `email`.
@@ -368,17 +370,26 @@ abstract class AdminController extends Controller
         $relations = $this->extractRelationValues($validated);
         $seo = $this->extractSeoValues($validated);
 
-        $item->fill($validated);
-        $item->save();
+        $saved = DB::transaction(function () use ($item, $validated, $relations, $seo): Model {
+            // A retry after a deadlock starts again from the record as it
+            // came: a rolled back insert leaves the model thinking it exists.
+            $record = clone $item;
+            $record->fill($validated);
+            $record->save();
 
-        $this->syncRelations($item, $relations);
-        $this->persistSeoValues($item, $seo);
+            $this->syncRelations($record, $relations);
+            $this->persistSeoValues($record, $seo);
 
-        $item->afterAdminSave($validated);
+            $record->afterAdminSave($validated);
 
-        Hook::fire('atrium.record.saved', $item, $context);
+            return $record;
+        }, attempts: 3);
 
-        return $item;
+        // Listeners send mail and queue jobs: only for what was committed,
+        // after the outermost transaction if the caller opened one.
+        DB::afterCommit(static fn () => Hook::fire('atrium.record.saved', $saved, $context));
+
+        return $saved;
     }
 
     /**
@@ -753,17 +764,42 @@ abstract class AdminController extends Controller
             return back()->with('error', __('atrium::resource.cannot_delete'));
         }
 
-        if (! $item->beforeAdminDelete()) {
+        if (! $this->deleteItem($item)) {
             return back()->with('error', __('atrium::resource.delete_failed'));
         }
-
-        $item->delete();
-
-        Hook::fire('atrium.record.deleted', $item);
 
         return redirect()
             ->route($this->model::getAdminRouteName().'.index')
             ->with('success', __('atrium::resource.deleted'));
+    }
+
+    /**
+     * Delete a record with what beforeAdminDelete() takes with it, whole or not
+     * at all. False when beforeAdminDelete() refuses. `atrium.record.deleted`
+     * is heard after the commit only.
+     */
+    protected function deleteItem(Model&Administrable $item): bool
+    {
+        $deleted = DB::transaction(static function () use ($item): ?Model {
+            // A retry after a deadlock starts again from the record as it came.
+            $record = clone $item;
+
+            if (! $record->beforeAdminDelete()) {
+                return null;
+            }
+
+            $record->delete();
+
+            return $record;
+        }, attempts: 3);
+
+        if ($deleted === null) {
+            return false;
+        }
+
+        DB::afterCommit(static fn () => Hook::fire('atrium.record.deleted', $deleted));
+
+        return true;
     }
 
     /**

@@ -11,6 +11,7 @@ namespace Atrium\Admin\Traits;
 
 use Atrium\Admin\Models\File;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 trait HasAdminFiles
@@ -98,16 +99,18 @@ trait HasAdminFiles
     }
 
     /**
-     * Reorder files for field
+     * Reorder files for field: the new order whole, or the old one.
      */
     public function reorderFiles(string $field, array $fileIds): void
     {
-        foreach ($fileIds as $index => $fileId) {
-            $this->files()
-                ->where('field', $field)
-                ->where('id', $fileId)
-                ->update(['sort' => $index + 1]);
-        }
+        DB::transaction(function () use ($field, $fileIds): void {
+            foreach ($fileIds as $index => $fileId) {
+                $this->files()
+                    ->where('field', $field)
+                    ->where('id', $fileId)
+                    ->update(['sort' => $index + 1]);
+            }
+        }, attempts: 3);
     }
 
     /**

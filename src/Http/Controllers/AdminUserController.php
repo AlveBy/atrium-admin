@@ -14,6 +14,7 @@ use Atrium\Admin\Models\AdminUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 
@@ -75,14 +76,18 @@ class AdminUserController extends AdminController
             }
         }
 
-        $item = parent::saveItem($request, $context, $item);
+        // One transaction with the parent's save: the account is never left
+        // saved without the superadmin box it was sent with.
+        return DB::transaction(function () use ($request, $context, $item, $promote): Model&Administrable {
+            $saved = parent::saveItem($request, $context, $item);
 
-        // Not fillable: a request from anyone else must not be able to set it.
-        if ($promote !== null) {
-            $item->forceFill(['is_superadmin' => $promote])->save();
-        }
+            // Not fillable: a request from anyone else must not be able to set it.
+            if ($promote !== null) {
+                $saved->forceFill(['is_superadmin' => $promote])->save();
+            }
 
-        return $item;
+            return $saved;
+        }, attempts: 3);
     }
 
     /**

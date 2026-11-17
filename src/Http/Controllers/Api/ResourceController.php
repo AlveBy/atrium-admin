@@ -11,7 +11,6 @@ namespace Atrium\Admin\Http\Controllers\Api;
 
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
-use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Models\AdminUser;
@@ -132,13 +131,9 @@ class ResourceController extends AdminController
 
         $item = $this->findItem($id);
 
-        if (! $item->canDelete() || ! $item->beforeAdminDelete()) {
+        if (! $item->canDelete() || ! $this->deleteItem($item)) {
             return response()->json(['message' => 'This record cannot be deleted.'], 409);
         }
-
-        $item->delete();
-
-        Hook::fire('atrium.record.deleted', $item);
 
         return response()->json(null, 204);
     }
