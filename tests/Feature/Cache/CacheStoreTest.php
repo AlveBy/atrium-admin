@@ -157,9 +157,9 @@ final class CacheStoreTest extends TestCase
     public function test_the_driver_is_named_after_the_store(): void
     {
         $this->assertSame('array', $this->tagged()->driver());
-        $this->assertSame('file', new CacheStore($this->fileRepository(), false)->driver());
-        $this->assertSame('redis', new CacheStore($this->redis([]), true)->driver());
-        $this->assertSame('database', new CacheStore($this->databaseRepository('driver_cache'), false)->driver());
+        $this->assertSame('file', (new CacheStore($this->fileRepository(), false))->driver());
+        $this->assertSame('redis', (new CacheStore($this->redis([]), true))->driver());
+        $this->assertSame('database', (new CacheStore($this->databaseRepository('driver_cache'), false))->driver());
     }
 
     public function test_the_size_of_a_store_that_cannot_tell_is_unknown(): void
@@ -187,7 +187,7 @@ final class CacheStoreTest extends TestCase
             $bytes += $file->getSize();
         }
 
-        $size = new CacheStore($repository, false)->size();
+        $size = (new CacheStore($repository, false))->size();
 
         $this->assertSame(['entries' => 3, 'bytes' => $bytes], $size);
         $this->assertGreaterThan(2100, $bytes);
@@ -197,12 +197,12 @@ final class CacheStoreTest extends TestCase
     {
         mkdir($this->directory);
 
-        $this->assertSame(['entries' => 0, 'bytes' => 0], new CacheStore($this->fileRepository(), false)->size());
+        $this->assertSame(['entries' => 0, 'bytes' => 0], (new CacheStore($this->fileRepository(), false))->size());
     }
 
     public function test_a_file_store_without_its_directory_has_no_size_and_no_error(): void
     {
-        $this->assertSame(['entries' => null, 'bytes' => null], new CacheStore($this->fileRepository(), false)->size());
+        $this->assertSame(['entries' => null, 'bytes' => null], (new CacheStore($this->fileRepository(), false))->size());
     }
 
     public function test_the_size_of_the_database_store_counts_its_rows_in_the_table_of_the_configured_store(): void
@@ -212,7 +212,7 @@ final class CacheStoreTest extends TestCase
         $repository->put('b', 2, 60);
         config(['cache.stores.kept' => ['driver' => 'database', 'table' => 'atrium_kept'], 'atrium.cache.store' => 'kept', 'cache.default' => 'array']);
 
-        $this->assertSame(['entries' => 2, 'bytes' => null], new CacheStore($repository, false)->size());
+        $this->assertSame(['entries' => 2, 'bytes' => null], (new CacheStore($repository, false))->size());
     }
 
     public function test_the_size_of_the_database_store_uses_the_default_store_when_none_is_named(): void
@@ -221,7 +221,7 @@ final class CacheStoreTest extends TestCase
         $repository->put('a', 1, 60);
         config(['cache.stores.kept' => ['driver' => 'database', 'table' => 'atrium_default_kept'], 'atrium.cache.store' => null, 'cache.default' => 'kept']);
 
-        $this->assertSame(['entries' => 1, 'bytes' => null], new CacheStore($repository, false)->size());
+        $this->assertSame(['entries' => 1, 'bytes' => null], (new CacheStore($repository, false))->size());
     }
 
     public function test_the_size_of_the_database_store_falls_back_to_the_table_named_cache(): void
@@ -232,7 +232,7 @@ final class CacheStoreTest extends TestCase
         $repository->put('c', 3, 60);
         config(['cache.stores.kept' => ['driver' => 'database'], 'atrium.cache.store' => 'kept']);
 
-        $this->assertSame(['entries' => 3, 'bytes' => null], new CacheStore($repository, false)->size());
+        $this->assertSame(['entries' => 3, 'bytes' => null], (new CacheStore($repository, false))->size());
     }
 
     /**
@@ -293,7 +293,7 @@ final class CacheStoreTest extends TestCase
         $repository->shouldNotReceive('many');
         $repository->shouldNotReceive('tags');
 
-        $this->assertSame([], new CacheStore($repository, true)->many('shelf', []));
+        $this->assertSame([], (new CacheStore($repository, true))->many('shelf', []));
     }
 
     public function test_nothing_to_write_is_nothing_written(): void
@@ -303,7 +303,7 @@ final class CacheStoreTest extends TestCase
         $repository->shouldNotReceive('putMany');
 
         foreach ([true, false] as $tags) {
-            new CacheStore($repository, $tags)->putMany('shelf', [], 60);
+            (new CacheStore($repository, $tags))->putMany('shelf', [], 60);
         }
 
         $this->addToAssertionCount(1);
