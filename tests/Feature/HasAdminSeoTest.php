@@ -14,6 +14,7 @@ use Atrium\Admin\Models\SeoMeta;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Handbook;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class HasAdminSeoTest extends TestCase
@@ -26,6 +27,23 @@ final class HasAdminSeoTest extends TestCase
         $article->updateSeoMeta(['title' => 'Buy {name} — {code}']);
 
         $this->assertSame('Buy Chair — chair', $article->fresh()?->getSeoTitle());
+    }
+
+    public function test_saving_the_seo_tab_again_updates_the_one_record_even_when_the_model_has_a_morph_alias(): void
+    {
+        Relation::morphMap(['handbook' => Handbook::class]);
+
+        try {
+            $article = Handbook::query()->create(['name' => 'Chair']);
+            $article->updateSeoMeta(['title' => 'First']);
+            $article->updateSeoMeta(['title' => 'Second']);
+
+            $this->assertSame(1, SeoMeta::query()->count());
+            $this->assertSame('Second', $article->fresh()?->getSeoTitle());
+            $this->assertSame('handbook', SeoMeta::query()->sole()->seoable_type);
+        } finally {
+            Relation::morphMap([], false);
+        }
     }
 
     public function test_without_a_title_the_template_of_the_model_is_used(): void

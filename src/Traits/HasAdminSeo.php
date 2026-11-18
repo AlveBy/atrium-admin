@@ -204,10 +204,9 @@ trait HasAdminSeo
      */
     public function updateSeoMeta(array $data): SeoMeta
     {
-        return $this->seoMeta()->updateOrCreate(
-            ['seoable_type' => static::class, 'seoable_id' => $this->id],
-            $data
-        );
+        // The relation already pins the type (its morph alias, if the app has
+        // a morph map) and the id.
+        return $this->seoMeta()->updateOrCreate([], $data);
     }
 
     /**
