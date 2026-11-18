@@ -33,17 +33,26 @@ final class ImageCaptcha implements CaptchaDriver
 
     private const HEIGHT = 50;
 
+    /** The largest of the built-in fonts of GD: 9 by 15 pixels a sign. */
+    private const FONT = 5;
+
     /**
      * @param  bool|null  $gd  Whether the picture can be drawn; null asks PHP whether GD is there.
+     * @param  (\Closure(int,int):int)|null  $random  Where the numbers of the sum and of the drawing come from; null is random_int().
      */
-    public function __construct(private readonly Encrypter $encrypter, private readonly Cache $cache, private readonly ?bool $gd = null) {}
+    public function __construct(
+        private readonly Encrypter $encrypter,
+        private readonly Cache $cache,
+        private readonly ?bool $gd = null,
+        private readonly ?\Closure $random = null,
+    ) {}
 
     public function widget(): HtmlString
     {
         // A question is used up on the first answer: a kept page would give
         // every visitor the same one.
         app(RecordCache::class)->dontKeepPage();
-        [$a, $b] = [random_int(1, 9), random_int(1, 9)];
+        [$a, $b] = [$this->random(1, 9), $this->random(1, 9)];
         $token = $this->encrypter->encrypt([
             'q' => "$a + $b",
             'a' => $a + $b,
@@ -123,11 +132,11 @@ final class ImageCaptcha implements CaptchaDriver
     private function draw(string $text): string
     {
         $image = imagecreatetruecolor(self::WIDTH, self::HEIGHT);
-        imagefill($image, 0, 0, $this->color($image, 225, 250));
+        imagefilter($image, IMG_FILTER_COLORIZE, ...$this->rgb(225, 250));
 
         for ($i = 0; $i < 6; $i++) {
-            imagesetthickness($image, random_int(1, 2));
-            imageline($image, random_int(0, self::WIDTH), random_int(0, self::HEIGHT), random_int(0, self::WIDTH), random_int(0, self::HEIGHT), $this->color($image, 120, 190));
+            imagesetthickness($image, $this->random(1, 2));
+            imageline($image, $this->random(0, self::WIDTH), $this->random(0, self::HEIGHT), $this->random(0, self::WIDTH), $this->random(0, self::HEIGHT), $this->color($image, 120, 190));
         }
 
         // Each sign drawn small with the built-in font, then enlarged, tilted
@@ -142,20 +151,19 @@ final class ImageCaptcha implements CaptchaDriver
             }
 
             $glyph = imagecreatetruecolor(9, 15);
+            imagefilter($glyph, IMG_FILTER_NEGATE);
             $background = imagecolorallocate($glyph, 255, 255, 255);
-            imagefill($glyph, 0, 0, $background);
-            imagecolortransparent($glyph, $background);
-            imagestring($glyph, 5, 0, 0, $char, $this->color($glyph, 20, 90));
+            imagestring($glyph, self::FONT, 0, 0, $char, $this->color($glyph, 20, 90));
 
-            $glyph = imagerotate($glyph, random_int(-20, 20), $background);
+            $glyph = imagerotate($glyph, $this->random(-20, 20), $background);
             imagecolortransparent($glyph, $background);
-            $size = random_int(24, 30);
-            imagecopyresized($image, $glyph, $x, random_int(2, self::HEIGHT - $size - 2), 0, 0, (int) ($size * .6), $size, imagesx($glyph), imagesy($glyph));
-            $x += (int) ($size * .6) + random_int(1, 4);
+            $size = $this->random(24, 30);
+            imagecopyresized($image, $glyph, $x, $this->random(2, self::HEIGHT - $size - 2), 0, 0, (int) ($size * .6), $size, imagesx($glyph), imagesy($glyph));
+            $x += (int) ($size * .6) + $this->random(1, 4);
         }
 
         for ($i = 0; $i < 250; $i++) {
-            imagesetpixel($image, random_int(0, self::WIDTH - 1), random_int(0, self::HEIGHT - 1), $this->color($image, 60, 200));
+            imagesetpixel($image, $this->random(0, self::WIDTH - 1), $this->random(0, self::HEIGHT - 1), $this->color($image, 60, 200));
         }
 
         ob_start();
@@ -166,7 +174,20 @@ final class ImageCaptcha implements CaptchaDriver
 
     private function color(\GdImage $image, int $from, int $to): int
     {
-        return (int) imagecolorallocate($image, random_int($from, $to), random_int($from, $to), random_int($from, $to));
+        return (int) imagecolorallocate($image, ...$this->rgb($from, $to));
+    }
+
+    /**
+     * @return array{int,int,int}
+     */
+    private function rgb(int $from, int $to): array
+    {
+        return [$this->random($from, $to), $this->random($from, $to), $this->random($from, $to)];
+    }
+
+    private function random(int $min, int $max): int
+    {
+        return ($this->random ?? random_int(...))($min, $max);
     }
 
     private function ttl(): int
