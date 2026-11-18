@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Api\ApiDocumentation;
+use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Tests\Fixtures\ApiAisle;
 use Atrium\Admin\Tests\Fixtures\ApiEdges;
 use Atrium\Admin\Tests\Fixtures\Bare;
@@ -141,10 +142,30 @@ final class ApiDocumentationExactTest extends TestCase
         ]]), $this->encoded($paths['/files']));
     }
 
+    public function test_a_translatable_field_keeps_its_own_note_and_is_typed_by_its_plain_value(): void
+    {
+        Hook::filter('atrium.module.translatable', static fn (array $names): array => [...$names, 'starts', 'limit', 'name']);
+
+        $fields = collect(app(ApiDocumentation::class)->modules(['api_edges'])['api_edges']['fields'])->keyBy('name');
+        $translatable = ' Translatable: a plain value sets the default language (en), an object {"en": …} sets several. Read back as that object.';
+
+        $this->assertSame('Edit only. Date: YYYY-MM-DD.'.$translatable, $fields['starts']['note']);
+        $this->assertSame('Create only.'.$translatable, $fields['limit']['note']);
+        $this->assertSame(trim($translatable), $fields['name']['note']);
+
+        $markdown = app(ApiDocumentation::class)->markdown(['api_edges']);
+        $this->assertStringContainsString('| `limit` | number per language |', $markdown);
+        $this->assertStringContainsString('| `starts` | date per language |', $markdown);
+        $this->assertStringContainsString('| `name` | string per language |', $markdown);
+    }
+
     public function test_the_note_of_a_field_comes_before_the_text_the_api_adds(): void
     {
         $fields = collect(app(ApiDocumentation::class)->modules(['api_edges'])['api_edges']['fields'])->keyBy('name');
-        $this->assertSame(['name', 'agree', 'tags', 'section_id'], $fields->keys()->all());
+        $this->assertSame(['name', 'agree', 'tags', 'section_id', 'limit', 'starts'], $fields->keys()->all());
+        $this->assertSame([0, 1, 2, 3, 4, 5], array_keys(app(ApiDocumentation::class)->modules(['api_edges'])['api_edges']['fields']), 'A list, though a field before them is left out.');
+        $this->assertSame('Create only.', $fields['limit']['note']);
+        $this->assertSame('Edit only. Date: YYYY-MM-DD.', $fields['starts']['note']);
 
         $this->assertSame('Create only. Send true/false; the response contains "Y" or null.', $fields['agree']['note']);
         $this->assertSame('Edit only. List of values.', $fields['tags']['note']);

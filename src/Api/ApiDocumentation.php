@@ -70,11 +70,6 @@ final class ApiDocumentation
      */
     private function describeModule(string $key, string $model): array
     {
-        $fields = array_filter(
-            AdminController::fieldsOf($model),
-            static fn (Field $field): bool => $field->shouldShowOnCreate() || $field->shouldShowOnEdit()
-        );
-
         $instance = new $model;
         $translatable = Hook::apply(
             'atrium.module.translatable',
@@ -82,14 +77,20 @@ final class ApiDocumentation
             $model,
         );
 
+        $fields = [];
+
+        foreach (AdminController::fieldsOf($model) as $field) {
+            if (! $field->shouldShowOnCreate() && ! $field->shouldShowOnEdit()) {
+                continue;
+            }
+
+            $doc = $this->describe($field);
+            $fields[] = in_array($field->getName(), $translatable, true) ? $this->translatable($doc) : $doc;
+        }
+
         return [
             'label' => $this->resources->label($key),
-            'fields' => array_values(array_map(
-                fn (Field $field): array => in_array($field->getName(), $translatable, true)
-                    ? $this->translatable($this->describe($field))
-                    : $this->describe($field),
-                $fields
-            )),
+            'fields' => $fields,
         ];
     }
 
@@ -168,10 +169,9 @@ final class ApiDocumentation
             $properties[$code] = $doc['schema'];
         }
 
-        $doc['schema'] = ['oneOf' => [$doc['schema'], ['type' => 'object', 'properties' => $properties, 'additionalProperties' => false]]];
-        $doc['note'] = trim(($doc['note'] ?? '').' Translatable: a plain value sets the default language ('.$languages->default().'), an object {"'.implode('": …, "', $languages->codes()).'": …} sets several. Read back as that object.');
+        $schema = ['oneOf' => [$doc['schema'], ['type' => 'object', 'properties' => $properties, 'additionalProperties' => false]]];
 
-        return $doc;
+        return $this->set($doc, $schema, 'Translatable: a plain value sets the default language ('.$languages->default().'), an object {"'.implode('": …, "', $languages->codes()).'": …} sets several. Read back as that object.');
     }
 
     /**
@@ -539,7 +539,7 @@ final class ApiDocumentation
 
     private function typeName(array $schema): string
     {
-        if (isset($schema['oneOf'][0])) {
+        if (isset($schema['oneOf'])) {
             return $this->typeName($schema['oneOf'][0]).' per language';
         }
 

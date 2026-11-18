@@ -12,7 +12,9 @@ namespace Atrium\Admin\Tests\Fixtures;
 use Atrium\Admin\Columns\TextColumn;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\CheckboxField;
+use Atrium\Admin\Fields\DateField;
 use Atrium\Admin\Fields\MultiSelectField;
+use Atrium\Admin\Fields\NumberField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Fields\TreeSelectField;
 use Atrium\Admin\Traits\InteractsWithAdmin;
@@ -36,10 +38,13 @@ final class ApiEdges extends Model implements Administrable
     public static function getAdministrationFields(): array
     {
         return [
+            TextField::make('secret')->label('Never in a form')->hideOnCreate()->hideOnEdit(),
             TextField::make('name')->label('Name')->required(),
             CheckboxField::make('agree')->label('Agree')->checkedValue('Y')->onlyOnCreate(),
             MultiSelectField::make('tags')->label('Tags')->options(['a' => 'A'])->onlyOnEdit(),
             TreeSelectField::make('section_id')->label('Section')->model(ApiAisle::class)->onlyOnCreate(),
+            NumberField::make('limit')->label('Limit')->onlyOnCreate(),
+            DateField::make('starts')->label('Starts')->onlyOnEdit(),
         ];
     }
 
