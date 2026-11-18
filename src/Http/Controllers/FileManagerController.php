@@ -58,7 +58,7 @@ class FileManagerController extends Controller
      */
     public function upload(Request $request): JsonResponse
     {
-        $maxKb = (int) config('atrium.uploads.max_size', 10240);
+        $maxKb = config('atrium.uploads.max_size', 10240);
 
         $request->validate([
             'file' => [
@@ -172,8 +172,9 @@ class FileManagerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $type = (string) $request->get('type', 'all');
-        $page = max(1, (int) $request->get('page', 1));
+        $type = $request->get('type');
+        $type = is_string($type) ? $type : 'all';
+        $page = max(1, $request->integer('page'));
 
         $query = MediaItem::query();
 
@@ -183,13 +184,13 @@ class FileManagerController extends Controller
             $query->documents();
         }
 
-        if ($collection = (int) $request->get('collection', 0)) {
+        if ($collection = $request->integer('collection')) {
             $query->where('collection_id', $collection);
         }
 
         $query->search((string) $request->get('search', ''));
 
-        $total = (clone $query)->count();
+        $total = $query->count();
 
         $files = $query
             ->orderByDesc('created_at')
@@ -291,7 +292,7 @@ class FileManagerController extends Controller
             ->map(fn (MediaCollection $collection) => [
                 'id' => $collection->id,
                 'name' => $collection->name,
-                'count' => (int) $collection->items_count,
+                'count' => $collection->items_count,
             ])
             ->values()
             ->all();

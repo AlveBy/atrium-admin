@@ -341,6 +341,66 @@ final class FileManagerTest extends TestCase
             ->assertJsonValidationErrors(['file' => 'The file is too large. Maximum size: 1.5 MB.']);
     }
 
+    /**
+     * @return array<string,array{0:int,1:int,2:string}>
+     */
+    public static function roundedSizes(): array
+    {
+        return [
+            'just under a half' => [1484, 1485, '1.4'],
+            'just over a half' => [1486, 1487, '1.5'],
+        ];
+    }
+
+    #[DataProvider('roundedSizes')]
+    public function test_the_size_limit_is_divided_by_exactly_1024_and_rounded_to_a_tenth(int $limit, int $kilobytes, string $megabytes): void
+    {
+        config()->set('atrium.uploads.max_size', $limit);
+
+        $this->upload($this->file('offer.pdf', $kilobytes))
+            ->assertJsonValidationErrors(['file' => "The file is too large. Maximum size: {$megabytes} MB."]);
+    }
+
+    /**
+     * @return array<string,array{0:string}>
+     */
+    public static function defaultTypes(): array
+    {
+        return array_map(
+            static fn (string $name): array => [$name],
+            array_combine(
+                $names = ['a.jpg', 'a.jpeg', 'a.png', 'a.gif', 'a.webp', 'a.pdf', 'a.doc', 'a.docx', 'a.xls', 'a.xlsx'],
+                $names,
+            ),
+        );
+    }
+
+    #[DataProvider('defaultTypes')]
+    public function test_without_a_configured_list_the_usual_pictures_and_documents_are_kept(string $name): void
+    {
+        config()->set('atrium.uploads', []);
+
+        $this->upload($this->file($name))->assertOk();
+    }
+
+    public function test_without_a_configured_list_anything_else_is_refused_and_named(): void
+    {
+        config()->set('atrium.uploads', []);
+
+        $this->upload($this->file('notes.txt'))
+            ->assertStatus(422)
+            ->assertJsonPath('message', __('atrium::files.errors.type_not_allowed', ['types' => 'jpg, jpeg, png, gif, webp, pdf, doc, docx, xls, xlsx']));
+    }
+
+    public function test_without_a_configured_limit_ten_megabytes_are_kept_and_one_kilobyte_more_is_not(): void
+    {
+        config()->set('atrium.uploads', []);
+
+        $this->upload($this->file('offer.pdf', 10240))->assertOk();
+        $this->upload($this->file('offer.pdf', 10241))
+            ->assertJsonValidationErrors(['file' => 'The file is too large. Maximum size: 10 MB.']);
+    }
+
     public function test_a_missing_or_broken_file_is_refused_by_name(): void
     {
         $admin = $this->admin();
@@ -429,6 +489,7 @@ final class FileManagerTest extends TestCase
         }
 
         $first = $this->files()->assertOk();
+        $this->assertSame(2, $first->json('last_page'), 'A whole number, not 2.0.');
         $first->assertJsonPath('total', 25)
             ->assertJsonPath('page', 1)
             ->assertJsonPath('per_page', 24)
@@ -492,6 +553,8 @@ final class FileManagerTest extends TestCase
         $this->assertSame(['beach.jpg', 'scan.pdf'], $names(['collection' => $photos->id]));
         $this->assertSame(['scan.pdf'], $names(['collection' => $photos->id, 'type' => 'document']));
         $this->assertSame(['beach.jpg', 'contract.pdf', 'scan.pdf'], $names(['collection' => 0]));
+        $this->assertSame(['beach.jpg', 'contract.pdf', 'scan.pdf'], $names(['collection' => 'abc']));
+        $this->assertSame(['beach.jpg', 'contract.pdf', 'scan.pdf'], $names(['type' => ['image']]));
         $this->assertSame(['beach.jpg'], $names(['search' => 'each']));
         $this->assertSame(['beach.jpg'], $names(['search' => 'sun']));
         $this->assertSame([], $names(['search' => '0_%']));

@@ -239,6 +239,8 @@ final class RelationFieldsTest extends FieldTestCase
         $this->assertFalse($array['clearable']);
         $this->assertTrue($array['multiple']);
         $this->assertTrue($array['expandAll']);
+        $this->assertTrue(TreeSelectField::make('a')->searchable(false)->searchable()->toArray()['searchable']);
+        $this->assertTrue(TreeSelectField::make('a')->clearable(false)->clearable()->toArray()['clearable']);
         $this->assertFalse(TreeSelectField::make('a')->expandAll()->expandAll(false)->toArray()['expandAll']);
         $this->assertFalse(TreeSelectField::make('a')->multiple()->multiple(false)->toArray()['multiple']);
     }
@@ -444,6 +446,9 @@ final class RelationFieldsTest extends FieldTestCase
         $rules[2]('parent_id', 0, $fail);
         $rules[2]('parent_id', '0', $fail);
         $this->assertSame([], $failures, 'no parent is never a cycle');
+
+        $rules[2]('parent_id', [$section->id], $fail);
+        $this->assertSame([], $failures, 'a list is not one section; there is nothing to walk and nothing to fail on');
 
         $rules[2]('parent_id', (string) $section->id, $fail);
         $this->assertSame([__('atrium::fields.validation.own_ancestor')], $failures);

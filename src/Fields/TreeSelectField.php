@@ -262,21 +262,21 @@ class TreeSelectField extends Field
         $parentColumn = $this->parentColumn;
 
         return function (string $attribute, $value, \Closure $fail) use ($record, $modelClass, $parentColumn): void {
-            if (! $value) {
+            if (! $value || ! is_scalar($value)) {
                 return;
             }
 
-            $rows = $modelClass::query()->pluck($parentColumn, 'id');
-            $cursor = (int) $value;
+            $parents = $modelClass::query()->pluck($parentColumn, 'id')->all();
 
-            for ($depth = 0; $cursor && $depth <= $rows->count(); $depth++) {
-                if ($cursor === (int) $record->getKey()) {
-                    $fail(__('atrium::fields.validation.own_ancestor'));
+            // The chosen section and every section above it; one already in
+            // the chain ends the walk, so a cycle in the data cannot hang it.
+            $chain = [];
+            for ($id = $value; array_key_exists($id, $parents) && ! in_array($id, $chain); $id = $parents[$id]) {
+                $chain[] = $id;
+            }
 
-                    return;
-                }
-
-                $cursor = (int) ($rows[$cursor] ?? 0);
+            if (in_array($record->getKey(), $chain)) {
+                $fail(__('atrium::fields.validation.own_ancestor'));
             }
         };
     }
