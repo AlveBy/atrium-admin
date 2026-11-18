@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Support;
 
 use GdImage;
+use SplFileInfo;
 
 /**
  * A lighter copy of an image: `photo.jpg` gets a `photo.jpg.webp` next to it.
@@ -59,7 +60,7 @@ final class WebpCopy
      *
      * @return array{status: string, before?: int, after?: int}
      */
-    public static function make(string $source, int $quality = 82, int $maxWidth = 1920, bool $force = false): array
+    public static function make(string $source, int $quality = 82, int $maxWidth = 1920, bool $force = false, int $maxPixels = self::MAX_PIXELS): array
     {
         if (! self::supported() || ! is_file($source) || ! self::convertible($source)) {
             return ['status' => 'failed'];
@@ -71,7 +72,7 @@ final class WebpCopy
             return ['status' => 'skipped'];
         }
 
-        $image = self::load($source);
+        $image = self::load($source, $maxPixels);
 
         if ($image === null) {
             return ['status' => 'failed'];
@@ -79,14 +80,13 @@ final class WebpCopy
 
         $image = self::resize($image, $maxWidth);
         $ok = @imagewebp($image, $target, $quality);
-        imagedestroy($image);
 
         if (! $ok) {
             return ['status' => 'failed'];
         }
 
-        $before = (int) filesize($source);
-        $after = (int) filesize($target);
+        $before = (new SplFileInfo($source))->getSize();
+        $after = (new SplFileInfo($target))->getSize();
 
         // A copy heavier than the source is pointless — the server would serve
         // the original. Happens with palette PNGs: webp loses on badges and logos.
@@ -99,7 +99,7 @@ final class WebpCopy
         return ['status' => 'made', 'before' => $before, 'after' => $after];
     }
 
-    private static function load(string $path): ?GdImage
+    private static function load(string $path, int $maxPixels): ?GdImage
     {
         $info = @getimagesize($path);
 
@@ -109,16 +109,13 @@ final class WebpCopy
 
         [$width, $height] = $info;
 
-        if ($width * $height > self::MAX_PIXELS) {
+        if ($width * $height > $maxPixels) {
             return null;
         }
 
         // Some files named .jpg are actually webp already (left so by an old
-        // CMS module). Nothing to compress a second time.
-        if ($info[2] === IMAGETYPE_WEBP) {
-            return null;
-        }
-
+        // CMS module). Nothing to compress a second time: only the two types
+        // below are opened.
         $image = match ($info[2]) {
             IMAGETYPE_JPEG => @imagecreatefromjpeg($path),
             IMAGETYPE_PNG => @imagecreatefrompng($path),
@@ -129,11 +126,9 @@ final class WebpCopy
             return null;
         }
 
-        // Otherwise palette PNGs lose colours when scaled, and without these two
-        // lines transparency is filled with black.
+        // Otherwise palette PNGs lose colours when scaled, and webp cannot be
+        // written from a palette image at all.
         imagepalettetotruecolor($image);
-        imagealphablending($image, false);
-        imagesavealpha($image, true);
 
         return $image;
     }
@@ -141,18 +136,21 @@ final class WebpCopy
     private static function resize(GdImage $image, int $maxWidth): GdImage
     {
         $width = imagesx($image);
+        $scaled = $maxWidth > 0 ? min($maxWidth, $width) : $width;
 
-        if ($maxWidth <= 0 || $width <= $maxWidth) {
-            return $image;
-        }
+        return $scaled === $width ? $image : self::scaled($image, $scaled);
+    }
 
-        $height = max(1, (int) round(imagesy($image) * $maxWidth / $width));
-        $resized = imagecreatetruecolor($maxWidth, $height);
+    private static function scaled(GdImage $image, int $width): GdImage
+    {
+        $sourceWidth = imagesx($image);
+        $sourceHeight = imagesy($image);
+        $height = max(1, (int) round($sourceHeight * $width / $sourceWidth));
+        $resized = imagecreatetruecolor($width, $height);
 
+        // Without this the copy of transparent areas is blended onto black.
         imagealphablending($resized, false);
-        imagesavealpha($resized, true);
-        imagecopyresampled($resized, $image, 0, 0, 0, 0, $maxWidth, $height, $width, imagesy($image));
-        imagedestroy($image);
+        imagecopyresampled($resized, $image, 0, 0, 0, 0, $width, $height, $sourceWidth, $sourceHeight);
 
         return $resized;
     }
