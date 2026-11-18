@@ -251,4 +251,193 @@ final class WebpCopyTest extends TestCase
         $this->assertSame(127, (imagecolorat($copy, 5, 5) >> 24) & 0x7F);
         $this->assertSame(0, (imagecolorat($copy, 50, 5) >> 24) & 0x7F);
     }
+
+    /**
+     * Garbage after the PNG's last chunk: decoders stop at IEND, so the
+     * picture stays the same and the file weighs exactly $size bytes.
+     */
+    private function weighing(string $path, int $size): string
+    {
+        $current = (int) filesize($path);
+        $this->assertLessThanOrEqual($size, $current);
+        file_put_contents($path, str_repeat("\0", $size - $current), FILE_APPEND);
+
+        return $path;
+    }
+
+    /**
+     * The gradient webp cannot beat: a few hundred bytes in PNG.
+     */
+    private function badge(string $name): string
+    {
+        $image = imagecreatetruecolor(16, 16);
+        for ($x = 0; $x < 16; $x++) {
+            for ($y = 0; $y < 16; $y++) {
+                imagesetpixel($image, $x, $y, ($x * 16 << 16) | ($y * 16 << 8));
+            }
+        }
+        $path = "{$this->dir}/{$name}";
+        imagepng($image, $path, 9);
+
+        return $path;
+    }
+
+    /**
+     * A $width x $height PNG, solid, padded to weigh far more than its copy.
+     */
+    private function heavy(string $name, int $width, int $height): string
+    {
+        $image = imagecreatetruecolor($width, $height);
+        $path = "{$this->dir}/{$name}";
+        imagepng($image, $path);
+
+        return $this->weighing($path, 100_000);
+    }
+
+    /**
+     * @return array{int,int} width and height of the copy
+     */
+    private function sizeOfCopy(string $source): array
+    {
+        $info = (array) getimagesize($source.'.webp');
+
+        return [$info[0], $info[1]];
+    }
+
+    public function test_the_default_quality_is_82(): void
+    {
+        $default = $this->photo('default.png', 96, 96);
+        $lower = $this->photo('lower.png', 96, 96);
+        $same = $this->photo('same.png', 96, 96);
+        $higher = $this->photo('higher.png', 96, 96);
+
+        WebpCopy::make($default);
+        WebpCopy::make($lower, 81);
+        WebpCopy::make($same, 82);
+        WebpCopy::make($higher, 83);
+
+        $this->assertFileEquals($default.'.webp', $same.'.webp');
+        $this->assertFileNotEquals($default.'.webp', $lower.'.webp');
+        $this->assertFileNotEquals($default.'.webp', $higher.'.webp');
+    }
+
+    public function test_the_default_width_limit_is_1920_pixels(): void
+    {
+        $exact = $this->heavy('exact.png', 1920, 2);
+        $over = $this->heavy('over.png', 1921, 2);
+        $under = $this->heavy('under.png', 1919, 2);
+
+        foreach ([$exact, $over, $under] as $source) {
+            $this->assertSame('made', WebpCopy::make($source)['status']);
+        }
+
+        $this->assertSame([1920, 2], $this->sizeOfCopy($exact));
+        $this->assertSame([1920, 2], $this->sizeOfCopy($over));
+        $this->assertSame([1919, 2], $this->sizeOfCopy($under));
+    }
+
+    public function test_a_copy_exactly_as_heavy_as_the_source_is_thrown_away_and_one_byte_lighter_kept(): void
+    {
+        $probe = WebpCopy::make($this->weighing($this->badge('probe.png'), 5000), 100);
+        $this->assertSame('made', $probe['status']);
+        $copy = $probe['after'];
+
+        $this->assertSame(['status' => 'rejected'], WebpCopy::make($this->weighing($this->badge('lighter.png'), $copy - 1), 100));
+        $this->assertSame(['status' => 'rejected'], WebpCopy::make($this->weighing($this->badge('equal.png'), $copy), 100));
+        $this->assertFileDoesNotExist("{$this->dir}/equal.png.webp");
+        $this->assertSame(
+            ['status' => 'made', 'before' => $copy + 1, 'after' => $copy],
+            WebpCopy::make($this->weighing($this->badge('heavier.png'), $copy + 1), 100),
+        );
+    }
+
+    public function test_a_copy_whose_source_is_gone_is_not_a_copy_to_skip(): void
+    {
+        file_put_contents("{$this->dir}/orphan.png.webp", 'left behind');
+
+        $this->assertSame(['status' => 'failed'], WebpCopy::make("{$this->dir}/orphan.png"));
+    }
+
+    public function test_the_pixel_limit_counts_width_times_height_and_stops_above_it(): void
+    {
+        $source = $this->heavy('ten.png', 10, 10);
+
+        $this->assertSame('made', WebpCopy::make($source, maxPixels: 100)['status']);
+        $this->assertSame(['status' => 'failed'], WebpCopy::make($source, force: true, maxPixels: 99));
+        // 20 x 5 is 100 pixels too, though 20 / 5 is 4.
+        $this->assertSame('made', WebpCopy::make($this->heavy('wide.png', 20, 5), maxPixels: 100)['status']);
+    }
+
+    public function test_the_height_of_a_scaled_picture_is_rounded_to_the_nearest_pixel(): void
+    {
+        $down = $this->heavy('down.png', 1000, 3);
+        $up = $this->heavy('up.png', 1000, 3);
+
+        WebpCopy::make($down, 82, 410);
+        WebpCopy::make($up, 82, 590);
+
+        // 3 * 410 / 1000 = 1.23 and 3 * 590 / 1000 = 1.77.
+        $this->assertSame([410, 1], $this->sizeOfCopy($down));
+        $this->assertSame([590, 2], $this->sizeOfCopy($up));
+    }
+
+    public function test_scaling_keeps_every_part_of_the_picture_in_its_place(): void
+    {
+        $image = imagecreatetruecolor(16, 16);
+        imagefill($image, 0, 0, 0x0000FF);
+        imagefilledrectangle($image, 0, 0, 7, 7, 0xFF0000);
+        $source = "{$this->dir}/quarters.png";
+        imagepng($image, $source);
+        $this->weighing($source, 100_000);
+
+        $this->assertSame('made', WebpCopy::make($source, 101, 8)['status']);
+
+        $copy = imagecreatefromwebp($source.'.webp');
+        $this->assertNotFalse($copy);
+        foreach ([[0, 0], [3, 0], [0, 3], [3, 3]] as [$x, $y]) {
+            $this->assertSame(0xFF0000, imagecolorat($copy, $x, $y) & 0xFFFFFF, "red at {$x},{$y}");
+        }
+        foreach ([[4, 0], [0, 4], [4, 4], [7, 7], [7, 0], [0, 7]] as [$x, $y]) {
+            $this->assertSame(0x0000FF, imagecolorat($copy, $x, $y) & 0xFFFFFF, "blue at {$x},{$y}");
+        }
+    }
+
+    public function test_transparency_survives_scaling_too(): void
+    {
+        $image = imagecreatetruecolor(64, 8);
+        imagealphablending($image, false);
+        imagesavealpha($image, true);
+        imagefill($image, 0, 0, (int) imagecolorallocatealpha($image, 200, 10, 10, 127));
+        imagefilledrectangle($image, 32, 0, 63, 7, (int) imagecolorallocatealpha($image, 10, 10, 200, 0));
+        $source = "{$this->dir}/scaled-transparent.png";
+        imagepng($image, $source);
+        $this->weighing($source, 100_000);
+
+        $this->assertSame('made', WebpCopy::make($source, 101, 32)['status']);
+
+        $copy = imagecreatefromwebp($source.'.webp');
+        $this->assertNotFalse($copy);
+        $this->assertSame(127, (imagecolorat($copy, 5, 2) >> 24) & 0x7F);
+        $this->assertSame(0, (imagecolorat($copy, 25, 2) >> 24) & 0x7F);
+    }
+
+    public function test_a_palette_png_with_a_transparent_colour_keeps_it(): void
+    {
+        $image = imagecreate(32, 8);
+        $clear = (int) imagecolorallocate($image, 0, 0, 0);
+        imagecolortransparent($image, $clear);
+        $red = (int) imagecolorallocate($image, 255, 0, 0);
+        imagefilledrectangle($image, 16, 0, 31, 7, $red);
+        $source = "{$this->dir}/palette.png";
+        imagepng($image, $source);
+        $this->weighing($source, 100_000);
+
+        $this->assertSame('made', WebpCopy::make($source, 101)['status']);
+
+        $copy = imagecreatefromwebp($source.'.webp');
+        $this->assertNotFalse($copy);
+        $this->assertSame(127, (imagecolorat($copy, 5, 2) >> 24) & 0x7F);
+        $this->assertSame(0, (imagecolorat($copy, 25, 2) >> 24) & 0x7F);
+        $this->assertSame(0xFF0000, imagecolorat($copy, 25, 2) & 0xFFFFFF);
+    }
 }
