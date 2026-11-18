@@ -162,7 +162,7 @@ abstract class AdminController extends Controller
 
         // A column like `brand.name` shows a related record's attribute.
         if ($related !== []) {
-            $query->with(array_values(array_unique(array_map(static fn (string $name): string => Str::beforeLast($name, '.'), $related))));
+            $query->with(array_map(static fn (string $name): string => Str::beforeLast($name, '.'), $related));
         }
 
         // Apply search
@@ -172,7 +172,7 @@ abstract class AdminController extends Controller
             // the filter matched nothing — search silently returned every row.
             $searchable = collect($columns)
                 ->map(fn ($col) => $col->toArray())
-                ->filter(fn (array $col): bool => (bool) ($col['searchable'] ?? false))
+                ->where('searchable', true)
                 ->pluck('name')
                 ->filter(fn ($name): bool => is_string($name) && $name !== '' && ! in_array($name, $related, true))
                 ->values()
@@ -278,7 +278,7 @@ abstract class AdminController extends Controller
      */
     protected function preselectSection(Request $request, array $data): array
     {
-        $sectionId = (int) $request->query(self::SECTION_QUERY, 0);
+        $sectionId = (int) $request->query(self::SECTION_QUERY);
 
         if ($sectionId <= 0 || ! $this->sectionExists($sectionId)) {
             return $data;
@@ -319,10 +319,6 @@ abstract class AdminController extends Controller
      */
     private function withFieldDefaults(array $data, array $defaults): array
     {
-        if ($defaults === []) {
-            return $data;
-        }
-
         $preset = static function (array $field) use ($defaults): array {
             if (array_key_exists($field['name'] ?? '', $defaults)) {
                 $field['default'] = $defaults[$field['name']];
@@ -555,10 +551,6 @@ abstract class AdminController extends Controller
      */
     protected function runValidation(Request $request, array $rules, string $context): void
     {
-        if (empty($rules)) {
-            return;
-        }
-
         $request->validate($rules, [], $this->validationAttributes($context));
     }
 
@@ -592,7 +584,7 @@ abstract class AdminController extends Controller
             }
         }
 
-        $data = $request->only(array_values(array_unique($keys)));
+        $data = $request->only($keys);
 
         // An untouched checkbox arrives as an empty string: the form seeds every
         // field as `default ?? ''`, and ConvertEmptyStringsToNull turns the
@@ -694,10 +686,7 @@ abstract class AdminController extends Controller
         $item = $this->model::findOrFail($id);
 
         // Load BelongsToMany relations for proper data transformation
-        $belongsToManyRelations = $this->getBelongsToManyRelations();
-        if (! empty($belongsToManyRelations)) {
-            $item->load($belongsToManyRelations);
-        }
+        $item->load($this->getBelongsToManyRelations());
 
         $data = $this->prepareFormData('edit', $item);
 
