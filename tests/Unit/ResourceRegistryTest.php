@@ -9,9 +9,12 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Unit;
 
+use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
+use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Resources\ResourceRegistry;
+use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\Fixtures\NotAdministrable;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
@@ -28,6 +31,36 @@ final class ResourceRegistryTest extends TestCase
         $this->assertSame(Post::class, $registry->modelForRoute('admin.posts.edit'));
     }
 
+    public function test_a_module_of_a_package_that_is_not_installed_is_left_out_without_stopping_the_list(): void
+    {
+        $this->app->make(Modules::class)->add(Label::module());
+        config(['atrium.resources' => [Label::class, Post::class]]);
+
+        $this->assertSame(['sites' => Site::class, 'languages' => Language::class, 'posts' => Post::class], (new ResourceRegistry)->all());
+    }
+
+    public function test_the_list_is_built_once_until_it_is_flushed(): void
+    {
+        $registry = new ResourceRegistry;
+        $this->assertArrayHasKey('posts', $registry->all());
+
+        config(['atrium.resources' => []]);
+        $this->assertArrayHasKey('posts', $registry->all(), 'Kept from the first time.');
+
+        $registry->flush();
+        $this->assertArrayNotHasKey('posts', $registry->all());
+    }
+
+    public function test_only_a_route_of_the_panel_with_a_module_and_an_action_names_a_module(): void
+    {
+        $registry = new ResourceRegistry;
+
+        $this->assertNull($registry->modelForRoute('other.admin.posts.edit'));
+        $this->assertNull($registry->modelForRoute('admin.posts.edit.copy'));
+        $this->assertNull($registry->modelForRoute('admin.posts.Edit'));
+        $this->assertSame(Post::class, $registry->modelForRoute('admin.posts.index'));
+    }
+
     public function test_unknown_routes_resolve_to_nothing(): void
     {
         $registry = new ResourceRegistry;
@@ -42,7 +75,7 @@ final class ResourceRegistryTest extends TestCase
         config(['atrium.resources' => [NotAdministrable::class]]);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('must be an Eloquent model that implements');
+        $this->expectExceptionMessage('Atrium resource ['.NotAdministrable::class.'] must be an Eloquent model that implements '.Administrable::class.'.');
 
         (new ResourceRegistry)->all();
     }

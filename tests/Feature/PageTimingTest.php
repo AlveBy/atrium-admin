@@ -116,6 +116,15 @@ final class PageTimingTest extends TestCase
         $this->assertSame('/'.str_repeat('a', 254), PageTiming::query()->value('path'));
     }
 
+    public function test_a_long_address_is_cut_by_characters_not_bytes(): void
+    {
+        // A server may hand over the address as raw UTF-8 bytes.
+        $request = new Request(server: ['REQUEST_URI' => '/'.str_repeat('я', 300), 'REQUEST_METHOD' => 'GET', 'REQUEST_TIME_FLOAT' => microtime(true)]);
+        (new RecordPageTiming)->terminate($request, new Response('<h1>News</h1>', 200, ['Content-Type' => 'text/html']));
+
+        $this->assertSame('/'.str_repeat('я', 254), PageTiming::query()->value('path'));
+    }
+
     public function test_a_failed_write_goes_unnoticed(): void
     {
         $default = config('database.default');
@@ -140,13 +149,37 @@ final class PageTimingTest extends TestCase
         $this->assertSame($response, (new RecordPageTiming)->handle(Request::create('/news'), fn () => $response));
     }
 
-    public function test_the_duration_is_counted_from_the_start_of_the_request(): void
+    /**
+     * @return array<string,array{0:float,1:int}>
+     */
+    public static function durations(): array
     {
-        $this->terminate(microtime(true) - 1.5);
+        return [
+            'a second and a half' => [1.5, 1500],
+            'rounded down' => [1.2344, 1234],
+            'rounded up' => [1.2346, 1235],
+            'nothing' => [0.0, 0],
+        ];
+    }
 
-        $duration = PageTiming::query()->value('duration_ms');
-        $this->assertGreaterThanOrEqual(1500, $duration);
-        $this->assertLessThan(4500, $duration, 'A second and a half, not seconds or microseconds.');
+    #[DataProvider('durations')]
+    public function test_the_duration_is_counted_from_the_start_of_the_request_in_milliseconds(float $seconds, int $milliseconds): void
+    {
+        $this->travelTo('2026-11-17 12:00:00');
+
+        $this->terminate(now()->getTimestamp() - $seconds);
+
+        $this->assertSame($milliseconds, PageTiming::query()->value('duration_ms'));
+    }
+
+    public function test_a_request_without_a_start_time_counts_as_zero(): void
+    {
+        $request = Request::create('/news');
+        $request->server->remove('REQUEST_TIME_FLOAT');
+
+        (new RecordPageTiming)->terminate($request, new Response('<h1>News</h1>', 200, ['Content-Type' => 'text/html']));
+
+        $this->assertSame(0, PageTiming::query()->value('duration_ms'));
     }
 
     public function test_a_hung_request_is_capped_at_ten_minutes(): void
@@ -170,6 +203,28 @@ final class PageTimingTest extends TestCase
         $this->get('/news')->assertOk();
 
         $this->assertSame(0, PageTiming::query()->count());
+    }
+
+    public function test_without_a_sample_rate_every_page_is_measured(): void
+    {
+        config(['atrium.dashboard.timings' => ['enabled' => true]]);
+        mt_srand($this->seedWhere(fn (): bool => mt_rand() / mt_getrandmax() > 0.001));
+
+        $this->terminate(microtime(true));
+
+        $this->assertSame(1, PageTiming::query()->count());
+    }
+
+    public function test_a_draw_equal_to_the_sample_rate_is_kept(): void
+    {
+        mt_srand(7);
+        $draw = mt_rand() / mt_getrandmax();
+        config(['atrium.dashboard.timings.sample_rate' => $draw]);
+
+        mt_srand(7);
+        $this->terminate(microtime(true));
+
+        $this->assertSame(1, PageTiming::query()->count());
     }
 
     public function test_a_sample_rate_keeps_the_draws_at_or_under_it(): void
@@ -204,6 +259,22 @@ final class PageTimingTest extends TestCase
         mt_srand($this->seedWhere(fn (): bool => mt_rand(1, 100) === 1));
         $this->terminate(microtime(true));
         $this->assertSame(['/recent', '/news', '/news'], PageTiming::query()->orderBy('id')->pluck('path')->all());
+    }
+
+    public function test_without_a_setting_measurements_are_kept_for_thirty_days(): void
+    {
+        config(['atrium.dashboard.timings' => ['enabled' => true, 'sample_rate' => 1.0]]);
+        $this->travelTo(now()->subHours(30 * 24 + 12));
+        PageTiming::query()->create(['path' => '/too-old', 'duration_ms' => 10]);
+        $this->travelBack();
+        $this->travelTo(now()->subHours(30 * 24 - 12));
+        PageTiming::query()->create(['path' => '/still-kept', 'duration_ms' => 10]);
+        $this->travelBack();
+
+        mt_srand($this->seedWhere(fn (): bool => mt_rand(1, 100) === 1));
+        $this->terminate(microtime(true));
+
+        $this->assertSame(['/still-kept', '/news'], PageTiming::query()->orderBy('id')->pluck('path')->all());
     }
 
     public function test_pruning_keeps_at_least_a_day(): void

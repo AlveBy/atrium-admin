@@ -42,7 +42,7 @@ class RecordPageTiming
             return;
         }
 
-        $rate = (float) config('atrium.dashboard.timings.sample_rate', 1.0);
+        $rate = config('atrium.dashboard.timings.sample_rate', 1.0);
 
         if ($rate < 1.0 && mt_rand() / mt_getrandmax() > $rate) {
             return;
@@ -83,7 +83,8 @@ class RecordPageTiming
 
     private function durationMs(Request $request): int
     {
-        $ms = (int) round((microtime(true) - $request->server('REQUEST_TIME_FLOAT', microtime(true))) * 1000);
+        $now = now()->getPreciseTimestamp(6) / 1000000;
+        $ms = (int) round(($now - $request->server('REQUEST_TIME_FLOAT', $now)) * 1000);
 
         // Upper bound, so a single timeout does not stretch the scale to infinity.
         return max(0, min($ms, 600000));

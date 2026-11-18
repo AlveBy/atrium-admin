@@ -30,9 +30,6 @@ final class Hooks
     /** @var array<string,array<int,array<int,callable|string>>> by name, then priority */
     private array $filters = [];
 
-    /** @var array<string,array<int,callable|string>> the filters of a name in the order they run */
-    private array $sorted = [];
-
     public function __construct(
         private readonly Dispatcher $events,
         private readonly Container $container,
@@ -67,7 +64,6 @@ final class Hooks
     public function filter(string $name, callable|string $callback, int $priority = 10): void
     {
         $this->filters[$name][$priority][] = $callback;
-        unset($this->sorted[$name]);
     }
 
     /**
@@ -79,7 +75,7 @@ final class Hooks
             return $value;
         }
 
-        foreach ($this->sorted[$name] ??= $this->sort($name) as $callback) {
+        foreach ($this->sort($name) as $callback) {
             $value = (is_string($callback) && ! is_callable($callback) ? $this->container->make($callback) : $callback)($value, ...array_values($args));
         }
 
@@ -102,6 +98,6 @@ final class Hooks
         $byPriority = $this->filters[$name];
         ksort($byPriority);
 
-        return array_merge(...array_values($byPriority));
+        return array_merge(...$byPriority);
     }
 }

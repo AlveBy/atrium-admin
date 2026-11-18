@@ -75,6 +75,45 @@ final class HooksTest extends TestCase
         $this->assertTrue(Hook::has('acme.sources'));
     }
 
+    public function test_arguments_given_by_name_reach_the_listeners_and_filters_by_position(): void
+    {
+        $heard = [];
+        Hook::on('acme.named', function (int $first, string $second) use (&$heard): void {
+            $heard[] = "{$first} {$second}";
+        });
+        Hook::filter('acme.named.filter', fn (string $value, string $extra): string => $value.$extra);
+
+        Hook::fire('acme.named', order: 7, by: 'card');
+
+        $this->assertSame(['7 card'], $heard);
+        $this->assertSame('ab', Hook::apply('acme.named.filter', 'a', suffix: 'b'));
+    }
+
+    public function test_a_filter_without_a_priority_runs_at_ten_between_nine_and_eleven(): void
+    {
+        Hook::filter('acme.order', fn (string $value): string => $value.'-eleven', 11);
+        Hook::filter('acme.order', fn (string $value): string => $value.'-default');
+        Hook::filter('acme.order', fn (string $value): string => $value.'-nine', 9);
+
+        $this->assertSame('start-nine-default-eleven', Hook::apply('acme.order', 'start'));
+    }
+
+    public function test_a_filter_added_later_joins_the_ones_that_already_ran(): void
+    {
+        Hook::filter('acme.later', fn (string $value): string => $value.'-first');
+        $this->assertSame('x-first', Hook::apply('acme.later', 'x'));
+
+        Hook::filter('acme.later', fn (string $value): string => $value.'-second');
+        $this->assertSame('x-first-second', Hook::apply('acme.later', 'x'));
+    }
+
+    public function test_a_filter_may_be_the_name_of_a_function(): void
+    {
+        Hook::filter('acme.function', 'strtoupper');
+
+        $this->assertSame('ABC', Hook::apply('acme.function', 'abc'));
+    }
+
     public function test_saving_and_deleting_a_record_in_the_panel_fires_the_core_hooks(): void
     {
         $saved = [];
