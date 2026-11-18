@@ -53,6 +53,22 @@ final class SiteCodesTest extends TestCase
         return $site;
     }
 
+    public function test_the_tidying_trims_the_ids_and_the_tokens_inside_a_tag_whatever_its_case(): void
+    {
+        $site = $this->withCodes([
+            'google_tag_id' => '  g-abc123xyz  ',
+            'google_verification' => '<META NAME="google-site-verification" CONTENT = "  loud-token  ">',
+            'yandex_verification' => "<meta content='  quiet-token '>",
+        ]);
+
+        $this->assertSame('G-ABC123XYZ', $site->google_tag_id);
+        $this->assertSame('loud-token', $site->google_verification);
+        $this->assertSame('quiet-token', $site->yandex_verification);
+
+        $site = $this->withCodes(['google_tag_id' => '   ']);
+        $this->assertNull($site->google_tag_id);
+    }
+
     public function test_codes_are_tidied_on_save(): void
     {
         $site = $this->withCodes(['bing_verification' => '  ', 'head_code' => "  \n"]);

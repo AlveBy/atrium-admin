@@ -59,6 +59,13 @@ final class FileFieldsTest extends FieldTestCase
         $this->assertSame(['disk' => 'public', 'directory' => 'uploads', 'maxSize' => 10240, 'acceptedTypes' => [], 'accept' => null], array_intersect_key($field->toArray(), array_flip(['disk', 'directory', 'maxSize', 'acceptedTypes', 'accept'])));
     }
 
+    public function test_a_file_field_is_checked_without_a_context_as_a_plain_value(): void
+    {
+        $this->assertNotContains('file', FileField::make('document')->getValidationRules());
+        $this->assertNotContains('file', FileField::make('document')->getValidationRules(FieldContext::create('uploads/a.pdf')));
+        $this->assertContains('file', FileField::make('document')->getValidationRules(FieldContext::create(UploadedFile::fake()->create('a.pdf', 1))));
+    }
+
     public function test_a_file_field_takes_its_storage_and_limits(): void
     {
         $array = FileField::make('document')->disk('s3')->directory('docs/2026')->maxSize(500)->acceptedTypes(['text/csv'])->accept('.csv')->toArray();

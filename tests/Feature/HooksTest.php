@@ -83,9 +83,15 @@ final class HooksTest extends TestCase
         });
         Hook::filter('acme.named.filter', fn (string $value, string $extra): string => $value.$extra);
 
+        $everyone = [];
+        Hook::on('acme.*', function (string $event, array $payload) use (&$everyone): void {
+            $everyone = $payload;
+        });
+
         Hook::fire('acme.named', order: 7, by: 'card');
 
         $this->assertSame(['7 card'], $heard);
+        $this->assertSame([7, 'card'], $everyone, 'A listener of a pattern gets the arguments as a list too.');
         $this->assertSame('ab', Hook::apply('acme.named.filter', 'a', suffix: 'b'));
     }
 

@@ -30,7 +30,11 @@ final class ServiceProviderTest extends TestCase
             $app['config']->set('atrium.dashboard.timings.enabled', true);
         }
 
-        if ($this->name() === 'test_the_app_routes_file_adds_pages_inside_the_panel') {
+        if ($this->name() === 'test_the_app_routes_file_takes_every_middleware_the_app_configures') {
+            $app['config']->set('atrium.middleware', ['web', 'throttle:60,1']);
+        }
+
+        if (in_array($this->name(), ['test_the_app_routes_file_adds_pages_inside_the_panel', 'test_the_app_routes_file_takes_every_middleware_the_app_configures'], true)) {
             file_put_contents($app->basePath('routes/atrium.php'), "<?php\n\nIlluminate\\Support\\Facades\\Route::get('reports', fn () => 'Reports')->name('admin.reports');\n");
         }
     }
@@ -87,6 +91,14 @@ final class ServiceProviderTest extends TestCase
         $this->assertSame(['web', 'atrium.inertia', 'admin.auth', 'admin.can'], $route->middleware());
         $this->get('/admin/reports')->assertRedirect(route('admin.login'));
         $this->actingAs($this->admin(), 'admin')->get('/admin/reports')->assertOk()->assertSee('Reports');
+    }
+
+    public function test_the_app_routes_file_takes_every_middleware_the_app_configures(): void
+    {
+        $route = $this->app['router']->getRoutes()->getByName('admin.reports');
+
+        $this->assertNotNull($route);
+        $this->assertSame(['web', 'throttle:60,1', 'atrium.inertia', 'admin.auth', 'admin.can'], $route->middleware());
     }
 
     public function test_the_console_publishes_every_part_of_the_panel(): void

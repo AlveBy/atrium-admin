@@ -34,6 +34,17 @@ final class LocaleTest extends TestCase
         $this->assertSame('de', $response->inertiaProps('locale'));
     }
 
+    public function test_a_default_that_is_not_text_or_not_available_falls_back_to_english(): void
+    {
+        foreach ([null, 5, 'xx'] as $configured) {
+            config(['atrium.locale' => $configured]);
+
+            $response = $this->get('/admin/login', ['Accept-Language' => 'sw-KE,sw;q=0.9']);
+
+            $this->assertSame('en', $response->inertiaProps('locale'), var_export($configured, true));
+        }
+    }
+
     public function test_regional_codes_are_matched(): void
     {
         $this->assertSame('pt_BR', $this->get('/admin/login', ['Accept-Language' => 'pt-BR'])->inertiaProps('locale'));

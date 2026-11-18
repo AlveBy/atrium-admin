@@ -306,6 +306,14 @@ final class SiteExactnessTest extends TestCase
         $this->assertSame("Disallow: /sitemap: x\n\nSitemap: ".url('sitemap.xml')."\nSitemap: ".url('f/sitemap.xml')."\n", $site->robotsTxt([new Site(['folder' => 'f'])]));
     }
 
+    public function test_robots_txt_that_was_never_saved_is_trimmed_too(): void
+    {
+        $this->app['env'] = 'production';
+
+        $this->assertSame("User-agent: *\nDisallow: /x\n\nSitemap: ".url('sitemap.xml')."\n", (new Site(['robots_txt' => "\r\n  User-agent: *\r\nDisallow: /x\r\n\r\n"]))->robotsTxt());
+        $this->assertSame("User-agent: *\nDisallow:\n\nSitemap: ".url('sitemap.xml')."\n", (new Site(['robots_txt' => " \r\n "]))->robotsTxt());
+    }
+
     public function test_a_host_is_matched_without_regard_to_case_and_trailing_dot(): void
     {
         $site = $this->site('de', ['domains' => ['example.de']]);

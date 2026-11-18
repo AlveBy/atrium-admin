@@ -129,7 +129,9 @@ final class SlugRedirectTest extends TestCase
 
     public function test_the_root_is_never_redirected_whatever_the_history_says(): void
     {
-        $this->history($this->guide('setup', 'guides'), 'root', '/');
+        $guide = $this->guide('setup', 'guides');
+        $this->history($guide, 'root', '/');
+        $this->history($guide, '', '');
 
         $this->get('/')->assertNotFound();
     }

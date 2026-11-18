@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Api\ApiDocumentation;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Models\Language;
+use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\ApiAisle;
 use Atrium\Admin\Tests\Fixtures\ApiShowcase;
@@ -115,6 +116,26 @@ final class ApiDocumentationTest extends TestCase
         foreach (['api_showcases', 'posts', 'languages', 'sites'] as $key) {
             $this->assertSame(in_array($key, $modules, true), str_contains($markdown, "`GET|POST /{$key}`"), $key);
         }
+    }
+
+    public function test_the_administrators_stay_out_of_the_api_unless_the_app_says_otherwise(): void
+    {
+        $make = fn (): ApiResources => new ApiResources($this->app['router'], $this->app->make(ResourceRegistry::class));
+
+        $this->assertArrayHasKey('users', $make()->modules());
+        $this->assertArrayNotHasKey('users', $make()->all());
+
+        // An app that sets its own api block without "except" keeps the default.
+        config(['atrium.api' => ['prefix' => 'v1']]);
+        $this->assertArrayNotHasKey('users', $make()->all());
+
+        config(['atrium.api.except' => []]);
+        $this->assertArrayHasKey('users', $make()->all());
+
+        $resources = $make();
+        $before = $resources->all();
+        config(['atrium.api.except' => ['posts']]);
+        $this->assertSame($before, $resources->all(), 'The list is worked out once.');
     }
 
     public function test_modules_are_named_as_in_the_menu(): void
