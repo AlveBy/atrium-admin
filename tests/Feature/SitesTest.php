@@ -229,6 +229,34 @@ final class SitesTest extends TestCase
             ->assertRedirect(route('admin.notes.index'));
     }
 
+    public function test_nobody_signed_in_may_not_switch_the_site(): void
+    {
+        $this->withoutMiddleware();
+
+        $this->post('/admin/site', ['site_id' => $this->main()->id])->assertForbidden();
+    }
+
+    public function test_switching_the_site_names_the_site(): void
+    {
+        $this->actingAs($this->admin(), 'admin')
+            ->from('/admin/notes')
+            ->post('/admin/site', [])
+            ->assertSessionHasErrors(['site_id' => 'The site id field is required.']);
+    }
+
+    public function test_switching_the_site_goes_back_to_a_page_that_is_not_a_form_of_a_module(): void
+    {
+        $second = $this->addSecondSite();
+        Route::get('/elsewhere/{note}', static fn (): string => 'x')->name('other.admin.notes.edit');
+        Route::get('/elsewhere/copy/{note}', static fn (): string => 'x')->name('admin.notes.edit.copy');
+
+        $this->actingAs($this->admin(), 'admin');
+
+        foreach (['/nowhere-at-all', '/elsewhere/1', '/elsewhere/copy/1'] as $page) {
+            $this->from($page)->post('/admin/site', ['site_id' => $second->id])->assertRedirect(url($page));
+        }
+    }
+
     public function test_a_code_is_unique_within_its_site(): void
     {
         $second = $this->addSecondSite();

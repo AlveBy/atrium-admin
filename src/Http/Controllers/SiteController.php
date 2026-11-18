@@ -29,7 +29,7 @@ final class SiteController extends Controller
         abort_unless($user instanceof AdminUser, 403);
 
         $id = $request->validate([
-            'site_id' => ['required', Rule::in($user->allowedSites()->pluck('id')->map(fn ($id) => (string) $id)->all())],
+            'site_id' => ['required', Rule::in($user->allowedSites()->pluck('id')->all())],
         ])['site_id'];
 
         $request->session()->put(ResolveSite::SESSION_KEY, (int) $id);
