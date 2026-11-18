@@ -44,8 +44,6 @@ final class EnterSiteFolder
         $site = $this->sites->forRequest($request->getHost(), $path);
 
         if ($site->folder === null) {
-            $request->attributes->set(self::SITE, $site->id);
-
             return $next($request);
         }
 
@@ -99,7 +97,7 @@ final class EnterSiteFolder
         $rest = trim($rest, '/').'/';
 
         foreach ([config('atrium.prefix', 'admin'), config('atrium.api.prefix', 'api/v1'), config('atrium.mcp.path', 'mcp')] as $prefix) {
-            $prefix = trim((string) $prefix, '/');
+            $prefix = trim($prefix, '/');
 
             if ($prefix !== '' && str_starts_with($rest, $prefix.'/')) {
                 return true;
