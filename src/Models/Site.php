@@ -532,11 +532,11 @@ class Site extends Model implements Administrable
         }
 
         $first = strtolower(explode('/', $this->folder)[0]);
-        $reserved = array_filter([
+        $reserved = [
             strtolower(explode('/', trim((string) config('atrium.prefix', 'admin'), '/'))[0]),
             strtolower(explode('/', trim((string) config('atrium.api.prefix', 'api/v1'), '/'))[0]),
             strtolower(explode('/', trim((string) config('atrium.mcp.path', 'mcp'), '/'))[0]),
-        ]);
+        ];
 
         if (in_array($first, $reserved, true)) {
             throw ValidationException::withMessages(['folder' => __('atrium::sites.errors.folder_reserved', ['folder' => $first])]);

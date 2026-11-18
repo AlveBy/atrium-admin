@@ -216,7 +216,7 @@ class FileManagerController extends Controller
             'total' => $total,
             'page' => $page,
             'per_page' => self::PER_PAGE,
-            'last_page' => (int) ceil($total / self::PER_PAGE),
+            'last_page' => ceil($total / self::PER_PAGE),
         ]);
     }
 
