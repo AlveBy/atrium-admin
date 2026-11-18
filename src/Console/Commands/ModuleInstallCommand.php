@@ -72,7 +72,9 @@ final class ModuleInstallCommand extends ModuleCommand
         }
 
         if ($this->option('demo') && $module->demo !== null) {
-            $this->step('Filling it with demo content', fn (): bool => $modules->seedDemo($module) || true);
+            $this->components->task('Filling it with demo content', function () use ($modules, $module): void {
+                $modules->seedDemo($module);
+            });
         }
 
         $this->refreshCaches();
@@ -81,13 +83,13 @@ final class ModuleInstallCommand extends ModuleCommand
 
         foreach ($modules->childrenOf($module) as $child) {
             if (! $modules->isInstalled($child->name)) {
-                $this->call('atrium:module:install', ['package' => $child->name, '--demo' => (bool) $this->option('demo')]);
+                $this->call('atrium:module:install', ['package' => $child->name, '--demo' => $this->option('demo')]);
             }
         }
 
         $this->components->info($already
             ? "{$name} was installed already; its tables are up to date."
-            : "{$name} is installed. In the menu and the role form: ".implode(', ', $this->moduleKeys($module)).'.');
+            : "{$name} is installed. In the menu and the role form: ".implode(', ', $this->moduleKeys($module)));
 
         return self::SUCCESS;
     }
@@ -100,7 +102,7 @@ final class ModuleInstallCommand extends ModuleCommand
     {
         $with = array_filter(array_map(static fn (array $permission): ?string => $permission['with'], $module->declaredPermissions));
 
-        if ($with === [] || ! Schema::hasTable('admin_roles')) {
+        if (! Schema::hasTable('admin_roles')) {
             return;
         }
 

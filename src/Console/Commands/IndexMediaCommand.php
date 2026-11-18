@@ -37,7 +37,7 @@ class IndexMediaCommand extends Command
 
     public function handle(): int
     {
-        $dryRun = (bool) $this->option('dry-run');
+        $dryRun = $this->option('dry-run');
         $relative = trim((string) ($this->option('path') ?? ''), '/');
 
         if ($relative === '') {
@@ -61,7 +61,7 @@ class IndexMediaCommand extends Command
         $added = 0;
 
         foreach ($files as $file) {
-            $url = $prefix.'/'.ltrim($file['relative'], '/');
+            $url = $prefix.'/'.$file['relative'];
 
             if (isset($known[$url])) {
                 continue;
@@ -101,13 +101,9 @@ class IndexMediaCommand extends Command
      */
     private function storageFiles(): array
     {
-        $disk = (string) config('atrium.uploads.disk', 'public');
-        $directory = (string) config('atrium.uploads.directory', 'uploads');
+        $disk = config()->string('atrium.uploads.disk', 'public');
+        $directory = config()->string('atrium.uploads.directory', 'uploads');
         $storage = Storage::disk($disk);
-
-        if (! $storage->exists($directory)) {
-            return [[], '/storage'];
-        }
 
         $files = [];
 
@@ -156,7 +152,7 @@ class IndexMediaCommand extends Command
 
     private function collection(): ?MediaCollection
     {
-        $name = (string) ($this->option('collection') ?? '');
+        $name = $this->option('collection') ?? '';
 
         return $name === '' ? null : MediaCollection::firstOrCreate(['name' => $name]);
     }

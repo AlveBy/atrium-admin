@@ -48,14 +48,13 @@ final class InstallCommand extends Command
             $this->step('Running migrations', fn (): bool => $this->callSilently('migrate', ['--force' => true]) === 0);
 
             if (! AdminUser::query()->exists()) {
-                $this->newLine();
                 $this->components->info('Create the first administrator.');
 
-                $status = $this->call('atrium:user', array_filter([
+                $status = $this->call('atrium:user', [
                     '--name' => $this->option('name'),
                     '--email' => $this->option('email'),
                     '--password' => $this->option('password'),
-                ]));
+                ]);
 
                 if ($status !== self::SUCCESS) {
                     return $status;
@@ -79,7 +78,6 @@ final class InstallCommand extends Command
 
         $this->removeStockRobotsTxt();
 
-        $this->newLine();
         $this->components->info('Atrium is ready: '.url(config('atrium.prefix', 'admin')));
 
         return self::SUCCESS;
@@ -95,8 +93,6 @@ final class InstallCommand extends Command
 
         if ($modules->all() === []) {
             $this->components->warn('No module packages to fill: `composer require alveby/atrium-catalog alveby/atrium-brands alveby/atrium-stores alveby/atrium-news` and run this command again.');
-
-            return;
         }
 
         foreach ($modules->all() as $module) {
