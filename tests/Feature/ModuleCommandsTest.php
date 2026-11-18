@@ -17,6 +17,9 @@ use Atrium\Admin\Tests\TestCase;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Console\ClosureCommand;
+use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 /**
  * atrium:module:install and atrium:module:remove where things go wrong:
@@ -136,5 +139,69 @@ final class ModuleCommandsTest extends TestCase
         $this->app->instance('routes.cached', true);
         $this->artisan('atrium:module:remove', ['package' => self::SHELVES])->assertSuccessful();
         $this->assertSame(['config:cache' => 1, 'route:cache' => 1], $this->built);
+    }
+
+    /**
+     * @return array<string,array{int,string}>
+     */
+    public static function exitCodes(): array
+    {
+        return ['succeeds' => [0, 'DONE'], 'fails' => [1, 'FAIL']];
+    }
+
+    /**
+     * A module with a migrations folder and a migrate that only records how it was called.
+     *
+     * @param  array<int,array<string,mixed>>  $calls
+     */
+    private function crates(int $exit, array &$calls): string
+    {
+        $path = $this->root.'/crates';
+        mkdir($path);
+        $this->app->make(Modules::class)->add(new Module(name: 'acme/atrium-crates', migrations: [$path]));
+
+        foreach (['migrate', 'migrate:reset'] as $name) {
+            $this->app->make(ConsoleKernel::class)->registerCommand(new ClosureCommand($name.' {--path=*} {--realpath} {--force}', function () use (&$calls, $name, $exit): int {
+                $calls[] = [$name, $this->option('path'), $this->option('realpath'), $this->option('force')];
+
+                return $exit;
+            }));
+        }
+
+        return $path;
+    }
+
+    private function printed(string $command, array $options): string
+    {
+        $output = new BufferedOutput;
+        Artisan::call($command, $options, $output);
+
+        return $output->fetch();
+    }
+
+    #[DataProvider('exitCodes')]
+    public function test_the_migrations_of_a_module_are_run_for_its_folder_and_reported_by_their_result(int $exit, string $result): void
+    {
+        $calls = [];
+        $path = $this->crates($exit, $calls);
+
+        $printed = $this->printed('atrium:module:install', ['package' => 'acme/atrium-crates']);
+
+        $this->assertSame([['migrate', [$path], true, true]], $calls);
+        $this->assertMatchesRegularExpression('/Running its migrations[ .]*\S* '.$result.'/', $printed);
+    }
+
+    #[DataProvider('exitCodes')]
+    public function test_the_tables_of_a_module_are_dropped_for_its_folder_and_reported_by_their_result(int $exit, string $result): void
+    {
+        $calls = [];
+        $path = $this->crates($exit, $calls);
+        $this->printed('atrium:module:install', ['package' => 'acme/atrium-crates']);
+        $calls = [];
+
+        $printed = $this->printed('atrium:module:remove', ['package' => 'acme/atrium-crates', '--delete-data' => true]);
+
+        $this->assertSame([['migrate:reset', [$path], true, true]], $calls);
+        $this->assertMatchesRegularExpression('/Dropping its tables[ .]*\S* '.$result.'/', $printed);
     }
 }

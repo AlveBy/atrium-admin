@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Console\Commands;
 
+use Atrium\Admin\Console\Concerns\ReportsSteps;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
@@ -19,6 +20,8 @@ use Illuminate\Console\Command;
  */
 abstract class ModuleCommand extends Command
 {
+    use ReportsSteps;
+
     protected function packageName(): string
     {
         return strtolower(trim((string) $this->argument('package')));

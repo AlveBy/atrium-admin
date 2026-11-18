@@ -60,7 +60,7 @@ final class ModuleRemoveCommand extends ModuleCommand
         }
 
         if (! $keep && $module->migrations !== []) {
-            $this->components->task('Dropping its tables', fn (): bool => $this->callSilently('migrate:reset', [
+            $this->step('Dropping its tables', fn (): bool => $this->callSilently('migrate:reset', [
                 '--path' => $module->migrations,
                 '--realpath' => true,
                 '--force' => true,

@@ -60,7 +60,7 @@ final class ModuleInstallCommand extends ModuleCommand
         }
 
         if ($module->migrations !== []) {
-            $this->components->task('Running its migrations', fn (): bool => $this->callSilently('migrate', [
+            $this->step('Running its migrations', fn (): bool => $this->callSilently('migrate', [
                 '--path' => $module->migrations,
                 '--realpath' => true,
                 '--force' => true,
@@ -72,7 +72,7 @@ final class ModuleInstallCommand extends ModuleCommand
         }
 
         if ($this->option('demo') && $module->demo !== null) {
-            $this->components->task('Filling it with demo content', fn (): bool => $modules->seedDemo($module) || true);
+            $this->step('Filling it with demo content', fn (): bool => $modules->seedDemo($module) || true);
         }
 
         $this->refreshCaches();

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Console\Commands;
 
+use Atrium\Admin\Console\Concerns\ReportsSteps;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Modules\Modules;
 use Illuminate\Console\Command;
@@ -18,6 +19,8 @@ use Illuminate\Console\Command;
  */
 final class InstallCommand extends Command
 {
+    use ReportsSteps;
+
     protected $signature = 'atrium:install
                             {--name= : Name of the first administrator}
                             {--email= : Email of the first administrator}
@@ -29,12 +32,12 @@ final class InstallCommand extends Command
 
     public function handle(): int
     {
-        $this->components->task('Publishing config', fn () => $this->callSilently('vendor:publish', ['--tag' => 'atrium-config']) === 0);
-        $this->components->task('Publishing assets', fn () => $this->callSilently('vendor:publish', ['--tag' => 'atrium-assets', '--force' => true]) === 0);
+        $this->step('Publishing config', fn (): bool => $this->callSilently('vendor:publish', ['--tag' => 'atrium-config']) === 0);
+        $this->step('Publishing assets', fn (): bool => $this->callSilently('vendor:publish', ['--tag' => 'atrium-assets', '--force' => true]) === 0);
 
         // API tokens need Sanctum's table; publishing is a no-op when it is already there.
         if (! glob(database_path('migrations/*_create_personal_access_tokens_table.php'))) {
-            $this->components->task('Publishing Sanctum migration', fn () => $this->callSilently('vendor:publish', ['--tag' => 'sanctum-migrations']) === 0);
+            $this->step('Publishing Sanctum migration', fn (): bool => $this->callSilently('vendor:publish', ['--tag' => 'sanctum-migrations']) === 0);
         }
 
         if ($this->option('demo')) {
@@ -42,7 +45,7 @@ final class InstallCommand extends Command
         }
 
         if (! $this->option('no-migrate')) {
-            $this->components->task('Running migrations', fn () => $this->callSilently('migrate', ['--force' => true]) === 0);
+            $this->step('Running migrations', fn (): bool => $this->callSilently('migrate', ['--force' => true]) === 0);
 
             if (! AdminUser::query()->exists()) {
                 $this->newLine();
@@ -71,7 +74,7 @@ final class InstallCommand extends Command
         // Files uploaded in the admin go to storage/app/public and are served
         // through this link, demo or not.
         if (! is_link(public_path('storage')) && ! file_exists(public_path('storage'))) {
-            $this->components->task('Linking public/storage', fn () => $this->callSilently('storage:link') === 0);
+            $this->step('Linking public/storage', fn (): bool => $this->callSilently('storage:link') === 0);
         }
 
         $this->removeStockRobotsTxt();
@@ -98,7 +101,7 @@ final class InstallCommand extends Command
 
         foreach ($modules->all() as $module) {
             if (! $modules->isInstalled($module->name)) {
-                $this->components->task("Installing {$module->name}", fn (): bool => $modules->install($module));
+                $this->step("Installing {$module->name}", fn (): bool => $modules->install($module));
             }
         }
     }
@@ -114,7 +117,7 @@ final class InstallCommand extends Command
 
         foreach ($modules->dependencyOrder($modules->installed()) as $module) {
             if ($module->demo !== null) {
-                $this->components->task("Filling {$module->name}", function () use ($modules, $module, &$seeded): bool {
+                $this->step("Filling {$module->name}", function () use ($modules, $module, &$seeded): bool {
                     $seeded = $modules->seedDemo($module) || $seeded;
 
                     return true;
@@ -143,7 +146,7 @@ final class InstallCommand extends Command
         $stock = preg_replace('/\s+/', ' ', trim((string) file_get_contents($file))) === 'User-agent: * Disallow:';
 
         if ($stock) {
-            $this->components->task('Removing public/robots.txt (robots.txt is set in the admin now)', fn () => unlink($file));
+            $this->step('Removing public/robots.txt (robots.txt is set in the admin now)', fn (): bool => unlink($file));
 
             return;
         }

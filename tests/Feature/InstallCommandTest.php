@@ -19,8 +19,11 @@ use Atrium\Admin\Tests\TestCase;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Console\ClosureCommand;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Testing\PendingCommand;
+use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionProperty;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 /**
  * atrium:install: from `composer require` to a working panel. Publishing,
@@ -33,6 +36,9 @@ final class InstallCommandTest extends TestCase
 
     /** @var array<int,string> the stand-in commands, in the order they ran */
     private array $ran = [];
+
+    /** @var array<string,int> the exit code a stand-in command gives, 0 by default */
+    private array $exits = [];
 
     protected function defineEnvironment($app): void
     {
@@ -55,11 +61,14 @@ final class InstallCommandTest extends TestCase
 
         // Inside the callback $this is the command; the list is shared by reference.
         $ran = &$this->ran;
+        $exits = &$this->exits;
         foreach (['vendor:publish {--tag=} {--force}', 'migrate {--force}', 'storage:link'] as $signature) {
-            $this->app->make(ConsoleKernel::class)->registerCommand(new ClosureCommand($signature, function () use (&$ran, $signature): void {
+            $this->app->make(ConsoleKernel::class)->registerCommand(new ClosureCommand($signature, function () use (&$ran, &$exits, $signature): int {
                 $tag = $this->hasOption('tag') ? $this->option('tag') : null;
                 $force = $this->hasOption('force') && $this->option('force');
                 $ran[] = strtok($signature, ' ').($tag ? " {$tag}" : '').($force ? ' --force' : '');
+
+                return $exits[strtok($signature, ' ')] ?? 0;
             }));
         }
     }
@@ -201,5 +210,46 @@ final class InstallCommandTest extends TestCase
 
         $this->assertSame(0, Post::query()->count());
         $this->assertSame(['acme/atrium-shelves'], config('atrium.modules'));
+    }
+
+    /**
+     * What the command printed, as one text.
+     *
+     * @param  array<string,mixed>  $options
+     */
+    private function printed(array $options = []): string
+    {
+        $output = new BufferedOutput;
+        Artisan::call('atrium:install', $options + ['--name' => 'Ann', '--email' => 'ann@example.com', '--password' => 'long-enough'], $output);
+
+        return $output->fetch();
+    }
+
+    /**
+     * @return array<string,array{int,string}>
+     */
+    public static function exitCodes(): array
+    {
+        return ['succeeds' => [0, 'DONE'], 'fails' => [1, 'FAIL']];
+    }
+
+    #[DataProvider('exitCodes')]
+    public function test_every_step_is_reported_by_what_its_command_returned(int $exit, string $result): void
+    {
+        $this->exits = ['vendor:publish' => $exit, 'migrate' => $exit, 'storage:link' => $exit];
+
+        $printed = $this->printed();
+
+        foreach (['Publishing config', 'Publishing assets', 'Publishing Sanctum migration', 'Running migrations', 'Linking public/storage'] as $step) {
+            $this->assertMatchesRegularExpression('/'.preg_quote($step, '/').'[ .]*\S* '.$result.'/', $printed, $step);
+        }
+    }
+
+    public function test_the_first_administrator_and_the_closing_line_stand_apart_from_the_steps(): void
+    {
+        $printed = $this->printed();
+
+        $this->assertMatchesRegularExpression('/DONE\s*\n\s*\n\s*INFO\s+Create the first administrator\./', $printed);
+        $this->assertMatchesRegularExpression('/\n\s*\n\s*INFO\s+Atrium is ready/', $printed);
     }
 }
