@@ -36,11 +36,11 @@ const change = (event) => {
         v-if="sites.length > 1"
         class="relative flex min-w-0 items-center gap-1 rounded-lg px-1 py-1 text-muted hover:bg-hover hover:text-fg sm:gap-2 sm:px-2"
     >
-        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <svg class="hidden h-5 w-5 shrink-0 min-[360px]:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8.25V18a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18V8.25m-18 0V6a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 6v2.25m-18 0h18M5.25 6h.008v.008H5.25V6zm2.25 0h.008v.008H7.5V6zm2.25 0h.008v.008H9.75V6z" />
         </svg>
         <span class="flex min-w-0 flex-col text-left leading-tight" aria-hidden="true">
-            <span data-switcher-caption class="truncate text-[11px] sm:text-xs">{{ $t('layout.site') }}</span>
+            <span data-switcher-caption class="break-words text-[11px] sm:truncate sm:text-xs">{{ $t('layout.site') }}</span>
             <span class="max-w-14 truncate text-sm font-medium text-fg sm:max-w-32 xl:max-w-48">{{ currentName }}</span>
         </span>
         <svg class="hidden h-4 w-4 shrink-0 sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

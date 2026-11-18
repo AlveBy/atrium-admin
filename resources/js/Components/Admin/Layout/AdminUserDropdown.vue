@@ -60,7 +60,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div ref="dropdownRef" class="relative">
+    <div ref="dropdownRef" class="relative shrink-0">
         <!-- Trigger -->
         <button
             data-action="user-menu"
