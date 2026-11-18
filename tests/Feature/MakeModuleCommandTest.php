@@ -89,4 +89,45 @@ final class MakeModuleCommandTest extends TestCase
         $this->assertStringContainsString('class Brochure extends Model', (string) file_get_contents($this->root.'/app/Models/Brochure.php'));
         $this->assertCount(1, glob($this->root.'/database/migrations/*_create_brochures_table.php') ?: []);
     }
+
+    public function test_the_model_and_the_migration_carry_the_namespace_table_label_and_are_announced(): void
+    {
+        $this->artisan('atrium:make-module', ['name' => 'price list'])
+            ->expectsOutputToContain('Model ['.$this->root.'/app/Models/PriceList.php] created.')
+            ->expectsOutputToContain('Migration ['.$this->root.'/database/migrations/')
+            ->assertSuccessful();
+
+        $model = (string) file_get_contents($this->root.'/app/Models/PriceList.php');
+        $this->assertStringContainsString("\nnamespace App\\Models;\n", $model);
+        $this->assertStringContainsString("return 'Price Lists';", $model);
+        $this->assertStringContainsString("->unique('price_lists', 'code')", $model);
+
+        $migrations = glob($this->root.'/database/migrations/*') ?: [];
+        $this->assertCount(1, $migrations);
+        $this->assertMatchesRegularExpression('#/\d{4}_\d{2}_\d{2}_\d{6}_create_price_lists_table\.php$#', $migrations[0]);
+        $migration = (string) file_get_contents($migrations[0]);
+        $this->assertStringContainsString("Schema::create('price_lists'", $migration);
+        $this->assertStringContainsString("Schema::dropIfExists('price_lists')", $migration);
+        $this->assertStringNotContainsString('{{', $model.$migration);
+    }
+
+    public function test_a_backslash_in_the_label_is_escaped_and_an_empty_label_falls_back_to_the_plural(): void
+    {
+        $this->artisan('atrium:make-module', ['name' => 'Brochure', '--label' => 'A\\B'])->assertSuccessful();
+        $this->assertStringContainsString("return 'A\\\\B';", (string) file_get_contents($this->root.'/app/Models/Brochure.php'));
+
+        $this->artisan('atrium:make-module', ['name' => 'Brochure', '--label' => '', '--force' => true])->assertSuccessful();
+        $this->assertStringContainsString("return 'Brochures';", (string) file_get_contents($this->root.'/app/Models/Brochure.php'));
+    }
+
+    public function test_a_stub_of_the_application_wins_over_the_packaged_one(): void
+    {
+        $this->app->setBasePath($this->root);
+        mkdir($this->root.'/stubs/atrium', 0777, true);
+        file_put_contents($this->root.'/stubs/atrium/model.stub', '<?php // {{ class }} in {{ namespace }} of {{ table }}');
+
+        $this->artisan('atrium:make-module', ['name' => 'Brochure', '--no-migration' => true])->assertSuccessful();
+
+        $this->assertSame('<?php // Brochure in App\\Models of brochures', file_get_contents($this->root.'/app/Models/Brochure.php'));
+    }
 }

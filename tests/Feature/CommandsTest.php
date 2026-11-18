@@ -56,6 +56,9 @@ final class CommandsTest extends TestCase
     {
         $model = app_path('Models/Brochure.php');
         $before = glob(database_path('migrations/*_create_brochures_table.php')) ?: [];
+        // The command registers the module in the config of this very application.
+        $config = config_path('atrium.php');
+        $registered = is_file($config) ? file_get_contents($config) : null;
 
         try {
             $this->artisan('atrium:make-module', ['name' => 'Brochure'])->assertSuccessful();
@@ -70,6 +73,10 @@ final class CommandsTest extends TestCase
             $this->assertStringContainsString("\$table->json('name');", (string) file_get_contents((string) reset($migrations)));
         } finally {
             File::delete([$model, ...array_diff(glob(database_path('migrations/*_create_brochures_table.php')) ?: [], $before)]);
+
+            if ($registered !== null) {
+                file_put_contents($config, $registered);
+            }
         }
     }
 
