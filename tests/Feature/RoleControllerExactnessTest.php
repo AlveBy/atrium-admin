@@ -74,6 +74,7 @@ final class RoleControllerExactnessTest extends TestCase
 
         $this->post('/admin/roles', ['name' => 'Editor', 'permissions' => ['posts.view', 'posts.view', 'posts.update']])->assertRedirect();
 
-        $this->assertSame('["posts.view","posts.update"]', DB::table('admin_roles')->value('permissions'));
+        // Decoded: MySQL writes its JSON with spaces after the commas.
+        $this->assertSame(['posts.view', 'posts.update'], json_decode((string) DB::table('admin_roles')->value('permissions'), true));
     }
 }

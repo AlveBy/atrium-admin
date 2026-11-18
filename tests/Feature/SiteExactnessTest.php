@@ -308,10 +308,15 @@ final class SiteExactnessTest extends TestCase
 
     public function test_robots_txt_that_was_never_saved_is_trimmed_too(): void
     {
+        $environment = $this->app['env'];
         $this->app['env'] = 'production';
 
-        $this->assertSame("User-agent: *\nDisallow: /x\n\nSitemap: ".url('sitemap.xml')."\n", (new Site(['robots_txt' => "\r\n  User-agent: *\r\nDisallow: /x\r\n\r\n"]))->robotsTxt());
-        $this->assertSame("User-agent: *\nDisallow:\n\nSitemap: ".url('sitemap.xml')."\n", (new Site(['robots_txt' => " \r\n "]))->robotsTxt());
+        try {
+            $this->assertSame("User-agent: *\nDisallow: /x\n\nSitemap: ".url('sitemap.xml')."\n", (new Site(['robots_txt' => "\r\n  User-agent: *\r\nDisallow: /x\r\n\r\n"]))->robotsTxt());
+            $this->assertSame("User-agent: *\nDisallow:\n\nSitemap: ".url('sitemap.xml')."\n", (new Site(['robots_txt' => " \r\n "]))->robotsTxt());
+        } finally {
+            $this->app['env'] = $environment;
+        }
     }
 
     public function test_a_host_is_matched_without_regard_to_case_and_trailing_dot(): void
