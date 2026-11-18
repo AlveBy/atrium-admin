@@ -8,6 +8,7 @@ import { ref, computed } from 'vue'
 import { usePage, Head } from '@inertiajs/vue3'
 import AdminSidebar from '../Components/Admin/Layout/AdminSidebar.vue'
 import AdminHeader from '../Components/Admin/Layout/AdminHeader.vue'
+import AiHelper from '../Components/Admin/Layout/AiHelper.vue'
 
 const props = defineProps({
     title: {
@@ -84,5 +85,7 @@ const closeSidebar = () => {
                 <slot />
             </main>
         </div>
+
+        <AiHelper />
     </div>
 </template>
