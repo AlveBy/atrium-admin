@@ -119,6 +119,22 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('bundles', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        Schema::create('bundle_post', function (Blueprint $table): void {
+            $table->foreignId('bundle_id');
+            $table->foreignId('post_id');
+        });
+
+        Schema::create('bundle_topic', function (Blueprint $table): void {
+            $table->foreignId('bundle_id');
+            $table->foreignId('topic_id');
+        });
+
         Schema::create('leaflets', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
@@ -140,7 +156,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['sections', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
+        foreach (['sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
             Schema::dropIfExists($table);
         }
     }
