@@ -188,7 +188,7 @@ class ModuleController extends Controller
             $attributes[$name] = $field->getLabel();
         }
 
-        $request->validate($rules, [], array_filter($attributes));
+        $request->validate($rules, [], $attributes);
 
         $values = [];
 
