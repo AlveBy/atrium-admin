@@ -16,12 +16,14 @@ import SiteSpeedGadget from '@atrium/Components/Admin/Dashboard/SiteSpeedGadget.
 import PerformanceGadget from '@atrium/Components/Admin/Dashboard/PerformanceGadget.vue'
 import RecentElementsGadget from '@atrium/Components/Admin/Dashboard/RecentElementsGadget.vue'
 import ErrorsGadget from '@atrium/Components/Admin/Dashboard/ErrorsGadget.vue'
+import MonitoringGadget from '@atrium/Components/Admin/Dashboard/MonitoringGadget.vue'
 
 const COMPONENTS = {
     SiteSpeedGadget,
     PerformanceGadget,
     RecentElementsGadget,
     ErrorsGadget,
+    MonitoringGadget,
 }
 
 const props = defineProps({
