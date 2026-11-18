@@ -115,6 +115,17 @@ final class TabRegistryTest extends TestCase
         $this->assertSame([], TabRegistry::sortTabs([]));
     }
 
+    public function test_a_tab_without_an_order_counts_as_zero_on_either_side_of_a_comparison(): void
+    {
+        $names = static fn (array $tabs): array => array_map(static fn (array $tab): string => $tab['name'], TabRegistry::sortTabs($tabs));
+
+        $this->assertSame(['unordered', 'zero'], $names([['name' => 'unordered'], ['name' => 'zero', 'order' => 0]]));
+        $this->assertSame(['zero', 'unordered'], $names([['name' => 'zero', 'order' => 0], ['name' => 'unordered']]));
+        $this->assertSame(['negative', 'unordered', 'one'], $names([['name' => 'one', 'order' => 1], ['name' => 'unordered'], ['name' => 'negative', 'order' => -1]]));
+        $this->assertSame(['negative', 'unordered', 'one'], $names([['name' => 'unordered'], ['name' => 'one', 'order' => 1], ['name' => 'negative', 'order' => -1]]));
+        $this->assertSame(['negative', 'unordered', 'one'], $names([['name' => 'negative', 'order' => -1], ['name' => 'one', 'order' => 1], ['name' => 'unordered']]));
+    }
+
     public function test_a_tab_is_found_by_its_name(): void
     {
         $tabs = [['name' => 'seo'], Tab::make('main'), Tab::make('seo')->label('Found')];

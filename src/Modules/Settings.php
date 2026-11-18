@@ -37,9 +37,6 @@ final class Settings
     /** @var array<string,ModuleSettings|null> */
     private array $declarations = [];
 
-    /** @var array<string,array<string,mixed>> */
-    private array $defaults = [];
-
     public function __construct(
         private readonly Modules $modules,
         private readonly Sites $sites,
@@ -50,9 +47,9 @@ final class Settings
      */
     public function get(string $key, mixed $default = null, Site|int|null $site = null): mixed
     {
-        [$module, $name] = array_pad(explode('.', $key, 2), 2, '');
+        $parts = explode('.', $key, 2);
 
-        return $this->all($module, $site)[$name] ?? $default;
+        return $this->all($parts[0], $site)[$parts[1] ?? ''] ?? $default;
     }
 
     /**
@@ -70,7 +67,7 @@ final class Settings
 
         $stored = array_filter($this->stored($module, $this->siteId($declaration, $site)), static fn (mixed $value): bool => $value !== null && $value !== '');
 
-        return array_replace($this->defaults[$module] ??= $declaration->defaults(), $stored);
+        return array_replace($declaration->defaults(), $stored);
     }
 
     /**
@@ -172,7 +169,7 @@ final class Settings
      */
     public function flush(): void
     {
-        $this->stored = $this->declarations = $this->defaults = [];
+        $this->stored = $this->declarations = [];
 
         if (app()->resolved(RecordCache::class)) {
             app(RecordCache::class)->flushClass(self::class);

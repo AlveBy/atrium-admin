@@ -81,6 +81,34 @@ final class ModuleSettingsTest extends TestCase
         $this->assertSame(['color' => 'red', 'per_page' => null, 'show_count' => null], Setting::all('labels'));
     }
 
+    public function test_a_key_is_the_module_then_the_field_and_nothing_else_names_a_value(): void
+    {
+        $this->install();
+
+        $this->assertSame('red', Setting::get('labels.color'));
+        $this->assertSame('fallback', Setting::get('labels.color.extra', 'fallback'), 'Everything after the first dot is the field.');
+        $this->assertSame('fallback', Setting::get('labels', 'fallback'));
+        $this->assertSame('fallback', Setting::get('', 'fallback'));
+    }
+
+    public function test_a_value_saved_empty_is_the_default_but_zero_and_false_are_values(): void
+    {
+        $this->install();
+        $settings = $this->app->make(Settings::class);
+
+        $settings->save('labels', ['color' => '', 'per_page' => 0, 'show_count' => false]);
+        $settings->flush();
+        $this->assertSame(['color' => 'red', 'per_page' => 0, 'show_count' => false], Setting::all('labels'));
+
+        $settings->save('labels', ['color' => null]);
+        $settings->flush();
+        $this->assertSame('red', Setting::get('labels.color'));
+
+        $settings->save('labels', ['color' => 'blue']);
+        $settings->flush();
+        $this->assertSame('blue', Setting::get('labels.color'));
+    }
+
     public function test_a_superadmin_sets_up_a_module(): void
     {
         $this->install();
