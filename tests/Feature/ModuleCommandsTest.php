@@ -9,8 +9,11 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
+use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
+use Atrium\Admin\Tests\Fixtures\Page;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\ShelfDemoSeeder;
 use Atrium\Admin\Tests\TestCase;
@@ -18,6 +21,8 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Console\ClosureCommand;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -203,5 +208,125 @@ final class ModuleCommandsTest extends TestCase
 
         $this->assertSame([['migrate:reset', [$path], true, true]], $calls);
         $this->assertMatchesRegularExpression('/Dropping its tables[ .]*\S* '.$result.'/', $printed);
+    }
+
+    public function test_an_unknown_module_is_refused_with_the_modules_that_could_be_installed(): void
+    {
+        $printed = $this->printed('atrium:module:install', ['package' => 'acme/atrium-missing']);
+
+        $this->assertStringContainsString('acme/atrium-missing is not an Atrium module Composer has installed.', $printed);
+        $this->assertStringContainsString(self::SHELVES, $printed);
+
+        $this->artisan('atrium:module:install', ['package' => self::SHELVES])->assertSuccessful();
+        $this->assertStringNotContainsString(self::SHELVES, $this->printed('atrium:module:install', ['package' => 'acme/atrium-missing']));
+    }
+
+    public function test_the_closing_line_names_the_keys_the_module_added_to_the_menu(): void
+    {
+        $this->app->make(Modules::class)->add(new Module(name: 'acme/atrium-posts', resources: [Post::class]));
+
+        $this->assertStringContainsString(
+            'acme/atrium-posts is installed. In the menu and the role form: posts.',
+            $this->printed('atrium:module:install', ['package' => 'acme/atrium-posts']),
+        );
+        $this->assertStringContainsString(
+            'acme/atrium-posts was installed already; its tables are up to date.',
+            $this->printed('atrium:module:install', ['package' => 'acme/atrium-posts']),
+        );
+    }
+
+    public function test_the_menu_keys_are_those_of_the_modules_that_can_be_administered_all_of_them(): void
+    {
+        $this->app->make(Modules::class)->add(new Module(name: 'acme/atrium-mixed', resources: [Post::class, 'Acme\\Missing', \stdClass::class, Page::class]));
+
+        $this->assertStringContainsString(
+            'acme/atrium-mixed is installed. In the menu and the role form: posts, pages',
+            $this->printed('atrium:module:install', ['package' => 'acme/atrium-mixed']),
+        );
+    }
+
+    public function test_the_package_name_is_trimmed_and_lowercased(): void
+    {
+        $this->artisan('atrium:module:install', ['package' => '  ACME/Atrium-Shelves '])->assertSuccessful();
+
+        $this->assertContains(self::SHELVES, (require $this->root.'/config/atrium.php')['modules']);
+    }
+
+    public function test_the_installed_hook_is_fired_with_the_module(): void
+    {
+        $heard = [];
+        Hook::on('atrium.module.installed', static function (Module $module) use (&$heard): void {
+            $heard[] = $module->name;
+        });
+
+        $this->artisan('atrium:module:install', ['package' => self::SHELVES])->assertSuccessful();
+
+        $this->assertSame([self::SHELVES], $heard);
+    }
+
+    public function test_a_submodule_is_filled_with_demo_content_only_when_its_parent_is(): void
+    {
+        $modules = $this->app->make(Modules::class);
+        $modules->add(new Module(name: 'acme/atrium-parent'));
+        $modules->add(new Module(name: 'acme/atrium-child', demo: ShelfDemoSeeder::class, parent: 'acme/atrium-parent'));
+
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-parent'])->assertSuccessful();
+        $this->assertSame(0, Post::query()->count());
+
+        $this->artisan('atrium:module:remove', ['package' => 'acme/atrium-parent'])->assertSuccessful();
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-parent', '--demo' => true])->assertSuccessful();
+        $this->assertSame(['Demo shelf'], Post::query()->pluck('name')->all());
+    }
+
+    public function test_a_permission_that_comes_with_another_goes_to_the_roles_that_have_it_once(): void
+    {
+        $this->app->make(Modules::class)->add(new Module(name: 'acme/atrium-orders', declaredPermissions: [
+            'orders.refund' => ['label' => 'Refund', 'with' => 'orders.view'],
+            'orders.export' => ['label' => 'Export', 'with' => 'orders.view'],
+            'orders.audit' => ['label' => 'Audit', 'with' => null],
+        ]));
+        $holder = AdminRole::query()->create(['name' => 'Holder', 'permissions' => ['orders.view', 'orders.view', 'posts.view']]);
+        $already = AdminRole::query()->create(['name' => 'Already', 'permissions' => ['orders.view', 'orders.refund', 'orders.export']]);
+        $other = AdminRole::query()->create(['name' => 'Other', 'permissions' => ['posts.view']]);
+        DB::table('admin_roles')->insert(['name' => 'Nothing', 'permissions' => 'null', 'created_at' => now(), 'updated_at' => now()]);
+        $nothing = AdminRole::query()->where('name', 'Nothing')->sole();
+        $saved = [];
+        AdminRole::saved(static function (AdminRole $role) use (&$saved): void {
+            $saved[] = $role->name;
+        });
+
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-orders'])->assertSuccessful();
+
+        $this->assertSame(['orders.view', 'posts.view', 'orders.refund', 'orders.export'], $holder->fresh()->permissions);
+        $this->assertSame(['orders.view', 'orders.refund', 'orders.export'], $already->fresh()->permissions);
+        $this->assertSame(['posts.view'], $other->fresh()->permissions);
+        $this->assertSame([], (array) $nothing->fresh()->permissions);
+        $this->assertSame(['Holder'], $saved, 'Only a role that lacked something was written.');
+    }
+
+    public function test_a_module_without_permissions_that_come_with_another_leaves_the_roles_alone(): void
+    {
+        $role = AdminRole::query()->create(['name' => 'Holder', 'permissions' => ['orders.view']]);
+        $saved = 0;
+        AdminRole::saved(static function () use (&$saved): void {
+            $saved++;
+        });
+        $this->app->make(Modules::class)->add(new Module(name: 'acme/atrium-orders', declaredPermissions: ['orders.audit' => ['label' => 'Audit', 'with' => null]]));
+
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-orders'])->assertSuccessful();
+
+        $this->assertSame(0, $saved);
+        $this->assertSame(['orders.view'], $role->fresh()->permissions);
+    }
+
+    public function test_the_permissions_step_is_skipped_when_the_roles_table_is_missing(): void
+    {
+        $this->app->make(Modules::class)->add(new Module(name: 'acme/atrium-orders', declaredPermissions: ['orders.refund' => ['label' => 'Refund', 'with' => 'orders.view']]));
+        Schema::drop('admin_role_user');
+        Schema::drop('admin_roles');
+
+        $this->artisan('atrium:module:install', ['package' => 'acme/atrium-orders'])->assertSuccessful();
+
+        $this->assertContains('acme/atrium-orders', (require $this->root.'/config/atrium.php')['modules']);
     }
 }

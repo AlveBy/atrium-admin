@@ -85,7 +85,10 @@ final class IndexMediaTest extends TestCase
     {
         Storage::fake('public')->put('other/file.txt', 'x');
 
-        $this->artisan('atrium:media:index')->expectsOutput('No files found.')->assertSuccessful();
+        $this->artisan('atrium:media:index')
+            ->expectsOutput('No files found.')
+            ->doesntExpectOutput('Added: 0')
+            ->assertSuccessful();
 
         $this->assertSame(0, MediaItem::query()->count());
     }
@@ -95,12 +98,14 @@ final class IndexMediaTest extends TestCase
         $disk = Storage::fake('public');
         $disk->put('uploads/a.png', 'png');
         $disk->put('uploads/b.png', 'png');
+        $disk->put('uploads/c.png', 'png');
         MediaItem::query()->create(['name' => 'a.png', 'url' => '/storage/uploads/a.png', 'disk' => 'public', 'path' => 'uploads/a.png', 'extension' => 'png', 'size' => 3, 'is_image' => true]);
 
         $this->artisan('atrium:media:index', ['--dry-run' => true])
             ->expectsOutput('  /storage/uploads/b.png')
+            ->expectsOutput('  /storage/uploads/c.png')
             ->doesntExpectOutput('  /storage/uploads/a.png')
-            ->expectsOutput('Would be added: 1')
+            ->expectsOutput('Would be added: 2')
             ->assertSuccessful();
 
         $this->assertSame(['/storage/uploads/a.png'], MediaItem::query()->pluck('url')->all());

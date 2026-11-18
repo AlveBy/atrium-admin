@@ -105,6 +105,7 @@ final class InstallCommandTest extends TestCase
         $this->install()
             ->expectsOutputToContain('Create the first administrator.')
             ->expectsOutputToContain('Atrium is ready: http://localhost/admin')
+            ->doesntExpectOutputToContain('is served instead')
             ->assertSuccessful();
 
         $this->assertSame([
@@ -251,5 +252,41 @@ final class InstallCommandTest extends TestCase
 
         $this->assertMatchesRegularExpression('/DONE\s*\n\s*\n\s*INFO\s+Create the first administrator\./', $printed);
         $this->assertMatchesRegularExpression('/\n\s*\n\s*INFO\s+Atrium is ready/', $printed);
+    }
+
+    public function test_an_option_left_out_is_asked_for_by_the_user_command(): void
+    {
+        $this->artisan('atrium:install', ['--email' => 'ann@example.com', '--password' => 'long-enough'])
+            ->expectsQuestion('Enter admin name', 'Asked Ann')
+            ->assertSuccessful();
+
+        $this->assertSame('Asked Ann', AdminUser::query()->where('email', 'ann@example.com')->sole()->name);
+    }
+
+    public function test_the_stock_robots_txt_is_removed_with_a_step_and_no_warning(): void
+    {
+        file_put_contents($this->root.'/public/robots.txt', "User-agent: *\nDisallow:\n");
+
+        $printed = $this->printed();
+
+        $this->assertMatchesRegularExpression('/Removing public\/robots\.txt .*DONE/', $printed);
+        $this->assertStringNotContainsString('is served instead', $printed);
+    }
+
+    public function test_demo_steps_are_reported_as_done_and_a_module_with_content_does_not_hide_one_without(): void
+    {
+        $this->onlyModules(
+            new Module(name: 'acme/atrium-shelves', demo: ShelfDemoSeeder::class, suggests: ['acme/atrium-brands']),
+            new Module(name: 'acme/atrium-brands', demo: BrandDemoSeeder::class),
+        );
+        Post::query()->create(['name' => 'Demo shelf']);
+
+        $printed = $this->printed(['--demo' => true]);
+
+        $this->assertMatchesRegularExpression('/Installing acme\/atrium-shelves[ .]*\S* DONE/', $printed);
+        $this->assertMatchesRegularExpression('/Filling acme\/atrium-brands[ .]*\S* DONE/', $printed);
+        $this->assertMatchesRegularExpression('/Filling acme\/atrium-shelves[ .]*\S* DONE/', $printed);
+        $this->assertStringNotContainsString('nothing was added', $printed);
+        $this->assertSame(['Demo shelf', 'Demo brand'], Post::query()->orderBy('id')->pluck('name')->all());
     }
 }
