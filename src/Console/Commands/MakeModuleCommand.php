@@ -46,7 +46,7 @@ final class MakeModuleCommand extends Command
         }
 
         $files->ensureDirectoryExists(dirname($modelPath));
-        $files->put($modelPath, $this->render('model', [
+        $files->put($modelPath, $this->render($files, 'model', [
             'namespace' => $namespace,
             'class' => $class,
             'label' => addcslashes($label, "'\\"),
@@ -56,7 +56,7 @@ final class MakeModuleCommand extends Command
 
         if (! $this->option('no-migration')) {
             $migrationPath = database_path('migrations/'.date('Y_m_d_His')."_create_{$table}_table.php");
-            $files->put($migrationPath, $this->render('migration', ['table' => $table]));
+            $files->put($migrationPath, $this->render($files, 'migration', ['table' => $table]));
             $this->components->info("Migration [{$migrationPath}] created.");
         }
 
@@ -72,12 +72,12 @@ final class MakeModuleCommand extends Command
     /**
      * @param  array<string,string>  $replace
      */
-    private function render(string $stub, array $replace): string
+    private function render(Filesystem $files, string $stub, array $replace): string
     {
         $custom = base_path("stubs/atrium/{$stub}.stub");
         $path = is_file($custom) ? $custom : __DIR__."/../../../stubs/{$stub}.stub";
 
-        $content = (string) file_get_contents($path);
+        $content = $files->get($path);
 
         foreach ($replace as $key => $value) {
             $content = str_replace('{{ '.$key.' }}', $value, $content);
