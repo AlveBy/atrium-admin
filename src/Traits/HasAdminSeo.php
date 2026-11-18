@@ -119,7 +119,7 @@ trait HasAdminSeo
         // the limit: a fragment cut mid-phrase reads as a bug, a whole sentence
         // reads as a description. Half the limit, so that a single five-word
         // sentence is not served as the description.
-        if (preg_match('/^(.*[.!?])\s/us', mb_substr($text, 0, $limit), $m)
+        if (preg_match('/(.*[.!?])\s/', mb_substr($text, 0, $limit), $m)
             && mb_strlen($m[1]) >= intdiv($limit, 2)) {
             return $m[1];
         }
@@ -143,7 +143,7 @@ trait HasAdminSeo
         // and is shown on the page itself. Without this branch sections went to
         // search results with no description at all, and Google made up the
         // snippet itself.
-        if (isset($this->description) && $this->description) {
+        if (! empty($this->description)) {
             return self::excerpt((string) $this->description);
         }
 
