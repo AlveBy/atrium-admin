@@ -52,7 +52,7 @@ class AdminUserController extends AdminController
 
         $this->guardTarget($item);
 
-        if ($item instanceof AdminUser && $item->isSuperadmin() && $this->isLastSuperadmin($item)) {
+        if ($item instanceof AdminUser && $this->isLastSuperadmin($item)) {
             return back()->with('error', __('atrium::permissions.last_superadmin'));
         }
 
@@ -66,12 +66,12 @@ class AdminUserController extends AdminController
             ? $request->boolean('is_superadmin')
             : null;
 
-        if ($item instanceof AdminUser && $item->exists) {
+        if ($item instanceof AdminUser) {
             $this->guardTarget($item);
 
             $demoted = $promote === false || ($request->has('is_active') && ! $request->boolean('is_active'));
 
-            if ($item->isSuperadmin() && $demoted && $this->isLastSuperadmin($item)) {
+            if ($demoted && $this->isLastSuperadmin($item)) {
                 throw ValidationException::withMessages(['is_superadmin' => __('atrium::permissions.last_superadmin')]);
             }
         }
@@ -104,7 +104,7 @@ class AdminUserController extends AdminController
 
     private function isLastSuperadmin(AdminUser $item): bool
     {
-        return $this->model::query()
+        return $item->isSuperadmin() && $this->model::query()
             ->where('is_superadmin', true)
             ->where('is_active', true)
             ->whereKeyNot($item->getKey())

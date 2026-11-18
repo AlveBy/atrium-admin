@@ -87,7 +87,7 @@ trait HasAdminTabs
         $sortedTabs = TabRegistry::sortTabs($visibleTabs);
 
         return [
-            'tabs' => array_values(array_map(fn ($t) => $t instanceof Tab ? $t->toArray() : $t, $sortedTabs)),
+            'tabs' => array_map(fn ($t) => $t instanceof Tab ? $t->toArray() : $t, $sortedTabs),
             'fields' => $grouped,
         ];
     }

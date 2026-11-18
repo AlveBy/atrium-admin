@@ -43,6 +43,6 @@ class DocsController extends Controller
      */
     private function only(Request $request): array
     {
-        return array_values(array_filter(array_map('trim', explode(',', (string) $request->query('only', '')))));
+        return array_filter(array_map('trim', explode(',', (string) $request->query('only', ''))));
     }
 }

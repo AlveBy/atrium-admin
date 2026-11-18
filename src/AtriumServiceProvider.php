@@ -247,7 +247,7 @@ final class AtriumServiceProvider extends ServiceProvider
         if (is_file($custom)) {
             $this->app['router']
                 ->prefix(config('atrium.prefix', 'admin'))
-                ->middleware([...config('atrium.middleware', ['web']), 'atrium.inertia', 'admin.auth', 'admin.can'])
+                ->middleware([...config()->array('atrium.middleware'), 'atrium.inertia', 'admin.auth', 'admin.can'])
                 ->group($custom);
         }
     }

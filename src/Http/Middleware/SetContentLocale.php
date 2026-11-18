@@ -29,12 +29,11 @@ final class SetContentLocale
 
     public function handle(Request $request, Closure $next): Response
     {
-        $route = $request->route();
-        $code = $route?->parameter('locale');
+        $code = $request->route('locale');
 
         if (is_string($code)) {
             abort_unless($this->languages->has($code) && $code !== $this->languages->default(), 404);
-            $route->forgetParameter('locale');
+            $request->route()->forgetParameter('locale');
         } else {
             $code = $this->languages->default();
         }

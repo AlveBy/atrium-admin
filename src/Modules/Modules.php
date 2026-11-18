@@ -344,7 +344,7 @@ final class Modules
                 return;
             }
 
-            foreach ([...array_filter([$this->parentOf($module)?->name]), ...$module->suggests] as $name) {
+            foreach ([$this->parentOf($module)?->name, ...$module->suggests] as $name) {
                 if (isset($modules[$name])) {
                     $visit($modules[$name], [...$path, $module->name]);
                 }
