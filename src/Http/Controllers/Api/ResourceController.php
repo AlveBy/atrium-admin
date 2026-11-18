@@ -73,7 +73,7 @@ class ResourceController extends AdminController
         if (is_string($search) && $search !== '') {
             $searchable = collect(Hook::apply('atrium.module.columns', $this->model::getAdministrationListColumns(), $this->model))
                 ->map(fn ($column) => $column->toArray())
-                ->filter(fn (array $column): bool => (bool) ($column['searchable'] ?? false))
+                ->where('searchable', true)
                 ->pluck('name')
                 ->all();
 
@@ -115,7 +115,7 @@ class ResourceController extends AdminController
         ]);
     }
 
-    public function showItem(Request $request, string $resource = '', int $id = 0): JsonResponse
+    public function showItem(Request $request, string $resource, int $id): JsonResponse
     {
         $this->useResource($request, $resource, 'read', Permissions::VIEW);
 
@@ -134,7 +134,7 @@ class ResourceController extends AdminController
     /**
      * Updates are partial: only the fields sent are validated and written.
      */
-    public function updateItem(Request $request, string $resource = '', int $id = 0): JsonResponse
+    public function updateItem(Request $request, string $resource, int $id): JsonResponse
     {
         $this->useResource($request, $resource, 'write', Permissions::UPDATE);
 
@@ -143,7 +143,7 @@ class ResourceController extends AdminController
         return response()->json(['data' => $this->present($item->fresh($this->eagerRelations()))]);
     }
 
-    public function destroyItem(Request $request, string $resource = '', int $id = 0): JsonResponse
+    public function destroyItem(Request $request, string $resource, int $id): JsonResponse
     {
         $this->useResource($request, $resource, 'write', Permissions::DELETE);
 
