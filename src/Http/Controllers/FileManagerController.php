@@ -87,7 +87,9 @@ class FileManagerController extends Controller
             ], 422);
         }
 
-        if (! $this->isWhatItsNameSays($file, $extension)) {
+        $mimeType = $this->contentType($file, $extension);
+
+        if ($mimeType === null) {
             return response()->json([
                 'message' => __('atrium::files.errors.content_mismatch', ['type' => $extension]),
             ], 422);
@@ -100,7 +102,6 @@ class FileManagerController extends Controller
 
         $this->makeWebpCopy($disk, $path);
 
-        $mimeType = (string) $file->getMimeType();
         $item = MediaItem::create([
             'collection_id' => $this->uploadsCollection()->id,
             'name' => Str::limit($file->getClientOriginalName(), 250, ''),
@@ -128,20 +129,21 @@ class FileManagerController extends Controller
     }
 
     /**
-     * Whether the file is what its name says, judged by its content (finfo),
-     * not by the name the client sent: a script called photo.jpg is refused.
+     * The type of the file's content (finfo) when the file is what its name
+     * says, null when it is not: a script called photo.jpg is refused.
      * Office files finfo knows only by their container — a zip, an OLE store —
      * count as the formats built on it. An SVG may carry a script, so one with
      * anything that runs is refused.
      */
-    private function isWhatItsNameSays(UploadedFile $file, string $extension): bool
+    private function contentType(UploadedFile $file, string $extension): ?string
     {
         $types = MimeTypes::getDefault();
         $type = $types->guessMimeType($file->getRealPath()) ?? '';
         $extensions = [...$types->getExtensions($type), ...self::CONTAINERS[$type] ?? []];
 
-        return in_array($extension, $extensions, true)
-            && ($type !== 'image/svg+xml' || preg_match(self::ACTIVE_SVG, (string) $file->getContent()) === 0);
+        return in_array($extension, $extensions, true) && ($type !== 'image/svg+xml' || preg_match(self::ACTIVE_SVG, (string) $file->getContent()) === 0)
+            ? $type
+            : null;
     }
 
     /**
