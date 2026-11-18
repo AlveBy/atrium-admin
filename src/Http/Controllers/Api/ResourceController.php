@@ -67,7 +67,10 @@ class ResourceController extends AdminController
             }
         }
 
-        if (($search = (string) $request->query('search', '')) !== '') {
+        $search = $request->query('search');
+
+        // search[]=x is not a search: it is ignored, not a reason for a 500.
+        if (is_string($search) && $search !== '') {
             $searchable = collect(Hook::apply('atrium.module.columns', $this->model::getAdministrationListColumns(), $this->model))
                 ->map(fn ($column) => $column->toArray())
                 ->filter(fn (array $column): bool => (bool) ($column['searchable'] ?? false))
@@ -89,7 +92,8 @@ class ResourceController extends AdminController
             });
         }
 
-        $sort = (string) $request->query('sort', 'id');
+        $sort = $request->query('sort');
+        $sort = is_string($sort) ? $sort : 'id';
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
 
         if (! Hook::apply('atrium.query.sort', false, $query, $sort, $direction)) {
