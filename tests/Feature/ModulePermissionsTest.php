@@ -62,9 +62,9 @@ final class ModulePermissionsTest extends TestCase
         ], Label::module()->declaredPermissions);
 
         $module = Module::fromComposer(['name' => 'acme/atrium-shop', 'extra' => ['atrium' => ['key' => 'store', 'permissions' => [
-            'refund' => 'Refund',
             'Not a name!' => 'Skipped',
             'a.b.c' => 'Skipped too',
+            'refund' => 'Refund',
         ]]]], '/tmp');
 
         $this->assertSame(['store.refund'], $module->permissions());

@@ -9,10 +9,12 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
+use Atrium\Admin\Fields\DisplayField;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Receipt;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Support\HtmlString;
 use Inertia\Testing\AssertableInertia;
 
 final class DisplayFieldTest extends TestCase
@@ -55,5 +57,12 @@ final class DisplayFieldTest extends TestCase
             ->assertRedirect(route('admin.receipts.index'));
 
         $this->assertSame('New', $receipt->fresh()?->getAttribute('name'));
+    }
+
+    public function test_whatever_the_closure_returns_is_drawn_as_a_string(): void
+    {
+        $this->assertSame('<i>x</i>', DisplayField::make('a')->html(fn (): HtmlString => new HtmlString('<i>x</i>'))->render(new Post));
+        $this->assertSame('42', DisplayField::make('a')->html(fn (): int => 42)->render(new Post));
+        $this->assertSame('', DisplayField::make('a')->render(new Post));
     }
 }

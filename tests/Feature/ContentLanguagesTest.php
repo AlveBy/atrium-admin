@@ -43,6 +43,9 @@ final class ContentLanguagesTest extends TestCase
         Route::localized(function (): void {
             Route::get('pages/{code}', fn (string $code) => app()->getLocale().':'.$code)->name('pages.show');
         });
+
+        // After the language prefix, which must not swallow what is not a language code.
+        Route::get('{section}/pages/{code}', fn (string $section, string $code) => "{$section}:{$code}");
     }
 
     private function addGerman(): Language
@@ -243,6 +246,7 @@ final class ContentLanguagesTest extends TestCase
         // Inactive languages and the default one under a prefix do not exist.
         $this->get('/fr/pages/bonjour')->assertNotFound();
         $this->get('/en/pages/hello')->assertNotFound();
+        $this->get('/shop/pages/hello')->assertOk()->assertSee('shop:hello');
 
         $languages = app(ContentLanguages::class);
         $this->assertSame(url('/pages/hello'), $languages->route('pages.show', ['code' => 'hello'], 'en'));

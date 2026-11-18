@@ -71,6 +71,13 @@ final class ThemeTest extends TestCase
         $this->assertNull($admin->fresh()->theme);
     }
 
+    public function test_a_theme_is_required(): void
+    {
+        $this->actingAs($this->admin(), 'admin')
+            ->put('/admin/profile/theme', [])
+            ->assertSessionHasErrors('theme');
+    }
+
     public function test_a_guest_cannot_save_a_theme(): void
     {
         $this->put('/admin/profile/theme', ['theme' => 'night'])->assertRedirect('/admin/login');

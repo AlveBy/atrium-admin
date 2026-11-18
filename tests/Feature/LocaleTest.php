@@ -47,6 +47,11 @@ final class LocaleTest extends TestCase
         $this->assertSame('uk', $this->get('/admin/login')->inertiaProps('locale'));
     }
 
+    public function test_a_language_is_required(): void
+    {
+        $this->from('/admin/login')->post('/admin/locale', [])->assertSessionHasErrors('locale');
+    }
+
     public function test_an_admin_keeps_the_language_on_the_account(): void
     {
         $admin = $this->admin();

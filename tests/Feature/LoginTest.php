@@ -192,6 +192,19 @@ final class LoginTest extends TestCase
         $this->get('/admin')->assertRedirect('/admin/login');
     }
 
+    public function test_signing_out_leaves_the_session_a_new_csrf_token(): void
+    {
+        $this->actingAs($this->admin(), 'admin')
+            ->withSession(['_token' => 'old-token'])
+            ->post('/admin/logout')
+            ->assertRedirect('/admin/login');
+
+        $token = $this->app['session.store']->token();
+
+        $this->assertNotEmpty($token);
+        $this->assertNotSame('old-token', $token);
+    }
+
     public function test_guests_cannot_sign_out(): void
     {
         $this->post('/admin/logout')->assertRedirect('/admin/login');
