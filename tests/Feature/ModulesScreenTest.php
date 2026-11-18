@@ -366,12 +366,13 @@ final class ModulesScreenTest extends TestCase
                     ['name' => 'someone/atrium-gone', 'downloads' => 100, 'abandoned' => 'someone/atrium-new'],
                     ['name' => 'Someone/Atrium-Upper', 'description' => 'Upper', 'url' => 'https://example.com/upper', 'downloads' => '12'],
                     ['name' => 'someone/atrium-bare'],
+                    ['name' => 'someone/atrium-numeric', 'url' => 7],
                 ], 'next' => 'https://packagist.org/search.json?type=atrium-module&page=2']),
                 'https://packagist.org/search.json?type=atrium-module&page=2' => Http::response(['results' => [
                     ['name' => 'someone/atrium-second', 'description' => 42, 'downloads' => 1],
                 ], 'next' => '']),
                 'https://packagist.org/search.json?tags=atrium-module&per_page=100' => Http::response(['results' => [
-                    ['name' => 'someone/atrium-upper', 'description' => 'Upper', 'url' => 'https://example.com/upper', 'downloads' => 12],
+                    ['name' => 'someone/atrium-upper', 'description' => 'Upper', 'url' => 'https://example.com/upper', 'downloads' => '12'],
                 ]]),
                 default => Http::response('', 404),
             };
@@ -381,8 +382,24 @@ final class ModulesScreenTest extends TestCase
             ['name' => 'someone/atrium-upper', 'description' => 'Upper', 'url' => 'https://example.com/upper', 'downloads' => 12],
             ['name' => 'someone/atrium-second', 'description' => '42', 'url' => 'https://packagist.org/packages/someone/atrium-second', 'downloads' => 1],
             ['name' => 'someone/atrium-bare', 'description' => '', 'url' => 'https://packagist.org/packages/someone/atrium-bare', 'downloads' => 0],
+            ['name' => 'someone/atrium-numeric', 'description' => '', 'url' => '7', 'downloads' => 0],
         ], $this->app->make(Catalogue::class)->packages());
         Http::assertSentCount(3);
+    }
+
+    public function test_packagist_is_given_five_seconds_to_answer(): void
+    {
+        Cache::forget('atrium.modules.catalogue');
+        $timeouts = [];
+        Http::fake(function (Request $request, array $options) use (&$timeouts) {
+            $timeouts[] = $options['timeout'];
+
+            return Http::response(['results' => []]);
+        });
+
+        $this->app->make(Catalogue::class)->packages();
+
+        $this->assertSame([5, 5], $timeouts);
     }
 
     public function test_the_catalogue_asks_for_five_pages_at_most(): void

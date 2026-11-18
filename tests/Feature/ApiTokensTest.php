@@ -14,6 +14,7 @@ use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
@@ -59,6 +60,48 @@ final class ApiTokensTest extends TestCase
         $this->assertSame(hash('sha256', explode('|', $plain, 2)[1]), $token->token, 'Only the hash is stored.');
 
         $this->withToken($plain)->getJson('/api/v1/posts')->assertOk();
+    }
+
+    public function test_the_form_names_the_name_field_in_the_panel_s_words(): void
+    {
+        $this->app->make('translator')->addLines(['account.api_tokens.attributes.name' => 'token title'], 'en', 'atrium');
+
+        $this->actingAs($this->admin(), 'admin')
+            ->from('/admin/api-tokens')
+            ->post('/admin/api-tokens', ['abilities' => ['posts:read']])
+            ->assertSessionHasErrors(['name' => 'The token title field is required.']);
+    }
+
+    public function test_an_ability_is_a_string_that_is_on_offer(): void
+    {
+        $response = $this->actingAs($this->admin(), 'admin')
+            ->from('/admin/api-tokens')
+            ->post('/admin/api-tokens', ['name' => 'Robot', 'abilities' => [5]]);
+
+        $messages = $response->assertSessionHasErrors('abilities.0')->getSession()->get('errors')->get('abilities.0');
+        $this->assertCount(2, $messages);
+        $this->assertStringContainsString('must be a string', $messages[0]);
+        $this->assertStringContainsString('invalid', $messages[1]);
+        $this->assertSame(0, PersonalAccessToken::query()->count());
+    }
+
+    public function test_the_abilities_of_a_token_are_stored_as_a_list(): void
+    {
+        $this->actingAs($this->admin(), 'admin')
+            ->post('/admin/api-tokens', ['name' => 'Robot', 'abilities' => ['posts:read', 'posts:read', 'posts:write']]);
+
+        $this->assertSame('["posts:read","posts:write"]', DB::table('personal_access_tokens')->value('abilities'));
+    }
+
+    public function test_a_token_without_a_creation_date_is_listed_with_none(): void
+    {
+        $this->actingAs($this->admin(), 'admin');
+        $token = AdminUser::query()->sole()->createToken('Old', ['posts:read'])->accessToken;
+        $token->forceFill(['created_at' => null])->saveQuietly();
+
+        $this->get('/admin/api-tokens')->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('tokens.0.created_at', null)
+            ->where('tokens.0.name', 'Old'));
     }
 
     public function test_a_token_without_an_expiry_never_expires(): void

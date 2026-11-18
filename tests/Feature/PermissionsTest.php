@@ -132,6 +132,39 @@ final class PermissionsTest extends TestCase
         $this->assertFalse(AdminRole::query()->where('name', 'Mine')->exists());
     }
 
+    public function test_a_role_holding_the_routers_own_markers_gets_nothing_from_them(): void
+    {
+        $permissions = app(Permissions::class);
+        $user = $this->editor(['*superadmin', '*write', '*settings']);
+
+        $this->assertFalse($permissions->allowsRoute($user, 'admin.roles.index'));
+        $this->assertFalse($permissions->allowsRoute($user, 'admin.upload'));
+        $this->assertFalse($permissions->canWriteAnything($user));
+    }
+
+    /**
+     * @return array<string,array{0:string,1:bool}>
+     */
+    public static function writeEndings(): array
+    {
+        return [
+            'create' => ['posts.create', true],
+            'update' => ['posts.update', true],
+            'settings' => ['labels.settings', true],
+            'view' => ['posts.view', false],
+            'delete' => ['posts.delete', false],
+            'create without a dot' => ['postscreate', false],
+            'update without a dot' => ['postsupdate', false],
+            'settings without a dot' => ['labelssettings', false],
+        ];
+    }
+
+    #[DataProvider('writeEndings')]
+    public function test_writing_anything_needs_a_permission_to_create_update_or_set_up_something(string $permission, bool $can): void
+    {
+        $this->assertSame($can, app(Permissions::class)->canWriteAnything($this->editor([$permission])));
+    }
+
     public function test_a_module_keeps_its_screens_for_superadmins(): void
     {
         // Empty and non-string prefixes are skipped: '' would close every screen.
