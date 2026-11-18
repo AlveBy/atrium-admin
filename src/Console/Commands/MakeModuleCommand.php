@@ -35,7 +35,10 @@ final class MakeModuleCommand extends Command
         $namespace = trim($this->laravel->getNamespace(), '\\').'\\Models';
         $fqcn = $namespace.'\\'.$class;
         $table = Str::snake(Str::pluralStudly($class));
-        $label = (string) ($this->option('label') ?: Str::headline(Str::pluralStudly($class)));
+        $label = $this->option('label');
+        if (! is_string($label) || $label === '') {
+            $label = Str::headline(Str::pluralStudly($class));
+        }
 
         $modelPath = app_path("Models/{$class}.php");
 
