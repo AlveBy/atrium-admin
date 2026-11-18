@@ -101,6 +101,7 @@ final class ApiGatewayTest extends TestCase
         (new ApiGateway($router))->call('GET', 'posts');
 
         $this->assertSame([true, 'api/v1/posts', true], $inside);
+        $this->assertSame('mcp', RequestFacade::path(), 'What the facade saw during the call is forgotten afterwards.');
     }
 
     public function test_the_original_request_is_back_afterwards_for_everyone(): void
@@ -120,7 +121,11 @@ final class ApiGatewayTest extends TestCase
     {
         $original = Request::create('/mcp', 'POST');
         $this->app->instance('request', $original);
-        $router = $this->recordingRouter(fn () => throw new RuntimeException('boom'));
+        $router = $this->recordingRouter(function () {
+            RequestFacade::path();
+
+            throw new RuntimeException('boom');
+        });
 
         try {
             (new ApiGateway($router))->call('GET', 'posts');
