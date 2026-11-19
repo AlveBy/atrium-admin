@@ -14,7 +14,7 @@ Add `--demo` to fill it with three example records. `php artisan atrium:module:r
 ## What is inside
 
 - `composer.json`: the manifest in `extra.atrium` (models, migrations, demo seeder). Add `settings`, `permissions`, `public_urls`, `search` or `submodules` there as the module grows: see the [module docs](https://github.com/AlveBy/atrium/blob/main/docs/modules.md).
-- `src/Models/{{ model }}.php`: the model, with its admin form and list.
+- `src/Models/{{ model }}.php`: the model, with its admin form and list. It uses the record cache (`Cacheable`, `CachesRecords`): read lists with `cachedPaginate()` or `cachedCards()`, see the [cache docs](https://github.com/AlveBy/atrium/blob/main/docs/cache.md).
 - `database/migrations`: its table.
 - `src/Database/{{ class }}DemoSeeder.php`: the demo content.
 - `tests`: Orchestra Testbench tests that install the module in a bare Atrium.

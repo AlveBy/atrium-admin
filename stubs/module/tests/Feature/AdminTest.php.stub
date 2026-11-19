@@ -38,6 +38,17 @@ final class AdminTest extends TestCase
         $this->assertSame(0, {{ model }}::query()->count());
     }
 
+    public function test_a_record_is_read_from_its_card_and_a_save_drops_it(): void
+    {
+        $record = {{ model }}::query()->create(['name' => ['en' => 'First'], 'active' => true, 'sort' => 10]);
+
+        $this->assertSame('First', {{ model }}::cached($record->id)?->name);
+
+        $record->update(['name' => ['en' => 'Renamed']]);
+
+        $this->assertSame('Renamed', {{ model }}::cached($record->id)?->name);
+    }
+
     public function test_a_record_needs_a_name(): void
     {
         $this->actingAs($this->admin(), 'admin')
