@@ -44,6 +44,8 @@ final class EnterSiteFolder
         $site = $this->sites->forRequest($request->getHost(), $path);
 
         if ($site->folder === null) {
+            $request->attributes->set(self::SITE, $site->id);
+
             return $next($request);
         }
 
