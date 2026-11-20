@@ -131,6 +131,7 @@ final class DemoModeTest extends TestCase
         $granted = AdminUser::query()->sole()->adminPermissions();
         $all = app(Permissions::class)->all();
 
+        $this->assertTrue(array_is_list(AdminRole::query()->sole()->permissions));
         $this->assertContains('posts.view', $granted);
         $this->assertNotContains('posts.create', $granted);
         $this->assertNotContains('posts.update', $granted);

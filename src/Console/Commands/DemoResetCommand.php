@@ -39,7 +39,7 @@ final class DemoResetCommand extends Command
             return self::FAILURE;
         }
 
-        $email = (string) config('atrium.demo.email');
+        $email = config()->string('atrium.demo.email');
 
         $this->removeUploads();
 
@@ -58,7 +58,7 @@ final class DemoResetCommand extends Command
         }
 
         $visitor = AdminUser::query()->where('email', $email)->sole();
-        $visitor->forceFill(['is_superadmin' => false, 'password' => Hash::make((string) config('atrium.demo.password'))])->save();
+        $visitor->forceFill(['is_superadmin' => false, 'password' => Hash::make(config()->string('atrium.demo.password'))])->save();
         $visitor->roles()->sync([AdminRole::query()->create(['name' => 'Demo', 'permissions' => $this->granted($permissions)])->id]);
 
         $this->components->info("The demo is back as it was: {$email}.");
@@ -74,7 +74,7 @@ final class DemoResetCommand extends Command
      */
     private function granted(Permissions $permissions): array
     {
-        $readOnly = (array) config('atrium.demo.read_only', []);
+        $readOnly = config()->array('atrium.demo.read_only', []);
 
         return array_values(array_filter($permissions->all(), static function (string $permission) use ($readOnly): bool {
             [$section, $action] = explode('.', $permission);
