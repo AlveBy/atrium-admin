@@ -43,6 +43,7 @@ use Atrium\Admin\Support\RecordUrls;
 use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
 use Closure;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -371,6 +372,7 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\CacheWarmCommand::class,
             Console\Commands\CdnPurgeCommand::class,
             Console\Commands\CreateAdminCommand::class,
+            Console\Commands\DemoResetCommand::class,
             Console\Commands\IndexMediaCommand::class,
             Console\Commands\InstallCommand::class,
             Console\Commands\MakeModuleCommand::class,
@@ -379,5 +381,11 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\ModuleRemoveCommand::class,
             Console\Commands\SlugRegenerateCommand::class,
         ]);
+
+        if (config('atrium.demo.enabled')) {
+            $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
+                $schedule->command('atrium:demo:reset')->cron((string) config('atrium.demo.reset'))->withoutOverlapping();
+            });
+        }
     }
 }

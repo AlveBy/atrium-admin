@@ -102,6 +102,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Demo mode
+    |--------------------------------------------------------------------------
+    |
+    | For a public demo of the panel (docs/demo.md), never for a real site.
+    | `php artisan atrium:demo:reset` puts the database and the uploaded
+    | files back as they were: the demo content and one administrator,
+    | `email` / `password`, who is not a superadmin, edits the content and
+    | looks at the sections in `read_only` (administrators, sites, languages,
+    | the uptime checks) but changes none of them, has no API tokens, no
+    | module settings and cannot change their own name, e-mail or password.
+    | `reset` is the cron expression that runs the reset when the scheduler
+    | does (every hour).
+    |
+    */
+    'demo' => [
+        'enabled' => (bool) env('ATRIUM_DEMO', false),
+        'email' => env('ATRIUM_DEMO_EMAIL', 'demo@atrium.test'),
+        'password' => env('ATRIUM_DEMO_PASSWORD', 'demo'),
+        'reset' => env('ATRIUM_DEMO_RESET', '0 * * * *'),
+        'read_only' => ['users', 'languages', 'sites', 'uptime_checks', 'monitoring_incidents'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Interface languages
     |--------------------------------------------------------------------------
     |

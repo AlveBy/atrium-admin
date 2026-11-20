@@ -54,6 +54,11 @@ final class Permissions
 
     private const ANY_SETTINGS = '*settings';
 
+    private const NOBODY = '*nobody';
+
+    /** Own name, e-mail and password: a demo's visitor may not change them. */
+    private const DEMO_LOCKED = ['admin.profile.update', 'admin.profile.password'];
+
     /** Admin route action => permission action. */
     private const ROUTE_ACTIONS = [
         'index' => self::VIEW,
@@ -143,6 +148,7 @@ final class Permissions
     {
         return match ($permission = $this->routePermission($routeName)) {
             null => true,
+            self::NOBODY => false,
             self::SUPERADMIN => $user->isSuperadmin(),
             self::ANY_WRITE => $this->canWriteAnything($user),
             self::ANY_SETTINGS => $this->canSetUpAnything($user),
@@ -239,6 +245,10 @@ final class Permissions
     {
         if ($routeName === null || ! str_starts_with($routeName, 'admin.')) {
             return null;
+        }
+
+        if (config('atrium.demo.enabled') && in_array($routeName, self::DEMO_LOCKED, true)) {
+            return self::NOBODY;
         }
 
         if (str_starts_with($routeName, 'admin.roles.') || str_starts_with($routeName, 'admin.cache.')) {
