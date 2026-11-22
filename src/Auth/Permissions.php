@@ -140,10 +140,10 @@ final class Permissions
      */
     private function transferActions(string $module): array
     {
-        return array_values(array_filter(
+        return array_filter(
             [self::IMPORT, self::EXPORT],
             static fn (string $action): bool => Route::has("admin.{$module}.{$action}"),
-        ));
+        );
     }
 
     /**

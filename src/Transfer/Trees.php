@@ -35,7 +35,7 @@ final class Trees
         array $options,
         private readonly string $field,
         private readonly DataImport $import,
-        private readonly bool $check,
+        private readonly bool $check = false,
         private readonly ?Closure $create = null,
     ) {
         $this->collect($options, null);
@@ -48,7 +48,8 @@ final class Trees
     {
         foreach ($options as $option) {
             $id = (int) $option['value'];
-            $this->nodes[$id] = ['parent' => $parent, 'name' => mb_strtolower((string) $option['label']), 'label' => (string) $option['label']];
+            $label = (string) $option['label'];
+            $this->nodes[$id] = ['parent' => $parent, 'name' => mb_strtolower($label), 'label' => $label];
             $this->collect($option['children'] ?? [], $id);
         }
     }
@@ -61,8 +62,8 @@ final class Trees
         $names = [];
 
         // A cycle in the data ends the walk at the first node met twice.
-        for ($seen = []; $id !== null && isset($this->nodes[$id]) && ! isset($seen[$id]); $id = $this->nodes[$id]['parent']) {
-            $seen[$id] = true;
+        for ($seen = []; $id !== null && isset($this->nodes[$id]) && ! in_array($id, $seen, true); $id = $this->nodes[$id]['parent']) {
+            $seen[] = $id;
             array_unshift($names, $this->nodes[$id]['label']);
         }
 

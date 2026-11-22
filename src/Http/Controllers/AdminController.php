@@ -171,7 +171,7 @@ abstract class AdminController extends Controller
      *
      * @return array{import:bool,export:bool}
      */
-    protected function transferAbilities(): array
+    private function transferAbilities(): array
     {
         $user = auth()->guard(config('atrium.auth.guard', 'admin'))->user();
         $module = $this->model::getAdminRoutePrefix();

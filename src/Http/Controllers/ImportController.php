@@ -46,8 +46,6 @@ final class ImportController extends Controller
 
     public function index(string $module): Response
     {
-        $this->model($module);
-
         return Inertia::render('Admin/Transfer/Import/Index', [
             ...$this->screen($module),
             'imports' => DataImport::query()->with('user:id,name')->where('module', $module)->latest('id')->limit(20)->get()
@@ -109,7 +107,7 @@ final class ImportController extends Controller
             'targets' => $targets->options(),
             'keys' => $targets->keys(),
             'modes' => DataImport::MODES,
-            'moduleOptions' => array_map(static fn ($option): array => $option->toArray(), Settings::options($model)),
+            'moduleOptions' => Settings::options($model),
         ]);
     }
 

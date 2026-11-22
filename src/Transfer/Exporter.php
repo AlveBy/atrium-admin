@@ -131,13 +131,13 @@ final class Exporter
             $value === null => '',
             $field instanceof CheckboxField => Cells::bool((string) $value) === true ? '1' : '0',
             $field instanceof TreeSelectField => $this->tree($field)->path((int) $value),
-            is_array($value) => implode('|', array_map(static fn (mixed $item): string => (string) $item, $value)),
+            is_array($value) => implode('|', $value),
             default => (string) $value,
         };
     }
 
     private function tree(TreeSelectField $field): Trees
     {
-        return $this->trees[$field->getName()] ??= new Trees($field->toArray()['options'], $field->getLabel(), new DataImport, true);
+        return $this->trees[$field->getName()] ??= new Trees($field->toArray()['options'], $field->getLabel(), new DataImport);
     }
 }

@@ -36,7 +36,7 @@ final class ExportCommand extends Command
 
     public function handle(ResourceRegistry $resources): int
     {
-        $module = (string) $this->argument('module');
+        $module = $this->argument('module');
         $model = $resources->model($module);
 
         if ($model === null || ! Availability::export($model)) {
@@ -72,7 +72,7 @@ final class ExportCommand extends Command
         $filters = [];
 
         foreach ($this->option('filter') as $pair) {
-            [$name, $value] = array_pad(explode('=', $pair, 2), 2, '');
+            [$name, $value] = [...explode('=', $pair, 2), ''];
             $filters[$name] = $value;
         }
 

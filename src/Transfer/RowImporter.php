@@ -45,6 +45,8 @@ final class RowImporter
 {
     private readonly bool $check;
 
+    private readonly string $key;
+
     private readonly Target $keyTarget;
 
     private readonly Images $images;
@@ -66,7 +68,8 @@ final class RowImporter
         Hosts $hosts,
     ) {
         $this->check = $import->status === DataImport::CHECKING;
-        $this->keyTarget = $targets->keyTarget((string) $import->option('key')) ?? throw ImportFailed::because('key', ['key' => (string) $import->option('key')]);
+        $this->key = (string) $import->option('key');
+        $this->keyTarget = $targets->keyTarget($this->key) ?? throw ImportFailed::because('key', ['key' => $this->key]);
         $this->images = new Images($hosts, $this->check);
     }
 
@@ -150,13 +153,11 @@ final class RowImporter
      */
     private function find(string $value): (Model&Administrable)|null
     {
-        $key = (string) $this->import->option('key');
-
-        if ($key === Targets::ID && preg_match('/^[1-9][0-9]*\z/', $value) !== 1) {
+        if ($this->key === Targets::ID && preg_match('/^[1-9][0-9]*\z/', $value) !== 1) {
             throw RowProblem::because('bad_id', ['value' => $value]);
         }
 
-        $column = in_array($key, $this->writer->translatable(), true) ? $key.'->'.app(ContentLanguages::class)->default() : $key;
+        $column = in_array($this->key, $this->writer->translatable(), true) ? $this->key.'->'.app(ContentLanguages::class)->default() : $this->key;
 
         return $this->model::query()->where($column, $value)->orderBy('id')->first();
     }

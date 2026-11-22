@@ -72,7 +72,7 @@ final class ImportCommand extends Command
         $model = $module === null ? null : $resources->model($module);
 
         if ($model === null || ! Availability::import($model)) {
-            return $this->refuse(__('atrium::import.console.module', ['module' => (string) $module, 'modules' => implode(', ', $this->modules($resources))]));
+            return $this->refuse(__('atrium::import.console.module', ['module' => $module, 'modules' => implode(', ', $this->modules($resources))]));
         }
 
         $location = $this->argument('source');
@@ -155,7 +155,7 @@ final class ImportCommand extends Command
         $given = [];
 
         foreach ($this->option('option') as $pair) {
-            [$name, $value] = array_pad(explode('=', $pair, 2), 2, '1');
+            [$name, $value] = [...explode('=', $pair, 2), '1'];
 
             if (! in_array($name, array_column($options, 'name'), true)) {
                 throw ImportFailed::because('option', ['option' => $name]);

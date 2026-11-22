@@ -35,7 +35,7 @@ final class ExportController extends Controller
         $model = $this->resources->model($module);
         abort_if($model === null, 404);
 
-        $format = (string) $request->query('format', Exporter::CSV);
+        $format = $request->query('format', Exporter::CSV);
         abort_unless(in_array($format, Exporter::FORMATS, true), 422);
 
         $path = tempnam(sys_get_temp_dir(), 'atrium-export-');

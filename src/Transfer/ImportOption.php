@@ -9,13 +9,17 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Transfer;
 
+use Illuminate\Contracts\Support\Arrayable;
+
 /**
  * A setting of a module's import besides the mapping: "create the sections
  * that are not there", "the separator of a path". A module adds them with
  * the `atrium.import.options` filter; the mapping screen shows them, and the
  * console takes them as `--option=name=value`.
+ *
+ * @implements Arrayable<string,bool|string>
  */
-final class ImportOption
+final class ImportOption implements Arrayable
 {
     public const BOOLEAN = 'boolean';
 
