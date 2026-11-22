@@ -22,12 +22,18 @@ const props = defineProps({
     methods: {
         type: Array,
         default: () => []
+    },
+    // In a public demo: the e-mail and password anybody may use. They are
+    // filled in, and shown, so nobody has to look for them.
+    demo: {
+        type: Object,
+        default: null
     }
 })
 
 const form = useForm({
-    email: '',
-    password: '',
+    email: props.demo?.email ?? '',
+    password: props.demo?.password ?? '',
     remember: false,
 })
 
@@ -71,6 +77,23 @@ const submit = () => {
 
             <!-- Login Form -->
             <div class="bg-surface border border-line rounded-lg shadow-lg p-8">
+                <!-- The details of a public demo -->
+                <div
+                    v-if="demo"
+                    class="mb-6 rounded-md border border-accent bg-accent-soft text-accent-soft-fg p-4 text-sm"
+                    role="note"
+                    dusk="login-demo"
+                >
+                    <p class="font-semibold" dusk="login-demo-title">{{ $t('auth.login.demo_title') }}</p>
+                    <p class="mt-1">{{ $t('auth.login.demo_text') }}</p>
+                    <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                        <dt>{{ $t('auth.login.email') }}</dt>
+                        <dd class="font-mono font-semibold break-all" dusk="login-demo-email">{{ demo.email }}</dd>
+                        <dt>{{ $t('auth.login.password') }}</dt>
+                        <dd class="font-mono font-semibold break-all" dusk="login-demo-password">{{ demo.password }}</dd>
+                    </dl>
+                </div>
+
                 <form @submit.prevent="submit" class="space-y-6">
                     <!-- Email -->
                     <div>

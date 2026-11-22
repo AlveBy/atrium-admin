@@ -64,8 +64,12 @@ final class Permissions
 
     private const NOBODY = '*nobody';
 
-    /** Own name, e-mail and password: a demo's visitor may not change them. */
-    private const DEMO_LOCKED = ['admin.profile.update', 'admin.profile.password'];
+    /**
+     * What a demo's visitor may not change: their own name, e-mail and
+     * password, and the settings of any module (the two-factor sign-in among
+     * them: a setting there could lock the next visitor out).
+     */
+    private const DEMO_LOCKED = ['admin.profile.update', 'admin.profile.password', 'admin.modules.settings.update'];
 
     /** Admin route action => permission action. */
     private const ROUTE_ACTIONS = [

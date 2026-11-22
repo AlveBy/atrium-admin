@@ -23,6 +23,8 @@ return [
         'submit' => 'Se connecter',
         'submitting' => 'Connexion…',
         'or' => 'ou',
+        'demo_title' => 'Démo publique',
+        'demo_text' => 'Connectez-vous avec les informations ci-dessous, elles sont déjà remplies. Tout ce que vous modifiez ici est réinitialisé de temps en temps.',
     ],
 
     'validation' => [

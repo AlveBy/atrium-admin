@@ -23,6 +23,8 @@ return [
         'submit' => 'Zaloguj się',
         'submitting' => 'Logowanie…',
         'or' => 'lub',
+        'demo_title' => 'Publiczne demo',
+        'demo_text' => 'Zaloguj się podanymi niżej danymi, są już wpisane. Wszystko, co tu zmienisz, jest co jakiś czas przywracane.',
     ],
 
     'validation' => [

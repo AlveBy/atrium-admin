@@ -51,6 +51,7 @@ class AdminUserController extends AdminController
         $item = $this->findItem($id);
 
         $this->guardTarget($item);
+        $this->guardDemoAccount($item);
 
         if ($item instanceof AdminUser && $this->isLastSuperadmin($item)) {
             return back()->with('error', __('atrium::permissions.last_superadmin'));
@@ -68,6 +69,7 @@ class AdminUserController extends AdminController
 
         if ($item instanceof AdminUser) {
             $this->guardTarget($item);
+            $this->guardDemoAccount($item);
 
             $demoted = $promote === false || ($request->has('is_active') && ! $request->boolean('is_active'));
 
@@ -98,6 +100,17 @@ class AdminUserController extends AdminController
         $actor = request()->user(config('atrium.auth.guard', 'admin'));
 
         if ($item instanceof AdminUser && $item->isSuperadmin() && $actor instanceof AdminUser && ! $actor->isSuperadmin()) {
+            abort(403, __('atrium::permissions.forbidden'));
+        }
+    }
+
+    /**
+     * In a public demo everybody is the same person: nobody may change or
+     * delete that account (docs/demo.md), whatever role they were given.
+     */
+    private function guardDemoAccount(Model $item): void
+    {
+        if (config('atrium.demo.enabled') && $item instanceof AdminUser && $item->email === config('atrium.demo.email')) {
             abort(403, __('atrium::permissions.forbidden'));
         }
     }

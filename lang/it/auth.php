@@ -23,6 +23,8 @@ return [
         'submit' => 'Accedi',
         'submitting' => 'Accesso in corso…',
         'or' => 'oppure',
+        'demo_title' => 'Demo pubblica',
+        'demo_text' => 'Accedi con i dati qui sotto, sono già compilati. Tutto ciò che modifichi qui viene ripristinato di tanto in tanto.',
     ],
 
     'validation' => [

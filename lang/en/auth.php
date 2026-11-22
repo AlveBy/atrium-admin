@@ -24,6 +24,8 @@ return [
         'submit' => 'Sign in',
         'submitting' => 'Signing in…',
         'or' => 'or',
+        'demo_title' => 'Public demo',
+        'demo_text' => 'Sign in with the details below. They are already filled in. Whatever you change here is reset from time to time.',
     ],
 
     'validation' => [

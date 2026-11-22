@@ -23,6 +23,8 @@ return [
         'submit' => 'Entrar',
         'submitting' => 'Entrando…',
         'or' => 'ou',
+        'demo_title' => 'Demonstração pública',
+        'demo_text' => 'Entre com os dados abaixo, eles já estão preenchidos. Tudo o que você alterar aqui é redefinido de tempos em tempos.',
     ],
 
     'validation' => [

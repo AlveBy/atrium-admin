@@ -23,6 +23,8 @@ return [
         'submit' => 'Giriş yap',
         'submitting' => 'Giriş yapılıyor…',
         'or' => 'veya',
+        'demo_title' => 'Herkese açık demo',
+        'demo_text' => 'Aşağıdaki bilgilerle giriş yapın, bilgiler zaten doldurulmuş durumda. Burada yaptığınız her değişiklik zaman zaman sıfırlanır.',
     ],
 
     'validation' => [

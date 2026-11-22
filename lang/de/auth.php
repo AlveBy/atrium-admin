@@ -23,6 +23,8 @@ return [
         'submit' => 'Anmelden',
         'submitting' => 'Anmeldung läuft…',
         'or' => 'oder',
+        'demo_title' => 'Öffentliche Demo',
+        'demo_text' => 'Melden Sie sich mit den Angaben unten an, sie sind schon eingetragen. Alles, was Sie hier ändern, wird von Zeit zu Zeit zurückgesetzt.',
     ],
 
     'validation' => [

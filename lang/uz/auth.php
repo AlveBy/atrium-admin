@@ -23,6 +23,8 @@ return [
         'submit' => 'Kirish',
         'submitting' => 'Kirilmoqda…',
         'or' => 'yoki',
+        'demo_title' => 'Ommaviy demo',
+        'demo_text' => 'Quyidagi ma’lumotlar bilan kiring: ular allaqachon kiritib qo‘yilgan. Bu yerda o‘zgartirganingiz vaqti-vaqti bilan asl holiga qaytariladi.',
     ],
 
     'validation' => [

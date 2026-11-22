@@ -23,6 +23,8 @@ return [
         'submit' => '登录',
         'submitting' => '正在登录…',
         'or' => '或',
+        'demo_title' => '公开演示',
+        'demo_text' => '请使用下面的账号登录，信息已经填好。你在这里所做的任何更改都会定期重置。',
     ],
 
     'validation' => [

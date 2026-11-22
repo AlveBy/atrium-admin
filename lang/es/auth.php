@@ -23,6 +23,8 @@ return [
         'submit' => 'Iniciar sesión',
         'submitting' => 'Iniciando sesión…',
         'or' => 'o',
+        'demo_title' => 'Demo pública',
+        'demo_text' => 'Inicie sesión con los datos de abajo, ya están rellenados. Todo lo que cambie aquí se restablece de vez en cuando.',
     ],
 
     'validation' => [

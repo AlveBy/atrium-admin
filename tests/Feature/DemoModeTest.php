@@ -17,6 +17,7 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Console\ClosureCommand;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia;
 
 /**
  * A public demo (docs/demo.md): the reset puts everything back, and the
@@ -233,5 +234,83 @@ final class DemoModeTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame('Ann', AdminUser::query()->sole()->name);
+    }
+
+    public function test_the_sign_in_page_of_a_demo_shows_the_visitors_e_mail_and_password(): void
+    {
+        $this->demo();
+        config(['atrium.demo.password' => 'try-me-1']);
+
+        $this->get('/admin/login')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Admin/Auth/Login')
+                ->where('demo', ['email' => 'visitor@demo.test', 'password' => 'try-me-1']));
+    }
+
+    public function test_the_details_the_sign_in_page_shows_let_the_visitor_in(): void
+    {
+        $this->demo();
+        $this->artisan('atrium:demo:reset')->assertSuccessful();
+
+        $shown = $this->get('/admin/login')->viewData('page')['props']['demo'];
+
+        $this->post('/admin/login', $shown)->assertRedirect('/admin');
+        $this->assertAuthenticatedAs(AdminUser::query()->sole(), 'admin');
+    }
+
+    public function test_the_sign_in_page_of_a_site_that_is_not_a_demo_shows_no_details(): void
+    {
+        config(['atrium.demo.email' => 'visitor@demo.test', 'atrium.demo.password' => 'demo']);
+
+        $this->get('/admin/login')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('demo', null));
+    }
+
+    public function test_nobody_changes_or_deletes_the_demo_account_through_the_list_of_administrators(): void
+    {
+        $this->demo();
+        // A role that may do everything with administrators: the lock does not depend on it.
+        config(['atrium.demo.read_only' => []]);
+        $this->artisan('atrium:demo:reset')->assertSuccessful();
+        $visitor = AdminUser::query()->sole();
+        $other = AdminUser::query()->create(['name' => 'Other', 'email' => 'other@example.com', 'password' => 'secret-password', 'is_active' => true]);
+        $this->actingAs($visitor, 'admin');
+
+        $this->put("/admin/users/{$visitor->id}", ['name' => 'Mallory', 'email' => 'mallory@example.com', 'password' => 'new-password-1'])->assertForbidden();
+        $this->delete("/admin/users/{$visitor->id}")->assertForbidden();
+
+        $visitor->refresh();
+        $this->assertSame('Demo', $visitor->name);
+        $this->assertTrue(Hash::check('demo', $visitor->password));
+
+        // Other accounts are not part of the demo's visitor: the lock is theirs alone.
+        $this->put("/admin/users/{$other->id}", ['name' => 'Olga', 'email' => 'other@example.com'])->assertRedirect();
+        $this->assertSame('Olga', $other->fresh()->name);
+        $this->delete("/admin/users/{$other->id}")->assertRedirect();
+        $this->assertNull(AdminUser::query()->find($other->id));
+    }
+
+    public function test_the_account_of_a_site_that_is_not_a_demo_is_edited_as_usual(): void
+    {
+        $user = $this->admin();
+        config(['atrium.demo.email' => $user->email]);
+        $this->actingAs($user, 'admin');
+
+        $this->put("/admin/users/{$user->id}", ['name' => 'Ada', 'email' => $user->email])->assertRedirect();
+        $this->assertSame('Ada', $user->fresh()->name);
+    }
+
+    public function test_no_module_settings_are_saved_in_a_demo_not_even_by_a_superadmin(): void
+    {
+        $this->demo();
+
+        $this->actingAs($this->admin(), 'admin')->put('/admin/modules/anything/settings', ['x' => 'y'])->assertForbidden();
+    }
+
+    public function test_module_settings_are_not_locked_on_a_site_that_is_not_a_demo(): void
+    {
+        $this->actingAs($this->admin(), 'admin')->put('/admin/modules/anything/settings', ['x' => 'y'])->assertNotFound();
     }
 }

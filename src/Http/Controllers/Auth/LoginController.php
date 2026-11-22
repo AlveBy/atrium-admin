@@ -30,6 +30,11 @@ class LoginController extends Controller
             // Buttons of the sign-in modules that are switched on: social
             // accounts, a passkey, a code by e-mail.
             'methods' => app(SignIn::class)->methods((string) config('atrium.auth.guard', 'admin')),
+            // A public demo (docs/demo.md) tells everybody how to get in.
+            'demo' => config('atrium.demo.enabled') ? [
+                'email' => config()->string('atrium.demo.email'),
+                'password' => config()->string('atrium.demo.password'),
+            ] : null,
         ]);
     }
 
