@@ -205,7 +205,7 @@ final class ImportControllerTest extends TransferTestCase
         $this->assertSame('prices.csv', $import->original_name);
         $this->assertSame(['csv', 'UTF-8', ';', ['Article', 'Name', 'Price'], 3], [$import->format, $import->encoding, $import->delimiter, $import->headers, $import->total]);
         $this->assertSame(['article', 'name', 'price'], $import->mapping);
-        $this->assertNull($import->options);
+        $this->assertSame(['key' => 'article'], $import->options);
         $this->assertMatchesRegularExpression('/^[0-9a-f-]{36}\.csv$/', $import->file);
         $this->assertFileExists($import->path());
         $this->assertSame("2,A-1,Parka,1299\n3,A-2,Coat,99\n4,A-3,Hat,5\n", file_get_contents($import->path()));
@@ -241,6 +241,31 @@ final class ImportControllerTest extends TransferTestCase
         $this->assertSame($name, DataImport::query()->sole()->original_name);
     }
 
+    public function test_a_file_seen_for_the_first_time_is_found_by_the_first_key_its_columns_have(): void
+    {
+        $this->upload("Code;Name\nc-1;Parka\n");
+
+        $this->assertSame(['key' => 'code'], DataImport::query()->sole()->options);
+    }
+
+    public function test_a_file_with_no_key_column_gets_the_first_key_of_the_module(): void
+    {
+        $this->upload("Name;Price\nParka;1299\n");
+
+        $this->assertSame(['key' => 'article'], DataImport::query()->sole()->options);
+    }
+
+    public function test_the_screen_of_a_new_upload_has_the_key_chosen(): void
+    {
+        $admin = $this->admin();
+        $this->upload(as: $admin);
+        $import = DataImport::query()->sole();
+
+        $props = $this->props($this->actingAs($admin, 'admin')->get("/admin/parcels/import/{$import->id}"));
+
+        $this->assertSame('article', $props['import']['options']['key']);
+    }
+
     public function test_a_file_with_the_columns_of_an_earlier_import_is_mapped_and_set_up_as_that_one_was(): void
     {
         $this->makeImport(['mapping' => [null, 'code', 'price'], 'options' => ['key' => 'code', 'mode' => 'create']]);
@@ -273,7 +298,7 @@ final class ImportControllerTest extends TransferTestCase
 
         $import = DataImport::query()->latest('id')->first();
         $this->assertSame(['article', 'name', 'price'], $import->mapping);
-        $this->assertNull($import->options);
+        $this->assertSame(['key' => 'article'], $import->options);
     }
 
     public function test_only_the_last_twenty_imports_are_searched_for_the_same_columns(): void

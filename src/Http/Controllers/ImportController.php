@@ -79,6 +79,8 @@ final class ImportController extends Controller
         // The mapping of the last import of a file with these very columns.
         $previous = DataImport::query()->where('module', $module)->whereNotNull('mapping')->latest('id')->limit(20)->get()
             ->first(static fn (DataImport $import): bool => $import->headers === $read['headers']);
+        $targets = Targets::for($model);
+        $mapping = $previous->mapping ?? $targets->guess($read['headers']);
 
         $import = DataImport::query()->create([
             ...$read,
@@ -87,8 +89,9 @@ final class ImportController extends Controller
             'status' => DataImport::NEW,
             'original_name' => mb_substr($request->file('file')->getClientOriginalName(), 0, 255),
             'file' => $file,
-            'mapping' => $previous->mapping ?? Targets::for($model)->guess($read['headers']),
-            'options' => $previous?->options,
+            'mapping' => $mapping,
+            // A file seen for the first time is found by the first key its columns have: the select is never left empty.
+            'options' => $previous->options ?? ['key' => Settings::key($mapping, $targets)],
         ]);
 
         return redirect()->route("admin.{$module}.import.show", $import);
