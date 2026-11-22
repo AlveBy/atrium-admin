@@ -1,1 +1,0 @@
-function e(e,t,n){let r=Object.fromEntries(Object.entries(t.fill||{}).map(([e,t])=>[e,n[t]]));return route(`${e}.create`,r)}export{e as t};

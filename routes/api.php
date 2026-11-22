@@ -34,6 +34,9 @@ Route::prefix(config('atrium.api.prefix', 'api/v1'))
             Route::post('files', [ResourceController::class, 'upload'])->name('admin.api.files');
 
             Route::get('{resource}', [ResourceController::class, 'listItems'])->name('admin.api.list');
+            Route::get('{resource}/actions', [ResourceController::class, 'listActions'])->name('admin.api.actions');
+            Route::post('{resource}/bulk/{action}', [ResourceController::class, 'runBulkItemsAction'])->where('action', '[A-Za-z0-9_-]+')->name('admin.api.bulk');
+            Route::post('{resource}/{id}/actions/{action}', [ResourceController::class, 'runItemAction'])->where('action', '[A-Za-z0-9_-]+')->name('admin.api.action');
             Route::post('{resource}', [ResourceController::class, 'storeItem'])->name('admin.api.store');
             Route::get('{resource}/{id}', [ResourceController::class, 'showItem'])->name('admin.api.show');
             Route::match(['put', 'patch'], '{resource}/{id}', [ResourceController::class, 'updateItem'])->name('admin.api.update');

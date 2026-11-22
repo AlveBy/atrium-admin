@@ -13,6 +13,7 @@ return [
     'save' => 'Kaydet',
     'saving' => 'Kaydediliyor…',
     'cancel' => 'İptal',
+    'close' => 'Kapat',
     'back' => 'Geri',
     'create' => 'Oluştur',
     'edit' => 'Düzenle',

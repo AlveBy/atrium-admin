@@ -75,11 +75,18 @@ const closeSidebar = () => {
             <!-- Page content -->
             <main data-page-content="true" class="p-4 lg:p-6">
                 <!-- Flash messages -->
-                <div v-if="$page.props.flash?.success" data-flash="success" class="mb-4 p-4 bg-success-soft border border-success text-success-soft-fg rounded">
-                    {{ $page.props.flash.success }}
+                <!-- Success and error differ by icon and by the word read out, not only by colour. -->
+                <div v-if="$page.props.flash?.success" data-flash="success" role="status" class="mb-4 flex items-start gap-3 p-4 bg-success-soft border border-success text-success-soft-fg rounded">
+                    <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span class="sr-only">{{ $t('actions.success') }}: </span>{{ $page.props.flash.success }}</span>
                 </div>
-                <div v-if="$page.props.flash?.error" data-flash="error" class="mb-4 p-4 bg-danger-soft border border-danger text-danger-soft-fg rounded">
-                    {{ $page.props.flash.error }}
+                <div v-if="$page.props.flash?.error" data-flash="error" role="alert" class="mb-4 flex items-start gap-3 p-4 bg-danger-soft border border-danger text-danger-soft-fg rounded">
+                    <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    <span><span class="sr-only">{{ $t('actions.error') }}: </span>{{ $page.props.flash.error }}</span>
                 </div>
 
                 <slot />

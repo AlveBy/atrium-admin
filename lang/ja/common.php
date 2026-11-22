@@ -13,6 +13,7 @@ return [
     'save' => '保存',
     'saving' => '保存中…',
     'cancel' => 'キャンセル',
+    'close' => '閉じる',
     'back' => '戻る',
     'create' => '作成',
     'edit' => '編集',

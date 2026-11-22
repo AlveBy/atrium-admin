@@ -13,6 +13,7 @@ return [
     'save' => 'Guardar',
     'saving' => 'Guardando…',
     'cancel' => 'Cancelar',
+    'close' => 'Cerrar',
     'back' => 'Volver',
     'create' => 'Crear',
     'edit' => 'Editar',

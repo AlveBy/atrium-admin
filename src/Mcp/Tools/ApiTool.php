@@ -12,6 +12,7 @@ namespace Atrium\Admin\Mcp\Tools;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Models\AdminUser;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -42,6 +43,26 @@ abstract class ApiTool extends Tool
         $module = (string) $request->get('module', '');
 
         return app(ApiResources::class)->model($module) === null ? null : $module;
+    }
+
+    protected function actionArgument(JsonSchema $schema): Type
+    {
+        return $schema->string()->description('Action name from list_actions, e.g. "delete".')->required();
+    }
+
+    /**
+     * The action name, only if it is one: it becomes part of the API address.
+     */
+    protected function action(Request $request): ?string
+    {
+        $action = (string) $request->get('action', '');
+
+        return preg_match('/^[A-Za-z0-9_-]+$/', $action) === 1 ? $action : null;
+    }
+
+    protected function unknownAction(Request $request): Response
+    {
+        return Response::error('No action "'.$request->get('action', '').'". See list_actions.');
     }
 
     protected function unknownModule(Request $request): Response

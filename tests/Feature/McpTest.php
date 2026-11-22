@@ -46,7 +46,7 @@ final class McpTest extends TestCase
         $names = array_column($this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools'), 'name');
 
         $this->assertSame(
-            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record'],
+            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action'],
             $names,
         );
     }
@@ -146,6 +146,8 @@ final class McpTest extends TestCase
             'create_record' => ['create_record', ['data' => ['name' => 'x']]],
             'update_record' => ['update_record', ['id' => 1, 'data' => ['name' => 'x']]],
             'delete_record' => ['delete_record', ['id' => 1]],
+            'list_actions' => ['list_actions', []],
+            'run_bulk_action' => ['run_bulk_action', ['ids' => [1], 'action' => 'delete']],
         ];
     }
 
@@ -277,7 +279,7 @@ final class McpTest extends TestCase
         $names = array_column($this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools'), 'name');
 
         $this->assertSame(
-            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record'],
+            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action'],
             $names,
             'Listed once, in the order given.',
         );
@@ -288,6 +290,7 @@ final class McpTest extends TestCase
         $module = ['description' => 'Module key from list_modules, e.g. "articles".', 'type' => 'string'];
         $site = ['description' => 'Site code, when the record belongs to another site than this address.', 'type' => 'string'];
         $id = ['description' => 'Record id.', 'type' => 'integer'];
+        $action = ['description' => 'Action name from list_actions, e.g. "delete".', 'type' => 'string'];
 
         $expected = [
             'list_modules' => [],
@@ -315,6 +318,14 @@ final class McpTest extends TestCase
                 'data' => ['description' => 'The fields to change, keyed by field name.', 'type' => 'object'],
             ], 'required' => ['module', 'id', 'data']],
             'delete_record' => ['properties' => ['module' => $module, 'site' => $site, 'id' => $id], 'required' => ['module', 'id']],
+            'list_actions' => ['properties' => ['module' => $module, 'site' => $site], 'required' => ['module']],
+            'run_record_action' => ['properties' => ['module' => $module, 'site' => $site, 'id' => $id, 'action' => $action], 'required' => ['module', 'id', 'action']],
+            'run_bulk_action' => ['properties' => [
+                'module' => $module,
+                'site' => $site,
+                'ids' => ['description' => 'Ids of the records.', 'type' => 'array', 'items' => ['type' => 'integer']],
+                'action' => $action,
+            ], 'required' => ['module', 'ids', 'action']],
         ];
 
         $tools = $this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools');
@@ -408,7 +419,7 @@ final class McpTest extends TestCase
             $names = array_column($this->mcp($token, 'tools/list')->json('result.tools'), 'name');
 
             $this->assertSame(
-                ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record'],
+                ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action'],
                 $names,
             );
         }

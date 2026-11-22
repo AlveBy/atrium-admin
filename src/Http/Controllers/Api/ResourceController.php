@@ -9,6 +9,11 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Http\Controllers\Api;
 
+use Atrium\Admin\Actions\Action;
+use Atrium\Admin\Actions\ActionResult;
+use Atrium\Admin\Actions\BulkAction;
+use Atrium\Admin\Actions\ModuleActions;
+use Atrium\Admin\Actions\RecordAction;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Facades\Hook;
@@ -157,6 +162,53 @@ class ResourceController extends AdminController
     }
 
     /**
+     * The buttons of a module the token may run: server actions on a record
+     * and actions over a list of records. Links and filled create forms are
+     * the panel's own and are not listed.
+     */
+    public function listActions(Request $request, string $resource): JsonResponse
+    {
+        $this->useResource($request, $resource, 'read', Permissions::VIEW);
+
+        $actions = app(ModuleActions::class);
+        $usable = fn (Action $action): bool => $actions->allows($request->user(), $action, $this->model)
+            && $request->user()->tokenCan($resource.':'.$this->tokenMode($action, $resource));
+        $describe = static fn (Action $action): array => [...$action->toArray(), 'permission' => $action->permissionIn($resource)];
+
+        return response()->json(['data' => [
+            'record' => array_values(array_map($describe, array_filter($actions->forRecords($this->model), static fn (mixed $action): bool => $action instanceof RecordAction && $usable($action)))),
+            'bulk' => array_values(array_map($describe, array_filter($actions->forSelection($this->model), $usable))),
+        ]]);
+    }
+
+    /**
+     * Runs a server action on a record, as its button in the panel does.
+     */
+    public function runItemAction(Request $request, string $resource, int $id, string $action): JsonResponse
+    {
+        $this->useResource($request, $resource, 'read', Permissions::VIEW);
+
+        $actions = app(ModuleActions::class);
+        $found = $this->usableAction($request, $resource, $actions->find($actions->forRecords($this->model), $action, RecordAction::class, $request->user(), $this->model));
+
+        return $this->actionJson($found->handle($this->findItem($id)));
+    }
+
+    /**
+     * Runs an action over the records `ids` names: those of them the
+     * token's owner may see in the current site.
+     */
+    public function runBulkItemsAction(Request $request, string $resource, string $action): JsonResponse
+    {
+        $this->useResource($request, $resource, 'read', Permissions::VIEW);
+
+        $actions = app(ModuleActions::class);
+        $found = $this->usableAction($request, $resource, $actions->find($actions->forSelection($this->model), $action, BulkAction::class, $request->user(), $this->model));
+
+        return $this->actionJson($actions->runBulk($found, $this->model, $actions->selectedIds($request)));
+    }
+
+    /**
      * File upload into the media library — the same code as in the admin panel.
      * The returned `url` goes into an image field or a gallery list.
      */
@@ -205,6 +257,38 @@ class ResourceController extends AdminController
         abort_unless($owner instanceof AdminUser && $owner->hasAdminPermission("{$resource}.{$action}"), 403, "The token owner lacks the {$resource}.{$action} permission.");
 
         $this->model = $model;
+    }
+
+    /**
+     * An action that only reads (its permission is a `view`) needs a read
+     * token; any other a write one.
+     */
+    private function tokenMode(Action $action, string $resource): string
+    {
+        return str_ends_with($action->permissionIn($resource), '.'.Permissions::VIEW) ? 'read' : 'write';
+    }
+
+    /**
+     * @template T of Action
+     *
+     * @param  T  $action
+     * @return T
+     */
+    private function usableAction(Request $request, string $resource, Action $action): Action
+    {
+        $mode = $this->tokenMode($action, $resource);
+
+        abort_unless($request->user()->tokenCan("{$resource}:{$mode}"), 403, "The token lacks the {$resource}:{$mode} ability.");
+
+        return $action;
+    }
+
+    /**
+     * 200 with the message, or 422 when the action says it failed.
+     */
+    private function actionJson(ActionResult $result): JsonResponse
+    {
+        return response()->json(['message' => $result->message(), 'redirect' => $result->redirectUrl()], $result->isSuccessful() ? 200 : 422);
     }
 
     /**

@@ -51,8 +51,8 @@ final class RecordActionsTest extends TestCase
     {
         $chapter = Chapter::query()->create(['name' => 'One']);
         $expected = [
-            ['name' => 'subchapter', 'label' => 'Subchapter', 'fill' => ['parent_id' => 'id']],
-            ['name' => 'sibling', 'label' => 'Same kind', 'fill' => ['kind' => 'kind']],
+            ['type' => 'create', 'name' => 'subchapter', 'label' => 'Subchapter', 'fill' => ['parent_id' => 'id']],
+            ['type' => 'create', 'name' => 'sibling', 'label' => 'Same kind', 'fill' => ['kind' => 'kind']],
         ];
 
         $this->actingAs($this->admin(), 'admin');

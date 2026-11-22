@@ -67,6 +67,9 @@ final class Permissions
         'store' => self::CREATE,
         'update' => self::UPDATE,
         'destroy' => self::DELETE,
+        // A button checks its own permission on top.
+        'action' => self::VIEW,
+        'bulk' => self::VIEW,
     ];
 
     public function __construct(

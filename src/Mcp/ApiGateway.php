@@ -32,12 +32,14 @@ final class ApiGateway
     public function call(string $method, string $path, array $query = [], ?array $body = null): Response
     {
         $current = request();
-        $uri = '/'.trim((string) config('atrium.api.prefix', 'api/v1'), '/').'/'.ltrim($path, '/');
+        // The query goes into the address whatever the method: given to
+        // Request::create() apart, a POST would carry it in its body, where
+        // "site" is not looked for.
+        $uri = '/'.trim((string) config('atrium.api.prefix', 'api/v1'), '/').'/'.ltrim($path, '/').'?'.http_build_query($query);
 
         $sub = Request::create(
             $current->getSchemeAndHttpHost().$uri,
             $method,
-            $query,
             server: ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'],
             content: $body === null ? null : json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         );

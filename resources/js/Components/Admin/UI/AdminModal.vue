@@ -4,7 +4,7 @@
  * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
  */
 
-import { watch } from 'vue'
+import { nextTick, ref, useId, watch } from 'vue'
 
 const props = defineProps({
     show: Boolean,
@@ -35,13 +35,42 @@ const maxWidthClass = {
     '2xl': 'sm:max-w-2xl',
 }
 
-watch(() => props.show, (show) => {
+const titleId = useId()
+const panel = ref(null)
+// Where the keyboard was before the window opened: it goes back there.
+let returnFocus = null
+
+watch(() => props.show, async (show) => {
     if (show) {
         document.body.style.overflow = 'hidden'
+        returnFocus = document.activeElement
+        await nextTick()
+        // The last button of the footer is the window's answer ("Delete",
+        // "Continue"); without a footer, the first control inside.
+        const buttons = panel.value?.querySelectorAll('[data-modal-footer] button')
+        const target = buttons?.length ? buttons[buttons.length - 1] : panel.value?.querySelector('button, [href], input, select, textarea')
+        target?.focus()
     } else {
         document.body.style.overflow = ''
+        returnFocus?.focus?.()
+        returnFocus = null
     }
 })
+
+// Tab stays inside the window while it is open.
+const trapTab = (event) => {
+    const controls = [...(panel.value?.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea') || [])]
+    if (!controls.length) return
+    const first = controls[0]
+    const last = controls[controls.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+    }
+}
 </script>
 
 <template>
@@ -54,7 +83,13 @@ watch(() => props.show, (show) => {
             leave-from-class="opacity-100"
             leave-to-class="opacity-0"
         >
-            <div v-if="show" data-modal="true" class="fixed inset-0 z-50 overflow-y-auto">
+            <div
+                v-if="show"
+                data-modal="true"
+                class="fixed inset-0 z-50 overflow-y-auto"
+                @keydown.esc="close"
+                @keydown.tab="trapTab"
+            >
                 <!-- Backdrop -->
                 <div
                     class="fixed inset-0 bg-black/50 transition-opacity"
@@ -73,20 +108,26 @@ watch(() => props.show, (show) => {
                     >
                         <div
                             v-if="show"
+                            ref="panel"
+                            role="dialog"
+                            aria-modal="true"
+                            :aria-labelledby="title ? titleId : null"
                             class="relative transform overflow-hidden rounded-lg bg-surface shadow-xl transition-all sm:my-8 sm:w-full"
                             :class="maxWidthClass[maxWidth]"
                         >
                             <!-- Header -->
                             <div v-if="title || $slots.header" class="px-6 py-4 border-b border-line">
                                 <slot name="header">
-                                    <h3 class="text-lg font-medium text-fg">{{ title }}</h3>
+                                    <h3 :id="titleId" class="text-lg font-medium text-fg">{{ title }}</h3>
                                 </slot>
                                 <button
                                     v-if="closeable"
+                                    type="button"
                                     @click="close"
-                                    class="absolute top-4 right-4 text-muted hover:text-fg"
+                                    class="absolute top-4 right-4 rounded text-muted hover:text-fg focus:outline-none focus:ring-2 focus:ring-focus"
+                                    :aria-label="$t('common.close')"
                                 >
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="h-5 w-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
@@ -98,7 +139,7 @@ watch(() => props.show, (show) => {
                             </div>
 
                             <!-- Footer -->
-                            <div v-if="$slots.footer" class="px-6 py-4 border-t border-line bg-surface-alt flex justify-end space-x-3">
+                            <div v-if="$slots.footer" data-modal-footer class="px-6 py-4 border-t border-line bg-surface-alt flex justify-end space-x-3">
                                 <slot name="footer" />
                             </div>
                         </div>

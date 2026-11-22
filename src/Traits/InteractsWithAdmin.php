@@ -9,7 +9,10 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Traits;
 
+use Atrium\Admin\Actions\BulkAction;
 use Atrium\Admin\Actions\CreateFromRecord;
+use Atrium\Admin\Actions\LinkAction;
+use Atrium\Admin\Actions\RecordAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
@@ -57,11 +60,25 @@ trait InteractsWithAdmin
 
     /**
      * Buttons on a record, in the list and on its form: CreateFromRecord
-     * opens the create form filled from the record (a subpage, a copy).
+     * opens the create form filled from the record (a subpage, a copy),
+     * LinkAction an address, a RecordAction runs on the server. Other
+     * modules add theirs through the `atrium.module.actions` hook.
      *
-     * @return array<int,CreateFromRecord>
+     * @return array<int,CreateFromRecord|LinkAction|RecordAction>
      */
     public static function getAdministrationActions(): array
+    {
+        return [];
+    }
+
+    /**
+     * Buttons over the records selected in the list, after the standard
+     * "Delete". Other modules add theirs through the
+     * `atrium.module.bulk_actions` hook.
+     *
+     * @return array<int,BulkAction>
+     */
+    public static function getAdministrationBulkActions(): array
     {
         return [];
     }

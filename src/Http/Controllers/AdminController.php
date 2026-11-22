@@ -9,7 +9,13 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Http\Controllers;
 
+use Atrium\Admin\Actions\Action;
+use Atrium\Admin\Actions\ActionResult;
+use Atrium\Admin\Actions\BulkAction;
 use Atrium\Admin\Actions\CreateFromRecord;
+use Atrium\Admin\Actions\LinkAction;
+use Atrium\Admin\Actions\ModuleActions;
+use Atrium\Admin\Actions\RecordAction;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Contracts\Administrable;
@@ -22,6 +28,7 @@ use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Like;
 use Atrium\Admin\Support\PublicUrl;
+use Atrium\Admin\Support\RecordDeleter;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Traits\BelongsToSite;
 use Illuminate\Database\Eloquent\Collection;
@@ -36,6 +43,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 abstract class AdminController extends Controller
 {
@@ -85,28 +93,122 @@ abstract class AdminController extends Controller
             'routeName' => $this->model::getAdminRouteName(),
             'createLabel' => $this->model::getAdminCreateLabel(),
             'can' => $can,
-            // Buttons on a record that open the create form filled from it.
-            'actions' => $can[Permissions::CREATE]
-                ? array_map(static fn (CreateFromRecord $action): array => $action->toArray(), $this->createActions())
-                : [],
+            // Buttons on a record: a filled create form, a link, a server action.
+            'actions' => array_map(
+                static fn (CreateFromRecord|Action $action): array => $action instanceof Action ? $action->toArray() : ['type' => 'create', ...$action->toArray()],
+                $this->visibleRecordActions($can),
+            ),
         ];
     }
 
     /**
-     * The module's CreateFromRecord actions (InteractsWithAdmin::getAdministrationActions()).
+     * The record buttons this administrator may use: a filled create form
+     * for those who may create here, the others by their own permission.
+     *
+     * @param  array{view:bool,create:bool,update:bool,delete:bool}  $can
+     * @return array<int,CreateFromRecord|Action>
+     */
+    private function visibleRecordActions(array $can): array
+    {
+        $actions = app(ModuleActions::class);
+        $user = $this->currentAdmin();
+
+        return array_values(array_filter(
+            $actions->forRecords($this->model),
+            fn (CreateFromRecord|Action $action): bool => $action instanceof CreateFromRecord ? $can[Permissions::CREATE] : $actions->allows($user, $action, $this->model),
+        ));
+    }
+
+    /**
+     * Where the link buttons of each record lead: record id => name => address.
+     *
+     * @param  iterable<int,Model>  $records
+     * @return array<int|string,array<string,string>>
+     */
+    private function actionUrls(iterable $records): array
+    {
+        $links = array_filter($this->visibleRecordActions($this->abilities()), static fn (CreateFromRecord|Action $action): bool => $action instanceof LinkAction);
+        $urls = [];
+
+        foreach ($records as $record) {
+            foreach ($links as $link) {
+                $urls[$record->getKey()][$link->getName()] = $link->href($record);
+            }
+        }
+
+        return $urls;
+    }
+
+    /**
+     * The bulk buttons of the list this administrator may use. Inertia sends
+     * them as their toArray().
+     *
+     * @return array<int,BulkAction>
+     */
+    private function visibleBulkActions(): array
+    {
+        $actions = app(ModuleActions::class);
+        $user = $this->currentAdmin();
+
+        return array_values(array_filter($actions->forSelection($this->model), fn (BulkAction $action): bool => $actions->allows($user, $action, $this->model)));
+    }
+
+    /**
+     * Who is signed in to the panel.
+     */
+    private function currentAdmin(): mixed
+    {
+        return auth()->guard(config('atrium.auth.guard', 'admin'))->user();
+    }
+
+    /**
+     * The module's CreateFromRecord actions, its own and the ones added by
+     * the `atrium.module.actions` hook.
      *
      * @return array<int,CreateFromRecord>
      */
     protected function createActions(): array
     {
-        if (! method_exists($this->model, 'getAdministrationActions')) {
-            return [];
-        }
+        return array_filter(
+            app(ModuleActions::class)->forRecords($this->model),
+            static fn (CreateFromRecord|Action $action): bool => $action instanceof CreateFromRecord,
+        );
+    }
 
-        return array_values(array_filter(
-            (array) $this->model::getAdministrationActions(),
-            static fn (mixed $action): bool => $action instanceof CreateFromRecord,
-        ));
+    /**
+     * Runs a server button of a record (RecordAction): 404 for a name the
+     * module does not have, 403 for one the administrator may not use.
+     */
+    public function runAction(int $id, string $action): HttpResponse
+    {
+        $actions = app(ModuleActions::class);
+        $found = $actions->find($actions->forRecords($this->model), $action, RecordAction::class, $this->currentAdmin(), $this->model);
+
+        return $this->actionResponse($found->handle($this->findItem($id)));
+    }
+
+    /**
+     * Runs a bulk button over the records selected in the list.
+     */
+    public function runBulkAction(Request $request, string $action): HttpResponse
+    {
+        $actions = app(ModuleActions::class);
+        $found = $actions->find($actions->forSelection($this->model), $action, BulkAction::class, $this->currentAdmin(), $this->model);
+
+        return $this->actionResponse($actions->runBulk($found, $this->model, $actions->selectedIds($request)));
+    }
+
+    /**
+     * The message as a flash, and back to the page, or on to where the
+     * action sends the administrator (a full visit: it may be another site).
+     */
+    private function actionResponse(ActionResult $result): HttpResponse
+    {
+        session()->flash($result->isSuccessful() ? 'success' : 'error', $result->message());
+
+        $url = $result->redirectUrl();
+
+        return $url === null ? back() : Inertia::location($url);
     }
 
     /**
@@ -213,6 +315,7 @@ abstract class AdminController extends Controller
         $items = $query->paginate($this->model::getAdminPerPage())->withQueryString();
 
         // Every row goes through listRow(): a package may present any of them.
+        $actionUrls = $this->actionUrls($items->getCollection());
         $items->through(fn (Model $item): array => $this->listRow($item, $related));
 
         return Inertia::render($this->getPagePrefix().'/Index', [
@@ -226,6 +329,8 @@ abstract class AdminController extends Controller
             ],
             'title' => $this->model::getAdminLabel(),
             'links' => Hook::apply('atrium.module.links', [], $this->model),
+            'bulkActions' => $this->visibleBulkActions(),
+            'actionUrls' => $actionUrls,
             ...$this->resourceProps(),
         ]);
     }
@@ -690,7 +795,7 @@ abstract class AdminController extends Controller
 
         $data = $this->prepareFormData('edit', $item);
 
-        return Inertia::render($this->getPagePrefix().'/Edit', [...$data, ...$this->resourceProps()]);
+        return Inertia::render($this->getPagePrefix().'/Edit', [...$data, 'actionUrls' => $this->actionUrls([$item]), ...$this->resourceProps()]);
     }
 
     /**
@@ -820,26 +925,7 @@ abstract class AdminController extends Controller
      */
     protected function deleteItem(Model&Administrable $item): bool
     {
-        $deleted = DB::transaction(static function () use ($item): ?Model {
-            // A retry after a deadlock starts again from the record as it came.
-            $record = clone $item;
-
-            if (! $record->beforeAdminDelete()) {
-                return null;
-            }
-
-            $record->delete();
-
-            return $record;
-        }, attempts: 3);
-
-        if ($deleted === null) {
-            return false;
-        }
-
-        DB::afterCommit(static fn () => Hook::fire('atrium.record.deleted', $deleted));
-
-        return true;
+        return app(RecordDeleter::class)->delete($item);
     }
 
     /**

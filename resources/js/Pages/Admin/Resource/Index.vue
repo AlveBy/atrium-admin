@@ -4,13 +4,14 @@
  * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
  */
 
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminDataTable from '../../../Components/Admin/Table/AdminDataTable.vue'
 import AdminModal from '../../../Components/Admin/UI/AdminModal.vue'
-import { recordActionHref } from '../../../Support/recordActions'
+import { recordActionHref, runRecordAction } from '../../../Support/recordActions'
+import { tc } from '../../../Support/i18n'
 
 const props = defineProps({
     routeName: String,
@@ -21,8 +22,12 @@ const props = defineProps({
     title: String,
     // view / create / update / delete — what the administrator's roles allow here.
     can: { type: Object, default: () => ({}) },
-    // Buttons on a record that open the create form filled from it.
+    // Buttons on a record: a filled create form, a link, a server action.
     actions: { type: Array, default: () => [] },
+    // Where the link buttons of each row lead: id => name => address.
+    actionUrls: { type: [Object, Array], default: () => ({}) },
+    // Buttons over the checked rows ("Delete" and the module's own).
+    bulkActions: { type: Array, default: () => [] },
     // Buttons above the list added by packages ("Fields" of custom fields).
     links: { type: Array, default: () => [] },
 })
@@ -35,8 +40,39 @@ const listFilters = Object.fromEntries(
 
 const rowActions = props.actions.map((action) => ({
     ...action,
-    href: (item) => recordActionHref(props.routeName, action, item),
+    href: (item) => recordActionHref(props.routeName, action, item, props.actionUrls),
 }))
+
+const selected = ref([])
+// After a search, a page turn or an action, rows that left the page leave
+// the selection too: a bulk button acts only on what is in front of the eyes.
+watch(() => props.items.data, (rows) => {
+    const ids = (rows || []).map((row) => row.id)
+    selected.value = selected.value.filter((id) => ids.includes(id))
+})
+
+// A button that asks first: { action, run }.
+const pending = ref(null)
+
+const ask = (action, run) => {
+    if (action.confirm) {
+        pending.value = { action, run }
+    } else {
+        run()
+    }
+}
+
+const confirmPending = () => {
+    const { run } = pending.value
+    pending.value = null
+    run()
+}
+
+const handleRecordAction = ({ action, item }) => ask(action, () => runRecordAction(props.routeName, action, item))
+
+const handleBulkAction = (action) => ask(action, () => {
+    router.post(route(`${props.routeName}.bulk`, { action: action.name }), { ids: selected.value }, { preserveScroll: true })
+})
 
 const search = ref(props.filters.search || '')
 const showDeleteModal = ref(false)
@@ -127,6 +163,43 @@ const handleDelete = () => {
             </div>
         </div>
 
+        <!--
+            The bar above the list while rows are checked. The count is read
+            out as it changes; "Delete" is told apart by its icon, not only
+            by its colour.
+        -->
+        <p class="sr-only" aria-live="polite">{{ selected.length ? tc('actions.bulk.selected', selected.length) : '' }}</p>
+        <div
+            v-if="bulkActions.length && selected.length"
+            role="region"
+            :aria-label="$t('actions.bulk.region')"
+            data-bulk-bar="true"
+            class="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-accent bg-accent-soft px-4 py-2 text-accent-soft-fg"
+        >
+            <span data-bulk-count class="text-sm font-semibold">{{ tc('actions.bulk.selected', selected.length) }}</span>
+            <AdminButton
+                v-for="action in bulkActions"
+                :key="action.name"
+                :data-bulk-action="action.name"
+                :variant="action.name === 'delete' ? 'danger' : 'secondary'"
+                size="sm"
+                @click="handleBulkAction(action)"
+            >
+                <svg v-if="action.name === 'delete'" class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                {{ action.label }}
+            </AdminButton>
+            <button
+                type="button"
+                data-bulk-clear
+                class="ml-auto rounded px-2 py-1 text-sm underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-focus"
+                @click="selected = []"
+            >
+                {{ $t('actions.bulk.clear') }}
+            </button>
+        </div>
+
         <AdminDataTable
             :columns="columns"
             :items="items"
@@ -134,6 +207,9 @@ const handleDelete = () => {
             :sort-direction="filters.direction"
             :can-delete="can.delete !== false"
             :row-actions="rowActions"
+            :selectable="bulkActions.length > 0"
+            v-model:selected="selected"
+            @action="handleRecordAction"
             @sort="handleSort"
             @edit="handleEdit"
             @delete="confirmDelete"
@@ -154,6 +230,27 @@ const handleDelete = () => {
                 </AdminButton>
                 <AdminButton data-action="delete-confirm" variant="danger" @click="handleDelete">
                     {{ $t('common.delete') }}
+                </AdminButton>
+            </template>
+        </AdminModal>
+
+        <AdminModal
+            :show="pending !== null"
+            :title="$t('actions.confirm_title')"
+            @close="pending = null"
+        >
+            <p data-action-question class="text-fg">{{ pending?.action.confirm }}</p>
+
+            <template #footer>
+                <AdminButton data-action="action-cancel" variant="secondary" @click="pending = null">
+                    {{ $t('common.cancel') }}
+                </AdminButton>
+                <AdminButton
+                    data-action="action-confirm"
+                    :variant="pending?.action.name === 'delete' ? 'danger' : 'primary'"
+                    @click="confirmPending"
+                >
+                    {{ pending?.action.label }}
                 </AdminButton>
             </template>
         </AdminModal>

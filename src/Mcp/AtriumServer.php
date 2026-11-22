@@ -13,8 +13,11 @@ use Atrium\Admin\Mcp\Tools\CreateRecord;
 use Atrium\Admin\Mcp\Tools\DeleteRecord;
 use Atrium\Admin\Mcp\Tools\DescribeModule;
 use Atrium\Admin\Mcp\Tools\GetRecord;
+use Atrium\Admin\Mcp\Tools\ListActions;
 use Atrium\Admin\Mcp\Tools\ListModules;
 use Atrium\Admin\Mcp\Tools\ListRecords;
+use Atrium\Admin\Mcp\Tools\RunBulkAction;
+use Atrium\Admin\Mcp\Tools\RunRecordAction;
 use Atrium\Admin\Mcp\Tools\UpdateRecord;
 use Laravel\Mcp\Server;
 
@@ -36,6 +39,7 @@ class AtriumServer extends Server
         - Before creating or changing records of a module, call `describe_module` to see its fields, which are required and what values they take.
         - Translatable fields take either a plain value (the default language) or an object keyed by language code, e.g. {"en": "Hello", "de": "Hallo"}.
         - `update_record` changes only the fields you send.
+        - Modules may have actions (publish, hide, delete several records at once): `list_actions` shows them, `run_record_action` and `run_bulk_action` run them.
         - With several sites, pass `site` (the site code) to work with another site than the one this address belongs to.
         - When a call is refused, the message says why: a missing token ability, a missing permission of the token owner, or the invalid fields.
         MARKDOWN;
@@ -48,6 +52,9 @@ class AtriumServer extends Server
         CreateRecord::class,
         UpdateRecord::class,
         DeleteRecord::class,
+        ListActions::class,
+        RunRecordAction::class,
+        RunBulkAction::class,
     ];
 
     /**

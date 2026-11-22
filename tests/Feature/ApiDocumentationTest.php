@@ -62,6 +62,13 @@ final class ApiDocumentationTest extends TestCase
         $response->assertSee('# shop.test API', false);
         $response->assertSee('Base URL: `http://shop.test/api/v1`', false);
         $response->assertSee('OpenAPI 3.1 schema: `http://shop.test/api/v1/openapi.json`', false);
+        $response->assertSeeInOrder([
+            "| Upload a file | `POST /files`, multipart/form-data, field `file` (jpg, png, gif, webp, pdf, doc, docx, xls, xlsx) |\n",
+            "| Actions the token may run | `GET /{module}/actions` |\n",
+            "| Run an action on a record | `POST /{module}/{id}/actions/{action}` |\n",
+            "| Run an action on several records | `POST /{module}/bulk/{action}` with `{\"ids\": [1, 2]}`, at most 1000 |\n\n",
+            'An action answers `{"message", "redirect"}`: 200 when it worked, 422 when it did not. `bulk/delete` deletes the records that may be deleted. An action with `confirm` set asks first in the admin panel: ask a human too.'."\n\n`per_page`",
+        ], false);
     }
 
     public function test_the_openapi_schema_is_public_json_with_unescaped_text(): void
@@ -105,7 +112,7 @@ final class ApiDocumentationTest extends TestCase
     public function test_only_the_modules_asked_for_are_described(string $only, array $modules): void
     {
         $paths = array_keys($this->getJson('/api/v1/openapi.json?only='.urlencode($only))->json('paths'));
-        $expected = array_merge(...array_map(static fn (string $key): array => ["/{$key}", "/{$key}/{id}"], $modules), ...[['/files']]);
+        $expected = array_merge(...array_map(static fn (string $key): array => ["/{$key}", "/{$key}/{id}"], $modules), ...[['/files', '/{module}/actions', '/{module}/bulk/{action}', '/{module}/{id}/actions/{action}']]);
         sort($paths);
         sort($expected);
 

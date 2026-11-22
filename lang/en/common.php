@@ -14,6 +14,7 @@ return [
     'save' => 'Save',
     'saving' => 'Saving…',
     'cancel' => 'Cancel',
+    'close' => 'Close',
     'back' => 'Back',
     'create' => 'Create',
     'edit' => 'Edit',

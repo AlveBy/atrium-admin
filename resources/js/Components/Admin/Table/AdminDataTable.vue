@@ -31,14 +31,47 @@ const props = defineProps({
         type: Boolean,
         default: true
     },
-    // [{ name, label, href(item) }]: links shown before the edit button.
+    // [{ type, name, label, new_tab, href(item) }]: record buttons shown
+    // before the edit button. A create form or a link is followed; a server
+    // action (type "record") is handed to the page as an `action` event.
     rowActions: {
+        type: Array,
+        default: () => []
+    },
+    // Rows get checkboxes when the list has bulk actions; v-model:selected
+    // holds the ids of the checked rows.
+    selectable: Boolean,
+    selected: {
         type: Array,
         default: () => []
     },
 })
 
-const emit = defineEmits(['sort', 'edit', 'delete'])
+const emit = defineEmits(['sort', 'edit', 'delete', 'action', 'update:selected'])
+
+const pageIds = computed(() => (props.items.data || []).map((item) => item.id))
+const allSelected = computed(() => pageIds.value.length > 0 && pageIds.value.every((id) => props.selected.includes(id)))
+// Some but not all: the header box shows a dash, not a tick.
+const someSelected = computed(() => !allSelected.value && pageIds.value.some((id) => props.selected.includes(id)))
+
+const toggleAll = () => {
+    emit('update:selected', allSelected.value
+        ? props.selected.filter((id) => !pageIds.value.includes(id))
+        : [...new Set([...props.selected, ...pageIds.value])])
+}
+
+const toggleRow = (id) => {
+    emit('update:selected', props.selected.includes(id) ? props.selected.filter((other) => other !== id) : [...props.selected, id])
+}
+
+// What a screen reader says for a row's box: the first text column, as the
+// row reads, or its number.
+const rowTitle = (item) => {
+    const column = props.columns.find((candidate) => !['image', 'boolean'].includes(candidate.type))
+    const value = column ? item[column.name] : null
+
+    return value === null || value === undefined || value === '' ? `#${item.id}` : String(value)
+}
 
 const handleSort = (column) => {
     if (!column.sortable) return
@@ -107,6 +140,19 @@ const cellTitle = (item, column) => {
             <table class="min-w-full border-separate border-spacing-0">
                 <thead class="bg-surface-alt">
                     <tr>
+                        <th v-if="selectable" scope="col" class="w-10 border-b border-line px-3 py-2">
+                            <input
+                                type="checkbox"
+                                data-select="page"
+                                class="h-4 w-4 rounded border-field text-accent focus:ring-2 focus:ring-focus"
+                                :checked="allSelected"
+                                :indeterminate="someSelected"
+                                :disabled="!pageIds.length"
+                                :aria-label="$t('actions.bulk.select_page')"
+                                :title="$t('actions.bulk.select_page')"
+                                @change="toggleAll"
+                            />
+                        </th>
                         <th
                             v-for="column in columns"
                             :key="column.name"
@@ -145,7 +191,7 @@ const cellTitle = (item, column) => {
                 </thead>
                 <tbody class="bg-surface">
                     <tr v-if="loading">
-                        <td :colspan="columns.length + 1" class="px-6 py-12 text-center">
+                        <td :colspan="columns.length + (selectable ? 2 : 1)" class="px-6 py-12 text-center">
                             <svg class="animate-spin h-8 w-8 text-accent mx-auto" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -153,11 +199,29 @@ const cellTitle = (item, column) => {
                         </td>
                     </tr>
                     <tr v-else-if="!items.data?.length">
-                        <td :colspan="columns.length + 1" class="px-6 py-12 text-center text-muted">
+                        <td :colspan="columns.length + (selectable ? 2 : 1)" class="px-6 py-12 text-center text-muted">
                             {{ $t('resource.table.empty') }}
                         </td>
                     </tr>
-                    <tr v-else v-for="item in items.data" :key="item.id" :data-row-id="item.id" class="bg-surface hover:bg-hover">
+                    <tr
+                        v-else
+                        v-for="item in items.data"
+                        :key="item.id"
+                        :data-row-id="item.id"
+                        :data-selected="selected.includes(item.id) ? 'true' : null"
+                        class="hover:bg-hover"
+                        :class="selected.includes(item.id) ? 'bg-accent-soft' : 'bg-surface'"
+                    >
+                        <td v-if="selectable" class="w-10 border-b border-line px-3 py-2">
+                            <input
+                                type="checkbox"
+                                data-select="row"
+                                class="h-4 w-4 rounded border-field text-accent focus:ring-2 focus:ring-focus"
+                                :checked="selected.includes(item.id)"
+                                :aria-label="$t('actions.bulk.select_row', { title: rowTitle(item) })"
+                                @change="toggleRow(item.id)"
+                            />
+                        </td>
                         <td
                             v-for="column in columns"
                             :key="column.name"
@@ -206,18 +270,45 @@ const cellTitle = (item, column) => {
                         </td>
                         <td class="sticky right-0 z-10 border-b border-l border-line bg-inherit px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
                             <slot name="actions" :item="item">
-                                <Link
-                                    v-for="action in rowActions"
-                                    :key="action.name"
-                                    :href="action.href(item)"
-                                    :data-action="action.name"
-                                    class="mr-1 inline-flex items-center rounded px-2 py-1 text-xs text-accent hover:bg-accent-soft hover:text-accent-hover"
-                                >
-                                    <svg class="mr-1 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    {{ action.label }}
-                                </Link>
+                                <template v-for="action in rowActions" :key="action.name">
+                                    <button
+                                        v-if="action.type === 'record'"
+                                        type="button"
+                                        :data-action="action.name"
+                                        class="mr-1 inline-flex items-center rounded px-2 py-1 text-xs text-accent hover:bg-accent-soft hover:text-accent-hover focus:outline-none focus:ring-2 focus:ring-focus"
+                                        @click="$emit('action', { action, item })"
+                                    >
+                                        <svg class="mr-1 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        {{ action.label }}
+                                    </button>
+                                    <a
+                                        v-else-if="action.type === 'link' && action.href(item)"
+                                        :href="action.href(item)"
+                                        :target="action.new_tab ? '_blank' : null"
+                                        :rel="action.new_tab ? 'noopener' : null"
+                                        :data-action="action.name"
+                                        class="mr-1 inline-flex items-center rounded px-2 py-1 text-xs text-accent hover:bg-accent-soft hover:text-accent-hover focus:outline-none focus:ring-2 focus:ring-focus"
+                                    >
+                                        <svg class="mr-1 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        {{ action.label }}
+                                        <span v-if="action.new_tab" class="sr-only">{{ $t('actions.new_tab') }}</span>
+                                    </a>
+                                    <Link
+                                        v-else-if="action.type === 'create'"
+                                        :href="action.href(item)"
+                                        :data-action="action.name"
+                                        class="mr-1 inline-flex items-center rounded px-2 py-1 text-xs text-accent hover:bg-accent-soft hover:text-accent-hover"
+                                    >
+                                        <svg class="mr-1 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        {{ action.label }}
+                                    </Link>
+                                </template>
                                 <button
                                     data-action="edit"
                                     @click="$emit('edit', item)"

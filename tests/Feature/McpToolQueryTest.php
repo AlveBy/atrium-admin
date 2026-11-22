@@ -35,8 +35,9 @@ final class McpToolQueryTest extends TestCase
 
         $this->assertSame('GET', $seen->getMethod());
         $this->assertSame('/api/v1/posts', $seen->getPathInfo());
+        // In the address, as a program would send it over HTTP: all text.
         $this->assertSame(
-            ['search' => 'tea', 'filter' => ['active' => 1], 'sort' => 'name', 'direction' => 'desc', 'page' => 2, 'per_page' => 5, 'site' => 'shop'],
+            ['search' => 'tea', 'filter' => ['active' => '1'], 'sort' => 'name', 'direction' => 'desc', 'page' => '2', 'per_page' => '5', 'site' => 'shop'],
             $seen->query->all(),
         );
     }
@@ -59,7 +60,7 @@ final class McpToolQueryTest extends TestCase
     public function test_list_records_keeps_values_that_are_falsy_but_not_empty(): void
     {
         $this->assertSame(
-            ['search' => '0', 'page' => 0],
+            ['search' => '0', 'page' => '0'],
             $this->sent(new ListRecords, ['module' => 'posts', 'search' => '0', 'page' => 0])->query->all(),
         );
     }
@@ -75,11 +76,16 @@ final class McpToolQueryTest extends TestCase
 
     public function test_create_and_update_send_the_data_as_the_body(): void
     {
+        // The site goes into the address, where the API looks for it, not
+        // into the body with the fields.
         $seen = $this->sent(new CreateRecord, ['module' => 'posts', 'data' => ['name' => 'Tea'], 'site' => 'shop']);
-        $this->assertSame(['POST', '/api/v1/posts', ['site' => 'shop'], '{"name":"Tea"}'], [$seen->getMethod(), $seen->getPathInfo(), $seen->request->all(), $seen->getContent()]);
+        $this->assertSame(['POST', '/api/v1/posts', ['site' => 'shop'], [], '{"name":"Tea"}'], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all(), $seen->request->all(), $seen->getContent()]);
 
-        $seen = $this->sent(new UpdateRecord, ['module' => 'posts', 'id' => 7, 'data' => ['name' => 'Tea']]);
-        $this->assertSame(['PATCH', '/api/v1/posts/7', [], '{"name":"Tea"}'], [$seen->getMethod(), $seen->getPathInfo(), $seen->request->all(), $seen->getContent()]);
+        $seen = $this->sent(new UpdateRecord, ['module' => 'posts', 'id' => 7, 'data' => ['name' => 'Tea'], 'site' => 'shop']);
+        $this->assertSame(['PATCH', '/api/v1/posts/7', ['site' => 'shop'], [], '{"name":"Tea"}'], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all(), $seen->request->all(), $seen->getContent()]);
+
+        $seen = $this->sent(new DeleteRecord, ['module' => 'posts', 'id' => 7, 'site' => 'shop']);
+        $this->assertSame(['DELETE', '/api/v1/posts/7', ['site' => 'shop']], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
 
         $seen = $this->sent(new CreateRecord, ['module' => 'posts']);
         $this->assertSame('[]', $seen->getContent());

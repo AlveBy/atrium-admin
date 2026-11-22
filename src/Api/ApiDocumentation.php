@@ -315,6 +315,11 @@ final class ApiDocumentation
             '| Update | `PATCH /{module}/{id}`: only the fields that change |',
             '| Delete | `DELETE /{module}/{id}` |',
             '| Upload a file | `POST /files`, multipart/form-data, field `file` (jpg, png, gif, webp, pdf, doc, docx, xls, xlsx) |',
+            '| Actions the token may run | `GET /{module}/actions` |',
+            '| Run an action on a record | `POST /{module}/{id}/actions/{action}` |',
+            '| Run an action on several records | `POST /{module}/bulk/{action}` with `{"ids": [1, 2]}`, at most 1000 |',
+            '',
+            'An action answers `{"message", "redirect"}`: 200 when it worked, 422 when it did not. `bulk/delete` deletes the records that may be deleted. An action with `confirm` set asks first in the admin panel: ask a human too.',
             '',
             '`per_page` is at most 100. `filter` and `sort` accept only fields of the module.',
             'Record response: `{"data": {...}}`, which also has `admin_url` (edit in the admin panel) and `public_url` (the page on the site, if any).',
@@ -510,6 +515,36 @@ final class ApiDocumentation
                 'url' => ['type' => 'string'],
                 'path' => ['type' => 'string'],
             ]])] + $errors,
+        ]];
+
+        $module = ['name' => 'module', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string']];
+        $action = ['name' => 'action', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string']];
+        $result = $json(['type' => 'object', 'properties' => [
+            'message' => ['type' => 'string'],
+            'redirect' => ['type' => ['string', 'null']],
+        ]]);
+        $paths['/{module}/actions'] = ['get' => [
+            'operationId' => 'list_actions',
+            'summary' => 'Actions of a module the token may run',
+            'parameters' => [$module],
+            'responses' => ['200' => ['description' => 'Actions on one record and on several'] + $json(['type' => 'object', 'properties' => [
+                'data' => ['type' => 'object', 'properties' => ['record' => ['type' => 'array'], 'bulk' => ['type' => 'array']]],
+            ]])] + $errors,
+        ]];
+        $paths['/{module}/{id}/actions/{action}'] = ['post' => [
+            'operationId' => 'run_record_action',
+            'summary' => 'Run an action on a record',
+            'parameters' => [$module, $idParam, $action],
+            'responses' => ['200' => ['description' => 'Done'] + $result, '422' => ['description' => 'The action failed'] + $result] + $errors,
+        ]];
+        $paths['/{module}/bulk/{action}'] = ['post' => [
+            'operationId' => 'run_bulk_action',
+            'summary' => 'Run an action on several records',
+            'parameters' => [$module, $action],
+            'requestBody' => ['required' => true] + $json(['type' => 'object', 'properties' => [
+                'ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'maxItems' => 1000],
+            ], 'required' => ['ids']]),
+            'responses' => ['200' => ['description' => 'Done'] + $result, '422' => ['description' => 'The action failed or no record was found'] + $result] + $errors,
         ]];
 
         return [

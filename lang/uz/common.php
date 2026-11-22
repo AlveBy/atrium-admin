@@ -13,6 +13,7 @@ return [
     'save' => 'Saqlash',
     'saving' => 'Saqlanmoqda…',
     'cancel' => 'Bekor qilish',
+    'close' => 'Yopish',
     'back' => 'Orqaga',
     'create' => 'Yaratish',
     'edit' => 'Tahrirlash',

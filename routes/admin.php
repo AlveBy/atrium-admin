@@ -107,6 +107,12 @@ Route::prefix(config('atrium.prefix', 'admin'))
                     ->except(['show'])
                     ->parameters([$key => 'id'])
                     ->names("admin.{$key}");
+
+                // A module's buttons: on one record, and over the selected ones.
+                Route::post("{$key}/{id}/actions/{action}", [ResourceController::class, 'runAction'])
+                    ->whereNumber('id')->where('action', '[A-Za-z0-9_-]+')->name("admin.{$key}.action");
+                Route::post("{$key}/bulk/{action}", [ResourceController::class, 'runBulkAction'])
+                    ->where('action', '[A-Za-z0-9_-]+')->name("admin.{$key}.bulk");
             }
         });
     });

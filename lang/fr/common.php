@@ -13,6 +13,7 @@ return [
     'save' => 'Enregistrer',
     'saving' => 'Enregistrement…',
     'cancel' => 'Annuler',
+    'close' => 'Fermer',
     'back' => 'Retour',
     'create' => 'Créer',
     'edit' => 'Modifier',

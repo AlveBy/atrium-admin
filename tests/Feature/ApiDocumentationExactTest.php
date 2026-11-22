@@ -73,7 +73,7 @@ final class ApiDocumentationExactTest extends TestCase
 
         $paths = app(ApiDocumentation::class)->openApi(['bares'])['paths'];
 
-        $this->assertSame(['/bares', '/bares/{id}', '/files'], array_keys($paths));
+        $this->assertSame(['/bares', '/bares/{id}', '/files', '/{module}/actions', '/{module}/{id}/actions/{action}', '/{module}/bulk/{action}'], array_keys($paths));
 
         $this->assertSame($this->encoded([
             'get' => [
@@ -140,6 +140,36 @@ final class ApiDocumentationExactTest extends TestCase
                 'path' => ['type' => 'string'],
             ]])] + $errors,
         ]]), $this->encoded($paths['/files']));
+
+        $module = ['name' => 'module', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string']];
+        $action = ['name' => 'action', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string']];
+        $result = $json(['type' => 'object', 'properties' => ['message' => ['type' => 'string'], 'redirect' => ['type' => ['string', 'null']]]]);
+
+        $this->assertSame($this->encoded(['get' => [
+            'operationId' => 'list_actions',
+            'summary' => 'Actions of a module the token may run',
+            'parameters' => [$module],
+            'responses' => ['200' => ['description' => 'Actions on one record and on several'] + $json(['type' => 'object', 'properties' => [
+                'data' => ['type' => 'object', 'properties' => ['record' => ['type' => 'array'], 'bulk' => ['type' => 'array']]],
+            ]])] + $errors,
+        ]]), $this->encoded($paths['/{module}/actions']));
+
+        $this->assertSame($this->encoded(['post' => [
+            'operationId' => 'run_record_action',
+            'summary' => 'Run an action on a record',
+            'parameters' => [$module, $id, $action],
+            'responses' => ['200' => ['description' => 'Done'] + $result, '422' => ['description' => 'The action failed'] + $result] + $errors,
+        ]]), $this->encoded($paths['/{module}/{id}/actions/{action}']));
+
+        $this->assertSame($this->encoded(['post' => [
+            'operationId' => 'run_bulk_action',
+            'summary' => 'Run an action on several records',
+            'parameters' => [$module, $action],
+            'requestBody' => ['required' => true] + $json(['type' => 'object', 'properties' => [
+                'ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'maxItems' => 1000],
+            ], 'required' => ['ids']]),
+            'responses' => ['200' => ['description' => 'Done'] + $result, '422' => ['description' => 'The action failed or no record was found'] + $result] + $errors,
+        ]]), $this->encoded($paths['/{module}/bulk/{action}']));
     }
 
     public function test_a_translatable_field_keeps_its_own_note_and_is_typed_by_its_plain_value(): void
