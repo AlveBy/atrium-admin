@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Http\Controllers;
 
+use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Models\DataImport;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Transfer\ImportFailed;
@@ -178,7 +179,7 @@ final class ImportController extends Controller
     }
 
     /**
-     * @return class-string<Model>
+     * @return class-string<Model&Administrable>
      */
     private function model(string $module): string
     {

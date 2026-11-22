@@ -82,7 +82,7 @@ final class ExporterTest extends TransferTestCase
         $post = Post::query()->create(['name' => 'Hello']);
         $top = ApiAisle::query()->create(['name' => 'Europe']);
         $child = ApiAisle::query()->create(['name' => 'Day trips', 'parent_id' => $top->id]);
-        Parcel::query()->create([
+        $parcel = Parcel::query()->create([
             'article' => 'A-1', 'name' => 'Parka', 'code' => 'parka', 'price' => '1299.50', 'active' => true, 'booking' => 'YES',
             'starts_at' => '2026-03-05 10:30:00', 'starts_on' => '2026-03-05', 'label' => 'hit', 'colors' => ['black', 'silver'],
             'features' => ['Warm', 'Light'], 'picture' => 'a.jpg', 'photos' => ['a.jpg', 'b.jpg'], 'aisle_id' => $child->id,
@@ -93,17 +93,17 @@ final class ExporterTest extends TransferTestCase
 
         $this->assertCount(2, $rows);
         $this->assertSame(
-            ['1', 'A-1', 'Parka', 'parka', '1299.50', '1', '1', '2026-03-05 10:30:00', '2026-03-05', 'hit', 'black|silver', 'Warm|Light', 'a.jpg', 'a.jpg|b.jpg', 'Europe / Day trips', (string) $post->id, "Two\nlines", '10'],
+            [(string) $parcel->id, 'A-1', 'Parka', 'parka', '1299.50', '1', '1', '2026-03-05 10:30:00', '2026-03-05', 'hit', 'black|silver', 'Warm|Light', 'a.jpg', 'a.jpg|b.jpg', 'Europe / Day trips', (string) $post->id, "Two\nlines", '10'],
             $rows[1],
         );
     }
 
     public function test_a_record_with_nothing_filled_in_is_empty_cells_and_the_defaults(): void
     {
-        Parcel::query()->create(['article' => 'A-2', 'name' => 'Coat', 'active' => false, 'booking' => 'NO']);
+        $parcel = Parcel::query()->create(['article' => 'A-2', 'name' => 'Coat', 'active' => false, 'booking' => 'NO']);
 
         $this->assertSame(
-            ['1', 'A-2', 'Coat', '', '', '0', '0', '', '', '', '', '', '', '', '', '', '', '500'],
+            [(string) $parcel->id, 'A-2', 'Coat', '', '', '0', '0', '', '', '', '', '', '', '', '', '', '', '500'],
             $this->rows()[1],
         );
     }
@@ -192,29 +192,29 @@ final class ExporterTest extends TransferTestCase
 
     public function test_a_date_the_model_does_not_cast_is_written_as_it_is_kept(): void
     {
-        DB::table('parcels')->insert(['article' => 'a', 'name' => '{}', 'starts_at' => '2026-03-05 10:30:00', 'starts_on' => '2026-03-05', 'created_at' => now(), 'updated_at' => now()]);
-        DB::table('parcels')->insert(['article' => 'b', 'name' => '{}', 'starts_at' => null, 'starts_on' => null, 'created_at' => now(), 'updated_at' => now()]);
+        $first = DB::table('parcels')->insertGetId(['article' => 'a', 'name' => '{}', 'starts_at' => '2026-03-05 10:30:00', 'starts_on' => '2026-03-05', 'created_at' => now(), 'updated_at' => now()]);
+        $second = DB::table('parcels')->insertGetId(['article' => 'b', 'name' => '{}', 'starts_at' => null, 'starts_on' => null, 'created_at' => now(), 'updated_at' => now()]);
 
         $rows = $this->rows(Dated::class);
 
         $this->assertSame(['ID', 'Article', 'Starts at', 'Starts on'], $rows[0]);
-        $this->assertSame(['1', 'a', '2026-03-05 10:30:00', '2026-03-05'], $rows[1]);
-        $this->assertSame(['2', 'b', '', ''], $rows[2]);
+        $this->assertSame([(string) $first, 'a', '2026-03-05 10:30:00', '2026-03-05'], $rows[1]);
+        $this->assertSame([(string) $second, 'b', '', ''], $rows[2]);
     }
 
     public function test_a_field_kept_per_language_is_a_column_for_each_language(): void
     {
         Language::query()->create(['code' => 'de', 'name' => 'Deutsch', 'sort' => 200]);
-        Parcel::query()->create(['name' => ['en' => 'Parka', 'de' => 'Anorak']]);
-        Parcel::query()->create(['name' => ['en' => 'Coat']]);
-        Parcel::query()->create(['name' => ['de' => 'Mantel']]);
+        $parka = Parcel::query()->create(['name' => ['en' => 'Parka', 'de' => 'Anorak']]);
+        $coat = Parcel::query()->create(['name' => ['en' => 'Coat']]);
+        $mantel = Parcel::query()->create(['name' => ['de' => 'Mantel']]);
 
         $rows = $this->rows();
 
         $this->assertSame(['ID', 'Article', 'Name (English)', 'Name (Deutsch)', 'Code'], array_slice($rows[0], 0, 5));
-        $this->assertSame(['1', '', 'Parka', 'Anorak', ''], array_slice($rows[1], 0, 5));
-        $this->assertSame(['2', '', 'Coat', '', ''], array_slice($rows[2], 0, 5));
-        $this->assertSame(['3', '', '', 'Mantel', ''], array_slice($rows[3], 0, 5));
+        $this->assertSame([(string) $parka->id, '', 'Parka', 'Anorak', ''], array_slice($rows[1], 0, 5));
+        $this->assertSame([(string) $coat->id, '', 'Coat', '', ''], array_slice($rows[2], 0, 5));
+        $this->assertSame([(string) $mantel->id, '', '', 'Mantel', ''], array_slice($rows[3], 0, 5));
         $this->assertCount(19, $rows[0]);
         $this->assertCount(19, $rows[1]);
     }
@@ -240,15 +240,15 @@ final class ExporterTest extends TransferTestCase
 
             return $targets;
         });
-        Parcel::query()->create(['name' => 'a', 'code' => 'own']);
+        $parcel = Parcel::query()->create(['name' => 'a', 'code' => 'own']);
 
         $rows = $this->rows();
 
         $this->assertSame('Extra', $rows[0][18]);
         $this->assertSame('Code', $rows[0][3]);
-        $this->assertSame('code-1', $rows[1][3]);
-        $this->assertSame('x1', $rows[1][18]);
-        $this->assertSame('1', $rows[1][0]);
+        $this->assertSame('code-'.$parcel->id, $rows[1][3]);
+        $this->assertSame('x'.$parcel->id, $rows[1][18]);
+        $this->assertSame((string) $parcel->id, $rows[1][0]);
     }
 
     public function test_the_records_come_in_the_order_of_the_query_and_those_it_does_not_tell_apart_by_id(): void
@@ -323,21 +323,22 @@ final class ExporterTest extends TransferTestCase
 
     public function test_the_rows_of_a_chunked_export_are_all_there_in_order(): void
     {
+        $ids = [];
         foreach (range(1, 7) as $number) {
-            Parcel::query()->create(['name' => "n{$number}", 'article' => "A{$number}", 'sort' => $number % 2]);
+            $ids[$number] = (string) Parcel::query()->create(['name' => "n{$number}", 'article' => "A{$number}", 'sort' => $number % 2])->id;
         }
 
         config(['atrium.export.chunk' => 3]);
         $rows = $this->rows(Parcel::class, Parcel::query()->orderBy('sort'));
 
         $this->assertSame(['Article', 'A2', 'A4', 'A6', 'A1', 'A3', 'A5', 'A7'], array_column($rows, 1));
-        $this->assertSame(['ID', '2', '4', '6', '1', '3', '5', '7'], array_column($rows, 0));
+        $this->assertSame(['ID', $ids[2], $ids[4], $ids[6], $ids[1], $ids[3], $ids[5], $ids[7]], array_column($rows, 0));
     }
 
     public function test_the_header_comes_first_the_rows_next_and_the_output_is_closed_at_the_end(): void
     {
-        Parcel::query()->create(['name' => 'a', 'article' => 'A1']);
-        Parcel::query()->create(['name' => 'b', 'article' => 'A2']);
+        $first = Parcel::query()->create(['name' => 'a', 'article' => 'A1']);
+        $second = Parcel::query()->create(['name' => 'b', 'article' => 'A2']);
 
         $log = [];
         $output = new class($log) implements Output
@@ -359,12 +360,12 @@ final class ExporterTest extends TransferTestCase
         $count = Exporter::for(Parcel::class)->write($output, Parcel::query());
 
         $this->assertSame(2, $count);
-        $this->assertSame(['row ID', 'row 1', 'row 2', 'close'], $log);
+        $this->assertSame(['row ID', 'row '.$first->id, 'row '.$second->id, 'close'], $log);
     }
 
     public function test_a_csv_formula_is_protected_and_an_excel_cell_stays_as_it_is(): void
     {
-        Parcel::query()->create(['name' => '=SUM(1+1)', 'article' => '+cmd', 'code' => '@x', 'detail_text' => '-5', 'sort' => 1]);
+        $id = Parcel::query()->create(['name' => '=SUM(1+1)', 'article' => '+cmd', 'code' => '@x', 'detail_text' => '-5', 'sort' => 1])->id;
         $query = fn () => Parcel::query();
 
         $csv = $this->directory.'/e.csv';
@@ -375,7 +376,7 @@ final class ExporterTest extends TransferTestCase
 
         $text = (string) file_get_contents($csv);
         $this->assertStringStartsWith("\xEF\xBB\xBFID;Article;Name;Code;", $text);
-        $this->assertStringContainsString("1;'+cmd;'=SUM(1+1);'@x;", $text);
+        $this->assertStringContainsString("{$id};'+cmd;'=SUM(1+1);'@x;", $text);
         $this->assertStringContainsString(';-5;1', $text);
 
         $read = [];
@@ -390,7 +391,7 @@ final class ExporterTest extends TransferTestCase
 
     public function test_the_text_of_a_record_is_what_the_import_gets_back(): void
     {
-        Parcel::query()->create(['name' => 'Куртка «Север»', 'article' => '00123', 'detail_text' => "Line one\nLine \"two\"; with ; signs"]);
+        $id = Parcel::query()->create(['name' => 'Куртка «Север»', 'article' => '00123', 'detail_text' => "Line one\nLine \"two\"; with ; signs"])->id;
         File::ensureDirectoryExists($this->directory);
 
         foreach (['csv', 'xlsx'] as $format) {
@@ -402,7 +403,7 @@ final class ExporterTest extends TransferTestCase
             $this->assertSame(1, $read['total'], $format);
 
             $cells = str_getcsv(trim((string) file_get_contents($this->directory."/{$format}.txt")), ',', '"', '');
-            $this->assertSame(['2', '1', '00123', 'Куртка «Север»'], array_slice($cells, 0, 4), $format);
+            $this->assertSame(['2', (string) $id, '00123', 'Куртка «Север»'], array_slice($cells, 0, 4), $format);
             $this->assertSame("Line one\nLine \"two\"; with ; signs", $cells[17], $format);
         }
     }

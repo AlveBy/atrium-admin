@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Transfer;
 
+use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\BelongsToField;
 use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\DateField;
@@ -55,7 +56,7 @@ final class RowImporter
     private array $trees = [];
 
     /**
-     * @param  class-string<Model>  $model
+     * @param  class-string<Model&Administrable>  $model
      */
     public function __construct(
         private readonly DataImport $import,
@@ -147,7 +148,7 @@ final class RowImporter
      * The record the key's cell names, if there is one. A field kept per
      * language is looked for in the default language.
      */
-    private function find(string $value): ?Model
+    private function find(string $value): (Model&Administrable)|null
     {
         $key = (string) $this->import->option('key');
 

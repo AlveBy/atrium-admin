@@ -77,7 +77,7 @@ final class RecordWriter extends AdminController
     /**
      * @param  array<string,mixed>  $data
      */
-    public function write(array $data, ?Model $record): Model
+    public function write(array $data, (Model&Administrable)|null $record): Model&Administrable
     {
         return $this->saveItem(Request::create('/', 'POST', $data), $record === null ? 'create' : 'edit', $record ?? new $this->model);
     }
@@ -97,7 +97,7 @@ final class RecordWriter extends AdminController
      * The records of the module's list as a request narrows it: its filters,
      * search and sort, without a page.
      *
-     * @return Builder<Model>
+     * @return Builder<Model&Administrable>
      */
     public function list(Request $request): Builder
     {

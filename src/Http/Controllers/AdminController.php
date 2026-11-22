@@ -301,7 +301,7 @@ abstract class AdminController extends Controller
      * filters, the search over its searchable columns and the sort. The list
      * screen pages it; an export reads all of it.
      *
-     * @return array{0:Builder<Model>,1:array<int,Column>,2:array<int,string>,3:array<string,string>,4:string,5:string} query, columns, related columns, filters, sort column, direction
+     * @return array{0:Builder<Model&Administrable>,1:array<int,Column>,2:array<int,string>,3:array<string,string>,4:string,5:string} query, columns, related columns, filters, sort column, direction
      */
     protected function listQuery(Request $request): array
     {

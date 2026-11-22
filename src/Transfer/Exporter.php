@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Transfer;
 
+use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\DateField;
 use Atrium\Admin\Fields\DateTimeField;
@@ -44,7 +45,7 @@ final class Exporter
     public function __construct(private readonly Targets $targets, private readonly RecordWriter $writer, private readonly int $chunk) {}
 
     /**
-     * @param  class-string<Model>  $model
+     * @param  class-string<Model&Administrable>  $model
      */
     public static function for(string $model): self
     {
@@ -67,7 +68,7 @@ final class Exporter
     /**
      * Writes the header and the records of the query; how many records.
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<Model&Administrable>  $query
      */
     public function write(Output $output, Builder $query): int
     {

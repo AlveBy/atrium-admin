@@ -539,7 +539,10 @@ final class ImportControllerTest extends TransferTestCase
         $this->actingAs($admin, 'admin')->put("/admin/parcels/import/{$import->id}", ['mapping' => ['article', 'name', 'price'], 'key' => 'article', 'mode' => 'both', 'trim' => 'abc'])->assertSessionHasErrors('trim');
         $this->actingAs($admin, 'admin')->put("/admin/parcels/import/{$import->id}", ['mapping' => ['article', 'name', 'price'], 'key' => 'article', 'mode' => 'both', 'trim' => '1'])->assertSessionHasNoErrors();
 
-        $this->assertSame(['key' => 'article', 'mode' => 'both', 'separator' => '/', 'trim' => true], $import->refresh()->options);
+        // A JSON column on MySQL does not keep the order of the keys.
+        $options = $import->refresh()->options;
+        ksort($options);
+        $this->assertSame(['key' => 'article', 'mode' => 'both', 'separator' => '/', 'trim' => true], $options);
     }
 
     public function test_with_a_queue_worker_the_check_is_queued_and_without_one_it_is_not(): void
@@ -728,11 +731,11 @@ final class ImportControllerTest extends TransferTestCase
         return [
             'the list' => ['get', ''],
             'the upload' => ['post', ''],
-            'the mapping screen' => ['get', '/1'],
-            'the check' => ['put', '/1'],
-            'the import' => ['post', '/1/run'],
-            'the progress' => ['post', '/1/step'],
-            'the stop' => ['post', '/1/cancel'],
+            'the mapping screen' => ['get', '/{import}'],
+            'the check' => ['put', '/{import}'],
+            'the import' => ['post', '/{import}/run'],
+            'the progress' => ['post', '/{import}/step'],
+            'the stop' => ['post', '/{import}/cancel'],
         ];
     }
 
@@ -742,7 +745,7 @@ final class ImportControllerTest extends TransferTestCase
         $import = $this->makeImport();
         $every = $this->editor(['parcels.view', 'parcels.create', 'parcels.update', 'parcels.delete', 'parcels.export', 'posts.import', 'posts.view'], 'no@example.com');
 
-        $this->actingAs($every, 'admin')->{$method}('/admin/parcels/import'.$path)->assertForbidden();
+        $this->actingAs($every, 'admin')->{$method}('/admin/parcels/import'.str_replace('{import}', (string) $import->id, $path))->assertForbidden();
 
         $this->assertSame(DataImport::NEW, $import->refresh()->status);
         $this->assertSame(1, DataImport::query()->count());
@@ -751,10 +754,10 @@ final class ImportControllerTest extends TransferTestCase
     #[DataProvider('routes')]
     public function test_the_import_permission_alone_is_enough(string $method, string $path): void
     {
-        $this->makeImport();
+        $import = $this->makeImport();
         $only = $this->editor(['parcels.import'], 'yes@example.com');
 
-        $status = $this->actingAs($only, 'admin')->{$method}('/admin/parcels/import'.$path, ['file' => UploadedFile::fake()->createWithContent('a.csv', self::CSV)])->status();
+        $status = $this->actingAs($only, 'admin')->{$method}('/admin/parcels/import'.str_replace('{import}', (string) $import->id, $path), ['file' => UploadedFile::fake()->createWithContent('a.csv', self::CSV)])->status();
 
         $this->assertNotSame(403, $status);
     }

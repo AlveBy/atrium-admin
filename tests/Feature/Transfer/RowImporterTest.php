@@ -166,16 +166,21 @@ final class RowImporterTest extends TransferTestCase
 
     public function test_the_id_finds_a_record_and_is_never_written(): void
     {
-        $this->parcel(['article' => 'A-1']);
+        $existing = $this->parcel(['article' => 'A-1']);
+        $missing = $existing->id + 1000;
 
         $import = $this->import(['id', 'article', 'name'], ['key' => 'id']);
         $importer = $this->importer($import);
-        $importer->import(2, ['1', 'A-2', 'Parka']);
-        $importer->import(3, ['77', 'A-3', 'Boots']);
+        $importer->import(2, [(string) $existing->id, 'A-2', 'Parka']);
+        $importer->import(3, [(string) $missing, 'A-3', 'Boots']);
 
         $this->assertSame([2, 1, 1, []], [$import->processed, $import->created, $import->updated, $import->errors]);
         $this->assertSame(['A-2', 'A-3'], Parcel::query()->orderBy('id')->pluck('article')->all());
-        $this->assertSame([1, 2], Parcel::query()->orderBy('id')->pluck('id')->all());
+        $ids = Parcel::query()->orderBy('id')->pluck('id')->all();
+        $this->assertCount(2, $ids);
+        $this->assertSame($existing->id, $ids[0]);
+        $this->assertGreaterThan($existing->id, $ids[1]);
+        $this->assertLessThan($missing, $ids[1]);
     }
 
     /**

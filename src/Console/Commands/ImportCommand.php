@@ -24,6 +24,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -55,6 +56,11 @@ final class ImportCommand extends Command
     public function handle(SourceFile $source, ImportRunner $runner, ResourceRegistry $resources): int
     {
         if ($this->option('pending')) {
+            // The scheduler runs this every minute, also on a site that has not migrated yet.
+            if (! Schema::hasTable((new DataImport)->getTable())) {
+                return self::SUCCESS;
+            }
+
             foreach (DataImport::query()->whereIn('status', [DataImport::CHECKING, DataImport::IMPORTING])->get() as $import) {
                 $runner->step($import, config('atrium.import.seconds'));
             }
