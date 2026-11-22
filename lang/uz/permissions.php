@@ -43,5 +43,7 @@ return [
         'delete' => 'Oʻchirish',
         'use' => 'Tokenlar chiqarish va ishlatish',
         'settings' => 'Sozlamalar',
+        'import' => 'Import',
+        'export' => 'Eksport',
     ],
 ];

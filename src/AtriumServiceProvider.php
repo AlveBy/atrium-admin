@@ -373,6 +373,8 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\CdnPurgeCommand::class,
             Console\Commands\CreateAdminCommand::class,
             Console\Commands\DemoResetCommand::class,
+            Console\Commands\ExportCommand::class,
+            Console\Commands\ImportCommand::class,
             Console\Commands\IndexMediaCommand::class,
             Console\Commands\InstallCommand::class,
             Console\Commands\MakeModuleCommand::class,
@@ -381,6 +383,11 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\ModuleRemoveCommand::class,
             Console\Commands\SlugRegenerateCommand::class,
         ]);
+
+        // The imports started in the panel move on here when no queue worker moves them.
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
+            $schedule->command('atrium:import --pending')->everyMinute()->withoutOverlapping();
+        });
 
         if (config('atrium.demo.enabled')) {
             $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {

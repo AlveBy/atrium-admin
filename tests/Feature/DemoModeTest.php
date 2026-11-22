@@ -141,8 +141,14 @@ final class DemoModeTest extends TestCase
         $this->assertContains('users.delete', $granted);
         $this->assertNotContains('api-tokens.use', $granted);
         $this->assertSame([], array_filter($granted, static fn (string $permission): bool => str_ends_with($permission, '.settings')));
+        // Bringing records in from a file (it may fetch pictures from any address) and taking them out is not the visitor's.
+        $transfer = array_values(array_filter($all, static fn (string $permission): bool => str_ends_with($permission, '.import') || str_ends_with($permission, '.export')));
+        $this->assertContains('posts.import', $transfer);
+        $this->assertContains('posts.export', $transfer);
+        $this->assertContains('languages.export', $transfer);
+        $this->assertSame([], array_intersect($transfer, $granted));
         $this->assertEqualsCanonicalizing(
-            array_values(array_diff($all, ['posts.create', 'posts.update', 'posts.delete', 'api-tokens.use'])),
+            array_values(array_diff($all, ['posts.create', 'posts.update', 'posts.delete', 'api-tokens.use'], $transfer)),
             $granted,
         );
     }

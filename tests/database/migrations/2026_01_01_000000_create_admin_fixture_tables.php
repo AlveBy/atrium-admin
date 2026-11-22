@@ -27,6 +27,28 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('parcels', function (Blueprint $table): void {
+            $table->id();
+            $table->string('article')->nullable();
+            $table->json('name');
+            $table->string('code')->nullable();
+            $table->decimal('price', 10, 2)->nullable();
+            $table->boolean('active')->default(true);
+            $table->string('booking')->nullable();
+            $table->dateTime('starts_at')->nullable();
+            $table->date('starts_on')->nullable();
+            $table->string('label')->nullable();
+            $table->json('colors')->nullable();
+            $table->json('features')->nullable();
+            $table->string('picture')->nullable();
+            $table->json('photos')->nullable();
+            $table->unsignedBigInteger('aisle_id')->nullable();
+            $table->unsignedBigInteger('post_id')->nullable();
+            $table->text('detail_text')->nullable();
+            $table->integer('sort')->default(500);
+            $table->timestamps();
+        });
+
         Schema::create('stories', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('site_id')->nullable()->index();
@@ -157,7 +179,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'posts'] as $table) {
+        foreach (['sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'parcels', 'posts'] as $table) {
             Schema::dropIfExists($table);
         }
     }

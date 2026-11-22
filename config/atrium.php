@@ -519,6 +519,43 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Import and export
+    |--------------------------------------------------------------------------
+    |
+    | Any module's records come in from CSV and Excel (.xlsx) files and go out
+    | as the list shows them. A module opts out with isImportableInAdmin() /
+    | isExportableInAdmin() on its model and adds its own columns to the
+    | mapping with the `atrium.import.targets` filter.
+    |
+    | `directory` is where uploaded files wait for their import (read as they
+    | were left by the upload, so a local folder; storage/app/private/atrium-imports
+    | when empty); `max_size` the largest file
+    | the panel takes, in kilobytes; `chunk` rows read from a file (or
+    | records read for an export) at a time. An import works in steps of
+    | `seconds` — a queue job, a run of the scheduler and the progress page
+    | (`request_seconds`, without a worker) each save their place and let go,
+    | so a large file never meets a time limit. `errors` rows with a problem
+    | are listed in the report (all are counted). Images by URL: how long to
+    | wait for one and how large it may be (KB).
+    |
+    */
+    'import' => [
+        'directory' => env('ATRIUM_IMPORT_DIRECTORY'),
+        'max_size' => 51200,
+        'chunk' => 100,
+        'seconds' => 20,
+        'request_seconds' => 5,
+        'errors' => 500,
+        'image_timeout' => 10,
+        'image_max_size' => 10240,
+    ],
+
+    'export' => [
+        'chunk' => 500,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | API
     |--------------------------------------------------------------------------
     |

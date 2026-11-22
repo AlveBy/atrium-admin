@@ -43,5 +43,7 @@ return [
         'delete' => 'Elimina',
         'use' => 'Emettere e usare token',
         'settings' => 'Impostazioni',
+        'import' => 'Importazione',
+        'export' => 'Esportazione',
     ],
 ];

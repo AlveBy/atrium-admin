@@ -183,6 +183,39 @@ trait InteractsWithAdmin
     }
 
     /**
+     * Whether records of this module may be imported from CSV and Excel
+     * files. They are created and changed the way the form does it, so a
+     * module that is neither creatable nor editable has nothing to import.
+     * Return false to take the module out of the import.
+     */
+    public static function isImportableInAdmin(): bool
+    {
+        return static::isCreatableInAdmin() && static::isEditableInAdmin();
+    }
+
+    /**
+     * Whether the list of this module may be exported to CSV and Excel.
+     * Return false to take the module out of the export.
+     */
+    public static function isExportableInAdmin(): bool
+    {
+        return true;
+    }
+
+    /**
+     * The columns that tell an imported row which record it is, besides the
+     * id: the first one the file has is the default. A module whose records
+     * are known by something other than their code (an article number, an
+     * e-mail address) lists it first.
+     *
+     * @return array<int,string>
+     */
+    public static function getImportKeys(): array
+    {
+        return ['id', 'code'];
+    }
+
+    /**
      * Can be edited in admin
      */
     public function canEdit(): bool

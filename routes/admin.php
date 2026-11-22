@@ -12,7 +12,9 @@ use Atrium\Admin\Http\Controllers\ApiTokenController;
 use Atrium\Admin\Http\Controllers\Auth\LoginController;
 use Atrium\Admin\Http\Controllers\CacheController;
 use Atrium\Admin\Http\Controllers\DashboardController;
+use Atrium\Admin\Http\Controllers\ExportController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
+use Atrium\Admin\Http\Controllers\ImportController;
 use Atrium\Admin\Http\Controllers\LinkController;
 use Atrium\Admin\Http\Controllers\LocaleController;
 use Atrium\Admin\Http\Controllers\ModuleController;
@@ -22,6 +24,7 @@ use Atrium\Admin\Http\Controllers\RoleController;
 use Atrium\Admin\Http\Controllers\SiteController;
 use Atrium\Admin\Http\Controllers\ThemeController;
 use Atrium\Admin\Resources\ResourceRegistry;
+use Atrium\Admin\Transfer\Availability;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -103,6 +106,21 @@ Route::prefix(config('atrium.prefix', 'admin'))
 
             // Modules from config('atrium.resources') — one generic controller.
             foreach (app(ResourceRegistry::class)->all() as $key => $model) {
+                // Import from CSV and Excel files and the export of the list, for the modules that take part.
+                if (Availability::export($model)) {
+                    Route::get("{$key}/export", [ExportController::class, 'download'])->defaults('module', $key)->name("admin.{$key}.export");
+                }
+
+                if (Availability::import($model)) {
+                    Route::get("{$key}/import", [ImportController::class, 'index'])->defaults('module', $key)->name("admin.{$key}.import");
+                    Route::post("{$key}/import", [ImportController::class, 'store'])->defaults('module', $key)->name("admin.{$key}.import.store");
+                    Route::get("{$key}/import/{import}", [ImportController::class, 'show'])->defaults('module', $key)->whereNumber('import')->name("admin.{$key}.import.show");
+                    Route::put("{$key}/import/{import}", [ImportController::class, 'check'])->defaults('module', $key)->whereNumber('import')->name("admin.{$key}.import.check");
+                    Route::post("{$key}/import/{import}/run", [ImportController::class, 'run'])->defaults('module', $key)->whereNumber('import')->name("admin.{$key}.import.run");
+                    Route::post("{$key}/import/{import}/step", [ImportController::class, 'step'])->defaults('module', $key)->whereNumber('import')->name("admin.{$key}.import.step");
+                    Route::post("{$key}/import/{import}/cancel", [ImportController::class, 'cancel'])->defaults('module', $key)->whereNumber('import')->name("admin.{$key}.import.cancel");
+                }
+
                 Route::resource($key, ResourceController::class)
                     ->except(['show'])
                     ->parameters([$key => 'id'])

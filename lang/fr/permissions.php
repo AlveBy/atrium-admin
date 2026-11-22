@@ -43,5 +43,7 @@ return [
         'delete' => 'Supprimer',
         'use' => 'Émettre et utiliser des jetons',
         'settings' => 'Réglages',
+        'import' => 'Import',
+        'export' => 'Export',
     ],
 ];

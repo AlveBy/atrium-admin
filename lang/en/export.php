@@ -1,0 +1,23 @@
+<?php
+
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
+declare(strict_types=1);
+
+/*
+ * Export of a module's list to CSV and Excel files.
+ */
+return [
+    'title' => 'Export',
+    'csv' => 'CSV',
+    'xlsx' => 'Excel (.xlsx)',
+
+    'console' => [
+        'module' => 'No module ":module" can be exported. The ones that can: :modules.',
+        'format' => 'The format must be one of: :formats.',
+        'done' => 'Records written: :count, to :file.',
+    ],
+];

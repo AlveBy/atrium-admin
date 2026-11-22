@@ -43,5 +43,7 @@ return [
         'delete' => 'Sil',
         'use' => 'Token oluşturma ve kullanma',
         'settings' => 'Ayarlar',
+        'import' => 'İçe aktarma',
+        'export' => 'Dışa aktarma',
     ],
 ];

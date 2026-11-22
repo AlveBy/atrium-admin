@@ -12,6 +12,7 @@ namespace Atrium\Admin\Auth;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Modules\Modules;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 /**
@@ -19,8 +20,9 @@ use Illuminate\Support\Str;
  *
  * A permission is "{module}.{action}": `articles.view`, `articles.delete`.
  * Every module of the panel gets four actions — the panel's own sites,
- * languages and administrators included — and the "API tokens" section one,
- * `api-tokens.use`. Roles hold lists of these; a superadmin needs none.
+ * languages and administrators included — plus "import" and "export" where
+ * the module has them (Atrium\Admin\Transfer), and the "API tokens" section
+ * one, `api-tokens.use`. Roles hold lists of these; a superadmin needs none.
  *
  * The modules are not listed anywhere by hand: they are the same ones the
  * menu and the API are built from, so a new module can be granted at once.
@@ -41,6 +43,12 @@ final class Permissions
     public const DELETE = 'delete';
 
     public const ACTIONS = [self::VIEW, self::CREATE, self::UPDATE, self::DELETE];
+
+    /** Bringing records in from a file; a module that takes part in it has the action. */
+    public const IMPORT = 'import';
+
+    /** Taking the list out as a file; the same. */
+    public const EXPORT = 'export';
 
     public const API_TOKENS = 'api-tokens.use';
 
@@ -92,7 +100,7 @@ final class Permissions
         $sections = [];
 
         foreach (array_keys($this->resources->modules()) as $key) {
-            $sections[$key] = ['key' => $key, 'label' => $this->resources->label($key), 'actions' => self::ACTIONS];
+            $sections[$key] = ['key' => $key, 'label' => $this->resources->label($key), 'actions' => [...self::ACTIONS, ...$this->transferActions($key)]];
         }
 
         foreach ($this->modules->installed() as $module) {
@@ -123,6 +131,19 @@ final class Permissions
         $sections[] = ['key' => 'api-tokens', 'label' => __('atrium::menu.api_tokens'), 'actions' => ['use']];
 
         return $sections;
+    }
+
+    /**
+     * Whether the module has an import or an export: its routes are there.
+     *
+     * @return array<int,string>
+     */
+    private function transferActions(string $module): array
+    {
+        return array_values(array_filter(
+            [self::IMPORT, self::EXPORT],
+            static fn (string $action): bool => Route::has("admin.{$module}.{$action}"),
+        ));
     }
 
     /**
@@ -276,6 +297,12 @@ final class Permissions
         // The settings screens check the module's own permission.
         if (str_starts_with($routeName, 'admin.modules.')) {
             return self::ANY_SETTINGS;
+        }
+
+        // The import's screens and steps ("admin.news.import.show") need "import" as a whole.
+        if (preg_match('/^admin\.([a-z0-9_]+)\.(import|export)(\.[a-z]+)?$/', $routeName, $match)
+            && isset($this->resources->modules()[$match[1]])) {
+            return $match[1].'.'.$match[2];
         }
 
         if (preg_match('/^admin\.([a-z0-9_]+)\.([a-z]+)$/', $routeName, $match)

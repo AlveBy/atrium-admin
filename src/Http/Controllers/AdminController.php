@@ -18,6 +18,7 @@ use Atrium\Admin\Actions\ModuleActions;
 use Atrium\Admin\Actions\RecordAction;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Cache\RecordCache;
+use Atrium\Admin\Columns\Column;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Fields\CheckboxField;
@@ -31,6 +32,7 @@ use Atrium\Admin\Support\PublicUrl;
 use Atrium\Admin\Support\RecordDeleter;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Traits\BelongsToSite;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -38,6 +40,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
@@ -93,6 +96,8 @@ abstract class AdminController extends Controller
             'routeName' => $this->model::getAdminRouteName(),
             'createLabel' => $this->model::getAdminCreateLabel(),
             'can' => $can,
+            // Whether the list has the import and the export buttons: the module takes part, the role allows it.
+            'transfer' => $this->transferAbilities(),
             // Buttons on a record: a filled create form, a link, a server action.
             'actions' => array_map(
                 static fn (CreateFromRecord|Action $action): array => $action instanceof Action ? $action->toArray() : ['type' => 'create', ...$action->toArray()],
@@ -159,6 +164,21 @@ abstract class AdminController extends Controller
     private function currentAdmin(): mixed
     {
         return auth()->guard(config('atrium.auth.guard', 'admin'))->user();
+    }
+
+    /**
+     * Whether the administrator may import into the module and export its list.
+     *
+     * @return array{import:bool,export:bool}
+     */
+    protected function transferAbilities(): array
+    {
+        $user = auth()->guard(config('atrium.auth.guard', 'admin'))->user();
+        $module = $this->model::getAdminRoutePrefix();
+        $may = static fn (string $action): bool => Route::has("admin.{$module}.{$action}")
+            && (! $user instanceof AdminUser || $user->hasAdminPermission("{$module}.{$action}"));
+
+        return ['import' => $may(Permissions::IMPORT), 'export' => $may(Permissions::EXPORT)];
     }
 
     /**
@@ -251,6 +271,40 @@ abstract class AdminController extends Controller
      */
     public function index(Request $request): Response
     {
+        [$query, $columns, $related, $listFilters, $sortBy, $sortDir] = $this->listQuery($request);
+
+        $items = $query->paginate($this->model::getAdminPerPage())->withQueryString();
+
+        // Every row goes through listRow(): a package may present any of them.
+        $actionUrls = $this->actionUrls($items->getCollection());
+        $items->through(fn (Model $item): array => $this->listRow($item, $related));
+
+        return Inertia::render($this->getPagePrefix().'/Index', [
+            'items' => $items,
+            'columns' => $this->serializeColumns($columns),
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'sort' => $sortBy,
+                'direction' => $sortDir,
+                ...$listFilters,
+            ],
+            'title' => $this->model::getAdminLabel(),
+            'links' => Hook::apply('atrium.module.links', [], $this->model),
+            'bulkActions' => $this->visibleBulkActions(),
+            'actionUrls' => $actionUrls,
+            ...$this->resourceProps(),
+        ]);
+    }
+
+    /**
+     * The records of the list as the request narrows it: the module's
+     * filters, the search over its searchable columns and the sort. The list
+     * screen pages it; an export reads all of it.
+     *
+     * @return array{0:Builder<Model>,1:array<int,Column>,2:array<int,string>,3:array<string,string>,4:string,5:string} query, columns, related columns, filters, sort column, direction
+     */
+    protected function listQuery(Request $request): array
+    {
         $query = (new $this->model)->scopeAdminList($this->model::query());
         $columns = Hook::apply('atrium.module.columns', $this->model::getAdministrationListColumns(), $this->model);
         $related = $this->relatedColumns($columns);
@@ -312,27 +366,7 @@ abstract class AdminController extends Controller
             $query->orderBy($this->isTranslatable($sortBy) ? $sortBy.'->'.$this->contentLanguages()->default() : $sortBy, $sortDir);
         }
 
-        $items = $query->paginate($this->model::getAdminPerPage())->withQueryString();
-
-        // Every row goes through listRow(): a package may present any of them.
-        $actionUrls = $this->actionUrls($items->getCollection());
-        $items->through(fn (Model $item): array => $this->listRow($item, $related));
-
-        return Inertia::render($this->getPagePrefix().'/Index', [
-            'items' => $items,
-            'columns' => $this->serializeColumns($columns),
-            'filters' => [
-                'search' => $request->get('search', ''),
-                'sort' => $sortBy,
-                'direction' => $sortDir,
-                ...$listFilters,
-            ],
-            'title' => $this->model::getAdminLabel(),
-            'links' => Hook::apply('atrium.module.links', [], $this->model),
-            'bulkActions' => $this->visibleBulkActions(),
-            'actionUrls' => $actionUrls,
-            ...$this->resourceProps(),
-        ]);
+        return [$query, $columns, $related, $listFilters, $sortBy, $sortDir];
     }
 
     /**

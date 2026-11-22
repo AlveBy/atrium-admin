@@ -28,6 +28,8 @@ const props = defineProps({
     actionUrls: { type: [Object, Array], default: () => ({}) },
     // Buttons over the checked rows ("Delete" and the module's own).
     bulkActions: { type: Array, default: () => [] },
+    // import / export — whether the module has them and the roles allow them.
+    transfer: { type: Object, default: () => ({}) },
     // Buttons above the list added by packages ("Fields" of custom fields).
     links: { type: Array, default: () => [] },
 })
@@ -96,6 +98,13 @@ const handleSort = ({ column, direction }) => {
     })
 }
 
+// The export is what the list shows now: the same search, sort and filters, every page of it.
+const exportAs = (format) => {
+    const query = Object.fromEntries(Object.entries(props.filters || {}).filter(([, value]) => value !== '' && value !== null))
+
+    window.location.assign(route(`${props.routeName}.export`, { ...query, format }))
+}
+
 const handleEdit = (item) => {
     router.visit(route(`${props.routeName}.edit`, item.id))
 }
@@ -135,6 +144,15 @@ const handleDelete = () => {
                     variant="secondary"
                 >
                     {{ link.label }}
+                </AdminButton>
+                <AdminButton v-if="transfer.import" data-action="import" :href="route(`${props.routeName}.import`)" variant="secondary">
+                    {{ $t('import.title') }}
+                </AdminButton>
+                <AdminButton v-if="transfer.export" data-action="export-csv" variant="secondary" @click="exportAs('csv')">
+                    {{ $t('export.title') }} {{ $t('export.csv') }}
+                </AdminButton>
+                <AdminButton v-if="transfer.export" data-action="export-xlsx" variant="secondary" @click="exportAs('xlsx')">
+                    {{ $t('export.title') }} {{ $t('export.xlsx') }}
                 </AdminButton>
                 <AdminButton v-if="can.create !== false" data-action="create" :href="route(`${props.routeName}.create`, listFilters)">
                     <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

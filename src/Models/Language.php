@@ -98,6 +98,14 @@ class Language extends Model implements Administrable
         return 'languages';
     }
 
+    /**
+     * Sites and languages are set up in the panel, not brought in by a file.
+     */
+    public static function isImportableInAdmin(): bool
+    {
+        return false;
+    }
+
     public static function getAdminCreateLabel(): string
     {
         return __('atrium::languages.create');

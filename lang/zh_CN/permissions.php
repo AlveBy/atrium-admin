@@ -43,5 +43,7 @@ return [
         'delete' => '删除',
         'use' => '签发和使用令牌',
         'settings' => '设置',
+        'import' => '导入',
+        'export' => '导出',
     ],
 ];
