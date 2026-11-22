@@ -30,7 +30,7 @@ final class TreeIsReadOnceTest extends TransferTestCase
     {
         $count = 0;
         DB::listen(static function ($query) use (&$count): void {
-            $count += str_starts_with($query->sql, 'select * from "api_aisles"') ? 1 : 0;
+            $count += preg_match('/^select \* from [`"]api_aisles[`"]/', $query->sql);
         });
 
         $work();

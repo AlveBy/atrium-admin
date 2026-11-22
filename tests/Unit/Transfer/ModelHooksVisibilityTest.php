@@ -46,6 +46,8 @@ final class ModelHooksVisibilityTest extends TestCase
     {
         $method = new ReflectionMethod($model, $name);
 
+        // Run it too: the mutation tool sends a test to a line only if the test runs the line.
+        $this->assertNotNull($method->invoke(null));
         $this->assertTrue($method->isPublic());
         $this->assertTrue($method->isStatic());
     }
