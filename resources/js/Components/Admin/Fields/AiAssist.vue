@@ -30,6 +30,8 @@ const module = inject('aiModule', null)
 const formData = inject('formData', ref({}))
 const locales = computed(() => page.props.contentLocales || [])
 const labels = computed(() => ai.value?.labels || {})
+// A public demo: everybody sees what everybody types.
+const demo = computed(() => Boolean(ai.value?.demo))
 
 const canGenerate = computed(() => Boolean(ai.value && module && props.field.ai && ai.value.tasks.includes(props.field.ai.task)))
 const canTranslate = computed(() => Boolean(canGenerate.value && props.translatable && locales.value.length > 1 && ai.value.tasks.includes('translate')))
@@ -186,6 +188,10 @@ function accept() {
         </button>
 
         <AdminModal :show="open" :title="title" max-width="2xl" @close="close">
+            <p v-if="demo" class="mb-3 rounded-md border border-line bg-surface-alt px-3 py-2 text-xs text-fg" data-ai-demo-notice>
+                {{ labels.demo_notice }}
+            </p>
+
             <p v-if="working" class="text-sm text-fg" data-ai-working>{{ labels.working }}</p>
 
             <div v-else-if="error" class="rounded-md border border-danger bg-danger-soft px-4 py-3 text-sm text-danger-soft-fg" data-ai-error>

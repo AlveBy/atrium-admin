@@ -17,6 +17,7 @@ import { ajaxHeaders, responseErrorMessage } from '../../../Support/csrf'
 const page = usePage()
 const help = computed(() => page.props.ai?.help || null)
 const labels = computed(() => help.value?.labels || {})
+const demoNotice = computed(() => (page.props.ai?.demo ? page.props.ai?.labels?.demo_notice || '' : ''))
 const pollUrl = computed(() => page.props.ai?.url || '')
 const storageKey = computed(() => `atrium-ai-help:${page.props.auth?.user?.id ?? ''}`)
 
@@ -318,6 +319,7 @@ function escapeKey(event) {
                         dusk="ai-send"
                     >{{ labels.send }}</button>
                 </div>
+                <p v-if="demoNotice" class="mt-2 text-xs text-fg" dusk="ai-demo-notice">{{ demoNotice }}</p>
                 <p class="mt-2 text-xs text-muted">{{ labels.note }}</p>
             </form>
         </section>
