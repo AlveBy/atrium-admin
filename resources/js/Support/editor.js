@@ -24,6 +24,7 @@
 // diverge: without these rules Tailwind resets headings and lists.
 import './editor.css';
 
+import { DOMSerializer } from '@tiptap/pm/model';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
@@ -288,4 +289,73 @@ export function insertLibraryFile(editor, file, at = null) {
   }
 
   chain.run();
+}
+
+/**
+ * The piece of text picked out in the editor, for the AI to improve — and
+ * where to put the improved piece back.
+ *
+ * A piece inside one paragraph goes as its inline HTML (a word with its bold or
+ * link marks) and comes back the same way. A piece over several paragraphs
+ * grows to whole top-level blocks: putting blocks into the middle of a
+ * paragraph would split it, whereas whole blocks are swapped for whole blocks.
+ *
+ * `remembered` is the selection read when the button was pressed (see
+ * caretPosition()), for when the editor's own state has already lost it.
+ *
+ * Returns null when nothing is picked.
+ */
+export function pickPiece(editor, remembered = null) {
+  if (!editor) {
+    return null;
+  }
+
+  let { from, to } = editor.state.selection;
+
+  if (from === to && remembered && remembered.from !== remembered.to) {
+    ({ from, to } = remembered);
+  }
+
+  if (from === to) {
+    return null;
+  }
+
+  const doc = editor.state.doc;
+  const size = doc.content.size;
+
+  from = Math.max(0, Math.min(from, size));
+  to = Math.max(0, Math.min(to, size));
+
+  const $from = doc.resolve(from);
+  const $to = doc.resolve(to);
+  const inline = $from.sameParent($to) && $from.parent.isTextblock;
+
+  if (!inline) {
+    from = $from.before(1);
+    to = $to.after(1);
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.appendChild(DOMSerializer.fromSchema(editor.schema).serializeFragment(doc.slice(from, to).content));
+
+  return { html: wrapper.innerHTML, from, to, inline };
+}
+
+/**
+ * Put the improved piece where pickPiece() took it from. A model that
+ * answers a word with `<p>word</p>` must not split the paragraph: the wrapper
+ * of an inline piece is dropped.
+ */
+export function replacePiece(editor, piece, html) {
+  let text = String(html ?? '').trim();
+
+  if (piece.inline) {
+    const wrapped = /^<p>([\s\S]*)<\/p>$/.exec(text);
+
+    if (wrapped && !wrapped[1].includes('<p')) {
+      text = wrapped[1];
+    }
+  }
+
+  editor.chain().focus().insertContentAt({ from: piece.from, to: piece.to }, text).run();
 }

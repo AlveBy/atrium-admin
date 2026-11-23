@@ -113,6 +113,49 @@
             <span v-html="button.icon" class="w-4 h-4 block"></span>
           </button>
         </template>
+
+        <!-- AI: write, improve (the selected piece, if there is one), translate.
+             Here, not under the field, because the selection is at hand. -->
+        <div v-if="assist" ref="aiMenuRoot" class="relative ml-auto">
+          <button
+            type="button"
+            :data-ai-toolbar="name"
+            dusk="ai-toolbar"
+            class="flex items-center gap-1 rounded p-2 text-accent hover:bg-hover"
+            :class="{ 'bg-accent-soft text-accent-soft-fg': aiMenuOpen }"
+            :title="assist.title()"
+            :aria-label="assist.title()"
+            aria-haspopup="menu"
+            :aria-expanded="aiMenuOpen"
+            @mousedown="aiCaret = caretPosition(editor)"
+            @click="toggleAiMenu"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M10 1l1.8 5.2L17 8l-5.2 1.8L10 15l-1.8-5.2L3 8l5.2-1.8L10 1zm6 11l.9 2.1L19 15l-2.1.9L16 18l-.9-2.1L13 15l2.1-.9L16 12z" />
+            </svg>
+          </button>
+          <div
+            v-if="aiMenuOpen"
+            role="menu"
+            class="absolute right-0 top-full z-20 mt-1 min-w-48 rounded-md border border-field bg-surface py-1 shadow-lg"
+            :data-ai-menu="name"
+            dusk="ai-menu"
+            @keydown.esc="aiMenuOpen = false"
+          >
+            <button
+              v-for="item in aiItems"
+              :key="item.mode"
+              type="button"
+              role="menuitem"
+              class="block w-full px-3 py-1.5 text-left text-sm text-fg hover:bg-hover"
+              :data-ai-item="item.mode"
+              :dusk="`ai-item-${item.mode}`"
+              @click="runAi(item.mode)"
+            >
+              {{ item.label }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <editor-content
@@ -150,8 +193,11 @@ import {
   caretPosition,
   editorExtensions,
   insertLibraryFile,
+  pickPiece,
+  replacePiece,
   tableToolbarButtons,
 } from '../../../Support/editor'
+import { aiBridge, enlist } from '../../../Support/aiBridge'
 import FileManager from '../FileManager.vue'
 import { t } from '@atrium/Support/i18n'
 
@@ -230,6 +276,39 @@ function handleFileSelected(file) {
 
   insertLibraryFile(editor.value, file, caret.value)
 }
+
+// The AI of this field (AiAssist registers under the field's name): its buttons
+// are drawn in the toolbar while the visual editor is on screen.
+const assist = computed(() => (currentMode.value === 'wysiwyg' && props.name ? aiBridge.assists[props.name] : null))
+const aiMenuOpen = ref(false)
+const aiMenuRoot = ref(null)
+const aiItems = ref([])
+// The selection when the AI button was pressed: the editor loses focus to the
+// button, and the DOM selection has to be read before it does.
+const aiCaret = ref(null)
+
+function toggleAiMenu() {
+  aiMenuOpen.value = !aiMenuOpen.value
+
+  if (aiMenuOpen.value) {
+    aiItems.value = assist.value.menu()
+  }
+}
+
+function runAi(mode) {
+  aiMenuOpen.value = false
+  assist.value.run(mode)
+}
+
+function closeAiMenu(event) {
+  if (aiMenuRoot.value && !aiMenuRoot.value.contains(event.target)) {
+    aiMenuOpen.value = false
+  }
+}
+
+watch(aiMenuOpen, (open) => {
+  document[open ? 'addEventListener' : 'removeEventListener']('mousedown', closeAiMenu)
+})
 
 // TipTap editor
 const editor = useEditor({
@@ -496,7 +575,25 @@ const toolbarButtons = computed(() => {
   return buttons
 })
 
+// The AI reads the selected piece of the visual editor and puts the improved
+// piece back into the same place.
+let unlistEditor = null
+
+watch([currentMode, editor], ([mode, instance]) => {
+  unlistEditor?.()
+  unlistEditor = null
+
+  if (mode === 'wysiwyg' && instance && props.name) {
+    unlistEditor = enlist('editors', props.name, {
+      pick: () => pickPiece(instance, aiCaret.value),
+      replace: (piece, html) => replacePiece(instance, piece, html),
+    })
+  }
+}, { immediate: true })
+
 onUnmounted(() => {
+  unlistEditor?.()
+  document.removeEventListener('mousedown', closeAiMenu)
   editor.value?.destroy()
 })
 </script>
