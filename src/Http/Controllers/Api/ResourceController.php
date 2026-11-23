@@ -17,6 +17,7 @@ use Atrium\Admin\Actions\RecordAction;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Models\AdminUser;
@@ -154,8 +155,12 @@ class ResourceController extends AdminController
 
         $item = $this->findItem($id);
 
-        if (! $item->canDelete() || ! $this->deleteItem($item)) {
-            return response()->json(['message' => 'This record cannot be deleted.'], 409);
+        try {
+            if (! $item->canDelete() || ! $this->deleteItem($item)) {
+                return response()->json(['message' => 'This record cannot be deleted.'], 409);
+            }
+        } catch (Refused $refused) {
+            return response()->json(['message' => $refused->getMessage()], 409);
         }
 
         return response()->json(null, 204);

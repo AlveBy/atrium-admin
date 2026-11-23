@@ -25,6 +25,7 @@ use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\DisplayField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
+use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Like;
@@ -44,6 +45,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -541,7 +543,7 @@ abstract class AdminController extends Controller
         }
 
         $validated = $item->transformAdminData($validated);
-        $validated = Hook::apply('atrium.record.data', $validated, $item, $context);
+        $validated = $this->filterRecordData($request, $validated, $item, $context);
 
         // BelongsToMany values live in a pivot table, not a column. They must
         // be pulled out before fill(), or the insert fails with
@@ -573,6 +575,28 @@ abstract class AdminController extends Controller
         DB::afterCommit(static fn () => Hook::fire('atrium.record.saved', $saved, $context));
 
         return $saved;
+    }
+
+    /**
+     * `atrium.record.data`: other modules change what is saved, or refuse it
+     * with Refused. A refusal is a validation error, so the form keeps what
+     * was typed and the API answers 422 with the message; one without a
+     * field is also shown above the form.
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    private function filterRecordData(Request $request, array $data, Model $item, string $context): array
+    {
+        try {
+            return Hook::apply('atrium.record.data', $data, $item, $context);
+        } catch (Refused $refused) {
+            if ($refused->field === null && $request->hasSession()) {
+                $request->session()->flash('error', $refused->getMessage());
+            }
+
+            throw ValidationException::withMessages([$refused->field ?? '_record' => $refused->getMessage()]);
+        }
     }
 
     /**
@@ -943,8 +967,12 @@ abstract class AdminController extends Controller
             return back()->with('error', __('atrium::resource.cannot_delete'));
         }
 
-        if (! $this->deleteItem($item)) {
-            return back()->with('error', __('atrium::resource.delete_failed'));
+        try {
+            if (! $this->deleteItem($item)) {
+                return back()->with('error', __('atrium::resource.delete_failed'));
+            }
+        } catch (Refused $refused) {
+            return back()->with('error', $refused->getMessage());
         }
 
         return redirect()
@@ -954,8 +982,9 @@ abstract class AdminController extends Controller
 
     /**
      * Delete a record with what beforeAdminDelete() takes with it, whole or not
-     * at all. False when beforeAdminDelete() refuses. `atrium.record.deleted`
-     * is heard after the commit only.
+     * at all. False when beforeAdminDelete() refuses; Refused when a listener
+     * of `atrium.record.deleting` does. `atrium.record.deleted` is heard after
+     * the commit only.
      */
     protected function deleteItem(Model&Administrable $item): bool
     {

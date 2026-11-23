@@ -11,6 +11,7 @@ namespace Atrium\Admin\Support;
 
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\Hooks\Refused;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -22,14 +23,22 @@ use Illuminate\Support\Facades\DB;
 final class RecordDeleter
 {
     /**
-     * False when beforeAdminDelete() refuses. `atrium.record.deleted` is
-     * heard after the commit only.
+     * False when beforeAdminDelete() refuses. A listener of
+     * `atrium.record.deleting` refuses by throwing Refused, which leaves
+     * here after the rollback. `atrium.record.deleted` is heard after the
+     * commit only.
+     *
+     * @throws Refused
      */
     public function delete(Model&Administrable $item): bool
     {
         $deleted = DB::transaction(static function () use ($item): ?Model {
             // A retry after a deadlock starts again from the record as it came.
             $record = clone $item;
+
+            // Inside the transaction: what a listener writes goes or stays
+            // with the record.
+            Hook::fire('atrium.record.deleting', $record);
 
             if (! $record->beforeAdminDelete()) {
                 return null;
