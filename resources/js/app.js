@@ -9,6 +9,7 @@ import { createInertiaApp, router } from '@inertiajs/vue3';
 import { ZiggyVue } from 'ziggy-js';
 import { i18n } from './Support/i18n';
 import { applyTheme } from './Support/theme';
+import AdminShell from './Layouts/AdminShell.vue';
 
 // The server sets <html lang> only on a full load; keep it right after an
 // Inertia visit too, so screen readers pronounce the new language. `navigate`
@@ -43,6 +44,11 @@ createInertiaApp({
         }
         return page();
     },
+    // Every page gets the frame as its layout, and Inertia keeps that one
+    // instance between visits, so the sidebar, the header and the AI helper
+    // are not rebuilt on each click. Signing in has no frame; a page can say
+    // otherwise for itself with `defineOptions({ layout: ... })`.
+    layout: (name) => (name.startsWith('Admin/Auth/') ? null : AdminShell),
     setup({ el, App, props, plugin }) {
         applyTheme(props.initialPage.props.theme);
         createApp({ render: () => h(App, props) })

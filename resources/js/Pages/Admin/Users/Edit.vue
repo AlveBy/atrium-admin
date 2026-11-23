@@ -5,8 +5,7 @@
  */
 
 import { computed, provide } from 'vue'
-import { useForm, Link } from '@inertiajs/vue3'
-import AdminLayout from '../../../Layouts/AdminLayout.vue'
+import { useForm, Link, Head } from '@inertiajs/vue3'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminCard from '../../../Components/Admin/UI/AdminCard.vue'
 import FormField from '../../../Components/Admin/Fields/FormField.vue'
@@ -47,110 +46,109 @@ const submit = () => {
 </script>
 
 <template>
-    <AdminLayout :title="title">
-        <!-- Breadcrumb -->
-        <div class="mb-6">
-            <nav class="flex" aria-label="Breadcrumb">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                    <li class="inline-flex items-center">
-                        <Link :href="route('admin.users.index')" class="text-muted hover:text-accent">
-                            {{ $t('menu.administrators') }}
-                        </Link>
-                    </li>
-                    <li>
+    <Head :title="title" />
+    <!-- Breadcrumb -->
+    <div class="mb-6">
+        <nav class="flex" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <Link :href="route('admin.users.index')" class="text-muted hover:text-accent">
+                        {{ $t('menu.administrators') }}
+                    </Link>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 text-muted" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="ml-1 text-muted">{{ item.name }}</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="max-w-2xl">
+        <h1 class="text-2xl font-bold text-fg mb-6">{{ title }}</h1>
+
+        <AdminCard>
+            <p v-if="readOnly" data-read-only class="mb-6 rounded-md border border-field bg-surface-alt px-4 py-3 text-sm text-fg">
+                {{ $t('resource.form.read_only') }}
+            </p>
+
+            <form @submit.prevent="submit" class="space-y-6">
+                <fieldset :disabled="readOnly" class="space-y-6">
+                <template v-for="field in fields" :key="field.name">
+                <FormField
+                    v-if="!plain(field)"
+                    :field="field"
+                    v-model="form[field.name]"
+                    :errors="form.errors"
+                />
+                <div v-else>
+                    <label :for="field.name" class="block text-sm font-medium text-fg mb-1">
+                        {{ field.label }}
+                        <span v-if="field.required && field.type !== 'password'" class="text-danger">*</span>
+                    </label>
+
+                    <!-- Checkbox for boolean -->
+                    <template v-if="field.type === 'checkbox'">
                         <div class="flex items-center">
-                            <svg class="w-4 h-4 text-muted" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="ml-1 text-muted">{{ item.name }}</span>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
-        </div>
-
-        <div class="max-w-2xl">
-            <h1 class="text-2xl font-bold text-fg mb-6">{{ title }}</h1>
-
-            <AdminCard>
-                <p v-if="readOnly" data-read-only class="mb-6 rounded-md border border-field bg-surface-alt px-4 py-3 text-sm text-fg">
-                    {{ $t('resource.form.read_only') }}
-                </p>
-
-                <form @submit.prevent="submit" class="space-y-6">
-                    <fieldset :disabled="readOnly" class="space-y-6">
-                    <template v-for="field in fields" :key="field.name">
-                    <FormField
-                        v-if="!plain(field)"
-                        :field="field"
-                        v-model="form[field.name]"
-                        :errors="form.errors"
-                    />
-                    <div v-else>
-                        <label :for="field.name" class="block text-sm font-medium text-fg mb-1">
-                            {{ field.label }}
-                            <span v-if="field.required && field.type !== 'password'" class="text-danger">*</span>
-                        </label>
-
-                        <!-- Checkbox for boolean -->
-                        <template v-if="field.type === 'checkbox'">
-                            <div class="flex items-center">
-                                <input
-                                    :id="field.name"
-                                    v-model="form[field.name]"
-                                    type="checkbox"
-                                    class="h-4 w-4 text-accent focus:ring-focus border-field rounded"
-                                />
-                                <label :for="field.name" class="ml-2 text-sm text-fg">
-                                    {{ field.label }}
-                                </label>
-                            </div>
-                        </template>
-
-                        <!-- Text/Email/Password input -->
-                        <template v-else>
                             <input
                                 :id="field.name"
                                 v-model="form[field.name]"
-                                :type="field.type === 'password' ? 'password' : field.type === 'email' ? 'email' : 'text'"
-                                :placeholder="field.type === 'password' ? $t('account.users.password_keep_placeholder') : field.placeholder"
-                                :required="field.required && field.type !== 'password'"
-                                class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus"
-                                :class="{ 'border-danger': form.errors[field.name] }"
+                                type="checkbox"
+                                class="h-4 w-4 text-accent focus:ring-focus border-field rounded"
                             />
-                        </template>
-
-                        <p v-if="field.hint" class="mt-1 text-sm text-muted">
-                            {{ field.hint }}
-                        </p>
-                        <p v-if="field.type === 'password' && field.name === 'password'" class="mt-1 text-sm text-muted">
-                            {{ $t('account.users.password_keep_hint') }}
-                        </p>
-                        <p v-if="form.errors[field.name]" class="mt-1 text-sm text-danger">
-                            {{ form.errors[field.name] }}
-                        </p>
-                    </div>
+                            <label :for="field.name" class="ml-2 text-sm text-fg">
+                                {{ field.label }}
+                            </label>
+                        </div>
                     </template>
-                    </fieldset>
 
-                    <div class="flex items-center justify-end space-x-3 pt-4 border-t">
-                        <AdminButton
-                            :href="route('admin.users.index')"
-                            variant="secondary"
-                        >
-                            {{ readOnly ? $t('common.back') : $t('common.cancel') }}
-                        </AdminButton>
-                        <AdminButton
-                            v-if="!readOnly"
-                            data-action="save"
-                            type="submit"
-                            :loading="form.processing"
-                        >
-                            {{ $t('common.save') }}
-                        </AdminButton>
-                    </div>
-                </form>
-            </AdminCard>
-        </div>
-    </AdminLayout>
+                    <!-- Text/Email/Password input -->
+                    <template v-else>
+                        <input
+                            :id="field.name"
+                            v-model="form[field.name]"
+                            :type="field.type === 'password' ? 'password' : field.type === 'email' ? 'email' : 'text'"
+                            :placeholder="field.type === 'password' ? $t('account.users.password_keep_placeholder') : field.placeholder"
+                            :required="field.required && field.type !== 'password'"
+                            class="w-full px-3 py-2 border border-field rounded-md shadow-sm focus:ring-focus focus:border-focus"
+                            :class="{ 'border-danger': form.errors[field.name] }"
+                        />
+                    </template>
+
+                    <p v-if="field.hint" class="mt-1 text-sm text-muted">
+                        {{ field.hint }}
+                    </p>
+                    <p v-if="field.type === 'password' && field.name === 'password'" class="mt-1 text-sm text-muted">
+                        {{ $t('account.users.password_keep_hint') }}
+                    </p>
+                    <p v-if="form.errors[field.name]" class="mt-1 text-sm text-danger">
+                        {{ form.errors[field.name] }}
+                    </p>
+                </div>
+                </template>
+                </fieldset>
+
+                <div class="flex items-center justify-end space-x-3 pt-4 border-t">
+                    <AdminButton
+                        :href="route('admin.users.index')"
+                        variant="secondary"
+                    >
+                        {{ readOnly ? $t('common.back') : $t('common.cancel') }}
+                    </AdminButton>
+                    <AdminButton
+                        v-if="!readOnly"
+                        data-action="save"
+                        type="submit"
+                        :loading="form.processing"
+                    >
+                        {{ $t('common.save') }}
+                    </AdminButton>
+                </div>
+            </form>
+        </AdminCard>
+    </div>
 </template>

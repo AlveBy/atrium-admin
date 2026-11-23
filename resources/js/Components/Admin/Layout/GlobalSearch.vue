@@ -5,7 +5,7 @@
  */
 
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { Link, router, usePage } from '@inertiajs/vue3'
 import { ajaxHeaders } from '@atrium/Support/csrf'
 import { t } from '@atrium/Support/i18n'
 
@@ -84,7 +84,18 @@ function onBlur(event) {
     if (!event.currentTarget.contains(event.relatedTarget)) close()
 }
 
-onBeforeUnmount(() => clearTimeout(timer))
+// The header outlives visits: a visit starts the box afresh, as it did when the
+// header was rebuilt every time.
+const stopNavigate = router.on('navigate', () => {
+    query.value = ''
+    groups.value = []
+    close()
+})
+
+onBeforeUnmount(() => {
+    clearTimeout(timer)
+    stopNavigate()
+})
 </script>
 
 <template>

@@ -10,8 +10,8 @@
  *
  * The tiles themselves live in Components/Admin/Dashboard, this is only the layout.
  */
+import { Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import AdminLayout from '@atrium/Layouts/AdminLayout.vue'
 import SiteSpeedGadget from '@atrium/Components/Admin/Dashboard/SiteSpeedGadget.vue'
 import PerformanceGadget from '@atrium/Components/Admin/Dashboard/PerformanceGadget.vue'
 import RecentElementsGadget from '@atrium/Components/Admin/Dashboard/RecentElementsGadget.vue'
@@ -39,20 +39,19 @@ const visible = computed(() => props.gadgets.filter((gadget) => COMPONENTS[gadge
 </script>
 
 <template>
-    <AdminLayout :title="$t('dashboard.title')">
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-fg">{{ $t('dashboard.title') }}</h1>
-        </div>
+    <Head :title="$t('dashboard.title')" />
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-fg">{{ $t('dashboard.title') }}</h1>
+    </div>
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <component
-                :is="COMPONENTS[gadget.component]"
-                v-for="gadget in visible"
-                :key="gadget.key"
-                :title="gadget.title"
-                :data="gadget.data"
-                :class="gadget.width === 'full' ? 'lg:col-span-2' : ''"
-            />
-        </div>
-    </AdminLayout>
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <component
+            :is="COMPONENTS[gadget.component]"
+            v-for="gadget in visible"
+            :key="gadget.key"
+            :title="gadget.title"
+            :data="gadget.data"
+            :class="gadget.width === 'full' ? 'lg:col-span-2' : ''"
+        />
+    </div>
 </template>

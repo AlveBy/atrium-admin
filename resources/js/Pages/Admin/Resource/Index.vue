@@ -5,8 +5,7 @@
  */
 
 import { ref, watch } from 'vue'
-import { router } from '@inertiajs/vue3'
-import AdminLayout from '../../../Layouts/AdminLayout.vue'
+import { router, Head } from '@inertiajs/vue3'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminDataTable from '../../../Components/Admin/Table/AdminDataTable.vue'
 import AdminModal from '../../../Components/Admin/UI/AdminModal.vue'
@@ -127,150 +126,149 @@ const handleDelete = () => {
 </script>
 
 <template>
-    <AdminLayout :title="title">
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 :data-page-title="routeName" class="text-2xl font-bold text-fg">{{ title }}</h1>
-                <p class="mt-1 text-sm text-muted">
-                    {{ $t('resource.index.total', { count: items.total }) }}
-                </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <AdminButton
-                    v-for="link in links"
-                    :key="link.name"
-                    :data-link="link.name"
-                    :href="link.href"
-                    variant="secondary"
-                >
-                    {{ link.label }}
-                </AdminButton>
-                <AdminButton v-if="transfer.import" data-action="import" :href="route(`${props.routeName}.import`)" variant="secondary">
-                    {{ $t('import.title') }}
-                </AdminButton>
-                <AdminButton v-if="transfer.export" data-action="export-csv" variant="secondary" @click="exportAs('csv')">
-                    {{ $t('export.title') }} {{ $t('export.csv') }}
-                </AdminButton>
-                <AdminButton v-if="transfer.export" data-action="export-xlsx" variant="secondary" @click="exportAs('xlsx')">
-                    {{ $t('export.title') }} {{ $t('export.xlsx') }}
-                </AdminButton>
-                <AdminButton v-if="can.create !== false" data-action="create" :href="route(`${props.routeName}.create`, listFilters)">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    {{ $t('common.create') }}
-                </AdminButton>
-            </div>
-        </div>
-
-        <div class="mb-6">
-            <div class="flex gap-4">
-                <div class="flex-1 max-w-md">
-                    <input
-                        v-model="search"
-                        type="text"
-                        :placeholder="$t('resource.index.search_placeholder')"
-                        data-search-input="true"
-                        class="w-full px-4 py-2 border border-field rounded-lg focus:ring-focus focus:border-focus"
-                        @keyup.enter="handleSearch"
-                    />
-                </div>
-                <AdminButton data-action="search" @click="handleSearch" variant="secondary">
-                    {{ $t('resource.index.search_button') }}
-                </AdminButton>
-            </div>
-        </div>
-
-        <!--
-            The bar above the list while rows are checked. The count is read
-            out as it changes; "Delete" is told apart by its icon, not only
-            by its colour.
-        -->
-        <p class="sr-only" aria-live="polite">{{ selected.length ? tc('actions.bulk.selected', selected.length) : '' }}</p>
-        <div
-            v-if="bulkActions.length && selected.length"
-            role="region"
-            :aria-label="$t('actions.bulk.region')"
-            data-bulk-bar="true"
-            class="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-accent bg-accent-soft px-4 py-2 text-accent-soft-fg"
-        >
-            <span data-bulk-count class="text-sm font-semibold">{{ tc('actions.bulk.selected', selected.length) }}</span>
-            <AdminButton
-                v-for="action in bulkActions"
-                :key="action.name"
-                :data-bulk-action="action.name"
-                :variant="action.name === 'delete' ? 'danger' : 'secondary'"
-                size="sm"
-                @click="handleBulkAction(action)"
-            >
-                <svg v-if="action.name === 'delete'" class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                {{ action.label }}
-            </AdminButton>
-            <button
-                type="button"
-                data-bulk-clear
-                class="ml-auto rounded px-2 py-1 text-sm underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-focus"
-                @click="selected = []"
-            >
-                {{ $t('actions.bulk.clear') }}
-            </button>
-        </div>
-
-        <AdminDataTable
-            :columns="columns"
-            :items="items"
-            :sort-by="filters.sort"
-            :sort-direction="filters.direction"
-            :can-delete="can.delete !== false"
-            :row-actions="rowActions"
-            :selectable="bulkActions.length > 0"
-            v-model:selected="selected"
-            @action="handleRecordAction"
-            @sort="handleSort"
-            @edit="handleEdit"
-            @delete="confirmDelete"
-        />
-
-        <AdminModal
-            :show="showDeleteModal"
-            :title="$t('resource.delete.title')"
-            @close="showDeleteModal = false"
-        >
-            <p class="text-muted">
-                {{ $t('resource.delete.confirm') }}
+    <Head :title="title" />
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 :data-page-title="routeName" class="text-2xl font-bold text-fg">{{ title }}</h1>
+            <p class="mt-1 text-sm text-muted">
+                {{ $t('resource.index.total', { count: items.total }) }}
             </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <AdminButton
+                v-for="link in links"
+                :key="link.name"
+                :data-link="link.name"
+                :href="link.href"
+                variant="secondary"
+            >
+                {{ link.label }}
+            </AdminButton>
+            <AdminButton v-if="transfer.import" data-action="import" :href="route(`${props.routeName}.import`)" variant="secondary">
+                {{ $t('import.title') }}
+            </AdminButton>
+            <AdminButton v-if="transfer.export" data-action="export-csv" variant="secondary" @click="exportAs('csv')">
+                {{ $t('export.title') }} {{ $t('export.csv') }}
+            </AdminButton>
+            <AdminButton v-if="transfer.export" data-action="export-xlsx" variant="secondary" @click="exportAs('xlsx')">
+                {{ $t('export.title') }} {{ $t('export.xlsx') }}
+            </AdminButton>
+            <AdminButton v-if="can.create !== false" data-action="create" :href="route(`${props.routeName}.create`, listFilters)">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                {{ $t('common.create') }}
+            </AdminButton>
+        </div>
+    </div>
 
-            <template #footer>
-                <AdminButton data-action="delete-cancel" variant="secondary" @click="showDeleteModal = false">
-                    {{ $t('common.cancel') }}
-                </AdminButton>
-                <AdminButton data-action="delete-confirm" variant="danger" @click="handleDelete">
-                    {{ $t('common.delete') }}
-                </AdminButton>
-            </template>
-        </AdminModal>
+    <div class="mb-6">
+        <div class="flex gap-4">
+            <div class="flex-1 max-w-md">
+                <input
+                    v-model="search"
+                    type="text"
+                    :placeholder="$t('resource.index.search_placeholder')"
+                    data-search-input="true"
+                    class="w-full px-4 py-2 border border-field rounded-lg focus:ring-focus focus:border-focus"
+                    @keyup.enter="handleSearch"
+                />
+            </div>
+            <AdminButton data-action="search" @click="handleSearch" variant="secondary">
+                {{ $t('resource.index.search_button') }}
+            </AdminButton>
+        </div>
+    </div>
 
-        <AdminModal
-            :show="pending !== null"
-            :title="$t('actions.confirm_title')"
-            @close="pending = null"
+    <!--
+        The bar above the list while rows are checked. The count is read
+        out as it changes; "Delete" is told apart by its icon, not only
+        by its colour.
+    -->
+    <p class="sr-only" aria-live="polite">{{ selected.length ? tc('actions.bulk.selected', selected.length) : '' }}</p>
+    <div
+        v-if="bulkActions.length && selected.length"
+        role="region"
+        :aria-label="$t('actions.bulk.region')"
+        data-bulk-bar="true"
+        class="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-accent bg-accent-soft px-4 py-2 text-accent-soft-fg"
+    >
+        <span data-bulk-count class="text-sm font-semibold">{{ tc('actions.bulk.selected', selected.length) }}</span>
+        <AdminButton
+            v-for="action in bulkActions"
+            :key="action.name"
+            :data-bulk-action="action.name"
+            :variant="action.name === 'delete' ? 'danger' : 'secondary'"
+            size="sm"
+            @click="handleBulkAction(action)"
         >
-            <p data-action-question class="text-fg">{{ pending?.action.confirm }}</p>
+            <svg v-if="action.name === 'delete'" class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            {{ action.label }}
+        </AdminButton>
+        <button
+            type="button"
+            data-bulk-clear
+            class="ml-auto rounded px-2 py-1 text-sm underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-focus"
+            @click="selected = []"
+        >
+            {{ $t('actions.bulk.clear') }}
+        </button>
+    </div>
 
-            <template #footer>
-                <AdminButton data-action="action-cancel" variant="secondary" @click="pending = null">
-                    {{ $t('common.cancel') }}
-                </AdminButton>
-                <AdminButton
-                    data-action="action-confirm"
-                    :variant="pending?.action.name === 'delete' ? 'danger' : 'primary'"
-                    @click="confirmPending"
-                >
-                    {{ pending?.action.label }}
-                </AdminButton>
-            </template>
-        </AdminModal>
-    </AdminLayout>
+    <AdminDataTable
+        :columns="columns"
+        :items="items"
+        :sort-by="filters.sort"
+        :sort-direction="filters.direction"
+        :can-delete="can.delete !== false"
+        :row-actions="rowActions"
+        :selectable="bulkActions.length > 0"
+        v-model:selected="selected"
+        @action="handleRecordAction"
+        @sort="handleSort"
+        @edit="handleEdit"
+        @delete="confirmDelete"
+    />
+
+    <AdminModal
+        :show="showDeleteModal"
+        :title="$t('resource.delete.title')"
+        @close="showDeleteModal = false"
+    >
+        <p class="text-muted">
+            {{ $t('resource.delete.confirm') }}
+        </p>
+
+        <template #footer>
+            <AdminButton data-action="delete-cancel" variant="secondary" @click="showDeleteModal = false">
+                {{ $t('common.cancel') }}
+            </AdminButton>
+            <AdminButton data-action="delete-confirm" variant="danger" @click="handleDelete">
+                {{ $t('common.delete') }}
+            </AdminButton>
+        </template>
+    </AdminModal>
+
+    <AdminModal
+        :show="pending !== null"
+        :title="$t('actions.confirm_title')"
+        @close="pending = null"
+    >
+        <p data-action-question class="text-fg">{{ pending?.action.confirm }}</p>
+
+        <template #footer>
+            <AdminButton data-action="action-cancel" variant="secondary" @click="pending = null">
+                {{ $t('common.cancel') }}
+            </AdminButton>
+            <AdminButton
+                data-action="action-confirm"
+                :variant="pending?.action.name === 'delete' ? 'danger' : 'primary'"
+                @click="confirmPending"
+            >
+                {{ pending?.action.label }}
+            </AdminButton>
+        </template>
+    </AdminModal>
 </template>

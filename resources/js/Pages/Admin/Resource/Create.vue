@@ -4,9 +4,8 @@
  * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
  */
 
-import { useForm, Link } from '@inertiajs/vue3'
+import { useForm, Link, Head } from '@inertiajs/vue3'
 import { ref, computed, provide } from 'vue'
-import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminCard from '../../../Components/Admin/UI/AdminCard.vue'
 import AdminTabs from '../../../Components/Admin/Tabs/AdminTabs.vue'
@@ -82,97 +81,96 @@ const tabsWithBadges = computed(() => {
 </script>
 
 <template>
-    <AdminLayout :title="title">
-        <!-- Breadcrumb -->
-        <div class="mb-6">
-            <nav class="flex" aria-label="Breadcrumb">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                    <li class="inline-flex items-center">
-                        <Link :href="route(`${props.routeName}.index`)" class="text-muted hover:text-accent">
-                            {{ adminLabel }}
-                        </Link>
-                    </li>
-                    <li>
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 text-muted" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="ml-1 text-muted">{{ $t('resource.form.breadcrumb_create') }}</span>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
-        </div>
-
-        <div class="max-w-4xl">
-            <h1 class="text-2xl font-bold text-fg mb-6">{{ title }}</h1>
-
-            <AdminCard>
-                <form @submit.prevent="submit" data-admin-form="true" :data-resource="routeName" data-context="create">
-                    <ContentLocaleSwitcher
-                        v-if="showSwitcher"
-                        v-model="contentLocale"
-                        :locales="contentLocales"
-                        :fields="allFields()"
-                        :errors="form.errors"
-                    />
-
-                    <!-- With Tabs -->
-                    <template v-if="useTabs && tabs && fieldsByTab">
-                        <AdminTabs :tabs="tabsWithBadges" v-model="activeTab">
-                            <template #default="{ activeTab: currentTab }">
-                                <AdminTabPanel
-                                    v-for="tab in tabs"
-                                    :key="tab.name"
-                                    :name="tab.name"
-                                    :activeTab="currentTab"
-                                >
-                                    <div class="space-y-6">
-                                        <FormField
-                                            v-for="field in fieldsByTab[tab.name]"
-                                            :key="field.name"
-                                            :field="field"
-                                            v-model="form[field.name]"
-                                            :errors="form.errors"
-                                        />
-
-                                        <!-- Empty tab message -->
-                                        <div
-                                            v-if="!fieldsByTab[tab.name]?.length"
-                                            class="text-center py-12 text-muted"
-                                        >
-                                            <p>{{ $t('resource.form.empty_tab') }}</p>
-                                        </div>
-                                    </div>
-                                </AdminTabPanel>
-                            </template>
-                        </AdminTabs>
-                    </template>
-
-                    <!-- Without Tabs (backward compatibility) -->
-                    <template v-else>
-                        <div class="space-y-6">
-                            <FormField
-                                v-for="field in fields"
-                                :key="field.name"
-                                :field="field"
-                                v-model="form[field.name]"
-                                :errors="form.errors"
-                            />
-                        </div>
-                    </template>
-
-                    <!-- Form buttons -->
-                    <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t">
-                        <AdminButton data-action="cancel" :href="route(`${props.routeName}.index`)" variant="secondary">
-                            {{ $t('common.cancel') }}
-                        </AdminButton>
-                        <AdminButton data-action="save" type="submit" :loading="form.processing">
-                            {{ $t('common.create') }}
-                        </AdminButton>
+    <Head :title="title" />
+    <!-- Breadcrumb -->
+    <div class="mb-6">
+        <nav class="flex" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <Link :href="route(`${props.routeName}.index`)" class="text-muted hover:text-accent">
+                        {{ adminLabel }}
+                    </Link>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 text-muted" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="ml-1 text-muted">{{ $t('resource.form.breadcrumb_create') }}</span>
                     </div>
-                </form>
-            </AdminCard>
-        </div>
-    </AdminLayout>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="max-w-4xl">
+        <h1 class="text-2xl font-bold text-fg mb-6">{{ title }}</h1>
+
+        <AdminCard>
+            <form @submit.prevent="submit" data-admin-form="true" :data-resource="routeName" data-context="create">
+                <ContentLocaleSwitcher
+                    v-if="showSwitcher"
+                    v-model="contentLocale"
+                    :locales="contentLocales"
+                    :fields="allFields()"
+                    :errors="form.errors"
+                />
+
+                <!-- With Tabs -->
+                <template v-if="useTabs && tabs && fieldsByTab">
+                    <AdminTabs :tabs="tabsWithBadges" v-model="activeTab">
+                        <template #default="{ activeTab: currentTab }">
+                            <AdminTabPanel
+                                v-for="tab in tabs"
+                                :key="tab.name"
+                                :name="tab.name"
+                                :activeTab="currentTab"
+                            >
+                                <div class="space-y-6">
+                                    <FormField
+                                        v-for="field in fieldsByTab[tab.name]"
+                                        :key="field.name"
+                                        :field="field"
+                                        v-model="form[field.name]"
+                                        :errors="form.errors"
+                                    />
+
+                                    <!-- Empty tab message -->
+                                    <div
+                                        v-if="!fieldsByTab[tab.name]?.length"
+                                        class="text-center py-12 text-muted"
+                                    >
+                                        <p>{{ $t('resource.form.empty_tab') }}</p>
+                                    </div>
+                                </div>
+                            </AdminTabPanel>
+                        </template>
+                    </AdminTabs>
+                </template>
+
+                <!-- Without Tabs (backward compatibility) -->
+                <template v-else>
+                    <div class="space-y-6">
+                        <FormField
+                            v-for="field in fields"
+                            :key="field.name"
+                            :field="field"
+                            v-model="form[field.name]"
+                            :errors="form.errors"
+                        />
+                    </div>
+                </template>
+
+                <!-- Form buttons -->
+                <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t">
+                    <AdminButton data-action="cancel" :href="route(`${props.routeName}.index`)" variant="secondary">
+                        {{ $t('common.cancel') }}
+                    </AdminButton>
+                    <AdminButton data-action="save" type="submit" :loading="form.processing">
+                        {{ $t('common.create') }}
+                    </AdminButton>
+                </div>
+            </form>
+        </AdminCard>
+    </div>
 </template>

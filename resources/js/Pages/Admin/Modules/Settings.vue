@@ -9,8 +9,7 @@
  * with per-site settings, those of the site chosen in the header.
  */
 import { computed, provide } from 'vue'
-import { useForm, Link } from '@inertiajs/vue3'
-import AdminLayout from '../../../Layouts/AdminLayout.vue'
+import { useForm, Link, Head } from '@inertiajs/vue3'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminCard from '../../../Components/Admin/UI/AdminCard.vue'
 import FormField from '../../../Components/Admin/Fields/FormField.vue'
@@ -41,34 +40,33 @@ const submit = () => {
 </script>
 
 <template>
-    <AdminLayout :title="title">
-        <div class="mb-6">
-            <Link :href="route('admin.modules.index')" class="text-muted hover:text-accent">{{ $t('menu.modules') }}</Link>
-        </div>
+    <Head :title="title" />
+    <div class="mb-6">
+        <Link :href="route('admin.modules.index')" class="text-muted hover:text-accent">{{ $t('menu.modules') }}</Link>
+    </div>
 
-        <div class="max-w-4xl">
-            <h1 data-page-title="admin.modules.settings" class="text-2xl font-bold text-fg">{{ title }}</h1>
-            <p v-if="description" class="mt-1 text-sm text-muted">{{ description }}</p>
-            <p v-if="site" data-settings-site class="mt-1 text-sm text-muted">{{ $t('modules.per_site', { site: site.name }) }}</p>
+    <div class="max-w-4xl">
+        <h1 data-page-title="admin.modules.settings" class="text-2xl font-bold text-fg">{{ title }}</h1>
+        <p v-if="description" class="mt-1 text-sm text-muted">{{ description }}</p>
+        <p v-if="site" data-settings-site class="mt-1 text-sm text-muted">{{ $t('modules.per_site', { site: site.name }) }}</p>
 
-            <AdminCard class="mt-6">
-                <form data-settings-form :data-module="module.key" @submit.prevent="submit">
-                    <div class="space-y-6">
-                        <FormField
-                            v-for="field in fields"
-                            :key="field.name"
-                            :field="field"
-                            v-model="form[field.name]"
-                            :errors="form.errors"
-                        />
-                    </div>
+        <AdminCard class="mt-6">
+            <form data-settings-form :data-module="module.key" @submit.prevent="submit">
+                <div class="space-y-6">
+                    <FormField
+                        v-for="field in fields"
+                        :key="field.name"
+                        :field="field"
+                        v-model="form[field.name]"
+                        :errors="form.errors"
+                    />
+                </div>
 
-                    <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t">
-                        <AdminButton :href="route('admin.modules.index')" variant="secondary">{{ $t('common.cancel') }}</AdminButton>
-                        <AdminButton data-action="save" type="submit" :loading="form.processing">{{ $t('common.save') }}</AdminButton>
-                    </div>
-                </form>
-            </AdminCard>
-        </div>
-    </AdminLayout>
+                <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t">
+                    <AdminButton :href="route('admin.modules.index')" variant="secondary">{{ $t('common.cancel') }}</AdminButton>
+                    <AdminButton data-action="save" type="submit" :loading="form.processing">{{ $t('common.save') }}</AdminButton>
+                </div>
+            </form>
+        </AdminCard>
+    </div>
 </template>

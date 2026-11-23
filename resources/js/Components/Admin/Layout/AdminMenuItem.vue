@@ -4,7 +4,7 @@
  * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
  */
 
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
@@ -45,10 +45,14 @@ const toggleOpen = () => {
     }
 }
 
-// Auto-open if child is active
-if (isChildActive.value) {
-    isOpen.value = true
-}
+// Open the group that holds the current page, on load and after every visit.
+// The sidebar outlives visits now, so a group the person opened stays open and
+// one they closed is not forced open until they go to another page inside it.
+watch(isChildActive, (active) => {
+    if (active) {
+        isOpen.value = true
+    }
+}, { immediate: true })
 
 const icons = {
     home: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />`,
