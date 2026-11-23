@@ -308,22 +308,29 @@ final class SiteExactnessTest extends TestCase
 
     public function test_robots_txt_is_trimmed_and_gets_the_sitemap_when_it_has_none(): void
     {
+        $environment = $this->app['env'];
         $this->app['env'] = 'production';
-        $site = $this->main();
 
-        $site->update(['robots_txt' => "\r\n  User-agent: *\r\nDisallow: /x\r\n\r\n"]);
-        $this->assertSame("User-agent: *\nDisallow: /x\n\nSitemap: ".url('sitemap.xml')."\n", $site->robotsTxt());
+        try {
+            $site = $this->main();
 
-        // "sitemap:" in the middle of a line is not a Sitemap line.
-        $site->update(['robots_txt' => 'Disallow: /sitemap: x']);
-        $this->assertSame("Disallow: /sitemap: x\n\nSitemap: ".url('sitemap.xml')."\n", $site->robotsTxt());
+            $site->update(['robots_txt' => "\r\n  User-agent: *\r\nDisallow: /x\r\n\r\n"]);
+            $this->assertSame("User-agent: *\nDisallow: /x\n\nSitemap: ".url('sitemap.xml')."\n", $site->robotsTxt());
 
-        $site->update(['robots_txt' => "User-agent: *\n  SITEMAP: https://cdn.test/map.xml"]);
-        $this->assertSame("User-agent: *\n  SITEMAP: https://cdn.test/map.xml\n", $site->robotsTxt());
+            // "sitemap:" in the middle of a line is not a Sitemap line.
+            $site->update(['robots_txt' => 'Disallow: /sitemap: x']);
+            $this->assertSame("Disallow: /sitemap: x\n\nSitemap: ".url('sitemap.xml')."\n", $site->robotsTxt());
 
-        // The sites in folders of this domain add their own sitemaps.
-        $site->update(['robots_txt' => 'Disallow: /sitemap: x']);
-        $this->assertSame("Disallow: /sitemap: x\n\nSitemap: ".url('sitemap.xml')."\nSitemap: ".url('f/sitemap.xml')."\n", $site->robotsTxt([new Site(['folder' => 'f'])]));
+            $site->update(['robots_txt' => "User-agent: *\n  SITEMAP: https://cdn.test/map.xml"]);
+            $this->assertSame("User-agent: *\n  SITEMAP: https://cdn.test/map.xml\n", $site->robotsTxt());
+
+            // The sites in folders of this domain add their own sitemaps.
+            $site->update(['robots_txt' => 'Disallow: /sitemap: x']);
+            $this->assertSame("Disallow: /sitemap: x\n\nSitemap: ".url('sitemap.xml')."\nSitemap: ".url('f/sitemap.xml')."\n", $site->robotsTxt([new Site(['folder' => 'f'])]));
+        } finally {
+            // In production the rollback after the test would ask to confirm.
+            $this->app['env'] = $environment;
+        }
     }
 
     public function test_robots_txt_that_was_never_saved_is_trimmed_too(): void
