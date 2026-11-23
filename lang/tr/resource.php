@@ -28,6 +28,14 @@ return [
         'search_button' => 'Bul',
     ],
 
+    'filters' => [
+        'title' => 'Filtreler',
+        'any' => 'Tümü',
+        'yes' => 'Evet',
+        'no' => 'Hayır',
+        'reset' => 'Filtreleri sıfırla',
+    ],
+
     'form' => [
         'breadcrumb_create' => 'Yeni',
         'empty_tab' => 'Gösterilecek alan yok',

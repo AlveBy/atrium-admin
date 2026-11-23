@@ -4,7 +4,7 @@
  * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
  */
 
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { router, Head } from '@inertiajs/vue3'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminDataTable from '../../../Components/Admin/Table/AdminDataTable.vue'
@@ -31,13 +31,42 @@ const props = defineProps({
     transfer: { type: Object, default: () => ({}) },
     // Buttons above the list added by packages ("Fields" of custom fields).
     links: { type: Array, default: () => [] },
+    // Filters drawn above the list, the module's and other modules': name, type, label, options.
+    filterControls: { type: Array, default: () => [] },
 })
 
 // Filters from the address (?module=…) that the module declared: kept on
 // search and sort, and passed on to the create form.
-const listFilters = Object.fromEntries(
+const listFilters = computed(() => Object.fromEntries(
     Object.entries(props.filters || {}).filter(([key]) => !['search', 'sort', 'direction'].includes(key))
-)
+))
+
+// What is chosen in each drawn filter, '' for any. A change reloads the
+// list from its first page, keeping the search and the sort.
+const chosen = ref(Object.fromEntries(props.filterControls.map((filter) => [filter.name, props.filters?.[filter.name] ?? ''])))
+const activeFilters = computed(() => props.filterControls.filter((filter) => chosen.value[filter.name] !== '').length)
+
+const applyFilters = () => {
+    const query = { ...listFilters.value, search: search.value, sort: props.filters.sort, direction: props.filters.direction }
+
+    for (const filter of props.filterControls) {
+        if (chosen.value[filter.name] === '') {
+            delete query[filter.name]
+        } else {
+            query[filter.name] = chosen.value[filter.name]
+        }
+    }
+
+    router.get(route(`${props.routeName}.index`), query, { preserveState: true, preserveScroll: true })
+}
+
+const resetFilters = () => {
+    for (const filter of props.filterControls) {
+        chosen.value[filter.name] = ''
+    }
+
+    applyFilters()
+}
 
 const rowActions = props.actions.map((action) => ({
     ...action,
@@ -80,7 +109,7 @@ const showDeleteModal = ref(false)
 const itemToDelete = ref(null)
 
 const handleSearch = () => {
-    router.get(route(`${props.routeName}.index`), { ...listFilters, search: search.value }, {
+    router.get(route(`${props.routeName}.index`), { ...listFilters.value, search: search.value }, {
         preserveState: true,
         preserveScroll: true,
     })
@@ -177,6 +206,43 @@ const handleDelete = () => {
             <AdminButton data-action="search" @click="handleSearch" variant="secondary">
                 {{ $t('resource.index.search_button') }}
             </AdminButton>
+        </div>
+
+        <!--
+            Filters of the list. A chosen one shows its value in bold and
+            the reset button counts them: not only a colour tells them.
+        -->
+        <div
+            v-if="filterControls.length"
+            role="group"
+            :aria-label="$t('resource.filters.title')"
+            data-filters="true"
+            class="mt-3 flex flex-wrap items-end gap-3"
+        >
+            <div v-for="filter in filterControls" :key="filter.name" class="flex flex-col gap-1">
+                <label :for="`filter-${filter.name}`" class="text-sm font-medium text-fg">{{ filter.label }}</label>
+                <select
+                    :id="`filter-${filter.name}`"
+                    v-model="chosen[filter.name]"
+                    :data-filter="filter.name"
+                    :data-active="chosen[filter.name] !== '' || null"
+                    class="rounded-lg border border-field bg-surface px-3 py-2 text-sm text-fg focus:border-focus focus:ring-focus"
+                    :class="{ 'font-semibold': chosen[filter.name] !== '' }"
+                    @change="applyFilters"
+                >
+                    <option value="">{{ $t('resource.filters.any') }}</option>
+                    <option v-for="option in filter.options" :key="option.value" :value="option.value">{{ option.label }}</option>
+                </select>
+            </div>
+            <button
+                v-if="activeFilters"
+                type="button"
+                data-filters-reset="true"
+                class="rounded px-2 py-2 text-sm text-fg underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-focus"
+                @click="resetFilters"
+            >
+                {{ $t('resource.filters.reset') }} ({{ activeFilters }})
+            </button>
         </div>
     </div>
 

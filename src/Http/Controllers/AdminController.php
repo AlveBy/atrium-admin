@@ -25,6 +25,8 @@ use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\DisplayField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
+use Atrium\Admin\Filters\Filter;
+use Atrium\Admin\Filters\ModuleFilters;
 use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
@@ -279,7 +281,8 @@ abstract class AdminController extends Controller
 
         // Every row goes through listRow(): a package may present any of them.
         $actionUrls = $this->actionUrls($items->getCollection());
-        $items->through(fn (Model $item): array => $this->listRow($item, $related));
+        $computed = array_filter($columns, static fn (object $column): bool => $column instanceof Column && $column->isComputed());
+        $items->through(fn (Model $item): array => $this->listRow($item, $related, $computed));
 
         return Inertia::render($this->getPagePrefix().'/Index', [
             'items' => $items,
@@ -290,6 +293,8 @@ abstract class AdminController extends Controller
                 'direction' => $sortDir,
                 ...$listFilters,
             ],
+            // The filters drawn above the list: the module's and other modules'.
+            'filterControls' => app(ModuleFilters::class)->describe($this->model, $this->currentAdmin()),
             'title' => $this->model::getAdminLabel(),
             'links' => Hook::apply('atrium.module.links', [], $this->model),
             'bulkActions' => $this->visibleBulkActions(),
@@ -303,17 +308,26 @@ abstract class AdminController extends Controller
      * filters, the search over its searchable columns and the sort. The list
      * screen pages it; an export reads all of it.
      *
-     * @return array{0:Builder<Model&Administrable>,1:array<int,Column>,2:array<int,string>,3:array<string,string>,4:string,5:string} query, columns, related columns, filters, sort column, direction
+     * @return array{0:Builder<Model&Administrable>,1:array<int,object>,2:array<int,string>,3:array<string,string>,4:string,5:string} query, columns, related columns, filters, sort column, direction
      */
     protected function listQuery(Request $request): array
     {
         $query = (new $this->model)->scopeAdminList($this->model::query());
-        $columns = Hook::apply('atrium.module.columns', $this->model::getAdministrationListColumns(), $this->model);
+        $filters = app(ModuleFilters::class);
+        $user = $this->currentAdmin();
+        $columns = array_values(array_filter(
+            Hook::apply('atrium.module.columns', $this->model::getAdministrationListColumns(), $this->model),
+            // A column that is no Column (only toArray()) needs no permission.
+            fn (object $column): bool => ! $column instanceof Column || $filters->allows($user, $column->permissionIn($this->model::getAdminRoutePrefix())),
+        ));
         $related = $this->relatedColumns($columns);
         $listFilters = $this->listFilters($request);
+        $defined = $filters->for($this->model, $user);
 
         foreach ($listFilters as $name => $value) {
-            if (! Hook::apply('atrium.query.filter', false, $query, $name, $value)) {
+            if ($defined[$name] instanceof Filter) {
+                $defined[$name]->apply($query, $value);
+            } elseif (! Hook::apply('atrium.query.filter', false, $query, $name, $value)) {
                 $query->where($name, $value);
             }
         }
@@ -385,9 +399,10 @@ abstract class AdminController extends Controller
     }
 
     /**
-     * The list filters in the query string (`?module=…`): only the columns
-     * the module names in getAdministrationFilters(). The list is narrowed by
-     * them and the create form opened from it starts with the same values.
+     * The list filters in the query string (`?module=…`, `?brand=4`): only
+     * those of ModuleFilters, with a value a Filter accepts. The list is
+     * narrowed by them and the create form opened from it starts with the
+     * same values.
      *
      * @return array<string,string>
      */
@@ -395,10 +410,11 @@ abstract class AdminController extends Controller
     {
         $filters = [];
 
-        foreach ($this->model::getAdministrationFilters() as $name) {
-            $value = $request->query($name);
+        foreach (app(ModuleFilters::class)->for($this->model, $this->currentAdmin()) as $name => $filter) {
+            $value = $request->query((string) $name);
+            $value = $filter instanceof Filter ? $filter->value($value) : (is_string($value) && $value !== '' ? $value : null);
 
-            if (is_string($value) && $value !== '') {
+            if ($value !== null) {
                 $filters[$name] = $value;
             }
         }
@@ -1331,11 +1347,14 @@ abstract class AdminController extends Controller
     }
 
     /**
-     * A row of the list: translatable columns in the default language.
+     * A row of the list: translatable columns in the default language, the
+     * values of columns with their own value().
      *
+     * @param  array<int,string>  $related
+     * @param  array<int,Column>  $computed
      * @return array<string,mixed>
      */
-    protected function listRow(Model $item, array $related = []): array
+    protected function listRow(Model $item, array $related = [], array $computed = []): array
     {
         $row = $item->toArray();
         $default = $this->contentLanguages()->default();
@@ -1356,6 +1375,10 @@ abstract class AdminController extends Controller
                 : data_get($record, $attribute);
         }
 
+        foreach ($computed as $column) {
+            $row[$column->getName()] = $column->valueOf($item);
+        }
+
         return Hook::apply('atrium.record.present', $row, $item, 'list');
     }
 
@@ -1368,6 +1391,8 @@ abstract class AdminController extends Controller
      */
     protected function relatedColumns(array $columns): array
     {
+        // A column with its own value() is no relation, dot or not.
+        $columns = array_filter($columns, static fn ($column): bool => ! ($column instanceof Column && $column->isComputed()));
         $names = array_map(static fn ($column): string => (string) ($column->toArray()['name'] ?? ''), $columns);
 
         return array_values(array_filter($names, static fn (string $name): bool => str_contains($name, '.')));

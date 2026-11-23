@@ -9,7 +9,9 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Columns;
 
+use Closure;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Model;
 use JsonSerializable;
 
 /** @phpstan-consistent-constructor */
@@ -28,6 +30,11 @@ abstract class Column implements Arrayable, JsonSerializable
     protected ?string $align = null;
 
     protected bool $visible = true;
+
+    protected ?string $permission = null;
+
+    /** @var (Closure(Model): mixed)|null */
+    protected ?Closure $value = null;
 
     /**
      * Create a new column instance
@@ -128,6 +135,56 @@ abstract class Column implements Arrayable, JsonSerializable
         $this->visible = false;
 
         return $this;
+    }
+
+    /**
+     * Shown only to those who have it: a bare action ("view") is the
+     * module's own, a full name ("orders.view") is taken as it is. A column
+     * another module adds with its own data needs its module's permission.
+     */
+    public function permission(string $permission): static
+    {
+        $this->permission = $permission;
+
+        return $this;
+    }
+
+    /**
+     * The permission it needs in a module, or null for anyone who sees the list.
+     */
+    public function permissionIn(string $module): ?string
+    {
+        return $this->permission === null || str_contains($this->permission, '.') ? $this->permission : "{$module}.{$this->permission}";
+    }
+
+    /**
+     * Where the value comes from when it is not the record's attribute of
+     * the column's name: another module's column in one hook, without
+     * `atrium.record.present`.
+     *
+     * @param  Closure(Model): mixed  $value
+     */
+    public function value(Closure $value): static
+    {
+        $this->value = $value;
+
+        return $this;
+    }
+
+    /**
+     * Whether value() gives the column its value.
+     */
+    public function isComputed(): bool
+    {
+        return $this->value !== null;
+    }
+
+    /**
+     * The value of a record, from value().
+     */
+    public function valueOf(Model $record): mixed
+    {
+        return ($this->value)($record);
     }
 
     /**

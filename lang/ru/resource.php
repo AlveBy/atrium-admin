@@ -30,6 +30,14 @@ return [
         'search_button' => 'Найти',
     ],
 
+    'filters' => [
+        'title' => 'Фильтры',
+        'any' => 'Все',
+        'yes' => 'Да',
+        'no' => 'Нет',
+        'reset' => 'Сбросить фильтры',
+    ],
+
     'form' => [
         'breadcrumb_create' => 'Создание',
         'empty_tab' => 'Нет полей для отображения',

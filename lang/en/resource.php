@@ -30,6 +30,14 @@ return [
         'search_button' => 'Find',
     ],
 
+    'filters' => [
+        'title' => 'Filters',
+        'any' => 'Any',
+        'yes' => 'Yes',
+        'no' => 'No',
+        'reset' => 'Reset filters',
+    ],
+
     'form' => [
         'breadcrumb_create' => 'New',
         'empty_tab' => 'No fields to show',

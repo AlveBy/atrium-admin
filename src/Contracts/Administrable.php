@@ -11,6 +11,7 @@ namespace Atrium\Admin\Contracts;
 
 use Atrium\Admin\Columns\Column;
 use Atrium\Admin\Fields\Field;
+use Atrium\Admin\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 
 interface Administrable
@@ -49,9 +50,10 @@ interface Administrable
     public static function getAdminPerPage(): int;
 
     /**
-     * Columns the list can be narrowed by from the address (`?module=…`).
+     * What the list can be narrowed by: a Filter is drawn above it, a bare
+     * column name is a filter of the address only (`?module=…`).
      *
-     * @return array<int,string>
+     * @return array<int,string|Filter>
      */
     public static function getAdministrationFilters(): array;
 

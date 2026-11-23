@@ -28,6 +28,14 @@ return [
         'search_button' => 'Знайти',
     ],
 
+    'filters' => [
+        'title' => 'Фільтри',
+        'any' => 'Усі',
+        'yes' => 'Так',
+        'no' => 'Ні',
+        'reset' => 'Скинути фільтри',
+    ],
+
     'form' => [
         'breadcrumb_create' => 'Новий',
         'empty_tab' => 'Немає полів для відображення',

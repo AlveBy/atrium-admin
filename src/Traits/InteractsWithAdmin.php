@@ -13,6 +13,7 @@ use Atrium\Admin\Actions\BulkAction;
 use Atrium\Admin\Actions\CreateFromRecord;
 use Atrium\Admin\Actions\LinkAction;
 use Atrium\Admin\Actions\RecordAction;
+use Atrium\Admin\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
@@ -49,9 +50,10 @@ trait InteractsWithAdmin
     /**
      * Columns the list can be narrowed by from the address: `['module']`
      * lets `?module=…` show only those records, and the create form opened
-     * from that list starts with the same value.
+     * from that list starts with the same value. A Filter
+     * (SelectFilter, BooleanFilter) is drawn above the list as well.
      *
-     * @return array<int,string>
+     * @return array<int,string|Filter>
      */
     public static function getAdministrationFilters(): array
     {

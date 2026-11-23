@@ -28,6 +28,14 @@ return [
         'search_button' => '查找',
     ],
 
+    'filters' => [
+        'title' => '筛选',
+        'any' => '全部',
+        'yes' => '是',
+        'no' => '否',
+        'reset' => '重置筛选',
+    ],
+
     'form' => [
         'breadcrumb_create' => '新建',
         'empty_tab' => '没有可显示的字段',

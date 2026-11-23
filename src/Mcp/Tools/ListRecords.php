@@ -27,7 +27,7 @@ class ListRecords extends ApiTool
         return [
             ...$this->moduleArgument($schema),
             'search' => $schema->string()->description('Text to look for in the searchable columns.'),
-            'filter' => $schema->object()->description('Exact column values, e.g. {"active": 1, "section_id": 4}.'),
+            'filter' => $schema->object()->description('Exact column values, e.g. {"active": 1, "section_id": 4}, and the list\'s filters that describe_module names, with one of their values.'),
             'sort' => $schema->string()->description('Column to sort by. Default: id.'),
             'direction' => $schema->string()->enum(['asc', 'desc'])->description('Default: asc.'),
             'page' => $schema->integer()->description('Page number, from 1.'),

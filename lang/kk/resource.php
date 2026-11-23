@@ -28,6 +28,14 @@ return [
         'search_button' => 'Табу',
     ],
 
+    'filters' => [
+        'title' => 'Сүзгілер',
+        'any' => 'Барлығы',
+        'yes' => 'Иә',
+        'no' => 'Жоқ',
+        'reset' => 'Сүзгілерді тазалау',
+    ],
+
     'form' => [
         'breadcrumb_create' => 'Жаңа',
         'empty_tab' => 'Көрсетілетін өрістер жоқ',

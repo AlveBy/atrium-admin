@@ -28,6 +28,14 @@ return [
         'search_button' => '検索',
     ],
 
+    'filters' => [
+        'title' => 'フィルター',
+        'any' => 'すべて',
+        'yes' => 'はい',
+        'no' => 'いいえ',
+        'reset' => 'フィルターをリセット',
+    ],
+
     'form' => [
         'breadcrumb_create' => '新規',
         'empty_tab' => '表示するフィールドがありません',

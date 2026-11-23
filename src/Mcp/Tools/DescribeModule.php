@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace Atrium\Admin\Mcp\Tools;
 
 use Atrium\Admin\Api\ApiDocumentation;
+use Atrium\Admin\Api\ApiResources;
+use Atrium\Admin\Filters\ModuleFilters;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -18,7 +20,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('describe_module')]
-#[Description('The fields of a module: name, label, whether required, JSON type, allowed values and notes. Read it before creating or updating records.')]
+#[Description('The fields of a module: name, label, whether required, JSON type, allowed values and notes, and the filters of its list with their values. Read it before creating or updating records.')]
 #[IsReadOnly]
 class DescribeModule extends ApiTool
 {
@@ -43,6 +45,8 @@ class DescribeModule extends ApiTool
             'label' => $description['label'],
             'allowed' => array_keys(array_filter($allowed)),
             'fields' => $description['fields'],
+            // What list_records takes in "filter" besides the columns.
+            'filters' => app(ModuleFilters::class)->describe((string) app(ApiResources::class)->model($module), $this->owner()),
         ]);
     }
 }

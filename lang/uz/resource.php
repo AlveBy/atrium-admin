@@ -28,6 +28,14 @@ return [
         'search_button' => 'Topish',
     ],
 
+    'filters' => [
+        'title' => 'Filtrlar',
+        'any' => 'Hammasi',
+        'yes' => 'Ha',
+        'no' => 'Yoʻq',
+        'reset' => 'Filtrlarni tozalash',
+    ],
+
     'form' => [
         'breadcrumb_create' => 'Yangi',
         'empty_tab' => 'Koʻrsatiladigan maydonlar yoʻq',

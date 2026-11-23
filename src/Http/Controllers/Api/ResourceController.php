@@ -17,6 +17,8 @@ use Atrium\Admin\Actions\RecordAction;
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\Filters\Filter;
+use Atrium\Admin\Filters\ModuleFilters;
 use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
@@ -51,7 +53,21 @@ class ResourceController extends AdminController
         $columns = $this->filterableColumns();
         $codes = $this->contentLanguages()->codes();
 
+        $defined = app(ModuleFilters::class)->for($this->model, $request->user());
+
         foreach ((array) $request->query('filter', []) as $column => $value) {
+            // A filter of the list (the module's or another module's) narrows
+            // as it does there; a value it does not know is no filter.
+            if (($defined[$column] ?? null) instanceof Filter) {
+                $chosen = $defined[$column]->value($value);
+
+                if ($chosen !== null) {
+                    $defined[$column]->apply($query, $chosen);
+                }
+
+                continue;
+            }
+
             // A field added by a package (custom fields) filters itself.
             if (Hook::apply('atrium.query.filter', false, $query, (string) $column, $value)) {
                 continue;

@@ -299,7 +299,7 @@ final class McpTest extends TestCase
                 'module' => $module,
                 'site' => $site,
                 'search' => ['description' => 'Text to look for in the searchable columns.', 'type' => 'string'],
-                'filter' => ['description' => 'Exact column values, e.g. {"active": 1, "section_id": 4}.', 'type' => 'object'],
+                'filter' => ['description' => 'Exact column values, e.g. {"active": 1, "section_id": 4}, and the list\'s filters that describe_module names, with one of their values.', 'type' => 'object'],
                 'sort' => ['description' => 'Column to sort by. Default: id.', 'type' => 'string'],
                 'direction' => ['description' => 'Default: asc.', 'enum' => ['asc', 'desc'], 'type' => 'string'],
                 'page' => ['description' => 'Page number, from 1.', 'type' => 'integer'],

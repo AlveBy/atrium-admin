@@ -55,7 +55,8 @@ trait HasAdminTabs
     public static function getFieldsGroupedByTabs(string $context = 'create'): array
     {
         $fields = static::getAdminFieldsWithTabs();
-        $tabs = static::getAdminTabs();
+        // Tabs other modules add, for the fields they add with ->tab().
+        $tabs = Hook::apply('atrium.module.tabs', static::getAdminTabs(), static::class);
 
         // Filter fields by context (create/edit)
         $fields = array_filter($fields, function ($field) use ($context) {

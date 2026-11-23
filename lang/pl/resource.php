@@ -28,6 +28,14 @@ return [
         'search_button' => 'Znajdź',
     ],
 
+    'filters' => [
+        'title' => 'Filtry',
+        'any' => 'Wszystkie',
+        'yes' => 'Tak',
+        'no' => 'Nie',
+        'reset' => 'Wyczyść filtry',
+    ],
+
     'form' => [
         'breadcrumb_create' => 'Nowy',
         'empty_tab' => 'Brak pól do wyświetlenia',
