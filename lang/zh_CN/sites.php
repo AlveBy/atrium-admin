@@ -51,7 +51,7 @@ return [
         'snippet' => '原样添加到此站点的每个页面：聊天小部件、像素或任何其他计数器。',
         'robots_txt' => '留空表示允许机器人抓取所有内容。如果没有“Sitemap:”行，会自动添加指向此站点 sitemap.xml 的一行。',
         'robots_not_production' => '此服务器不是生产环境（APP_ENV=:env），因此无论此处填写什么，robots.txt 都会禁止索引。',
-        'robots_file_exists' => '存在文件 public/robots.txt：Web 服务器会返回该文件而不是此处的文本。请删除该文件。',
+        'robots_file_exists' => '存在文件 :file：Web 服务器会返回该文件而不是此处的文本。请删除该文件。',
     ],
     'errors' => [
         'domain_invalid' => '“:domain”不是有效的域名。',

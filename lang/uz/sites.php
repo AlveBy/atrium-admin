@@ -51,7 +51,7 @@ return [
         'snippet' => 'Ushbu saytning barcha sahifalariga oʻz holicha qoʻyiladi: chat vidjeti, piksel, boshqa har qanday hisoblagich.',
         'robots_txt' => 'Boʻsh qoldirilsa — robotlarga hammasi mumkin. Agar yoʻq boʻlsa, ushbu saytning sitemap.xml manzili bilan “Sitemap:” qatori oʻzi qoʻshiladi.',
         'robots_not_production' => 'Bu server ishchi emas (APP_ENV=:env), shuning uchun bu yerda nima yozilganidan qatʼi nazar, robots.txt indekslashni taqiqlaydi.',
-        'robots_file_exists' => 'public/robots.txt fayli mavjud: veb-server shu matn oʻrniga uni qaytaradi. Faylni oʻchiring.',
+        'robots_file_exists' => ':file fayli mavjud: veb-server shu matn oʻrniga uni qaytaradi. Faylni oʻchiring.',
     ],
     'errors' => [
         'domain_invalid' => '“:domain” domen nomi emas.',

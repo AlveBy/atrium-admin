@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Storage;
 class IndexMediaCommand extends Command
 {
     protected $signature = 'atrium:media:index
-                            {--path= : Folder inside public/ (defaults to the uploads directory)}
+                            {--path= : Folder inside the public folder (defaults to the uploads directory)}
                             {--collection= : Collection to put the files in}
                             {--dry-run : Show what would be added}';
 

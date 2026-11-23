@@ -51,7 +51,7 @@ return [
         'snippet' => 'このサイトのすべてのページにそのまま追加されます。チャットウィジェット、ピクセル、その他のカウンターなど。',
         'robots_txt' => '空の場合、ロボットはすべてをインデックスできます。「Sitemap:」行がなければ、このサイトの sitemap.xml を指す行が自動で追加されます。',
         'robots_not_production' => 'このサーバーは本番環境ではない（APP_ENV=:env）ため、ここに何を書いても robots.txt はインデックスを禁止します。',
-        'robots_file_exists' => 'public/robots.txt ファイルが存在します。Web サーバーはこのテキストの代わりにそのファイルを返します。ファイルを削除してください。',
+        'robots_file_exists' => ':file ファイルが存在します。Web サーバーはこのテキストの代わりにそのファイルを返します。ファイルを削除してください。',
     ],
     'errors' => [
         'domain_invalid' => '「:domain」はドメイン名ではありません。',

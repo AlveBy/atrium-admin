@@ -294,7 +294,7 @@ final class SeoFilesTest extends TestCase
             );
 
             $this->assertStringContainsString(__('atrium::sites.hints.robots_not_production', ['env' => 'testing']), (string) $page);
-            $this->assertStringContainsString(__('atrium::sites.hints.robots_file_exists'), (string) $page);
+            $this->assertStringContainsString(__('atrium::sites.hints.robots_file_exists', ['file' => $public.'/robots.txt']), (string) $page);
         } finally {
             unlink($public.'/robots.txt');
             rmdir($public);

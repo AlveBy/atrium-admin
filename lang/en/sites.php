@@ -49,7 +49,7 @@ return [
         'snippet' => 'Added as is to every page of this site: a chat widget, a pixel, any other counter.',
         'robots_txt' => 'Empty — robots may index everything. A "Sitemap:" line with this site\'s sitemap.xml is added if there is none.',
         'robots_not_production' => 'This server is not production (APP_ENV=:env), so robots.txt forbids indexing whatever is written here.',
-        'robots_file_exists' => 'The file public/robots.txt exists: the web server returns it instead of this text. Delete the file.',
+        'robots_file_exists' => 'The file :file exists: the web server returns it instead of this text. Delete the file.',
     ],
     'errors' => [
         'domain_invalid' => '":domain" is not a domain name.',

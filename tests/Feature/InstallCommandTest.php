@@ -128,7 +128,7 @@ final class InstallCommandTest extends TestCase
 
         $this->install()
             ->doesntExpectOutputToContain('Create the first administrator.')
-            ->expectsOutputToContain('public/robots.txt is served instead of the robots.txt set in the admin.')
+            ->expectsOutputToContain($this->root.'/public/robots.txt is served instead of the robots.txt set in the admin.')
             ->assertSuccessful();
 
         $this->assertSame(['vendor:publish atrium-config', 'vendor:publish atrium-assets --force', 'migrate --force'], $this->ran);
@@ -241,7 +241,7 @@ final class InstallCommandTest extends TestCase
 
         $printed = $this->printed();
 
-        foreach (['Publishing config', 'Publishing assets', 'Publishing Sanctum migration', 'Running migrations', 'Linking public/storage'] as $step) {
+        foreach (['Publishing config', 'Publishing assets', 'Publishing Sanctum migration', 'Running migrations', 'Linking '.$this->root.'/public/storage'] as $step) {
             $this->assertMatchesRegularExpression('/'.preg_quote($step, '/').'[ .]*\S* '.$result.'/', $printed, $step);
         }
     }
@@ -269,8 +269,54 @@ final class InstallCommandTest extends TestCase
 
         $printed = $this->printed();
 
-        $this->assertMatchesRegularExpression('/Removing public\/robots\.txt .*DONE/', $printed);
+        $this->assertMatchesRegularExpression('/Removing '.preg_quote($this->root.'/public/robots.txt', '/').' .*DONE/', $printed);
         $this->assertStringNotContainsString('is served instead', $printed);
+    }
+
+    /**
+     * @return array<string,array{string}>
+     */
+    public static function webRoots(): array
+    {
+        return ['www' => ['www'], 'public_html' => ['public_html'], 'a name of the site' => ['example.com']];
+    }
+
+    #[DataProvider('webRoots')]
+    public function test_the_steps_name_the_web_root_as_the_hosting_calls_it(string $name): void
+    {
+        $this->inWebRoot($name, "User-agent: *\nDisallow:\n");
+
+        $printed = $this->printed();
+
+        $this->assertMatchesRegularExpression('/Linking '.preg_quote($name, '/').'\/storage[ .]*\S* DONE/', $printed);
+        $this->assertMatchesRegularExpression('/Removing '.preg_quote($name, '/').'\/robots\.txt \(robots\.txt is set in the admin now\)[ .]*\S* DONE/', $printed);
+        $this->assertStringNotContainsString('public/', $printed);
+        $this->assertFileDoesNotExist(base_path($name.'/robots.txt'));
+    }
+
+    #[DataProvider('webRoots')]
+    public function test_the_warning_names_the_robots_txt_of_the_web_root_as_the_hosting_calls_it(string $name): void
+    {
+        $this->inWebRoot($name, "User-agent: *\nDisallow: /secret\n");
+
+        $this->install()
+            ->expectsOutputToContain($name.'/robots.txt is served instead of the robots.txt set in the admin.')
+            ->doesntExpectOutputToContain('public/robots.txt')
+            ->assertSuccessful();
+
+        $this->assertFileExists(base_path($name.'/robots.txt'));
+    }
+
+    /**
+     * The web root inside the project under another name, with a robots.txt.
+     */
+    private function inWebRoot(string $name, string $robots): void
+    {
+        $folder = base_path($name);
+        mkdir($folder);
+        file_put_contents($folder.'/robots.txt', $robots);
+        $this->app->usePublicPath($folder);
+        $this->beforeApplicationDestroyed(fn () => (new Filesystem)->deleteDirectory($folder));
     }
 
     public function test_demo_steps_are_reported_as_done_and_a_module_with_content_does_not_hide_one_without(): void

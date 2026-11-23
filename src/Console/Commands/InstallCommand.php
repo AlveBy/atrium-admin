@@ -12,6 +12,7 @@ namespace Atrium\Admin\Console\Commands;
 use Atrium\Admin\Console\Concerns\ReportsSteps;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Modules\Modules;
+use Atrium\Admin\Support\PublicFolder;
 use Illuminate\Console\Command;
 
 /**
@@ -73,7 +74,7 @@ final class InstallCommand extends Command
         // Files uploaded in the admin go to storage/app/public and are served
         // through this link, demo or not.
         if (! is_link(public_path('storage')) && ! file_exists(public_path('storage'))) {
-            $this->step('Linking public/storage', fn (): bool => $this->callSilently('storage:link') === 0);
+            $this->step('Linking '.PublicFolder::shown('storage'), fn (): bool => $this->callSilently('storage:link') === 0);
         }
 
         $this->removeStockRobotsTxt();
@@ -127,7 +128,7 @@ final class InstallCommand extends Command
     }
 
     /**
-     * The web server returns public/robots.txt before Laravel is asked, so
+     * The web server returns robots.txt of the public folder before Laravel is asked, so
      * the one a fresh Laravel ships with would hide the text set in the
      * admin. Laravel's own file goes; one somebody wrote stays, with a warning.
      */
@@ -142,11 +143,11 @@ final class InstallCommand extends Command
         $stock = preg_replace('/\s+/', ' ', trim((string) file_get_contents($file))) === 'User-agent: * Disallow:';
 
         if ($stock) {
-            $this->step('Removing public/robots.txt (robots.txt is set in the admin now)', fn (): bool => unlink($file));
+            $this->step('Removing '.PublicFolder::shown('robots.txt').' (robots.txt is set in the admin now)', fn (): bool => unlink($file));
 
             return;
         }
 
-        $this->components->warn('public/robots.txt is served instead of the robots.txt set in the admin. Move its text to Sites → robots.txt and delete the file, or set atrium.robots to false.');
+        $this->components->warn(PublicFolder::shown('robots.txt').' is served instead of the robots.txt set in the admin. Move its text to Sites → robots.txt and delete the file, or set atrium.robots to false.');
     }
 }

@@ -51,7 +51,7 @@ return [
         'snippet' => 'Wird unverändert auf jeder Seite dieser Website eingefügt: Chat-Widget, Pixel, jeder andere Zähler.',
         'robots_txt' => 'Leer – Robots dürfen alles indexieren. Eine Zeile „Sitemap:“ mit der sitemap.xml dieser Website wird ergänzt, falls keine vorhanden ist.',
         'robots_not_production' => 'Dieser Server ist nicht produktiv (APP_ENV=:env), daher verbietet robots.txt die Indexierung, unabhängig vom hier Eingetragenen.',
-        'robots_file_exists' => 'Die Datei public/robots.txt existiert: Der Webserver liefert sie anstelle dieses Textes aus. Löschen Sie die Datei.',
+        'robots_file_exists' => 'Die Datei :file existiert: Der Webserver liefert sie anstelle dieses Textes aus. Löschen Sie die Datei.',
     ],
     'errors' => [
         'domain_invalid' => '„:domain“ ist kein Domainname.',

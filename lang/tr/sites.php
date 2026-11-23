@@ -51,7 +51,7 @@ return [
         'snippet' => 'Bu sitenin her sayfasına olduğu gibi eklenir: sohbet widget\'ı, piksel, başka herhangi bir sayaç.',
         'robots_txt' => 'Boşsa — robotlar her şeyi dizinleyebilir. Yoksa, bu sitenin sitemap.xml adresini içeren bir “Sitemap:” satırı eklenir.',
         'robots_not_production' => 'Bu sunucu canlı ortam değil (APP_ENV=:env), bu yüzden buraya ne yazılırsa yazılsın robots.txt dizinlemeyi yasaklar.',
-        'robots_file_exists' => 'public/robots.txt dosyası var: web sunucusu bu metin yerine onu döndürür. Dosyayı silin.',
+        'robots_file_exists' => ':file dosyası var: web sunucusu bu metin yerine onu döndürür. Dosyayı silin.',
     ],
     'errors' => [
         'domain_invalid' => '“:domain” bir alan adı değil.',

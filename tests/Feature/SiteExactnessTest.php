@@ -16,6 +16,7 @@ use Atrium\Admin\Models\Site;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Tests\TestCase;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -172,12 +173,31 @@ final class SiteExactnessTest extends TestCase
             $this->app['env'] = 'production';
             file_put_contents($file, "User-agent: *\n");
             $this->assertSame(
-                __('atrium::sites.hints.robots_txt').' '.__('atrium::sites.hints.robots_file_exists'),
+                __('atrium::sites.hints.robots_txt').' '.__('atrium::sites.hints.robots_file_exists', ['file' => 'public/robots.txt']),
                 $this->fields()['robots_txt']->toArray()['hint'],
             );
         } finally {
             $this->app['env'] = $environment;
             @unlink($file);
+        }
+    }
+
+    public function test_the_robots_hint_names_the_web_root_as_the_hosting_calls_it(): void
+    {
+        $folder = base_path('public_html');
+        mkdir($folder);
+        $this->app->usePublicPath($folder);
+
+        try {
+            $this->assertStringNotContainsString('robots.txt exists', $this->fields()['robots_txt']->toArray()['hint']);
+
+            file_put_contents($folder.'/robots.txt', "User-agent: *\n");
+            $hint = $this->fields()['robots_txt']->toArray()['hint'];
+
+            $this->assertStringContainsString(__('atrium::sites.hints.robots_file_exists', ['file' => 'public_html/robots.txt']), $hint);
+            $this->assertStringNotContainsString('public/', $hint);
+        } finally {
+            (new Filesystem)->deleteDirectory($folder);
         }
     }
 

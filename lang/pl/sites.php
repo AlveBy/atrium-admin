@@ -51,7 +51,7 @@ return [
         'snippet' => 'Dodawany bez zmian na każdej stronie tej witryny: widżet czatu, piksel, dowolny inny licznik.',
         'robots_txt' => 'Puste — roboty mogą indeksować wszystko. Wiersz „Sitemap:” z adresem sitemap.xml tej witryny zostanie dodany, jeśli go nie ma.',
         'robots_not_production' => 'Ten serwer nie jest produkcyjny (APP_ENV=:env), więc robots.txt zabrania indeksowania, cokolwiek tu wpisano.',
-        'robots_file_exists' => 'Istnieje plik public/robots.txt: serwer WWW zwraca go zamiast tego tekstu. Usuń plik.',
+        'robots_file_exists' => 'Istnieje plik :file: serwer WWW zwraca go zamiast tego tekstu. Usuń plik.',
     ],
     'errors' => [
         'domain_invalid' => '„:domain” nie jest nazwą domeny.',

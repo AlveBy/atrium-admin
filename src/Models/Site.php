@@ -21,6 +21,7 @@ use Atrium\Admin\Fields\SelectField;
 use Atrium\Admin\Fields\TextareaField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Support\ContentLanguages;
+use Atrium\Admin\Support\PublicFolder;
 use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Tabs\Tab;
@@ -338,7 +339,7 @@ class Site extends Model implements Administrable
 
     /**
      * The hint also says when the text will not be served: off production,
-     * or when public/robots.txt is there and the web server answers first.
+     * or when robots.txt is in the public folder and the web server answers first.
      */
     private static function robotsField(): TextareaField
     {
@@ -349,7 +350,7 @@ class Site extends Model implements Administrable
         }
 
         if (is_file(public_path('robots.txt'))) {
-            $hint[] = __('atrium::sites.hints.robots_file_exists');
+            $hint[] = __('atrium::sites.hints.robots_file_exists', ['file' => PublicFolder::shown('robots.txt')]);
         }
 
         return TextareaField::make('robots_txt')

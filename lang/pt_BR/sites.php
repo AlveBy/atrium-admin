@@ -51,7 +51,7 @@ return [
         'snippet' => 'Adicionado como está a todas as páginas deste site: um widget de chat, um pixel, qualquer outro contador.',
         'robots_txt' => 'Vazio — os robôs podem indexar tudo. Uma linha “Sitemap:” com o sitemap.xml deste site é adicionada se não houver.',
         'robots_not_production' => 'Este servidor não é de produção (APP_ENV=:env), então o robots.txt proíbe a indexação, seja qual for o texto aqui.',
-        'robots_file_exists' => 'O arquivo public/robots.txt existe: o servidor web o retorna no lugar deste texto. Exclua o arquivo.',
+        'robots_file_exists' => 'O arquivo :file existe: o servidor web o retorna no lugar deste texto. Exclua o arquivo.',
     ],
     'errors' => [
         'domain_invalid' => '“:domain” não é um nome de domínio.',
