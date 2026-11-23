@@ -25,9 +25,10 @@ const hasChildren = computed(() => {
 // route() gives an absolute URL and page.url is a path, so compare paths.
 // The dashboard sits at the panel root and is selected only there; any
 // other entry also covers its sub-pages (/admin/news/5/edit → News).
+// An #anchor a redirect adds (…/security#recovery) is not part of the page.
 const matches = (name) => {
     const path = route(name, undefined, false)
-    const url = page.url.split('?')[0]
+    const url = page.url.split('#')[0].split('?')[0]
     if (url === path) return true
     return path !== route('admin.dashboard', undefined, false) && url.startsWith(path + '/')
 }
