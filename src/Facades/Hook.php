@@ -23,6 +23,9 @@ use Illuminate\Support\Facades\Facade;
  * @method static void slot(string $name, string|\Closure $content, int $priority = 10)
  * @method static string renderSlot(string $name, array $page = [])
  * @method static bool has(string $name)
+ * @method static void register(string $name, string $key, mixed $item, int $priority = 10)
+ * @method static array<string,mixed> registered(string $name, mixed ...$args)
+ * @method static mixed resolve(string $name, string $key, mixed ...$args)
  *
  * @see Hooks
  */

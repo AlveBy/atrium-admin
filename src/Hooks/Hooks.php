@@ -28,6 +28,9 @@ use Illuminate\Contracts\View\Factory as ViewFactory;
  * A slot is a filter of HTML at a place in the site's templates
  * (`atrium.slot.footer.end`): slot() adds a view to it.
  *
+ * A registry is a filter of items by key (`atrium.shop.payment_methods`):
+ * modules register() theirs, the owner reads registered() or resolve().
+ *
  * Firing a hook nobody listens to costs one array lookup.
  */
 final class Hooks
@@ -119,6 +122,43 @@ final class Hooks
     public function has(string $name): bool
     {
         return isset($this->filters[$name]) || $this->events->hasListeners($name);
+    }
+
+    /**
+     * Add an item to a registry: the shop's payment methods, the delivery
+     * services, the export formats. A registry is a filter whose value is
+     * the items by key, so Hook::filter() on its name may still drop or
+     * reorder them. The same key registered again replaces the item: the
+     * one with the higher priority, run later, wins.
+     */
+    public function register(string $name, string $key, mixed $item, int $priority = 10): void
+    {
+        $this->filter($name, static function (array $items) use ($key, $item): array {
+            $items[$key] = $item;
+
+            return $items;
+        }, $priority);
+    }
+
+    /**
+     * The items of a registry by key, in the order they were registered,
+     * lower priority first. The arguments go to the filters of its name:
+     * a module may offer an item only on some sites.
+     *
+     * @return array<string,mixed>
+     */
+    public function registered(string $name, mixed ...$args): array
+    {
+        return $this->apply($name, [], ...$args);
+    }
+
+    /**
+     * One item of a registry, or null when nothing is registered under the
+     * key (its module is switched off, say).
+     */
+    public function resolve(string $name, string $key, mixed ...$args): mixed
+    {
+        return $this->registered($name, ...$args)[$key] ?? null;
     }
 
     /**
