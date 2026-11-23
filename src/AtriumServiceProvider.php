@@ -211,6 +211,9 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'atrium');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'atrium');
         Blade::anonymousComponentPath(__DIR__.'/../resources/views/components', 'atrium');
+        // @atriumSlot('footer.end'): what modules add there, given the
+        // template's variables (an @extends layout has the page's too).
+        Blade::directive('atriumSlot', static fn (string $name): string => '<?php echo app(\\Atrium\\Admin\\Hooks\\Hooks::class)->renderSlot('.$name.', \\Illuminate\\Support\\Arr::except($__data ?? [], [\'__env\', \'app\'])); ?>');
 
         if (! $this->app->runningInConsole()) {
             return;

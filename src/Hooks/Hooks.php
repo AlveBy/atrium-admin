@@ -9,8 +9,10 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Hooks;
 
+use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 
 /**
  * The points where modules meet: actions and filters, by name.
@@ -22,6 +24,9 @@ use Illuminate\Contracts\Events\Dispatcher;
  *
  * A filter lets modules change a value (`atrium.search.sources`): each
  * callback gets what the one before returned, lower priority first.
+ *
+ * A slot is a filter of HTML at a place in the site's templates
+ * (`atrium.slot.footer.end`): slot() adds a view to it.
  *
  * Firing a hook nobody listens to costs one array lookup.
  */
@@ -80,6 +85,32 @@ final class Hooks
         }
 
         return $value;
+    }
+
+    /**
+     * Add to a slot of the site's templates (`footer.end`, `header.end`, see
+     * docs/modules.md): a view, given the page's variables, or a closure
+     * that gets them and returns HTML. Lower priority comes first.
+     *
+     * @param  string|Closure(array<string,mixed>):string  $content  a view name or a closure
+     */
+    public function slot(string $name, string|Closure $content, int $priority = 10): void
+    {
+        $this->filter('atrium.slot.'.$name, function (string $html, array $page) use ($content): string {
+            return $html.(is_string($content) ? $this->container->make(ViewFactory::class)->make($content, $page)->render() : $content($page));
+        }, $priority);
+    }
+
+    /**
+     * What modules put into a slot: `@atriumSlot('footer.end')` in a template.
+     * `atrium.slot.{name}` is a filter of the HTML, so Hook::filter() may also
+     * change or drop what others added.
+     *
+     * @param  array<string,mixed>  $page  the template's variables
+     */
+    public function renderSlot(string $name, array $page = []): string
+    {
+        return (string) $this->apply('atrium.slot.'.$name, '', $page);
     }
 
     /**

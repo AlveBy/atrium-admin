@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static void fire(string $name, mixed ...$args)
  * @method static void filter(string $name, callable|string $callback, int $priority = 10)
  * @method static mixed apply(string $name, mixed $value, mixed ...$args)
+ * @method static void slot(string $name, string|\Closure $content, int $priority = 10)
+ * @method static string renderSlot(string $name, array $page = [])
  * @method static bool has(string $name)
  *
  * @see Hooks
