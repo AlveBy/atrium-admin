@@ -69,6 +69,11 @@ final class ThemeContrastTest extends TestCase
         'logo accent on the sidebar' => ['mark-accent', 'sidebar'],
         'logo on the sign-in page' => ['fg', 'page'],
         'logo accent on the sign-in page' => ['accent', 'page'],
+        'AI helper on the page' => ['fg', 'page'],
+        'AI helper over a card' => ['fg', 'surface'],
+        'AI helper\'s eyes and brows on its body' => ['surface', 'fg'],
+        'AI helper\'s mouth on the page' => ['accent', 'page'],
+        'AI helper\'s mouth over a card' => ['accent', 'surface'],
     ];
 
     /**

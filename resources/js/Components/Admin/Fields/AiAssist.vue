@@ -73,6 +73,8 @@ async function start(translate) {
     value.value = ''
     values.value = {}
     provider.value = null
+    // The helper in the corner picks up a pencil (AiHelper.vue).
+    window.dispatchEvent(new CustomEvent('atrium:ai-writing'))
 
     try {
         const response = await fetch(ai.value.url, {
