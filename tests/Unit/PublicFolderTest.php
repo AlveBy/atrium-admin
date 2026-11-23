@@ -90,6 +90,14 @@ final class PublicFolderTest extends TestCase
         $this->assertSame($this->root.'/public', PublicFolder::find($this->root));
     }
 
+    public function test_public_is_kept_while_it_has_an_index_php_of_any_kind(): void
+    {
+        $this->folder('public', "<?php\necho 'a page of its own';\n");
+        $this->folder('www');
+
+        $this->assertSame($this->root.'/public', PublicFolder::find($this->root));
+    }
+
     public function test_a_public_folder_without_index_php_does_not_hide_the_renamed_one(): void
     {
         $this->folder('public', null);
