@@ -1,1 +1,0 @@
-import{s as e}from"./dist-Coleoju9.js";function t(e,t,n,r={}){if(t.type===`link`)return r[n.id]?.[t.name]??null;let i=Object.fromEntries(Object.entries(t.fill||{}).map(([e,t])=>[e,n[t]]));return route(`${e}.create`,i)}function n(t,n,r){e.post(route(`${t}.action`,{id:r.id,action:n.name}),{},{preserveScroll:!0})}export{n,t};
