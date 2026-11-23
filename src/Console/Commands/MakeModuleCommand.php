@@ -57,6 +57,8 @@ final class MakeModuleCommand extends Command
         ]));
         $this->components->info("Model [{$modelPath}] created.");
 
+        $this->writeLabel($files, $table, $label);
+
         if (! $this->option('no-migration')) {
             $migrationPath = database_path('migrations/'.date('Y_m_d_His')."_create_{$table}_table.php");
             $files->put($migrationPath, $this->render($files, 'migration', ['table' => $table]));
@@ -70,6 +72,28 @@ final class MakeModuleCommand extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The module's name goes to the language files, so that the menu speaks
+     * the language of the panel: the model reads it with __(). The file of the
+     * fallback language is written, every other language falls back to it;
+     * translate it by adding lang/{locale}/{table}.php.
+     */
+    private function writeLabel(Filesystem $files, string $table, string $label): void
+    {
+        $locale = config()->string('app.fallback_locale', 'en');
+        $path = lang_path("{$locale}/{$table}.php");
+
+        if ($files->exists($path) && ! $this->option('force')) {
+            $this->components->warn("{$path} already exists, so the name of the module is not written there. Add 'module' => '{$label}' to it.");
+
+            return;
+        }
+
+        $files->ensureDirectoryExists(dirname($path));
+        $files->put($path, $this->render($files, 'lang', ['label' => addcslashes($label, "'\\")]));
+        $this->components->info("Name [{$path}] created.");
     }
 
     /**

@@ -39,30 +39,31 @@ class {{ class }} extends Model implements Administrable
         ];
     }
 
+    /** The name in the menu: lang/{locale}/{{ table }}.php, one file per language of the panel. */
     public static function getAdminLabel(): string
     {
-        return '{{ label }}';
+        return __('{{ table }}.module');
     }
 
     public static function getAdministrationFields(): array
     {
         return [
-            TextField::make('name')->label('Name')->required(),
-            SlugField::make('code')->label('Code')->from('name')->unique('{{ table }}', 'code'),
-            CheckboxField::make('active')->label('Active')->default(true),
-            NumberField::make('sort')->label('Sort')->default(500),
-            ContentField::make('preview_text')->label('Preview text'),
-            ContentField::make('detail_text')->label('Detail text'),
+            TextField::make('name')->label(__('atrium::fields.standard.name'))->required(),
+            SlugField::make('code')->label(__('atrium::fields.standard.code'))->from('name')->unique('{{ table }}', 'code'),
+            CheckboxField::make('active')->label(__('atrium::fields.standard.active'))->default(true),
+            NumberField::make('sort')->label(__('atrium::fields.standard.sort'))->default(500),
+            ContentField::make('preview_text')->label(__('atrium::fields.standard.preview_text')),
+            ContentField::make('detail_text')->label(__('atrium::fields.standard.detail_text')),
         ];
     }
 
     public static function getAdministrationListColumns(): array
     {
         return [
-            TextColumn::make('id')->label('ID')->sortable(),
-            TextColumn::make('name')->label('Name')->sortable()->searchable(),
-            BooleanColumn::make('active')->label('Active'),
-            DateColumn::make('updated_at')->label('Updated')->sortable(),
+            TextColumn::make('id')->label(__('atrium::fields.standard.id'))->sortable(),
+            TextColumn::make('name')->label(__('atrium::fields.standard.name'))->sortable()->searchable(),
+            BooleanColumn::make('active')->label(__('atrium::fields.standard.active')),
+            DateColumn::make('updated_at')->label(__('atrium::fields.standard.updated_at'))->sortable(),
         ];
     }
 }
