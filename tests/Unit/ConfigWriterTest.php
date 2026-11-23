@@ -149,6 +149,28 @@ final class ConfigWriterTest extends TestCase
         $this->assertStringNotContainsString('\\\\', (string) file_get_contents($this->path));
     }
 
+    public function test_a_resource_is_found_with_or_without_the_leading_backslash_and_commented_out(): void
+    {
+        $this->config("    'resources' => [\n        App\\Models\\Article::class,\n        // \\App\\Models\\Page::class,\n    ],\n");
+
+        $this->assertTrue(ConfigWriter::hasResource('App\\Models\\Article', $this->path));
+        $this->assertTrue(ConfigWriter::hasResource('\\App\\Models\\Article', $this->path));
+        $this->assertTrue(ConfigWriter::hasResource('App\\Models\\Page', $this->path));
+        $this->assertFalse(ConfigWriter::hasResource('App\\Models\\News', $this->path));
+        $this->assertFalse(ConfigWriter::hasResource('App\\Models\\Article', $this->path.'.missing'));
+    }
+
+    public function test_another_class_whose_name_contains_the_resource_does_not_count(): void
+    {
+        $this->config("    'resources' => [\n        \\Vendor\\App\\Models\\Article::class,\n        \\App\\Models\\ArticleSection::class,\n        \\Shop\\Page::class,\n    ],\n");
+
+        $this->assertFalse(ConfigWriter::hasResource('App\\Models\\Article', $this->path));
+        $this->assertFalse(ConfigWriter::hasResource('Page', $this->path));
+        $this->assertTrue(ConfigWriter::addResource('App\\Models\\Article', $this->path));
+
+        $this->assertStringContainsString("    'resources' => [\n        \\App\\Models\\Article::class,\n        \\Vendor", (string) file_get_contents($this->path));
+    }
+
     public function test_an_entry_in_the_list_is_not_added_twice_and_one_named_like_the_list_is_added(): void
     {
         $this->config("    'resources' => [\n    ],\n\n    'modules' => [\n        'acme/one',\n    ],\n");

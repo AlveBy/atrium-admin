@@ -31,12 +31,12 @@ final class ConfigWriter
             return false;
         }
 
-        $config = (new Filesystem)->get($path);
-        $entry = '\\'.ltrim($class, '\\').'::class';
-
-        if (str_contains($config, $entry)) {
+        if (self::hasResource($class, $path)) {
             return true;
         }
+
+        $config = (new Filesystem)->get($path);
+        $entry = '\\'.ltrim($class, '\\').'::class';
 
         if (! preg_match("/'resources'\s*=>\s*\[\n/", $config, $match, PREG_OFFSET_CAPTURE)) {
             return false;
@@ -48,6 +48,24 @@ final class ConfigWriter
         self::write($path, $config);
 
         return true;
+    }
+
+    /**
+     * Whether config/atrium.php names the class, commented out included:
+     * with or without the leading backslash, and not another class whose
+     * name ends the same.
+     */
+    public static function hasResource(string $class, ?string $path = null): bool
+    {
+        $path ??= config_path('atrium.php');
+
+        if (! is_file($path)) {
+            return false;
+        }
+
+        $pattern = '/(?<![\\w\\\\])\\\\?'.preg_quote(ltrim($class, '\\'), '/').'::class/';
+
+        return preg_match($pattern, (new Filesystem)->get($path)) === 1;
     }
 
     /**
