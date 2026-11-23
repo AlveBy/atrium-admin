@@ -12,8 +12,7 @@
  * language.
  */
 import { computed, ref } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
-import AdminLayout from '@atrium/Layouts/AdminLayout.vue'
+import { router, usePage, Head } from '@inertiajs/vue3'
 import AdminButton from '@atrium/Components/Admin/UI/AdminButton.vue'
 import AdminCard from '@atrium/Components/Admin/UI/AdminCard.vue'
 import ModuleNotice from '@atrium/Components/Admin/UI/ModuleNotice.vue'
@@ -85,149 +84,148 @@ const code = `${field} text-center text-xl tracking-widest tabular-nums`
 </script>
 
 <template>
-    <AdminLayout :title="l('security.title')">
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-fg">{{ l('security.title') }}</h1>
-            <p class="mt-1 text-sm text-muted">{{ required ? l('security.required') : l('security.optional') }}</p>
+    <Head :title="l('security.title')" />
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-fg">{{ l('security.title') }}</h1>
+        <p class="mt-1 text-sm text-muted">{{ required ? l('security.required') : l('security.optional') }}</p>
+    </div>
+
+    <div dusk="a2f-security" class="max-w-3xl space-y-6">
+        <div v-if="mustEnrol" role="alert" dusk="a2f-must-enrol" class="flex items-start gap-3 p-4 bg-danger-soft border border-danger text-danger-soft-fg rounded">
+            <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <span><span class="sr-only">{{ $t('actions.error') }}: </span>{{ l('security.must_enrol') }}</span>
         </div>
 
-        <div dusk="a2f-security" class="max-w-3xl space-y-6">
-            <div v-if="mustEnrol" role="alert" dusk="a2f-must-enrol" class="flex items-start gap-3 p-4 bg-danger-soft border border-danger text-danger-soft-fg rounded">
-                <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                </svg>
-                <span><span class="sr-only">{{ $t('actions.error') }}: </span>{{ l('security.must_enrol') }}</span>
-            </div>
+        <div>
+            <ModuleNotice prefix="a2f" :status="status" :errors="[error, errors.factors].filter(Boolean)" />
+        </div>
 
-            <div>
-                <ModuleNotice prefix="a2f" :status="status" :errors="[error, errors.factors].filter(Boolean)" />
-            </div>
+        <AdminCard v-if="recoveryCodes" :title="l('security.recovery_new')">
+            <section id="recovery-codes" role="status" dusk="a2f-recovery-codes">
+                <p class="text-sm text-fg mb-3">{{ l('security.recovery_once') }}</p>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 rounded border border-dashed border-field p-4 font-mono text-base text-fg">
+                    <span v-for="item in recoveryCodes" :key="item">{{ item }}</span>
+                </div>
+            </section>
+        </AdminCard>
 
-            <AdminCard v-if="recoveryCodes" :title="l('security.recovery_new')">
-                <section id="recovery-codes" role="status" dusk="a2f-recovery-codes">
-                    <p class="text-sm text-fg mb-3">{{ l('security.recovery_once') }}</p>
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 rounded border border-dashed border-field p-4 font-mono text-base text-fg">
-                        <span v-for="item in recoveryCodes" :key="item">{{ item }}</span>
-                    </div>
-                </section>
-            </AdminCard>
-
-            <!-- What is set up -->
-            <AdminCard :title="l('security.factors')">
-                <p v-if="!factors.length" dusk="a2f-no-factors" class="text-sm text-muted">{{ l('security.none') }}</p>
-                <ul v-else dusk="a2f-factor-list" class="divide-y divide-line">
-                    <li v-for="factor in factors" :key="factor.id" class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
-                        <span class="text-sm text-fg">
-                            <strong>{{ l(`factors.${factor.type}`) }}</strong><template v-if="factor.name"> — {{ factor.name }}</template>
-                            <br>
-                            <span class="text-muted">
-                                {{ l('security.added_at', { date: factor.added_at }) }}<template v-if="factor.used_at"> · {{ l('security.used_at', { date: factor.used_at }) }}</template>
-                            </span>
+        <!-- What is set up -->
+        <AdminCard :title="l('security.factors')">
+            <p v-if="!factors.length" dusk="a2f-no-factors" class="text-sm text-muted">{{ l('security.none') }}</p>
+            <ul v-else dusk="a2f-factor-list" class="divide-y divide-line">
+                <li v-for="factor in factors" :key="factor.id" class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                    <span class="text-sm text-fg">
+                        <strong>{{ l(`factors.${factor.type}`) }}</strong><template v-if="factor.name"> — {{ factor.name }}</template>
+                        <br>
+                        <span class="text-muted">
+                            {{ l('security.added_at', { date: factor.added_at }) }}<template v-if="factor.used_at"> · {{ l('security.used_at', { date: factor.used_at }) }}</template>
                         </span>
-                        <AdminButton variant="outline" size="sm" :disabled="busy" :dusk="`a2f-remove-${factor.id}`" @click="send('delete', factor.remove_url)">
-                            {{ l('security.remove') }}<span class="sr-only"> {{ l(`factors.${factor.type}`) }} {{ factor.name }}</span>
-                        </AdminButton>
-                    </li>
-                </ul>
-            </AdminCard>
-
-            <!-- Authenticator app -->
-            <AdminCard v-if="allows('totp')" :title="l('factors.totp')" :subtitle="l('security.totp_hint')">
-                <section id="totp">
-                    <p v-if="errors.totp" role="alert" data-error class="mb-3 text-sm text-danger">{{ errors.totp }}</p>
-                    <div v-if="totp" class="flex flex-wrap items-start gap-6">
-                        <!-- Drawn by the server from the secret: an SVG of its own making. -->
-                        <div dusk="a2f-qr" role="img" :aria-label="l('security.qr')" class="inline-block rounded bg-white p-2 leading-none" v-html="totp.qr"></div>
-                        <form class="min-w-56 flex-1 space-y-4" @submit.prevent="send('post', urls['totp.confirm'], { name: totpName, code: totpCode })">
-                            <p class="text-sm text-fg">{{ l('security.totp_manual') }}<br><span dusk="a2f-secret" class="font-mono break-all">{{ totp.secret }}</span></p>
-                            <div>
-                                <label for="a2f-totp-name" class="block text-sm font-medium text-fg mb-1">{{ l('security.name') }}</label>
-                                <input id="a2f-totp-name" v-model="totpName" type="text" maxlength="100" :placeholder="l('security.name_totp')" :class="field">
-                            </div>
-                            <div>
-                                <label for="a2f-totp-code" class="block text-sm font-medium text-fg mb-1">{{ l('challenge.code_label.totp') }}</label>
-                                <input id="a2f-totp-code" v-model="totpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required dusk="a2f-totp-code" :class="code">
-                            </div>
-                            <AdminButton type="submit" :disabled="busy" dusk="a2f-totp-confirm">{{ l('security.confirm') }}</AdminButton>
-                        </form>
-                    </div>
-                    <AdminButton v-else variant="outline" :disabled="busy" dusk="a2f-totp-start" @click="send('post', urls['totp.start'])">
-                        {{ has('totp') ? l('security.totp_another') : l('security.totp_add') }}
+                    </span>
+                    <AdminButton variant="outline" size="sm" :disabled="busy" :dusk="`a2f-remove-${factor.id}`" @click="send('delete', factor.remove_url)">
+                        {{ l('security.remove') }}<span class="sr-only"> {{ l(`factors.${factor.type}`) }} {{ factor.name }}</span>
                     </AdminButton>
-                </section>
-            </AdminCard>
+                </li>
+            </ul>
+        </AdminCard>
 
-            <!-- Passkeys -->
-            <AdminCard v-if="allows('passkey')" :title="l('factors.passkey')" :subtitle="passwordless ? l('security.passkey_hint_passwordless') : l('security.passkey_hint')">
-                <section id="passkeys">
-                    <form class="flex flex-wrap items-end gap-4" @submit.prevent="addPasskey">
-                        <div class="min-w-48 flex-1">
-                            <label for="a2f-passkey-name" class="block text-sm font-medium text-fg mb-1">{{ l('security.name') }}</label>
-                            <input id="a2f-passkey-name" v-model="passkeyName" type="text" maxlength="100" :placeholder="l('security.name_passkey')" :class="field">
+        <!-- Authenticator app -->
+        <AdminCard v-if="allows('totp')" :title="l('factors.totp')" :subtitle="l('security.totp_hint')">
+            <section id="totp">
+                <p v-if="errors.totp" role="alert" data-error class="mb-3 text-sm text-danger">{{ errors.totp }}</p>
+                <div v-if="totp" class="flex flex-wrap items-start gap-6">
+                    <!-- Drawn by the server from the secret: an SVG of its own making. -->
+                    <div dusk="a2f-qr" role="img" :aria-label="l('security.qr')" class="inline-block rounded bg-white p-2 leading-none" v-html="totp.qr"></div>
+                    <form class="min-w-56 flex-1 space-y-4" @submit.prevent="send('post', urls['totp.confirm'], { name: totpName, code: totpCode })">
+                        <p class="text-sm text-fg">{{ l('security.totp_manual') }}<br><span dusk="a2f-secret" class="font-mono break-all">{{ totp.secret }}</span></p>
+                        <div>
+                            <label for="a2f-totp-name" class="block text-sm font-medium text-fg mb-1">{{ l('security.name') }}</label>
+                            <input id="a2f-totp-name" v-model="totpName" type="text" maxlength="100" :placeholder="l('security.name_totp')" :class="field">
                         </div>
-                        <AdminButton type="submit" variant="outline" :disabled="busy || !supportsPasskeys" dusk="a2f-passkey-add">{{ l('security.passkey_add') }}</AdminButton>
-                    </form>
-                    <p v-if="passkeyMessage || !supportsPasskeys" role="alert" data-a2f-message class="mt-3 text-sm text-danger">{{ passkeyMessage || l('passkey.unsupported') }}</p>
-                </section>
-            </AdminCard>
-
-            <!-- SMS -->
-            <AdminCard v-if="allows('sms')" :title="l('factors.sms')">
-                <section id="sms">
-                    <p v-if="errors.sms" role="alert" data-error class="mb-3 text-sm text-danger">{{ errors.sms }}</p>
-                    <p v-if="errors.phone" role="alert" data-error class="mb-3 text-sm text-danger">{{ errors.phone }}</p>
-                    <form v-if="sms" class="flex flex-wrap items-end gap-4" @submit.prevent="send('post', urls['sms.confirm'], { code: smsCode })">
-                        <div class="min-w-48 flex-1">
-                            <label for="a2f-sms-code" class="block text-sm font-medium text-fg mb-1">{{ l('security.sms_sent', { phone: sms.phone }) }}</label>
-                            <input id="a2f-sms-code" v-model="smsCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required dusk="a2f-sms-code" :class="code">
+                        <div>
+                            <label for="a2f-totp-code" class="block text-sm font-medium text-fg mb-1">{{ l('challenge.code_label.totp') }}</label>
+                            <input id="a2f-totp-code" v-model="totpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required dusk="a2f-totp-code" :class="code">
                         </div>
-                        <AdminButton type="submit" :disabled="busy" dusk="a2f-sms-confirm">{{ l('security.confirm') }}</AdminButton>
+                        <AdminButton type="submit" :disabled="busy" dusk="a2f-totp-confirm">{{ l('security.confirm') }}</AdminButton>
                     </form>
-                    <form v-else class="flex flex-wrap items-end gap-4" @submit.prevent="send('post', urls['sms.start'], { phone })">
-                        <div class="min-w-48 flex-1">
-                            <label for="a2f-phone" class="block text-sm font-medium text-fg mb-1">{{ l('security.phone') }}</label>
-                            <input id="a2f-phone" v-model="phone" type="tel" autocomplete="tel" placeholder="+1 555 0100" required dusk="a2f-phone" :class="field">
-                        </div>
-                        <AdminButton type="submit" variant="outline" :disabled="busy" dusk="a2f-sms-start">{{ l('security.sms_add') }}</AdminButton>
-                    </form>
-                </section>
-            </AdminCard>
+                </div>
+                <AdminButton v-else variant="outline" :disabled="busy" dusk="a2f-totp-start" @click="send('post', urls['totp.start'])">
+                    {{ has('totp') ? l('security.totp_another') : l('security.totp_add') }}
+                </AdminButton>
+            </section>
+        </AdminCard>
 
-            <!-- E-mail -->
-            <AdminCard v-if="allows('email') && !has('email')" :title="l('factors.email')" :subtitle="l('security.email_hint', { email })">
-                <section id="email">
-                    <AdminButton variant="outline" :disabled="busy" dusk="a2f-email-enable" @click="send('post', urls['email.enable'])">{{ l('security.email_add') }}</AdminButton>
-                </section>
-            </AdminCard>
+        <!-- Passkeys -->
+        <AdminCard v-if="allows('passkey')" :title="l('factors.passkey')" :subtitle="passwordless ? l('security.passkey_hint_passwordless') : l('security.passkey_hint')">
+            <section id="passkeys">
+                <form class="flex flex-wrap items-end gap-4" @submit.prevent="addPasskey">
+                    <div class="min-w-48 flex-1">
+                        <label for="a2f-passkey-name" class="block text-sm font-medium text-fg mb-1">{{ l('security.name') }}</label>
+                        <input id="a2f-passkey-name" v-model="passkeyName" type="text" maxlength="100" :placeholder="l('security.name_passkey')" :class="field">
+                    </div>
+                    <AdminButton type="submit" variant="outline" :disabled="busy || !supportsPasskeys" dusk="a2f-passkey-add">{{ l('security.passkey_add') }}</AdminButton>
+                </form>
+                <p v-if="passkeyMessage || !supportsPasskeys" role="alert" data-a2f-message class="mt-3 text-sm text-danger">{{ passkeyMessage || l('passkey.unsupported') }}</p>
+            </section>
+        </AdminCard>
 
-            <!-- Recovery codes -->
-            <AdminCard v-if="factors.length" :title="l('security.recovery')">
-                <section id="recovery">
-                    <p dusk="a2f-recovery-left" class="mb-3 text-sm text-muted">{{ recoveryLeft }}</p>
-                    <AdminButton variant="outline" :disabled="busy" dusk="a2f-recovery-regenerate" @click="send('post', urls['recovery.regenerate'])">{{ l('security.recovery_regenerate') }}</AdminButton>
-                </section>
-            </AdminCard>
+        <!-- SMS -->
+        <AdminCard v-if="allows('sms')" :title="l('factors.sms')">
+            <section id="sms">
+                <p v-if="errors.sms" role="alert" data-error class="mb-3 text-sm text-danger">{{ errors.sms }}</p>
+                <p v-if="errors.phone" role="alert" data-error class="mb-3 text-sm text-danger">{{ errors.phone }}</p>
+                <form v-if="sms" class="flex flex-wrap items-end gap-4" @submit.prevent="send('post', urls['sms.confirm'], { code: smsCode })">
+                    <div class="min-w-48 flex-1">
+                        <label for="a2f-sms-code" class="block text-sm font-medium text-fg mb-1">{{ l('security.sms_sent', { phone: sms.phone }) }}</label>
+                        <input id="a2f-sms-code" v-model="smsCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required dusk="a2f-sms-code" :class="code">
+                    </div>
+                    <AdminButton type="submit" :disabled="busy" dusk="a2f-sms-confirm">{{ l('security.confirm') }}</AdminButton>
+                </form>
+                <form v-else class="flex flex-wrap items-end gap-4" @submit.prevent="send('post', urls['sms.start'], { phone })">
+                    <div class="min-w-48 flex-1">
+                        <label for="a2f-phone" class="block text-sm font-medium text-fg mb-1">{{ l('security.phone') }}</label>
+                        <input id="a2f-phone" v-model="phone" type="tel" autocomplete="tel" placeholder="+1 555 0100" required dusk="a2f-phone" :class="field">
+                    </div>
+                    <AdminButton type="submit" variant="outline" :disabled="busy" dusk="a2f-sms-start">{{ l('security.sms_add') }}</AdminButton>
+                </form>
+            </section>
+        </AdminCard>
 
-            <!-- Trusted devices -->
-            <AdminCard v-if="trustedDays > 0 || devices.length" :title="l('security.devices')">
-                <section id="devices">
-                    <p v-if="!devices.length" class="text-sm text-muted">{{ l('security.devices_none') }}</p>
-                    <template v-else>
-                        <ul class="divide-y divide-line">
-                            <li v-for="device in devices" :key="device.id" class="py-3 text-sm text-fg first:pt-0 last:pb-0">
-                                {{ device.name || '—' }}<br>
-                                <span class="text-muted">{{ device.ip }} · {{ l('security.until', { date: device.until }) }}</span>
-                            </li>
-                        </ul>
-                        <AdminButton class="mt-4" variant="outline" :disabled="busy" dusk="a2f-devices-revoke" @click="send('delete', urls['devices.revoke'])">{{ l('security.devices_revoke') }}</AdminButton>
-                    </template>
-                </section>
-            </AdminCard>
+        <!-- E-mail -->
+        <AdminCard v-if="allows('email') && !has('email')" :title="l('factors.email')" :subtitle="l('security.email_hint', { email })">
+            <section id="email">
+                <AdminButton variant="outline" :disabled="busy" dusk="a2f-email-enable" @click="send('post', urls['email.enable'])">{{ l('security.email_add') }}</AdminButton>
+            </section>
+        </AdminCard>
 
-            <!-- Recent sign-ins -->
-            <AdminCard :title="l('security.events')">
-                <EventsTable :t="t" :events="events" />
-            </AdminCard>
-        </div>
-    </AdminLayout>
+        <!-- Recovery codes -->
+        <AdminCard v-if="factors.length" :title="l('security.recovery')">
+            <section id="recovery">
+                <p dusk="a2f-recovery-left" class="mb-3 text-sm text-muted">{{ recoveryLeft }}</p>
+                <AdminButton variant="outline" :disabled="busy" dusk="a2f-recovery-regenerate" @click="send('post', urls['recovery.regenerate'])">{{ l('security.recovery_regenerate') }}</AdminButton>
+            </section>
+        </AdminCard>
+
+        <!-- Trusted devices -->
+        <AdminCard v-if="trustedDays > 0 || devices.length" :title="l('security.devices')">
+            <section id="devices">
+                <p v-if="!devices.length" class="text-sm text-muted">{{ l('security.devices_none') }}</p>
+                <template v-else>
+                    <ul class="divide-y divide-line">
+                        <li v-for="device in devices" :key="device.id" class="py-3 text-sm text-fg first:pt-0 last:pb-0">
+                            {{ device.name || '—' }}<br>
+                            <span class="text-muted">{{ device.ip }} · {{ l('security.until', { date: device.until }) }}</span>
+                        </li>
+                    </ul>
+                    <AdminButton class="mt-4" variant="outline" :disabled="busy" dusk="a2f-devices-revoke" @click="send('delete', urls['devices.revoke'])">{{ l('security.devices_revoke') }}</AdminButton>
+                </template>
+            </section>
+        </AdminCard>
+
+        <!-- Recent sign-ins -->
+        <AdminCard :title="l('security.events')">
+            <EventsTable :t="t" :events="events" />
+        </AdminCard>
+    </div>
 </template>

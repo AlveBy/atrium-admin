@@ -10,8 +10,7 @@
  * the `t` prop.
  */
 import { reactive } from 'vue'
-import { Link, router } from '@inertiajs/vue3'
-import AdminLayout from '@atrium/Layouts/AdminLayout.vue'
+import { Link, router, Head } from '@inertiajs/vue3'
 import AdminButton from '@atrium/Components/Admin/UI/AdminButton.vue'
 import AdminCard from '@atrium/Components/Admin/UI/AdminCard.vue'
 import EventsTable from '@atrium/Components/Admin/TwoFactor/EventsTable.vue'
@@ -40,38 +39,37 @@ const field = 'block rounded-md border border-field bg-surface text-fg text-sm p
 </script>
 
 <template>
-    <AdminLayout :title="l('menu.log')">
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-fg">{{ l('menu.log') }}</h1>
-        </div>
+    <Head :title="l('menu.log')" />
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-fg">{{ l('menu.log') }}</h1>
+    </div>
 
-        <div dusk="a2f-log">
-            <AdminCard>
-                <form role="search" class="mb-4 flex flex-wrap items-end gap-4" @submit.prevent="filter">
-                    <div>
-                        <label for="a2f-guard" class="block text-sm font-medium text-fg mb-1">{{ l('log.guard') }}</label>
-                        <select id="a2f-guard" v-model="form.guard" dusk="a2f-guard-filter" :class="field">
-                            <option value="">{{ l('log.all') }}</option>
-                            <option v-for="name in guards" :key="name" :value="name">{{ l(`guards.${name}`) }}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="a2f-event" class="block text-sm font-medium text-fg mb-1">{{ l('log.what') }}</label>
-                        <select id="a2f-event" v-model="form.event" dusk="a2f-event-filter" :class="field">
-                            <option value="">{{ l('log.all') }}</option>
-                            <option v-for="name in eventNames" :key="name" :value="name">{{ l(`events.${name}`) }}</option>
-                        </select>
-                    </div>
-                    <AdminButton type="submit" variant="outline" dusk="a2f-filter">{{ l('log.filter') }}</AdminButton>
-                </form>
+    <div dusk="a2f-log">
+        <AdminCard>
+            <form role="search" class="mb-4 flex flex-wrap items-end gap-4" @submit.prevent="filter">
+                <div>
+                    <label for="a2f-guard" class="block text-sm font-medium text-fg mb-1">{{ l('log.guard') }}</label>
+                    <select id="a2f-guard" v-model="form.guard" dusk="a2f-guard-filter" :class="field">
+                        <option value="">{{ l('log.all') }}</option>
+                        <option v-for="name in guards" :key="name" :value="name">{{ l(`guards.${name}`) }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="a2f-event" class="block text-sm font-medium text-fg mb-1">{{ l('log.what') }}</label>
+                    <select id="a2f-event" v-model="form.event" dusk="a2f-event-filter" :class="field">
+                        <option value="">{{ l('log.all') }}</option>
+                        <option v-for="name in eventNames" :key="name" :value="name">{{ l(`events.${name}`) }}</option>
+                    </select>
+                </div>
+                <AdminButton type="submit" variant="outline" dusk="a2f-filter">{{ l('log.filter') }}</AdminButton>
+            </form>
 
-                <EventsTable :t="t" :events="events" with-who />
+            <EventsTable :t="t" :events="events" with-who />
 
-                <nav v-if="newer || older" :aria-label="l('log.pages')" class="mt-4 flex gap-4 text-sm">
-                    <Link v-if="newer" :href="newer" dusk="a2f-newer" class="text-accent hover:underline">← {{ l('log.newer') }}</Link>
-                    <Link v-if="older" :href="older" dusk="a2f-older" class="text-accent hover:underline">{{ l('log.older') }} →</Link>
-                </nav>
-            </AdminCard>
-        </div>
-    </AdminLayout>
+            <nav v-if="newer || older" :aria-label="l('log.pages')" class="mt-4 flex gap-4 text-sm">
+                <Link v-if="newer" :href="newer" dusk="a2f-newer" class="text-accent hover:underline">← {{ l('log.newer') }}</Link>
+                <Link v-if="older" :href="older" dusk="a2f-older" class="text-accent hover:underline">{{ l('log.older') }} →</Link>
+            </nav>
+        </AdminCard>
+    </div>
 </template>
