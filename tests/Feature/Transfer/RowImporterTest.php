@@ -49,6 +49,19 @@ final class RowImporterTest extends TransferTestCase
         Storage::fake('public');
     }
 
+    public function test_a_link_is_found_by_name_among_more_records_than_the_form_lists(): void
+    {
+        for ($i = 1; $i <= 60; $i++) {
+            Post::query()->create(['name' => "Post {$i}"]);
+        }
+
+        $import = $this->import(['article', 'name', 'code', 'post_id']);
+        $this->importer($import)->import(2, ['A-1', 'Parka', 'parka', 'post 57']);
+
+        $this->assertSame([], $import->errors);
+        $this->assertSame(Post::query()->where('name', 'Post 57')->value('id'), Parcel::query()->sole()->post_id);
+    }
+
     public function test_a_row_creates_a_record_with_every_kind_of_field(): void
     {
         $post = Post::query()->create(['name' => 'Hello']);

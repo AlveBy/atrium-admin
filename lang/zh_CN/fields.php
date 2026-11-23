@@ -86,6 +86,16 @@ return [
         'no_options' => '没有可用选项',
     ],
 
+    'relation' => [
+        'search' => '按名称或 ID 查找',
+        'filter' => '筛选列表',
+        'nothing' => '未找到任何内容',
+        'failed' => '无法加载列表，请重试。',
+        'results' => '结果：:count',
+        'remove' => '移除“:label”',
+        'limit' => '最多可选择 :count 项。',
+    ],
+
     'multi_select' => [
         'nothing_found' => '未找到任何内容',
     ],

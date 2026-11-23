@@ -19,6 +19,7 @@ use Atrium\Admin\Http\Controllers\LinkController;
 use Atrium\Admin\Http\Controllers\LocaleController;
 use Atrium\Admin\Http\Controllers\ModuleController;
 use Atrium\Admin\Http\Controllers\ProfileController;
+use Atrium\Admin\Http\Controllers\RelationOptionsController;
 use Atrium\Admin\Http\Controllers\ResourceController;
 use Atrium\Admin\Http\Controllers\RoleController;
 use Atrium\Admin\Http\Controllers\SiteController;
@@ -120,6 +121,10 @@ Route::prefix(config('atrium.prefix', 'admin'))
                     Route::post("{$key}/import/{import}/step", [ImportController::class, 'step'])->defaults('module', $key)->whereNumber('import')->name("admin.{$key}.import.step");
                     Route::post("{$key}/import/{import}/cancel", [ImportController::class, 'cancel'])->defaults('module', $key)->whereNumber('import')->name("admin.{$key}.import.cancel");
                 }
+
+                // The records a relation field of the form searches in.
+                Route::get("{$key}/fields/{field}/options", [RelationOptionsController::class, 'search'])
+                    ->defaults('module', $key)->where('field', '[A-Za-z0-9_]+')->name("admin.{$key}.options");
 
                 Route::resource($key, ResourceController::class)
                     ->except(['show'])

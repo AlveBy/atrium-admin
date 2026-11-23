@@ -86,6 +86,16 @@ return [
         'no_options' => '選択肢がありません',
     ],
 
+    'relation' => [
+        'search' => '名前または ID で検索',
+        'filter' => 'リストを絞り込む',
+        'nothing' => '見つかりませんでした',
+        'failed' => 'リストを読み込めませんでした。もう一度お試しください。',
+        'results' => '結果: :count',
+        'remove' => '「:label」を外す',
+        'limit' => '選択できるのは最大 :count 件です。',
+    ],
+
     'multi_select' => [
         'nothing_found' => '見つかりませんでした',
     ],

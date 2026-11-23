@@ -158,6 +158,21 @@ return new class extends Migration
             $table->foreignId('topic_id');
         });
 
+        Schema::create('kits', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->unsignedBigInteger('post_id')->nullable();
+            $table->timestamps();
+        });
+
+        foreach (['post', 'note', 'page', 'topic'] as $related) {
+            Schema::create("kit_{$related}", function (Blueprint $table) use ($related): void {
+                $table->foreignId('kit_id');
+                $table->foreignId("{$related}_id");
+                $table->integer('sort')->default(0);
+            });
+        }
+
         Schema::create('leaflets', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
@@ -179,7 +194,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'parcels', 'posts'] as $table) {
+        foreach (['kit_post', 'kit_note', 'kit_page', 'kit_topic', 'kits', 'sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'parcels', 'posts'] as $table) {
             Schema::dropIfExists($table);
         }
     }

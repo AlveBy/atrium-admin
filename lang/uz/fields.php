@@ -86,6 +86,16 @@ return [
         'no_options' => 'Mavjud variantlar yoʻq',
     ],
 
+    'relation' => [
+        'search' => 'Nomi yoki ID boʻyicha topish',
+        'filter' => 'Roʻyxatni saralash',
+        'nothing' => 'Hech narsa topilmadi',
+        'failed' => 'Roʻyxatni yuklab boʻlmadi. Qayta urinib koʻring.',
+        'results' => 'Topildi: :count',
+        'remove' => '«:label» ni olib tashlash',
+        'limit' => 'Koʻpi bilan :count tanlash mumkin.',
+    ],
+
     'multi_select' => [
         'nothing_found' => 'Hech narsa topilmadi',
     ],

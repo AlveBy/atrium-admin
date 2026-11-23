@@ -4,7 +4,13 @@
  * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
  */
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import RelationSearch from './RelationSearch.vue'
+
+// A short list is a list of checkboxes, with a box to narrow it once it
+// grows; past the field's threshold the server sends no list at all, only
+// `searchUrl` and the records already chosen (`selected`).
+const FILTER_FROM = 10
 
 const props = defineProps({
     name: {
@@ -46,6 +52,18 @@ const props = defineProps({
     multiple: {
         type: Boolean,
         default: true
+    },
+    searchUrl: {
+        type: String,
+        default: null
+    },
+    selected: {
+        type: Array,
+        default: () => []
+    },
+    maxItems: {
+        type: Number,
+        default: 0
     }
 })
 
@@ -88,6 +106,14 @@ const selectedLabels = computed(() => {
         .filter(Boolean)
 })
 
+const filter = ref('')
+
+const shownOptions = computed(() => {
+    const words = filter.value.trim().toLowerCase()
+    if (words === '') return props.options
+    return props.options.filter(option => String(option.label ?? '').toLowerCase().includes(words) || String(option.value) === words)
+})
+
 // Clear all selections
 const clearAll = () => {
     if (!props.disabled) {
@@ -107,6 +133,22 @@ const clearAll = () => {
             <span v-if="required" class="text-danger">*</span>
         </label>
 
+        <!-- Too many records for the page: search them -->
+        <RelationSearch
+            v-if="searchUrl"
+            v-model="value"
+            :input-id="name"
+            :label="label"
+            :search-url="searchUrl"
+            :selected="selected"
+            :multiple="true"
+            :max-items="maxItems"
+            :placeholder="placeholder"
+            :disabled="disabled"
+            :error="error"
+        />
+
+        <template v-else>
         <!-- Selected items display -->
         <div v-if="value.length > 0" class="mb-2 flex flex-wrap gap-1">
             <span
@@ -118,7 +160,8 @@ const clearAll = () => {
                 <button
                     type="button"
                     @click="toggleOption(value[index])"
-                    class="ml-1 text-accent hover:text-accent-hover"
+                    class="ml-1 text-accent-hover"
+                    :aria-label="$t('fields.relation.remove', { label })"
                     :disabled="disabled"
                 >
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,14 +180,29 @@ const clearAll = () => {
             </button>
         </div>
 
+        <!-- A box to narrow a longer list -->
+        <input
+            v-if="options.length > FILTER_FROM"
+            v-model="filter"
+            type="search"
+            :aria-label="$t('fields.relation.filter')"
+            :placeholder="$t('fields.relation.filter')"
+            :disabled="disabled"
+            class="mb-2 w-full px-3 py-2 border border-field rounded-md shadow-sm bg-surface text-fg placeholder:text-muted focus:ring-focus focus:border-focus"
+            data-relation-filter
+        />
+
         <!-- Options list -->
         <div
             v-if="options.length > 0"
             class="border border-field rounded-md max-h-64 overflow-y-auto"
             :class="{ 'border-danger': error, 'opacity-50': disabled }"
         >
+            <p v-if="shownOptions.length === 0" class="px-3 py-2 text-sm text-muted" data-relation-status>
+                {{ $t('fields.relation.nothing') }}
+            </p>
             <label
-                v-for="option in options"
+                v-for="option in shownOptions"
                 :key="option.value"
                 :data-option-value="option.value"
                 :data-option-selected="isSelected(option.value) ? 'true' : 'false'"
@@ -169,6 +227,7 @@ const clearAll = () => {
         >
             {{ $t('fields.belongs_to_many.no_options') }}
         </div>
+        </template>
 
         <!-- Hint -->
         <p v-if="hint && !error" class="mt-1 text-sm text-muted">

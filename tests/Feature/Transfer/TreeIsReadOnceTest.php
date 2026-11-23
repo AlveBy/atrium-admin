@@ -59,9 +59,10 @@ final class TreeIsReadOnceTest extends TransferTestCase
         Parcel::query()->delete();
         $many = $this->importRows(4);
 
-        // The form's own check of the choice lists the tree once for each row; the reading of the cells does not.
+        // Neither the reading of the cells nor the saving lists it again for
+        // each row: saving asks the fields their type, not their records.
         $this->assertGreaterThan(0, $one);
-        $this->assertSame($one + 3, $many);
+        $this->assertSame($one, $many);
     }
 
     public function test_the_tree_is_listed_as_often_for_many_records_as_for_one(): void

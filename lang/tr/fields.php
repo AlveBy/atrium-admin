@@ -86,6 +86,16 @@ return [
         'no_options' => 'Kullanılabilir seçenek yok',
     ],
 
+    'relation' => [
+        'search' => 'Ada veya ID\'ye göre bul',
+        'filter' => 'Listeyi filtrele',
+        'nothing' => 'Hiçbir şey bulunamadı',
+        'failed' => 'Liste yüklenemedi. Tekrar deneyin.',
+        'results' => 'Sonuç: :count',
+        'remove' => '“:label” öğesini kaldır',
+        'limit' => 'En fazla :count seçebilirsiniz.',
+    ],
+
     'multi_select' => [
         'nothing_found' => 'Hiçbir şey bulunamadı',
     ],

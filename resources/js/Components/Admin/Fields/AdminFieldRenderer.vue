@@ -19,6 +19,7 @@ import MultiSelectField from './MultiSelectField.vue'
 import MapField from './MapField.vue'
 import TreeField from './TreeField.vue'
 import LinkField from './LinkField.vue'
+import RelationSearch from './RelationSearch.vue'
 import FileManager from '../FileManager.vue'
 import { ajaxHeaders, sessionExpiredMessage } from '../../../Support/csrf'
 import { t } from '@atrium/Support/i18n'
@@ -128,8 +129,11 @@ const isTextarea = computed(() => props.field.type === 'textarea')
 
 // Check if field is a select
 const isSelect = computed(() => props.field.type === 'select'
-    // A link to one record of another module: a list of its records.
-    || (props.field.type === 'belongsTo' && !(props.field.searchable && props.field.searchRoute)))
+    // A link to one record of another module: a list of its records…
+    || (props.field.type === 'belongsTo' && !props.field.searchUrl))
+
+// …or, when they are too many for the page, a search among them.
+const isRelationSearch = computed(() => props.field.type === 'belongsTo' && Boolean(props.field.searchUrl))
 
 // Check if field is an image
 const isImage = computed(() => props.field.type === 'image')
@@ -430,6 +434,20 @@ function pickFromLibrary(file) {
                 v-model="value"
                 :options="field.options"
                 :placeholder="field.placeholder || $t('common.select')"
+                :disabled="field.disabled"
+                :error="error"
+            />
+        </template>
+
+        <!-- One record of another module, searched -->
+        <template v-else-if="isRelationSearch">
+            <RelationSearch
+                v-model="value"
+                :input-id="field.name"
+                :search-url="field.searchUrl"
+                :selected="field.selected"
+                :clearable="!field.required && field.clearable !== false"
+                :placeholder="field.placeholder"
                 :disabled="field.disabled"
                 :error="error"
             />

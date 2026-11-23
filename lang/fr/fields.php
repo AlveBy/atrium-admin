@@ -86,6 +86,16 @@ return [
         'no_options' => 'Aucune option disponible',
     ],
 
+    'relation' => [
+        'search' => 'Chercher par nom ou ID',
+        'filter' => 'Filtrer la liste',
+        'nothing' => 'Aucun résultat',
+        'failed' => 'Impossible de charger la liste. Réessayez.',
+        'results' => 'Résultats : :count',
+        'remove' => 'Retirer « :label »',
+        'limit' => 'Vous pouvez en choisir au plus :count.',
+    ],
+
     'multi_select' => [
         'nothing_found' => 'Aucun résultat',
     ],

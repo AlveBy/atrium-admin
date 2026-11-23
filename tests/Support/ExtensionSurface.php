@@ -11,6 +11,7 @@ namespace Atrium\Admin\Tests\Support;
 
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Console\Commands\SlugRegenerateCommand;
+use Atrium\Admin\Fields\BelongsToField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\TreeSelectField;
 use Atrium\Admin\Http\Controllers\AdminController;
@@ -71,6 +72,10 @@ final class ExtensionSurface
             'Console\Commands\SlugRegenerateCommand::findModelsWithSlug' => [SlugRegenerateCommand::class, 'findModelsWithSlug', 'protected'],
             'Console\Commands\SlugRegenerateCommand::regenerateAll' => [SlugRegenerateCommand::class, 'regenerateAll', 'protected'],
             'Console\Commands\SlugRegenerateCommand::regenerateModel' => [SlugRegenerateCommand::class, 'regenerateModel', 'protected'],
+            'Fields\BelongsToField::currentValues' => [BelongsToField::class, 'currentValues', 'protected'],
+            'Fields\BelongsToField::option' => [BelongsToField::class, 'option', 'protected'],
+            'Fields\BelongsToField::relationQuery' => [BelongsToField::class, 'relationQuery', 'protected'],
+            'Fields\BelongsToField::selectedOptions' => [BelongsToField::class, 'selectedOptions', 'protected'],
             'Fields\Field::getFieldProps' => [Field::class, 'getFieldProps', 'protected'],
             'Fields\TreeSelectField::buildTree' => [TreeSelectField::class, 'buildTree', 'protected'],
             'Fields\TreeSelectField::defaultRootLabel' => [TreeSelectField::class, 'defaultRootLabel', 'protected'],
@@ -111,6 +116,7 @@ final class ExtensionSurface
             'Http\Controllers\AdminController::uniqueRule' => [AdminController::class, 'uniqueRule', 'protected'],
             'Http\Controllers\AdminController::update' => [AdminController::class, 'update', 'public'],
             'Http\Controllers\AdminController::validationAttributes' => [AdminController::class, 'validationAttributes', 'protected'],
+            'Http\Controllers\AdminController::withRelationSearch' => [AdminController::class, 'withRelationSearch', 'protected'],
             'Http\Controllers\ApiTokenController::destroy' => [ApiTokenController::class, 'destroy', 'public'],
             'Http\Controllers\ApiTokenController::index' => [ApiTokenController::class, 'index', 'public'],
             'Http\Controllers\ApiTokenController::store' => [ApiTokenController::class, 'store', 'public'],

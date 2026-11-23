@@ -21,6 +21,7 @@ use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Columns\Column;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\Fields\BelongsToField;
 use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\DisplayField;
 use Atrium\Admin\Fields\Field;
@@ -886,13 +887,13 @@ abstract class AdminController extends Controller
         $relations = [];
 
         foreach ($this->model::getAdministrationFields() as $field) {
-            $fieldArray = $field->toArray();
-
-            if ($fieldArray['type'] !== 'belongsToMany') {
+            // getType(), not toArray(): toArray() would load every record
+            // the field offers just to read its type.
+            if ($field->getType() !== 'belongsToMany') {
                 continue;
             }
 
-            $name = $fieldArray['name'];
+            $name = $field->getName();
 
             if (! array_key_exists($name, $data)) {
                 continue;
@@ -942,12 +943,11 @@ abstract class AdminController extends Controller
         $fields = $this->model::getAdministrationFields();
 
         foreach ($fields as $field) {
-            $fieldArray = $field->toArray();
             // snake_case field name, camelCase relation method; a field with
             // no relation behind it is left out, as extractRelationValues() does.
-            $method = Str::camel($fieldArray['name']);
+            $method = Str::camel($field->getName());
 
-            if ($fieldArray['type'] === 'belongsToMany' && method_exists($this->model, $method)) {
+            if ($field->getType() === 'belongsToMany' && method_exists($this->model, $method)) {
                 $relations[] = $method;
             }
         }
@@ -1024,9 +1024,9 @@ abstract class AdminController extends Controller
 
             return [
                 'tabs' => $tabsData['tabs'],
-                'fieldsByTab' => $this->serializeFieldsByTab($tabsData['fields'], $context),
+                'fieldsByTab' => $this->serializeFieldsByTab(array_map(fn (array $fields): array => $this->withRelationSearch($fields, $item), $tabsData['fields']), $context),
                 'fields' => $this->serializeFields(
-                    $this->model::getAdminFieldsWithTabs(),
+                    $this->withRelationSearch($this->model::getAdminFieldsWithTabs(), $item),
                     $context
                 ), // For backward compatibility
                 'item' => $this->prepareItemData($item),
@@ -1038,7 +1038,7 @@ abstract class AdminController extends Controller
         }
 
         // Fallback: old logic without tabs
-        $fields = $this->allAdminFields();
+        $fields = $this->withRelationSearch($this->allAdminFields(), $item);
 
         return [
             'fields' => $this->serializeFields($fields, $context),
@@ -1048,6 +1048,31 @@ abstract class AdminController extends Controller
             'adminLabel' => $adminLabel,
             'useTabs' => false,
         ];
+    }
+
+    /**
+     * Relation fields with more records than fit in the page search them
+     * through the module's options route, and name the ones the record
+     * already links to. A module on routes of its own keeps the full lists.
+     *
+     * @param  array<int,mixed>  $fields
+     * @return array<int,mixed>
+     */
+    protected function withRelationSearch(array $fields, ?Model $item): array
+    {
+        foreach ($fields as $field) {
+            if (! $field instanceof BelongsToField) {
+                continue;
+            }
+
+            $route = $this->model::getAdminRouteName().'.options';
+
+            if (Route::has($route)) {
+                $field->searchUrl(route($route, ['field' => $field->getName()], false))->record($item);
+            }
+        }
+
+        return $fields;
     }
 
     /**

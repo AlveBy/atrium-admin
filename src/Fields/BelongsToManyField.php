@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Fields;
 
+use Illuminate\Support\Str;
+
 class BelongsToManyField extends BelongsToField
 {
     protected int $maxItems = 0;
@@ -52,14 +54,26 @@ class BelongsToManyField extends BelongsToField
         return $this;
     }
 
+    /**
+     * The records the edited one links to, through the relation named like
+     * the field (`related_posts` → relatedPosts()).
+     *
+     * @return array<int,mixed>
+     */
+    protected function currentValues(): array
+    {
+        $relation = Str::camel($this->name);
+
+        if ($this->record === null || ! method_exists($this->record, $relation)) {
+            return [];
+        }
+
+        return $this->record->{$relation}->pluck($this->valueColumn)->all();
+    }
+
     protected function getFieldProps(): array
     {
-        $props = parent::getFieldProps();
-
-        // Always load options for BelongsToMany (override parent's searchable logic)
-        $props['options'] = $this->getOptions();
-
-        return array_merge($props, [
+        return array_merge(parent::getFieldProps(), [
             'model' => $this->modelClass ?? null,
             'multiple' => true,
             'maxItems' => $this->maxItems,

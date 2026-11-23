@@ -82,6 +82,8 @@ final class Permissions
         // A button checks its own permission on top.
         'action' => self::VIEW,
         'bulk' => self::VIEW,
+        // The records a relation field of the form searches in: as the form.
+        'options' => self::VIEW,
     ];
 
     public function __construct(

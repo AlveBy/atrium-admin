@@ -14,9 +14,14 @@ use Atrium\Admin\Fields\BelongsToManyField;
 use Atrium\Admin\Fields\FieldContext;
 use Atrium\Admin\Fields\TreeSelectField;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
+use Atrium\Admin\Tests\Fixtures\Crate;
+use Atrium\Admin\Tests\Fixtures\Kit;
+use Atrium\Admin\Tests\Fixtures\Parcel;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Section;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -123,11 +128,11 @@ final class RelationFieldsTest extends FieldTestCase
         $this->assertSame($passes, $this->passes($field, $value($post->id)));
     }
 
-    public function test_a_belongs_to_many_field_always_loads_the_records(): void
+    public function test_a_belongs_to_many_field_lists_its_records_and_takes_its_settings(): void
     {
         $post = Post::query()->create(['name' => 'Chair']);
 
-        $field = BelongsToManyField::make('posts')->model(Post::class)->searchRoute('admin.posts.search');
+        $field = BelongsToManyField::make('posts')->model(Post::class);
         $array = $field->toArray();
 
         $this->assertSame('belongsToMany', $field->getType());
@@ -137,7 +142,198 @@ final class RelationFieldsTest extends FieldTestCase
         $this->assertSame(0, $array['maxItems']);
         $this->assertSame(0, $array['minItems']);
         $this->assertFalse($array['sortable']);
-        $this->assertSame('admin.posts.search', $array['searchRoute']);
+        $this->assertNull($array['searchUrl']);
+        $this->assertSame([], $array['selected']);
+    }
+
+    public function test_with_a_search_route_a_belongs_to_many_field_searches_too(): void
+    {
+        Post::query()->create(['name' => 'Chair']);
+
+        $array = BelongsToManyField::make('posts')->model(Post::class)->searchRoute('/find/posts')->toArray();
+
+        $this->assertSame('/find/posts', $array['searchRoute']);
+        $this->assertSame('/find/posts', $array['searchUrl']);
+        $this->assertSame([], $array['options']);
+    }
+
+    public function test_a_search_route_is_a_route_name_or_an_address(): void
+    {
+        Route::get('find/posts', fn (): string => '')->name('find.posts');
+
+        $this->assertSame(url('find/posts'), BelongsToField::make('a')->model(Post::class)->searchRoute('find.posts')->getSearchUrl());
+        $this->assertSame('/elsewhere', BelongsToField::make('a')->model(Post::class)->searchRoute('/elsewhere')->getSearchUrl());
+        $this->assertNull(BelongsToField::make('a')->searchRoute('find.posts')->getSearchUrl(), 'nothing to search without a model');
+        $this->assertNull(BelongsToField::make('a')->model(Post::class)->searchRoute('find.posts')->searchable(false)->getSearchUrl());
+    }
+
+    /**
+     * @return array<string, array{int, ?int, bool}>
+     */
+    public static function thresholds(): array
+    {
+        return [
+            'fifty records by default' => [50, null, false],
+            'fifty-one records by default' => [51, null, true],
+            'three records of three' => [3, 3, false],
+            'four records of three' => [4, 3, true],
+            'one record of none' => [1, 0, true],
+            'no records of none' => [0, 0, false],
+        ];
+    }
+
+    #[DataProvider('thresholds')]
+    public function test_past_the_threshold_the_field_searches_instead_of_listing(int $records, ?int $threshold, bool $searches): void
+    {
+        for ($i = 1; $i <= $records; $i++) {
+            Post::query()->create(['name' => "Post {$i}"]);
+        }
+
+        $field = BelongsToManyField::make('posts')->model(Post::class)->searchUrl('/admin/kits/fields/posts/options');
+
+        if ($threshold !== null) {
+            $field->searchThreshold($threshold);
+        }
+
+        $array = $field->toArray();
+
+        $this->assertSame($searches ? '/admin/kits/fields/posts/options' : null, $array['searchUrl']);
+        $this->assertCount($searches ? 0 : $records, $array['options']);
+    }
+
+    public function test_without_a_search_address_every_record_is_listed_however_many(): void
+    {
+        Post::query()->create(['name' => 'A']);
+        Post::query()->create(['name' => 'B']);
+
+        $field = BelongsToField::make('post_id')->model(Post::class)->searchThreshold(1);
+
+        $this->assertNull($field->getSearchUrl());
+        $this->assertCount(2, $field->toArray()['options']);
+        $this->assertNull($field->searchUrl('/x')->searchUrl(null)->getSearchUrl());
+    }
+
+    /**
+     * @return array<string, array{int, int, int, bool, int}>
+     */
+    public static function searchPages(): array
+    {
+        return [
+            'the first of three' => [41, 1, 20, true, 1],
+            'the second of three' => [41, 2, 20, true, 21],
+            'the last, one record' => [41, 3, 1, false, 41],
+            'past the last' => [41, 4, 0, false, 0],
+            'the second of exactly two' => [40, 2, 20, false, 21],
+            'the only one, full' => [20, 1, 20, false, 1],
+            'zero is the first' => [41, 0, 20, true, 1],
+            'below zero is the first' => [41, -2, 20, true, 1],
+        ];
+    }
+
+    #[DataProvider('searchPages')]
+    public function test_a_search_returns_a_page_of_twenty_and_whether_there_are_more(int $records, int $page, int $listed, bool $more, int $first): void
+    {
+        $ids = [];
+
+        for ($i = 1; $i <= $records; $i++) {
+            $ids[$i] = Post::query()->create(['name' => "Post {$i}"])->id;
+        }
+
+        $found = BelongsToField::make('post_id')->model(Post::class)->search('', $page);
+
+        $this->assertSame(20, BelongsToField::PER_PAGE);
+        $this->assertCount($listed, $found['data']);
+        $this->assertSame($more, $found['more']);
+        $this->assertSame(['data', 'more'], array_keys($found));
+
+        if ($listed > 0) {
+            $this->assertSame(['value' => $ids[$first], 'label' => "Post {$first}"], $found['data'][0]);
+            $this->assertSame(range(0, $listed - 1), array_keys($found['data']));
+        }
+    }
+
+    public function test_a_search_matches_a_part_of_the_name_or_the_id(): void
+    {
+        $chair = Post::query()->create(['name' => 'Office Chair']);
+        Post::query()->create(['name' => 'Table']);
+        $lamp = Post::query()->create(['name' => 'Lamp']);
+
+        $field = BelongsToField::make('post_id')->model(Post::class);
+
+        $this->assertSame([$chair->id], array_column($field->search('  chair ', 1)['data'], 'value'));
+        $this->assertSame([$chair->id], array_column($field->search((string) $chair->id, 1)['data'], 'value'));
+        $this->assertSame([$lamp->id], array_column($field->search('lamp', 1)['data'], 'value'));
+        $this->assertSame([], $field->search('sofa', 1)['data']);
+        $this->assertSame([], $field->search($chair->id.'x', 1)['data'], 'digits and letters are a name, not an id');
+    }
+
+    public function test_a_search_leaves_out_what_the_linked_module_list_leaves_out(): void
+    {
+        $shown = Crate::query()->create(['name' => 'Oak crate']);
+        Crate::query()->create(['name' => 'Draft crate']);
+
+        $found = BelongsToField::make('crate_id')->model(Crate::class)->search('crate', 1);
+
+        $this->assertSame([['value' => $shown->id, 'label' => 'Oak crate']], $found['data']);
+    }
+
+    public function test_a_plain_column_of_a_translated_model_is_searched_as_it_is(): void
+    {
+        $parcel = Parcel::query()->create(['name' => 'Parka', 'code' => 'parka', 'article' => 'AB-12']);
+        Parcel::query()->create(['name' => 'Boots', 'code' => 'boots', 'article' => 'CD-34']);
+
+        $found = BelongsToField::make('parcel_id')->model(Parcel::class)->displayColumn('article')->search('b-1', 1);
+
+        $this->assertSame([['value' => $parcel->id, 'label' => 'AB-12']], $found['data']);
+    }
+
+    public function test_the_chosen_records_come_by_name_in_their_order(): void
+    {
+        $first = Post::query()->create(['name' => 'First']);
+        $second = Post::query()->create(['name' => 'Second']);
+        $kit = Kit::query()->create(['name' => 'Kit', 'post_id' => $second->id]);
+        $kit->posts()->attach([$second->id => ['sort' => 1], $first->id => ['sort' => 2]]);
+
+        $one = BelongsToField::make('post_id')->model(Post::class)->searchRoute('/s')->record($kit)->toArray();
+        $many = BelongsToManyField::make('posts')->model(Post::class)->searchRoute('/s')->record($kit->fresh())->toArray();
+        $nothing = BelongsToField::make('post_id')->model(Post::class)->searchRoute('/s')->record(new Kit)->toArray();
+        $noRelation = BelongsToManyField::make('missing')->model(Post::class)->searchRoute('/s')->record($kit)->toArray();
+        $listed = BelongsToField::make('post_id')->model(Post::class)->record($kit)->toArray();
+
+        $this->assertSame([['value' => $second->id, 'label' => 'Second']], $one['selected']);
+        $this->assertSame([
+            ['value' => $second->id, 'label' => 'Second'],
+            ['value' => $first->id, 'label' => 'First'],
+        ], $many['selected']);
+        $this->assertSame([], $nothing['selected']);
+        $this->assertSame([], $noRelation['selected']);
+        $this->assertSame([], $listed['selected'], 'a listed field names its records in the list');
+    }
+
+    /**
+     * @return array<string, array{mixed}>
+     */
+    public static function notValues(): array
+    {
+        return [
+            'an empty string' => [''],
+            'nothing' => [null],
+            'a list' => [[1]],
+        ];
+    }
+
+    #[DataProvider('notValues')]
+    public function test_a_value_that_names_no_record_is_not_looked_up(mixed $value): void
+    {
+        Post::query()->create(['name' => 'Chair']);
+        $kit = new Kit;
+        $kit->setRawAttributes(['post_id' => $value]);
+
+        DB::enableQueryLog();
+        $selected = BelongsToField::make('post_id')->model(Post::class)->searchRoute('/s')->record($kit)->toArray()['selected'];
+
+        $this->assertSame([], $selected);
+        $this->assertSame([], DB::getQueryLog());
     }
 
     public function test_a_belongs_to_many_field_without_a_model_offers_nothing(): void
