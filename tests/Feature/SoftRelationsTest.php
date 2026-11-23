@@ -11,12 +11,14 @@ namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Fields\Field;
+use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Modules\Soft;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Gadget;
+use Atrium\Admin\Tests\Fixtures\Journal;
 use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Remark;
@@ -41,7 +43,7 @@ final class SoftRelationsTest extends TestCase
         parent::defineEnvironment($app);
 
         $app->resolving(Modules::class, static fn (Modules $modules) => $modules->add(Label::module()));
-        $app['config']->set('atrium.resources', [Post::class, Gadget::class]);
+        $app['config']->set('atrium.resources', [Post::class, Gadget::class, Journal::class]);
         // Installed from the start: its migrations run and its routes exist.
         $app['config']->set('atrium.modules', ['acme/atrium-labels']);
     }
@@ -231,6 +233,8 @@ final class SoftRelationsTest extends TestCase
         $this->assertSame('Labels', $targets[Label::class] ?? null);
         $this->assertArrayHasKey(Gadget::class, $targets);
         $this->assertArrayNotHasKey(Site::class, $targets);
+        $this->assertArrayNotHasKey(Language::class, $targets);
+        $this->assertArrayNotHasKey(Journal::class, $targets, 'a service module is no target');
 
         $this->withoutLabels();
         $this->assertArrayNotHasKey(Label::class, Soft::targets());

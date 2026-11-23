@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Modules;
 
-use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Closure;
@@ -62,7 +61,8 @@ final class Soft
     /**
      * Every content module a record can be attached to (reviews, comments,
      * …): model class => label, for a select of the type column of a soft
-     * morphTo relation. The panel's sites and languages are not content.
+     * morphTo relation. Service modules (logs, submissions, languages) and
+     * the panel's sites are not targets.
      *
      * @return array<class-string,string>
      */
@@ -70,8 +70,8 @@ final class Soft
     {
         $targets = [];
 
-        foreach (app(ResourceRegistry::class)->all() as $model) {
-            if (! in_array($model, [Site::class, Language::class], true)) {
+        foreach (app(ResourceRegistry::class)->content() as $model) {
+            if ($model !== Site::class) {
                 $targets[$model] = $model::getAdminLabel();
             }
         }

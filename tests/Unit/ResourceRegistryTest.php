@@ -14,6 +14,8 @@ use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Resources\ResourceRegistry;
+use Atrium\Admin\Tests\Fixtures\Bare;
+use Atrium\Admin\Tests\Fixtures\Journal;
 use Atrium\Admin\Tests\Fixtures\Modules\Label;
 use Atrium\Admin\Tests\Fixtures\NotAdministrable;
 use Atrium\Admin\Tests\Fixtures\Post;
@@ -37,6 +39,19 @@ final class ResourceRegistryTest extends TestCase
         config(['atrium.resources' => [Label::class, Post::class]]);
 
         $this->assertSame(['sites' => Site::class, 'languages' => Language::class, 'posts' => Post::class], (new ResourceRegistry)->all());
+    }
+
+    public function test_the_content_modules_are_the_ones_that_do_not_say_otherwise(): void
+    {
+        config(['atrium.resources' => [Post::class, Journal::class, Bare::class]]);
+        $registry = new ResourceRegistry;
+
+        $this->assertSame(['sites', 'languages', 'posts', 'journals', 'bares'], array_keys($registry->all()));
+        $this->assertSame(
+            ['sites' => Site::class, 'posts' => Post::class, 'bares' => Bare::class],
+            $registry->content(),
+            'a service module and the languages are out; a model that never heard of the flag is content',
+        );
     }
 
     public function test_the_list_is_built_once_until_it_is_flushed(): void

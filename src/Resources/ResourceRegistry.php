@@ -73,6 +73,18 @@ final class ResourceRegistry
     }
 
     /**
+     * The modules that hold content, not the panel's service records (see
+     * `isContentModule()`): what custom fields, links and reviews may point
+     * at. A model that does not say is content.
+     *
+     * @return array<string,class-string<Model&Administrable>> key => model class
+     */
+    public function content(): array
+    {
+        return array_filter($this->all(), static fn (string $model): bool => ! method_exists($model, 'isContentModule') || $model::isContentModule());
+    }
+
+    /**
      * @return class-string<Model&Administrable>|null
      */
     public function model(string $key): ?string

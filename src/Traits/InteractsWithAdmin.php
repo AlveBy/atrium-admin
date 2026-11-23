@@ -205,6 +205,20 @@ trait InteractsWithAdmin
     }
 
     /**
+     * Whether the module holds content: what editors write and the site
+     * shows or sells (pages, products, news, the sites themselves). False
+     * for service records the panel keeps for itself: logs, audit results,
+     * form submissions, languages, administrators. Only a content module
+     * can get custom fields and be picked as the target of a link or of a
+     * review; service modules stay in the menu, the search, the API and the
+     * export.
+     */
+    public static function isContentModule(): bool
+    {
+        return true;
+    }
+
+    /**
      * The columns that tell an imported row which record it is, besides the
      * id: the first one the file has is the default. A module whose records
      * are known by something other than their code (an article number, an

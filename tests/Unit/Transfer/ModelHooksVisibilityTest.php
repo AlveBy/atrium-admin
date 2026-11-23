@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Unit\Transfer;
 
+use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Tests\Fixtures\Post;
@@ -33,6 +34,9 @@ final class ModelHooksVisibilityTest extends TestCase
             'the keys of a module' => [Post::class, 'getImportKeys'],
             'the import of a module' => [Post::class, 'isImportableInAdmin'],
             'the export of a module' => [Post::class, 'isExportableInAdmin'],
+            'the content flag of a module' => [Post::class, 'isContentModule'],
+            'the content flag of the languages' => [Language::class, 'isContentModule'],
+            'the content flag of the administrators' => [AdminUser::class, 'isContentModule'],
             'the import of the sites' => [Site::class, 'isImportableInAdmin'],
             'the import of the languages' => [Language::class, 'isImportableInAdmin'],
         ];
@@ -50,5 +54,13 @@ final class ModelHooksVisibilityTest extends TestCase
         $this->assertNotNull($method->invoke(null));
         $this->assertTrue($method->isPublic());
         $this->assertTrue($method->isStatic());
+    }
+
+    public function test_the_administrators_and_the_languages_are_no_content_but_the_sites_and_a_module_are(): void
+    {
+        $this->assertFalse(AdminUser::isContentModule());
+        $this->assertFalse(Language::isContentModule());
+        $this->assertTrue(Site::isContentModule());
+        $this->assertTrue(Post::isContentModule());
     }
 }

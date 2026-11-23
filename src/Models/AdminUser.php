@@ -72,6 +72,12 @@ class AdminUser extends Authenticatable implements Administrable
     /**
      * The routes are admin.users.*, not the admin.admin_users.* the class name gives.
      */
+    /** Service records, not content: no custom fields, no link target. */
+    public static function isContentModule(): bool
+    {
+        return false;
+    }
+
     public static function getAdminRoutePrefix(): string
     {
         return 'users';
