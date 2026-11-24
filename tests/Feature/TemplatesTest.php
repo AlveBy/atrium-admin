@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Tabs\Tab;
 use Atrium\Admin\Templates\RecordTemplate;
@@ -124,6 +125,46 @@ final class TemplatesTest extends TestCase
         $this->assertSame('labels', $this->templates()->module(Label::class));
     }
 
+    public function test_the_folder_of_a_module_package_is_its_key_not_the_table_of_its_model(): void
+    {
+        $folder = $this->views.'/gallery-module';
+        mkdir($folder, 0777, true);
+        file_put_contents($folder.'/composer.json', json_encode([
+            'name' => 'acme/atrium-gallery',
+            'type' => 'atrium-module',
+            'extra' => ['atrium' => ['resources' => [Tabbed::class]]],
+        ]));
+        $this->app->make(Modules::class)->add(Module::fromPath($folder) ?? throw new \RuntimeException('No module.'));
+        $this->template('templates/gallery/wide');
+        $this->template('templates/posts/other');
+
+        $this->assertSame('gallery', $this->templates()->module(Tabbed::class));
+        $this->assertSame(['wide'], array_keys($this->templates()->available(Tabbed::class)));
+    }
+
+    public function test_a_file_named_by_digits_is_a_template_too(): void
+    {
+        $this->template('templates/posts/404', '{{-- Template: Not found --}}');
+
+        $template = $this->templates()->available(Post::class)[404];
+
+        $this->assertSame('404', $template->key);
+        $this->assertSame('templates.posts.404', $template->view);
+        $this->assertSame(['default' => 'Default', '404' => 'Not found'], $this->templates()->options(Post::class));
+    }
+
+    public function test_the_names_of_every_place_the_views_are_in_come_in_one_order(): void
+    {
+        $second = $this->views.'/second';
+        mkdir($second.'/templates/posts', 0777, true);
+        file_put_contents($second.'/templates/posts/alpha.blade.php', '{{-- Template: Alpha --}}');
+        view()->addLocation($second);
+        $this->template('templates/posts/zeta');
+        $this->template('templates/posts/alpha');
+
+        $this->assertSame(['alpha', 'zeta'], array_keys($this->templates()->available(Post::class)));
+    }
+
     public function test_names_that_are_not_view_names_and_the_default_are_left_out(): void
     {
         $this->template('templates/posts/with.dot');
@@ -233,6 +274,13 @@ final class TemplatesTest extends TestCase
         $labels = array_map(static fn (Template $template): string => $template->label, $this->templates()->available(Post::class));
 
         $this->assertSame(['a' => 'Nice one', 'b' => 'Wide, translated', 'c' => 'atrium::templates.none'], $labels);
+    }
+
+    public function test_a_name_that_is_the_key_of_a_group_of_translations_stays_as_it_is(): void
+    {
+        $this->template('templates/posts/a', '{{-- Template: atrium::templates --}}');
+
+        $this->assertSame('atrium::templates', $this->templates()->available(Post::class)['a']->label);
     }
 
     public function test_a_template_whose_view_is_not_found_is_named_by_its_key(): void
@@ -359,9 +407,10 @@ final class TemplatesTest extends TestCase
         Tabbed::$tabs = $tabs;
         Tabbed::$uses = $uses;
 
-        $fields = Hook::apply('atrium.module.fields', [], Tabbed::class);
+        $fields = Hook::apply('atrium.module.fields', ['first'], Tabbed::class);
 
-        $this->assertSame($expected, $fields[0]->getTab());
+        $this->assertSame('first', $fields[0], 'the fields of the module stay');
+        $this->assertSame($expected, $fields[1]->getTab());
     }
 
     public function test_a_finder_that_knows_no_folders_finds_no_templates(): void
@@ -396,6 +445,8 @@ final class TemplatesTest extends TestCase
         $this->assertSame(['templatable_type' => Post::class, 'templatable_id' => $post->id, 'template' => 'wide'], RecordTemplate::query()->first()?->only(['templatable_type', 'templatable_id', 'template']));
         $this->assertSame('wide', $this->templates()->key($post));
         $this->assertArrayNotHasKey('template', $post->getAttributes());
+        $this->assertSame(10, $post->sort, 'the rest of the form is saved as it is');
+        $this->assertTrue($post->active);
 
         $panel->get("/admin/posts/{$post->id}/edit")->assertInertia(fn (AssertableInertia $page) => $page->where('item.template', 'wide'));
 
@@ -616,6 +667,8 @@ final class TemplatesTest extends TestCase
         $this->assertSame('plain.view', $this->templates()->viewOf(new Flyer(['name' => 'nope']), 'plain.view'));
         $this->assertSame('plain.view', $this->templates()->viewOf(new Flyer, 'plain.view'));
         $this->assertSame('default', $this->templates()->key(new Flyer(['name' => 'nope'])));
+        $this->assertSame('wide', $this->templates()->key(new Flyer(['name' => 'wide'])));
+        $this->assertSame('default', $this->templates()->key(new Flyer(['name' => 'default'])));
     }
 
     public function test_a_record_of_a_module_without_a_template_costs_no_query(): void

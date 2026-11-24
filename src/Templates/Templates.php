@@ -82,7 +82,6 @@ final class Templates
     public function source(string $model, Closure $templates): void
     {
         $this->sources[$model] = $templates;
-        $this->forget();
     }
 
     /**
@@ -138,6 +137,9 @@ final class Templates
         $templates = [];
 
         foreach ($this->views($model) as $key => $view) {
+            // A file named 404 has an integer for a key.
+            $key = (string) $key;
+
             if ($key !== self::DEFAULT) {
                 $templates[$key] = new Template($key, $view, $this->label($view, $key));
             }
@@ -177,7 +179,7 @@ final class Templates
     {
         $key = $this->picked($record);
 
-        return $key !== null && isset($this->available($record::class)[$key]) ? $key : self::DEFAULT;
+        return $key !== null && $key !== self::DEFAULT && isset($this->views($record::class)[$key]) ? $key : self::DEFAULT;
     }
 
     /**
@@ -190,9 +192,9 @@ final class Templates
     public function view(string $model, ?string $key, string $default): string
     {
         $default = $this->defaultView($model) ?? $default;
-        $template = $key === null ? null : ($this->available($model)[$key] ?? null);
+        $view = $key === null || $key === self::DEFAULT ? null : ($this->views($model)[$key] ?? null);
 
-        return $template !== null && view()->exists($template->view) ? $template->view : $default;
+        return $view !== null && view()->exists($view) ? $view : $default;
     }
 
     /**
@@ -254,7 +256,7 @@ final class Templates
         $model = $record::class;
 
         // No template to draw with, so no query on the public page.
-        if ($this->available($model) === [] && $this->defaultView($model) === null) {
+        if ($this->views($model) === []) {
             return null;
         }
 
@@ -268,10 +270,10 @@ final class Templates
 
         // Kept with the cache of the module's records, so a warm page runs no
         // query; saving the choice drops it, as it drops the record's cards.
-        $key = app(RecordCache::class)->remember($model, 'template:'.$record->getKey(), fn (): mixed => RecordTemplate::query()
+        $key = app(RecordCache::class)->remember($model, "template:{$record->getKey()}", fn (): mixed => RecordTemplate::query()
             ->where('templatable_type', $record->getMorphClass())
             ->where('templatable_id', $record->getKey())
-            ->value('template'), perSite: false);
+            ->value('template'));
 
         return is_string($key) ? $key : null;
     }
@@ -287,9 +289,9 @@ final class Templates
     private function views(string $model): array
     {
         $module = $this->module($model);
-        $given = array_filter(isset($this->sources[$model]) ? ($this->sources[$model])() : [], 'is_string');
+        $given = isset($this->sources[$model]) ? ($this->sources[$model])() : [];
         $files = $this->found[$module] ??= $this->discover($module);
-        $config = (array) config('atrium.templates.'.$module, []);
+        $config = config('atrium.templates.'.$module, []);
         $views = [];
 
         foreach ([...array_keys($given), ...array_keys($config), ...array_keys($files)] as $key) {
@@ -297,7 +299,7 @@ final class Templates
 
             // A key set to null or false in the config is taken away.
             if (is_string($view)) {
-                $views[(string) $key] = $view;
+                $views[$key] = $view;
             }
         }
 
@@ -346,7 +348,8 @@ final class Templates
      */
     private function names(string $prefix, string $folder): array
     {
-        [$namespace, $path] = str_contains($prefix, '::') ? explode('::', $prefix, 2) : [null, $prefix];
+        $namespace = str_contains($prefix, '::') ? Str::before($prefix, '::') : null;
+        $path = Str::after($prefix, '::');
         $finder = view()->getFinder();
 
         // Only the file finder knows folders; any other finds nothing to list.
@@ -371,9 +374,10 @@ final class Templates
             }
         }
 
+        // A name found in two places is found twice, and discover() keeps the first.
         sort($names);
 
-        return array_values(array_unique($names));
+        return $names;
     }
 
     /**
@@ -388,12 +392,17 @@ final class Templates
             return Str::headline($key);
         }
 
-        $head = (string) file_get_contents($path, false, null, 0, 2048);
+        $head = File::get($path);
 
         // The copyright header is a comment too: the name may follow it.
         while (preg_match('/\A\s*\{\{--(.*?)--\}\}/s', $head, $comment) === 1) {
-            if (preg_match('/\A\s*Template:\s*(\S.*?)\s*\z/s', $comment[1], $label) === 1) {
-                return Lang::has($label[1]) ? (string) __($label[1]) : $label[1];
+            $text = trim($comment[1]);
+
+            if (str_starts_with($text, 'Template:') && ($label = trim(substr($text, 9))) !== '') {
+                // A translation key or a text of the JSON translations; the text itself otherwise.
+                $line = Lang::get($label);
+
+                return is_string($line) ? $line : $label;
             }
 
             $head = substr($head, strlen($comment[0]));

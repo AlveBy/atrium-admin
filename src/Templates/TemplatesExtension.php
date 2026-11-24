@@ -111,6 +111,6 @@ final class TemplatesExtension
 
         $tab = $model::getAdminTabs()[0] ?? null;
 
-        return $tab instanceof Tab ? $tab->getName() : (string) ($tab['name'] ?? 'params');
+        return $tab instanceof Tab ? $tab->getName() : ($tab['name'] ?? 'params');
     }
 }
