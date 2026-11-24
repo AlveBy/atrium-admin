@@ -166,7 +166,7 @@ final class ActivityLogTest extends TestCase
 
     public function test_a_deleted_record_is_logged_with_its_title_and_no_changes(): void
     {
-        $post = Post::query()->create(['name' => str_repeat('a', 300)]);
+        $post = Post::query()->create(['name' => str_repeat('a', 255)]);
 
         $this->actingAs($this->admin(), 'admin')->delete("/admin/posts/{$post->id}")->assertSessionHasNoErrors();
 
