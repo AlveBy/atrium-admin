@@ -95,6 +95,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(Modules::class);
         $this->app->singleton(Settings::class);
         $this->app->singleton(Hooks::class);
+        $this->app->singleton(Extensions\Events::class);
         $this->app->singleton(Embeds::class);
         $this->app->singleton(CaptchaManager::class);
         $this->app->singleton(ResourceRegistry::class);
@@ -135,6 +136,9 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->registerHistory();
         $this->registerCommands();
         $this->registerCdnAssets();
+
+        // Every module has registered its events in its own boot() by now.
+        $this->app->booted(fn () => $this->app->make(Extensions\Events::class)->listen());
     }
 
     /**
@@ -416,6 +420,7 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\CdnPurgeCommand::class,
             Console\Commands\CreateAdminCommand::class,
             Console\Commands\DemoResetCommand::class,
+            Console\Commands\EventsCommand::class,
             Console\Commands\ExportCommand::class,
             Console\Commands\ImportCommand::class,
             Console\Commands\IndexMediaCommand::class,
