@@ -86,6 +86,8 @@ final class Permissions
         'options' => self::VIEW,
         // Who changed a record and what: anyone who may open it.
         'history' => self::VIEW,
+        // Putting an old version back is changing the record.
+        'revert' => self::UPDATE,
     ];
 
     public function __construct(

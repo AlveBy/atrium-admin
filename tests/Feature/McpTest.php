@@ -46,7 +46,7 @@ final class McpTest extends TestCase
         $names = array_column($this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools'), 'name');
 
         $this->assertSame(
-            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action'],
+            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version'],
             $names,
         );
     }
@@ -148,6 +148,7 @@ final class McpTest extends TestCase
             'delete_record' => ['delete_record', ['id' => 1]],
             'list_actions' => ['list_actions', []],
             'run_bulk_action' => ['run_bulk_action', ['ids' => [1], 'action' => 'delete']],
+            'list_versions' => ['list_versions', ['id' => 1]],
         ];
     }
 
@@ -178,6 +179,25 @@ final class McpTest extends TestCase
 
         $this->mcp($token, 'tools/call', ['name' => $tool, 'arguments' => ['module' => 'posts'] + $arguments])
             ->assertJsonPath('result.isError', false);
+    }
+
+    public function test_a_record_is_put_back_as_one_of_its_versions(): void
+    {
+        $post = Post::query()->create(['name' => 'Hello']);
+        $token = $this->token(['posts.view', 'posts.update'], ['posts:read', 'posts:write']);
+        $this->callTool($token, 'update_record', ['module' => 'posts', 'id' => $post->id, 'data' => ['name' => 'Changed']]);
+
+        $versions = $this->callTool($token, 'list_versions', ['module' => 'posts', 'id' => $post->id]);
+        $this->assertSame(['Changed', 'Hello'], array_column(array_column($versions['data'], 'values'), 'name'));
+
+        $restored = $this->callTool($token, 'restore_version', ['module' => 'posts', 'id' => $post->id, 'version' => $versions['data'][1]['id']]);
+        $this->assertSame('Hello', $restored['data']['name']);
+        $this->assertSame('Hello', $post->fresh()->name);
+
+        foreach (['nope', 'users'] as $module) {
+            $this->mcp($token, 'tools/call', ['name' => 'restore_version', 'arguments' => ['module' => $module, 'id' => $post->id, 'version' => 1]])
+                ->assertJsonPath('result.content.0.text', 'No module "'.$module.'". See list_modules.');
+        }
     }
 
     public function test_a_token_that_may_use_nothing_is_told_so(): void
@@ -279,7 +299,7 @@ final class McpTest extends TestCase
         $names = array_column($this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools'), 'name');
 
         $this->assertSame(
-            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action'],
+            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version'],
             $names,
             'Listed once, in the order given.',
         );
@@ -326,6 +346,13 @@ final class McpTest extends TestCase
                 'ids' => ['description' => 'Ids of the records.', 'type' => 'array', 'items' => ['type' => 'integer']],
                 'action' => $action,
             ], 'required' => ['module', 'ids', 'action']],
+            'list_versions' => ['properties' => ['module' => $module, 'site' => $site, 'id' => $id], 'required' => ['module', 'id']],
+            'restore_version' => ['properties' => [
+                'module' => $module,
+                'site' => $site,
+                'id' => $id,
+                'version' => ['description' => 'Version id from list_versions.', 'type' => 'integer'],
+            ], 'required' => ['module', 'id', 'version']],
         ];
 
         $tools = $this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools');
@@ -419,7 +446,7 @@ final class McpTest extends TestCase
             $names = array_column($this->mcp($token, 'tools/list')->json('result.tools'), 'name');
 
             $this->assertSame(
-                ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action'],
+                ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version'],
                 $names,
             );
         }

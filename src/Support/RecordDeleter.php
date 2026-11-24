@@ -12,6 +12,7 @@ namespace Atrium\Admin\Support;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\History\Revisions;
 use Atrium\Admin\Hooks\Refused;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +54,9 @@ final class RecordDeleter
             if ($history->enabledFor($record::class)) {
                 $history->record($record, ActivityLog::DELETED);
             }
+
+            // Gone for good: so are its versions.
+            app(Revisions::class)->forget($record);
 
             return $record;
         }, attempts: 3);

@@ -84,6 +84,16 @@ class AdminUser extends Authenticatable implements Administrable
     }
 
     /**
+     * An account keeps no versions to put back: that would get around what
+     * its form checks (who may change a superadmin, the last superadmin).
+     * Its changes are still in the activity log.
+     */
+    public static function hasAdminRevisions(): bool
+    {
+        return false;
+    }
+
+    /**
      * Get fields for admin form
      */
     public static function getAdministrationFields(): array

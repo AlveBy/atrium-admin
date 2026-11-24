@@ -362,8 +362,8 @@ final class ActivityLogTest extends TestCase
 
     public function test_two_values_are_the_same_as_the_form_shows_them(): void
     {
-        $same = [[null, ''], [null, []], ['', []], [true, '1'], [false, '0'], [1, '1'], [1.5, '1.5'], [[1, true], ['1', '1']], ['a', 'a'], [['x' => null], ['x' => '']]];
-        $different = [[true, '0'], [false, '1'], [false, null], [0, null], ['0', ''], [1, '2'], ['a', 'b'], [['x' => 1], ['x' => 2]], [['x' => 1], ['y' => 1]], [[1], 1]];
+        $same = [[null, ''], [null, []], ['', []], [true, '1'], [false, '0'], [1, '1'], [1.5, '1.5'], [[1, true], ['1', '1']], ['a', 'a'], [['x' => null], ['x' => '']], [['en' => 'Hi', 'de' => null], ['en' => 'Hi']], [['de' => null, 'ru' => ''], null]];
+        $different = [[true, '0'], [false, '1'], [false, null], [0, null], ['0', ''], [1, '2'], ['a', 'b'], [['x' => 1], ['x' => 2]], [['x' => 1], ['y' => 1]], [[1], 1], [[1, null], [1]], [['en' => 'Hi', 'de' => null], ['en' => 'Hi', 'de' => 'Hallo']]];
 
         foreach ($same as [$a, $b]) {
             $this->assertTrue(ActivityLog::same($a, $b), json_encode([$a, $b]));

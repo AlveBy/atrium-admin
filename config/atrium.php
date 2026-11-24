@@ -600,13 +600,17 @@ return [
     | what, from the form, the API, the MCP tools and the import alike. A
     | module leaves it with `hasAdminHistory(): false`.
     |
-    | secrets  fields whose values are never written, only that they changed:
-    |          a name containing one of these, a password input, an attribute
-    |          the model hides
+    | secrets    fields whose values are never written, only that they
+    |            changed: a name containing one of these, a password input,
+    |            an attribute the model hides
+    | revisions  versions of a record kept to compare and put back, the
+    |            newest first; 0 keeps none. A module keeps none with
+    |            `hasAdminRevisions(): false`
     |
     */
     'history' => [
         'enabled' => (bool) env('ATRIUM_HISTORY_ENABLED', true),
+        'revisions' => (int) env('ATRIUM_HISTORY_REVISIONS', 50),
         'secrets' => ['password', 'secret', 'token', 'api_key', 'private_key'],
     ],
 

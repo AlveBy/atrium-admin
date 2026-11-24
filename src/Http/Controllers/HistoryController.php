@@ -11,16 +11,21 @@ namespace Atrium\Admin\Http\Controllers;
 
 use Atrium\Admin\Api\ApiResources;
 use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\History\Revisions;
 use Atrium\Admin\Models\Activity;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Models\Revision;
 use Atrium\Admin\Support\Sites;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -70,14 +75,21 @@ final class HistoryController extends Controller
     }
 
     /**
-     * The history of one record of the module. Its route checks "view" of
-     * the module; the record must be one this site has.
+     * The history of one record of the module, and its versions: two of them
+     * compared when the address names them (?from=&to=). Its route checks
+     * "view" of the module; the record must be one this site has.
      */
-    public function record(int $id, string $module): Response
+    public function record(Request $request, int $id, string $module): Response
     {
         $model = $this->resources->modules()[$module];
         $record = $model::query()->findOrFail($id);
         $modules = [$module => $this->resources->label($module)];
+        $revisions = app(Revisions::class);
+        $versions = $revisions->enabledFor($model) ? $revisions->of($record)->with('activity')->get() : new Collection;
+        $compare = $request->validate([
+            'from' => ['nullable', 'integer', Rule::in($versions->modelKeys())],
+            'to' => ['nullable', 'integer', Rule::in($versions->modelKeys())],
+        ]);
 
         $entries = $this->entries()
             ->where('module', $module)
@@ -90,7 +102,53 @@ final class HistoryController extends Controller
             'moduleLabel' => $modules[$module],
             'indexUrl' => route("admin.{$module}.index"),
             'editUrl' => route("admin.{$module}.edit", $id),
+            'versions' => $this->versions($versions, $module, $id),
+            'comparison' => isset($compare['from'], $compare['to']) ? [
+                'from' => (int) $compare['from'],
+                'to' => (int) $compare['to'],
+                'changes' => $this->labelled(
+                    app(ActivityLog::class)->changes($versions->find($compare['from'])->values, $versions->find($compare['to'])->values),
+                    $this->fieldLabels($module),
+                ),
+            ] : null,
         ]);
+    }
+
+    /**
+     * Puts the record back as a version of it was (Revisions::restore()).
+     * Its route checks "update" of the module.
+     */
+    public function revert(int $id, int $revision, string $module): RedirectResponse
+    {
+        $model = $this->resources->modules()[$module];
+        $record = $model::query()->findOrFail($id);
+        $revisions = app(Revisions::class);
+
+        try {
+            $revisions->restore($record, $revisions->of($record)->findOrFail($revision));
+        } catch (ValidationException $invalid) {
+            return back()->with('error', __('atrium::history.versions.failed', ['errors' => implode(' ', $invalid->validator->errors()->all())]));
+        }
+
+        return redirect()->route("admin.{$module}.history", $id)->with('success', __('atrium::history.versions.restored'));
+    }
+
+    /**
+     * The versions as the screen lists them, newest (the record as it is)
+     * first; each older one can be put back by whoever may change the record.
+     *
+     * @param  Collection<int,Revision>  $versions
+     * @return array<int,array{id:int,at:string|null,admin:string|null,source:string|null,revertUrl:string|null}>
+     */
+    private function versions(Collection $versions, string $module, int $id): array
+    {
+        $user = auth()->guard((string) config('atrium.auth.guard', 'admin'))->user();
+        $canRevert = ! $user instanceof AdminUser || $user->hasAdminPermission("{$module}.update");
+
+        return $versions->values()->map(static fn (Revision $version, int $i): array => [
+            ...$version->summary(),
+            'revertUrl' => $i > 0 && $canRevert ? route("admin.{$module}.revert", ['id' => $id, 'revision' => $version->id]) : null,
+        ])->all();
     }
 
     /**
@@ -157,7 +215,7 @@ final class HistoryController extends Controller
             'module' => $modules[$entry->module],
             'record' => $entry->record_title,
             'url' => in_array($entry->record_id, $existing[$entry->module]) ? route("admin.{$entry->module}.edit", $entry->record_id) : null,
-            'changes' => $this->changes($entry, $labels[$entry->module]),
+            'changes' => $this->labelled($entry->changes ?? [], $labels[$entry->module]),
         ]);
     }
 
@@ -181,15 +239,18 @@ final class HistoryController extends Controller
     }
 
     /**
+     * Changes of fields as the screen shows them: each with its label.
+     *
+     * @param  array<string,array<string,mixed>>  $changes  field => ['old' => …, 'new' => …] or ['secret' => true]
      * @param  array<string,string>  $labels  field => label
      * @return array<int,array{field:string,label:string,old:mixed,new:mixed,secret:bool}>
      */
-    private function changes(Activity $entry, array $labels): array
+    private function labelled(array $changes, array $labels): array
     {
-        $changes = [];
+        $list = [];
 
-        foreach ($entry->changes ?? [] as $field => $change) {
-            $changes[] = [
+        foreach ($changes as $field => $change) {
+            $list[] = [
                 'field' => $field,
                 'label' => $labels[$field] ?? Str::headline($field),
                 'old' => $change['old'] ?? null,
@@ -198,7 +259,7 @@ final class HistoryController extends Controller
             ];
         }
 
-        return $changes;
+        return $list;
     }
 
     /**

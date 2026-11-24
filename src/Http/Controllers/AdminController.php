@@ -31,6 +31,7 @@ use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Filters\Filter;
 use Atrium\Admin\Filters\ModuleFilters;
 use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\History\Revisions;
 use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
@@ -615,8 +616,9 @@ abstract class AdminController extends Controller
 
     /**
      * Writes what the save changed to the activity log: a new record with the
-     * values it was given, a changed one with the fields that differ. A save
-     * that changed nothing leaves no entry.
+     * values it was given, a changed one with the fields that differ, and
+     * keeps the record as it is now as a version. A save that changed nothing
+     * leaves neither.
      *
      * @param  array<int,Field>  $fields  the fields of the form that was saved
      * @param  array<string,mixed>  $before  snapshot() before the save; empty for a new record
@@ -629,10 +631,18 @@ abstract class AdminController extends Controller
             static fn (string $name): bool => filled($validated[$name] ?? null),
         );
 
-        $changes = $history->changes($before, $this->snapshot($record, $fields), $secrets);
+        $after = $this->snapshot($record, $fields);
+        $changes = $history->changes($before, $after, $secrets);
 
-        if ($record->wasRecentlyCreated || $changes !== []) {
-            $history->record($record, $record->wasRecentlyCreated ? ActivityLog::CREATED : ActivityLog::UPDATED, $changes);
+        if (! $record->wasRecentlyCreated && $changes === []) {
+            return;
+        }
+
+        $entry = $history->record($record, $record->wasRecentlyCreated ? ActivityLog::CREATED : ActivityLog::UPDATED, $changes);
+        $revisions = app(Revisions::class);
+
+        if ($revisions->enabledFor($record::class)) {
+            $revisions->keep($record, $entry, $before, $after);
         }
     }
 

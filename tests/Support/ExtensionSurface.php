@@ -224,6 +224,7 @@ final class ExtensionSurface
             'Traits\InteractsWithAdmin::getAdministrationBulkActions' => [InteractsWithAdmin::class, 'getAdministrationBulkActions', 'public'],
             'Traits\InteractsWithAdmin::getAdministrationFilters' => [InteractsWithAdmin::class, 'getAdministrationFilters', 'public'],
             'Traits\InteractsWithAdmin::hasAdminHistory' => [InteractsWithAdmin::class, 'hasAdminHistory', 'public'],
+            'Traits\InteractsWithAdmin::hasAdminRevisions' => [InteractsWithAdmin::class, 'hasAdminRevisions', 'public'],
             'Traits\InteractsWithAdmin::isCreatableInAdmin' => [InteractsWithAdmin::class, 'isCreatableInAdmin', 'public'],
             'Traits\InteractsWithAdmin::isEditableInAdmin' => [InteractsWithAdmin::class, 'isEditableInAdmin', 'public'],
             'Traits\Translatable::getFallbackLocale' => [Translatable::class, 'getFallbackLocale', 'public'],

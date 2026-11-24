@@ -268,9 +268,28 @@ final class ActivityLog
             $value === '', $value === [] => null,
             is_bool($value) => $value ? '1' : '0',
             is_int($value), is_float($value) => (string) $value,
-            is_array($value) => array_map(self::comparable(...), $value),
+            is_array($value) => self::comparableArray($value),
             default => $value,
         };
+    }
+
+    /**
+     * A list item by item; the empty entries of a map (a language with no
+     * text yet) left out, so {"en": "Hi", "de": null} is {"en": "Hi"}, and
+     * a map of nothing but empty entries is no value at all.
+     *
+     * @param  array<array-key,mixed>  $value
+     * @return array<array-key,mixed>|null
+     */
+    private static function comparableArray(array $value): ?array
+    {
+        $items = array_map(self::comparable(...), $value);
+
+        if (! array_is_list($value)) {
+            $items = array_filter($items, static fn (mixed $item): bool => $item !== null);
+        }
+
+        return $items === [] ? null : $items;
     }
 
     /**

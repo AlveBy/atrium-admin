@@ -318,8 +318,12 @@ final class ApiDocumentation
             '| Actions the token may run | `GET /{module}/actions` |',
             '| Run an action on a record | `POST /{module}/{id}/actions/{action}` |',
             '| Run an action on several records | `POST /{module}/bulk/{action}` with `{"ids": [1, 2]}`, at most 1000 |',
+            '| Versions of a record | `GET /{module}/{id}/versions` |',
+            '| Put a version back | `POST /{module}/{id}/versions/{version}/restore` |',
             '',
             'An action answers `{"message", "redirect"}`: 200 when it worked, 422 when it did not. `bulk/delete` deletes the records that may be deleted. An action with `confirm` set asks first in the admin panel: ask a human too.',
+            '',
+            'Every save keeps a version of the record: `versions` lists them newest first (the first is the record as it is), each with `id`, `at`, `admin`, `source` and the `values` of its fields. `restore` saves those values as `PATCH` would and answers with the record; 404 for a module that keeps no versions. Restoring takes a `write` token, listing a `read` one.',
             '',
             '`per_page` is at most 100. `filter` and `sort` accept only fields of the module.',
             'Record response: `{"data": {...}}`, which also has `admin_url` (edit in the admin panel) and `public_url` (the page on the site, if any).',
@@ -545,6 +549,27 @@ final class ApiDocumentation
                 'ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'maxItems' => 1000],
             ], 'required' => ['ids']]),
             'responses' => ['200' => ['description' => 'Done'] + $result, '422' => ['description' => 'The action failed or no record was found'] + $result] + $errors,
+        ]];
+        $version = ['name' => 'version', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']];
+        $paths['/{module}/{id}/versions'] = ['get' => [
+            'operationId' => 'list_versions',
+            'summary' => 'Versions of a record, newest first',
+            'parameters' => [$module, $idParam],
+            'responses' => ['200' => ['description' => 'The versions'] + $json(['type' => 'object', 'properties' => [
+                'data' => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
+                    'id' => ['type' => 'integer'],
+                    'at' => ['type' => ['string', 'null'], 'format' => 'date-time'],
+                    'admin' => ['type' => ['string', 'null']],
+                    'source' => ['type' => ['string', 'null']],
+                    'values' => ['type' => 'object'],
+                ]]],
+            ]])] + $errors,
+        ]];
+        $paths['/{module}/{id}/versions/{version}/restore'] = ['post' => [
+            'operationId' => 'restore_version',
+            'summary' => 'Put a record back as one of its versions holds it',
+            'parameters' => [$module, $idParam, $version],
+            'responses' => ['200' => ['description' => 'The record as restored'] + $json(['type' => 'object', 'properties' => ['data' => ['type' => 'object']]]), '422' => ['description' => 'The version no longer passes validation']] + $errors,
         ]];
 
         return [

@@ -73,7 +73,7 @@ final class ApiDocumentationExactTest extends TestCase
 
         $paths = app(ApiDocumentation::class)->openApi(['bares'])['paths'];
 
-        $this->assertSame(['/bares', '/bares/{id}', '/files', '/{module}/actions', '/{module}/{id}/actions/{action}', '/{module}/bulk/{action}'], array_keys($paths));
+        $this->assertSame(['/bares', '/bares/{id}', '/files', '/{module}/actions', '/{module}/{id}/actions/{action}', '/{module}/bulk/{action}', '/{module}/{id}/versions', '/{module}/{id}/versions/{version}/restore'], array_keys($paths));
 
         $this->assertSame($this->encoded([
             'get' => [
@@ -170,6 +170,29 @@ final class ApiDocumentationExactTest extends TestCase
             ], 'required' => ['ids']]),
             'responses' => ['200' => ['description' => 'Done'] + $result, '422' => ['description' => 'The action failed or no record was found'] + $result] + $errors,
         ]]), $this->encoded($paths['/{module}/bulk/{action}']));
+
+        $version = ['name' => 'version', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']];
+        $this->assertSame($this->encoded(['get' => [
+            'operationId' => 'list_versions',
+            'summary' => 'Versions of a record, newest first',
+            'parameters' => [$module, $id],
+            'responses' => ['200' => ['description' => 'The versions'] + $json(['type' => 'object', 'properties' => [
+                'data' => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
+                    'id' => ['type' => 'integer'],
+                    'at' => ['type' => ['string', 'null'], 'format' => 'date-time'],
+                    'admin' => ['type' => ['string', 'null']],
+                    'source' => ['type' => ['string', 'null']],
+                    'values' => ['type' => 'object'],
+                ]]],
+            ]])] + $errors,
+        ]]), $this->encoded($paths['/{module}/{id}/versions']));
+
+        $this->assertSame($this->encoded(['post' => [
+            'operationId' => 'restore_version',
+            'summary' => 'Put a record back as one of its versions holds it',
+            'parameters' => [$module, $id, $version],
+            'responses' => ['200' => ['description' => 'The record as restored'] + $json(['type' => 'object', 'properties' => ['data' => ['type' => 'object']]]), '422' => ['description' => 'The version no longer passes validation']] + $errors,
+        ]]), $this->encoded($paths['/{module}/{id}/versions/{version}/restore']));
     }
 
     public function test_a_translatable_field_keeps_its_own_note_and_is_typed_by_its_plain_value(): void

@@ -41,6 +41,8 @@ Route::prefix(config('atrium.api.prefix', 'api/v1'))
             Route::get('{resource}/{id}', [ResourceController::class, 'showItem'])->name('admin.api.show');
             Route::match(['put', 'patch'], '{resource}/{id}', [ResourceController::class, 'updateItem'])->name('admin.api.update');
             Route::delete('{resource}/{id}', [ResourceController::class, 'destroyItem'])->name('admin.api.destroy');
+            Route::get('{resource}/{id}/versions', [ResourceController::class, 'listVersions'])->name('admin.api.versions');
+            Route::post('{resource}/{id}/versions/{revision}/restore', [ResourceController::class, 'restoreVersion'])->whereNumber('revision')->name('admin.api.versions.restore');
         });
     });
 

@@ -19,10 +19,12 @@ use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Filters\Filter;
 use Atrium\Admin\Filters\ModuleFilters;
+use Atrium\Admin\History\Revisions;
 use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Models\Revision;
 use Atrium\Admin\Support\Like;
 use Atrium\Admin\Support\PublicUrl;
 use Illuminate\Database\Eloquent\Model;
@@ -183,6 +185,34 @@ class ResourceController extends AdminController
     }
 
     /**
+     * The versions of a record, newest (the record as it is) first, each with
+     * the values of its form.
+     */
+    public function listVersions(Request $request, string $resource, int $id): JsonResponse
+    {
+        $this->useResource($request, $resource, 'read', Permissions::VIEW);
+
+        $versions = $this->revisions()->of($this->findItem($id))->with('activity')->get();
+
+        return response()->json(['data' => $versions->map(static fn (Revision $version): array => [...$version->summary(), 'values' => $version->values])->all()]);
+    }
+
+    /**
+     * Puts a record back as one of its versions holds it, as the panel's
+     * "Restore" does; the values are validated as an update's are.
+     */
+    public function restoreVersion(Request $request, string $resource, int $id, int $revision): JsonResponse
+    {
+        $this->useResource($request, $resource, 'write', Permissions::UPDATE);
+
+        $revisions = $this->revisions();
+        $item = $this->findItem($id);
+        $revisions->restore($item, $revisions->of($item)->findOrFail($revision));
+
+        return response()->json(['data' => $this->present($item->fresh($this->eagerRelations()))]);
+    }
+
+    /**
      * The buttons of a module the token may run: server actions on a record
      * and actions over a list of records. Links and filled create forms are
      * the panel's own and are not listed.
@@ -278,6 +308,15 @@ class ResourceController extends AdminController
         abort_unless($owner instanceof AdminUser && $owner->hasAdminPermission("{$resource}.{$action}"), 403, "The token owner lacks the {$resource}.{$action} permission.");
 
         $this->model = $model;
+    }
+
+    private function revisions(): Revisions
+    {
+        $revisions = app(Revisions::class);
+
+        abort_unless($revisions->enabledFor($this->model), 404, 'This module keeps no versions of its records.');
+
+        return $revisions;
     }
 
     /**

@@ -216,6 +216,15 @@ trait InteractsWithAdmin
     }
 
     /**
+     * Whether the records keep a version on every save, to compare two and put
+     * an old one back (docs/history.md). Only where they have a history.
+     */
+    public static function hasAdminRevisions(): bool
+    {
+        return true;
+    }
+
+    /**
      * Whether the module holds content: what editors write and the site
      * shows or sells (pages, products, news, the sites themselves). False
      * for service records the panel keeps for itself: logs, audit results,

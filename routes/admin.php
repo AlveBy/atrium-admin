@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\History\Revisions;
 use Atrium\Admin\Http\Controllers\AdminUserController;
 use Atrium\Admin\Http\Controllers\ApiTokenController;
 use Atrium\Admin\Http\Controllers\Auth\LoginController;
@@ -151,6 +152,11 @@ Route::prefix(config('atrium.prefix', 'admin'))
                 // Who changed the record, when and what.
                 if (app(ActivityLog::class)->enabledFor($model)) {
                     Route::get("{$key}/{id}/history", [HistoryController::class, 'record'])->defaults('module', $key)->whereNumber('id')->name("admin.{$key}.history");
+                }
+
+                // Putting an old version of the record back.
+                if (app(Revisions::class)->enabledFor($model)) {
+                    Route::post("{$key}/{id}/history/{revision}", [HistoryController::class, 'revert'])->defaults('module', $key)->whereNumber(['id', 'revision'])->name("admin.{$key}.revert");
                 }
 
                 // A module's buttons: on one record, and over the selected ones.
