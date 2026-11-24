@@ -10,10 +10,13 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\History\Revisions;
+use Atrium\Admin\Http\Controllers\Api\ResourceController;
+use Atrium\Admin\Http\Controllers\HistoryController;
 use Atrium\Admin\Models\Activity;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Revision;
+use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\PanelAccount;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Untracked;
@@ -30,6 +33,8 @@ use ReflectionClass;
  */
 final class RevisionsTest extends TestCase
 {
+    use PinsExtensionSurface;
+
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);
@@ -214,6 +219,7 @@ final class RevisionsTest extends TestCase
             ->where('comparison.changes.0.old', 'Plum')->where('comparison.changes.0.new', 'Pear'));
         $this->get("{$url}?from={$pear}&to={$pear}")->assertInertia(fn (AssertableInertia $page) => $page->where('comparison.changes', []));
         $this->get("{$url}?from={$pear}")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('comparison', null));
+        $this->get("{$url}?from=&to=")->assertOk()->assertSessionHasNoErrors()->assertInertia(fn (AssertableInertia $page) => $page->where('comparison', null));
         $this->get("{$url}?to={$pear}")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('comparison', null));
 
         $other = Post::query()->create(['name' => 'Other']);
@@ -287,6 +293,23 @@ final class RevisionsTest extends TestCase
 
         $this->assertSame('Apple', $post->fresh()->name);
         $this->assertSame(['api', 'Editor'], [Activity::query()->latest('id')->value('source'), Activity::query()->latest('id')->value('admin_name')]);
+    }
+
+    public function test_the_actions_of_versions_are_public(): void
+    {
+        $post = $this->changedTwice();
+        $apple = app(Revisions::class)->of($post)->get()->last();
+        $this->post("/admin/posts/{$post->id}/history/{$apple->id}")->assertRedirect();
+        $this->app['auth']->forgetGuards();
+        $token = $this->editor(['posts.view', 'posts.update'])->createToken('writer', ['posts:read', 'posts:write'])->plainTextToken;
+        $this->withToken($token)->getJson("/api/v1/posts/{$post->id}/versions")->assertOk();
+        $this->withToken($token)->postJson("/api/v1/posts/{$post->id}/versions/{$apple->id}/restore")->assertOk();
+
+        $actions = $this->assertRouteActionsArePublic();
+
+        $this->assertArrayHasKey(HistoryController::class.'::revert', $actions);
+        $this->assertArrayHasKey(ResourceController::class.'::listVersions', $actions);
+        $this->assertArrayHasKey(ResourceController::class.'::restoreVersion', $actions);
     }
 
     public function test_the_api_refuses_what_cannot_be_put_back(): void

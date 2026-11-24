@@ -265,7 +265,7 @@ final class ActivityLog
     private static function comparable(mixed $value): mixed
     {
         return match (true) {
-            $value === '', $value === [] => null,
+            $value === '' => null,
             is_bool($value) => $value ? '1' : '0',
             is_int($value), is_float($value) => (string) $value,
             is_array($value) => self::comparableArray($value),

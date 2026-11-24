@@ -14,6 +14,8 @@ use Atrium\Admin\Mcp\Tools\CreateRecord;
 use Atrium\Admin\Mcp\Tools\DeleteRecord;
 use Atrium\Admin\Mcp\Tools\GetRecord;
 use Atrium\Admin\Mcp\Tools\ListRecords;
+use Atrium\Admin\Mcp\Tools\ListVersions;
+use Atrium\Admin\Mcp\Tools\RestoreVersion;
 use Atrium\Admin\Mcp\Tools\UpdateRecord;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Http\Request;
@@ -99,7 +101,16 @@ final class McpToolQueryTest extends TestCase
     /**
      * @param  array<string,mixed>  $arguments
      */
-    private function sent(ListRecords|GetRecord|DeleteRecord|CreateRecord|UpdateRecord $tool, array $arguments): Request
+    public function test_the_version_tools_send_numbers_in_the_address(): void
+    {
+        $seen = $this->sent(new ListVersions, ['module' => 'posts', 'id' => '07', 'site' => 'shop']);
+        $this->assertSame(['GET', '/api/v1/posts/7/versions', ['site' => 'shop']], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
+
+        $seen = $this->sent(new RestoreVersion, ['module' => 'posts', 'id' => '07', 'version' => '03']);
+        $this->assertSame(['POST', '/api/v1/posts/7/versions/3/restore', []], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
+    }
+
+    private function sent(ListRecords|GetRecord|DeleteRecord|CreateRecord|UpdateRecord|ListVersions|RestoreVersion $tool, array $arguments): Request
     {
         $router = $this->recordingRouter(fn () => new Response('{}', 200));
         $tool->handle(new McpRequest($arguments), new ApiGateway($router));

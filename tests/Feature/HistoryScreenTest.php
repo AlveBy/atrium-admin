@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature;
 
-use Atrium\Admin\Http\Controllers\Api\ResourceController;
 use Atrium\Admin\Http\Controllers\HistoryController;
 use Atrium\Admin\Models\Activity;
 use Atrium\Admin\Models\AdminRole;
@@ -240,9 +239,6 @@ final class HistoryScreenTest extends TestCase
 
         $this->assertArrayHasKey(HistoryController::class.'::index', $actions);
         $this->assertArrayHasKey(HistoryController::class.'::record', $actions);
-        $this->assertArrayHasKey(HistoryController::class.'::revert', $actions);
-        $this->assertArrayHasKey(ResourceController::class.'::listVersions', $actions);
-        $this->assertArrayHasKey(ResourceController::class.'::restoreVersion', $actions);
     }
 
     public function test_the_menu_has_the_journal_once(): void

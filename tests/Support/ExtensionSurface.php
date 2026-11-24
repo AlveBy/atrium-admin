@@ -159,6 +159,7 @@ final class ExtensionSurface
             'Http\Requests\Auth\LoginRequest::throttleKey' => [LoginRequest::class, 'throttleKey', 'public'],
             'Mcp\Tools\ApiTool::owner' => [ApiTool::class, 'owner', 'protected'],
             'Models\AdminUser::actingSuperadmin' => [AdminUser::class, 'actingSuperadmin', 'protected'],
+            'Models\AdminUser::hasAdminRevisions' => [AdminUser::class, 'hasAdminRevisions', 'public'],
             'Models\File::fileable' => [File::class, 'fileable', 'public'],
             'Models\File::getFullPathAttribute' => [File::class, 'getFullPathAttribute', 'public'],
             'Models\File::getHumanSizeAttribute' => [File::class, 'getHumanSizeAttribute', 'public'],

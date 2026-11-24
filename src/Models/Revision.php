@@ -53,7 +53,7 @@ class Revision extends Model
     {
         return [
             'id' => $this->id,
-            'at' => $this->activity?->created_at?->toIso8601String(),
+            'at' => $this->activity?->created_at->toIso8601String(),
             'admin' => $this->activity?->admin_name,
             'source' => $this->activity?->source,
         ];
@@ -62,7 +62,6 @@ class Revision extends Model
     protected function casts(): array
     {
         return [
-            'activity_id' => 'integer',
             'record_id' => 'integer',
             'values' => 'array',
             'created_at' => 'datetime',
