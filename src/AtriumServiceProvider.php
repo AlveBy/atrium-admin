@@ -47,6 +47,8 @@ use Atrium\Admin\Support\Menu;
 use Atrium\Admin\Support\RecordUrls;
 use Atrium\Admin\Support\Sitemap;
 use Atrium\Admin\Support\Sites;
+use Atrium\Admin\Templates\Templates;
+use Atrium\Admin\Templates\TemplatesExtension;
 use Closure;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
@@ -121,6 +123,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(RecordCache::class);
         $this->app->singleton(RecordUrls::class);
         $this->app->singleton(ActivityLog::class);
+        $this->app->singleton(Templates::class);
     }
 
     public function boot(): void
@@ -134,6 +137,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->registerGadgets();
         $this->registerCache();
         $this->registerHistory();
+        TemplatesExtension::register();
         $this->registerCommands();
         $this->registerCdnAssets();
 

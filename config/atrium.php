@@ -403,6 +403,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Templates of the pages
+    |--------------------------------------------------------------------------
+    |
+    | The form of a module with a public page offers a "Template" when it has
+    | any besides the default one. They are found by themselves: Blade files
+    | in resources/views/templates/{module}/ (that module only) and
+    | resources/views/templates/all/ (every module), named by the comment at
+    | the top of the file, `{{-- Template: Full width --}}`. Here, by the
+    | module's key, a template is added, replaced (the same key) or hidden
+    | (null):
+    |
+    |   'news' => ['wide' => 'my.views.wide', 'full-width' => null],
+    |
+    */
+    'templates' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | robots.txt, sitemap.xml and counters
     |--------------------------------------------------------------------------
     |
