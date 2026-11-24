@@ -207,7 +207,7 @@ class ModuleController extends Controller
             $name = $field->getName();
 
             // An empty secret field keeps the saved secret.
-            if (in_array($name, $declaration->secrets(), true) && trim((string) $request->input($name)) === '') {
+            if (in_array($name, $declaration->secrets(), true) && blank($request->input($name))) {
                 continue;
             }
 

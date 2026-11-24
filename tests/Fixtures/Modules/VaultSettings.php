@@ -26,17 +26,19 @@ final class VaultSettings extends ModuleSettings implements HasActions
         return [
             TextField::make('name')->label('Name'),
             TextField::make('webhook')->label('Webhook'),
+            TextField::make('note')->label('Note'),
+            TextField::make('token')->label('Token')->default('none'),
         ];
     }
 
     public function secrets(): array
     {
-        return ['webhook'];
+        return ['webhook', 'token'];
     }
 
     public function mask(string $field, string $value): string
     {
-        return parse_url($value, PHP_URL_HOST).'/••••';
+        return $field === 'token' ? 'token ••' : parse_url($value, PHP_URL_HOST).'/••••';
     }
 
     public function actions(): array

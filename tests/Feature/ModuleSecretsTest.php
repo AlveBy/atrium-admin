@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Facades\Setting;
+use Atrium\Admin\Http\Controllers\ModuleController;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
@@ -21,6 +22,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
+use ReflectionMethod;
 
 /**
  * Settings that hold a secret, and the buttons a module puts on its screen.
@@ -78,7 +80,7 @@ final class ModuleSecretsTest extends TestCase
 
         app(Settings::class)->flush();
         $this->assertSame(self::URL, Setting::get('vault.webhook'));
-        $this->assertSame(['name' => 'Main', 'webhook' => self::URL], Setting::all('vault'));
+        $this->assertSame(['name' => 'Main', 'webhook' => self::URL, 'note' => null, 'token' => 'none'], Setting::all('vault'));
     }
 
     public function test_saving_other_values_keeps_the_secret_and_saving_it_empty_clears_it(): void
@@ -126,6 +128,8 @@ final class ModuleSecretsTest extends TestCase
             ->where('values.name', 'Main')
             ->missing('values.webhook')
             ->where('fields.0.placeholder', null)
+            ->where('fields.1.name', 'webhook')
+            ->where('fields.1.label', 'Webhook')
             ->where('fields.1.placeholder', 'portal.example.test/••••')
             ->where('actions', [['name' => 'ping', 'label' => 'Ping'], ['name' => 'break', 'label' => 'Break']]));
         $this->assertStringNotContainsString('SECRETCODE', $response->getContent());
@@ -154,6 +158,41 @@ final class ModuleSecretsTest extends TestCase
         $this->actingAs($admin, 'admin')->put('/admin/modules/vault/settings', ['webhook' => 'https://other.example.test/rest/2/NEW/']);
         app(Settings::class)->flush();
         $this->assertSame('https://other.example.test/rest/2/NEW/', Setting::get('vault.webhook'));
+    }
+
+    public function test_every_secret_has_its_own_mask(): void
+    {
+        $admin = $this->admin();
+        app(Settings::class)->save('vault', ['webhook' => self::URL, 'token' => 'T0P']);
+
+        $this->actingAs($admin, 'admin')->get('/admin/modules/vault/settings')->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('fields.1.placeholder', 'portal.example.test/••••')
+            ->where('fields.2.placeholder', null)
+            ->where('fields.3.placeholder', 'token ••')
+            ->missing('values.token'));
+    }
+
+    public function test_an_empty_secret_does_not_stop_the_fields_after_it_from_being_saved(): void
+    {
+        $admin = $this->admin();
+        app(Settings::class)->save('vault', ['webhook' => self::URL, 'token' => 'OLD']);
+
+        $this->actingAs($admin, 'admin')->put('/admin/modules/vault/settings', ['webhook' => '', 'note' => 'After it', 'token' => 'NEW'])->assertSessionHasNoErrors();
+        app(Settings::class)->flush();
+
+        $this->assertSame([self::URL, 'After it', 'NEW'], [Setting::get('vault.webhook'), Setting::get('vault.note'), Setting::get('vault.token')]);
+    }
+
+    public function test_a_secret_that_cannot_be_read_gives_way_to_its_default(): void
+    {
+        DB::table(Settings::TABLE)->insert(['module' => 'vault', 'values' => json_encode(['token' => 'not-an-encrypted-text']), 'created_at' => now(), 'updated_at' => now()]);
+
+        $this->assertSame('none', Setting::get('vault.token'));
+    }
+
+    public function test_the_button_is_an_action_of_the_controller_the_router_can_call(): void
+    {
+        $this->assertTrue((new ReflectionMethod(ModuleController::class, 'action'))->isPublic());
     }
 
     public function test_a_button_runs_and_says_what_it_did(): void
