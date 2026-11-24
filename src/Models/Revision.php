@@ -62,7 +62,6 @@ class Revision extends Model
     protected function casts(): array
     {
         return [
-            'record_id' => 'integer',
             'values' => 'array',
             'created_at' => 'datetime',
         ];
