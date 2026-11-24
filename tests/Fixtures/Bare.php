@@ -46,6 +46,11 @@ final class Bare extends Model implements Administrable
         return [];
     }
 
+    public static function getAdministrationViews(): array
+    {
+        return [];
+    }
+
     public static function getAdminRoutePrefix(): string
     {
         return 'bares';

@@ -27,6 +27,25 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('tasks', function (Blueprint $table): void {
+            $table->id();
+            $table->string('title');
+            $table->string('status')->nullable();
+            $table->unsignedBigInteger('lane_id')->nullable();
+            $table->integer('rank')->default(0);
+            $table->date('due_on')->nullable();
+            $table->boolean('urgent')->default(false);
+            $table->timestamps();
+        });
+
+        Schema::create('tickets', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('site_id')->nullable()->index();
+            $table->string('name');
+            $table->unsignedBigInteger('lane_id')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('parcels', function (Blueprint $table): void {
             $table->id();
             $table->string('article')->nullable();
@@ -194,7 +213,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['kit_post', 'kit_note', 'kit_page', 'kit_topic', 'kits', 'sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'parcels', 'posts'] as $table) {
+        foreach (['tickets', 'tasks', 'kit_post', 'kit_note', 'kit_page', 'kit_topic', 'kits', 'sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'parcels', 'posts'] as $table) {
             Schema::dropIfExists($table);
         }
     }

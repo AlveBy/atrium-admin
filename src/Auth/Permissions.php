@@ -79,6 +79,9 @@ final class Permissions
         'store' => self::CREATE,
         'update' => self::UPDATE,
         'destroy' => self::DELETE,
+        // A card moved on the kanban board is an update; more cards are a view.
+        'move' => self::UPDATE,
+        'cards' => self::VIEW,
         // A button checks its own permission on top.
         'action' => self::VIEW,
         'bulk' => self::VIEW,

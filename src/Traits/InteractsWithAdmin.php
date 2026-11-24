@@ -14,6 +14,7 @@ use Atrium\Admin\Actions\CreateFromRecord;
 use Atrium\Admin\Actions\LinkAction;
 use Atrium\Admin\Actions\RecordAction;
 use Atrium\Admin\Filters\Filter;
+use Atrium\Admin\Views\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
@@ -81,6 +82,20 @@ trait InteractsWithAdmin
      * @return array<int,BulkAction>
      */
     public static function getAdministrationBulkActions(): array
+    {
+        return [];
+    }
+
+    /**
+     * Other ways to look at the list besides the table: a KanbanView (cards
+     * in the columns of a select) or a CalendarView (records on the days of
+     * a date). A module that returns one gets a "Table / Kanban / Calendar"
+     * switcher above its list, and the administrator's choice is kept.
+     * Other modules add theirs through the `atrium.module.views` hook.
+     *
+     * @return array<int,View>
+     */
+    public static function getAdministrationViews(): array
     {
         return [];
     }

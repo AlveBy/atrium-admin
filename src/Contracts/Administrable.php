@@ -12,6 +12,7 @@ namespace Atrium\Admin\Contracts;
 use Atrium\Admin\Columns\Column;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Filters\Filter;
+use Atrium\Admin\Views\View;
 use Illuminate\Database\Eloquent\Builder;
 
 interface Administrable
@@ -56,6 +57,14 @@ interface Administrable
      * @return array<int,string|Filter>
      */
     public static function getAdministrationFilters(): array;
+
+    /**
+     * Other ways to look at the list besides the table: a KanbanView or a
+     * CalendarView. Without any the list has no switcher.
+     *
+     * @return array<int,View>
+     */
+    public static function getAdministrationViews(): array;
 
     /** @return array<string, mixed> */
     public static function getCreateValidationRules(): array;

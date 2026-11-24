@@ -4,18 +4,23 @@
  * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
  */
 
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { router, Head } from '@inertiajs/vue3'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminDataTable from '../../../Components/Admin/Table/AdminDataTable.vue'
 import AdminModal from '../../../Components/Admin/UI/AdminModal.vue'
 import { recordActionHref, runRecordAction } from '../../../Support/recordActions'
+import ViewSwitcher from '../../../Components/Admin/Views/ViewSwitcher.vue'
 import { tc } from '../../../Support/i18n'
+
+// Only a module with a board loads it, and with it the drag-and-drop library.
+const KanbanBoard = defineAsyncComponent(() => import('../../../Components/Admin/Views/KanbanBoard.vue'))
 
 const props = defineProps({
     routeName: String,
     createLabel: String,
-    items: Object,
+    // The table's page of records; the other looks have none.
+    items: { type: Object, default: null },
     columns: Array,
     filters: Object,
     title: String,
@@ -33,6 +38,11 @@ const props = defineProps({
     links: { type: Array, default: () => [] },
     // Filters drawn above the list, the module's and other modules': name, type, label, options.
     filterControls: { type: Array, default: () => [] },
+    // The looks of the list the module declared ('table', 'kanban'…) and the one drawn now.
+    views: { type: Array, default: () => [] },
+    view: { type: String, default: 'table' },
+    // The kanban board: columns with their first cards.
+    board: { type: Object, default: null },
 })
 
 // Filters from the address (?module=…) that the module declared: kept on
@@ -68,6 +78,11 @@ const resetFilters = () => {
     applyFilters()
 }
 
+// What a change of the look keeps: the search and the filters.
+const switchQuery = computed(() => Object.fromEntries(
+    Object.entries({ ...listFilters.value, search: search.value }).filter(([, value]) => value !== '' && value !== null)
+))
+
 const rowActions = props.actions.map((action) => ({
     ...action,
     href: (item) => recordActionHref(props.routeName, action, item, props.actionUrls),
@@ -76,7 +91,7 @@ const rowActions = props.actions.map((action) => ({
 const selected = ref([])
 // After a search, a page turn or an action, rows that left the page leave
 // the selection too: a bulk button acts only on what is in front of the eyes.
-watch(() => props.items.data, (rows) => {
+watch(() => props.items?.data, (rows) => {
     const ids = (rows || []).map((row) => row.id)
     selected.value = selected.value.filter((id) => ids.includes(id))
 })
@@ -159,11 +174,18 @@ const handleDelete = () => {
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 :data-page-title="routeName" class="text-2xl font-bold text-fg">{{ title }}</h1>
-            <p class="mt-1 text-sm text-muted">
+            <p v-if="items" class="mt-1 text-sm text-muted">
                 {{ $t('resource.index.total', { count: items.total }) }}
             </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+            <ViewSwitcher
+                v-if="views.length > 1"
+                :route-name="routeName"
+                :views="views"
+                :view="view"
+                :query="switchQuery"
+            />
             <AdminButton
                 v-for="link in links"
                 :key="link.name"
@@ -251,6 +273,15 @@ const handleDelete = () => {
         out as it changes; "Delete" is told apart by its icon, not only
         by its colour.
     -->
+    <KanbanBoard
+        v-if="view === 'kanban' && board"
+        :route-name="routeName"
+        :board="board"
+        :filters="switchQuery"
+        :can-move="can.update !== false"
+    />
+
+    <template v-if="items">
     <p class="sr-only" aria-live="polite">{{ selected.length ? tc('actions.bulk.selected', selected.length) : '' }}</p>
     <div
         v-if="bulkActions.length && selected.length"
@@ -297,6 +328,7 @@ const handleDelete = () => {
         @edit="handleEdit"
         @delete="confirmDelete"
     />
+    </template>
 
     <AdminModal
         :show="showDeleteModal"

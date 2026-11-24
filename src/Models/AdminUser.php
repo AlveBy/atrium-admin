@@ -57,6 +57,7 @@ class AdminUser extends Authenticatable implements Administrable
             'is_superadmin' => 'boolean',
             'two_factor_sent_at' => 'datetime',
             'site_ids' => 'array',
+            'list_views' => 'array',
             'two_factor_expires_at' => 'datetime',
         ];
     }

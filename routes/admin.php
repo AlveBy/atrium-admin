@@ -159,6 +159,10 @@ Route::prefix(config('atrium.prefix', 'admin'))
                     Route::post("{$key}/{id}/history/{revision}", [HistoryController::class, 'revert'])->defaults('module', $key)->whereNumber(['id', 'revision'])->name("admin.{$key}.revert");
                 }
 
+                // The kanban board and the calendar of a module's list: more cards of a column, a card or an event moved.
+                Route::get("{$key}/cards", [ResourceController::class, 'cards'])->name("admin.{$key}.cards");
+                Route::patch("{$key}/{id}/move", [ResourceController::class, 'move'])->whereNumber('id')->name("admin.{$key}.move");
+
                 // A module's buttons: on one record, and over the selected ones.
                 Route::post("{$key}/{id}/actions/{action}", [ResourceController::class, 'runAction'])
                     ->whereNumber('id')->where('action', '[A-Za-z0-9_-]+')->name("admin.{$key}.action");

@@ -43,12 +43,18 @@ use Atrium\Admin\Tabs\Tab;
 use Atrium\Admin\Tabs\TabRegistry;
 use Atrium\Admin\Templates\Templates;
 use Atrium\Admin\Traits\BelongsToSite;
+use Atrium\Admin\Views\Board;
+use Atrium\Admin\Views\KanbanView;
+use Atrium\Admin\Views\ModuleViews;
+use Atrium\Admin\Views\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -86,6 +92,15 @@ abstract class AdminController extends Controller
 
     /** @var array<int,string>|null */
     private ?array $translatableCache = null;
+
+    /** @var array<string,Field>|null */
+    private ?array $fieldsByNameCache = null;
+
+    /**
+     * Set while a card is moved on a board: the save then
+     * validates only what the move sends, as an update from the API does.
+     */
+    private bool $moving = false;
 
     /**
      * Get Inertia page path prefix.
@@ -285,6 +300,14 @@ abstract class AdminController extends Controller
     {
         [$query, $columns, $related, $listFilters, $sortBy, $sortDir] = $this->listQuery($request);
 
+        $views = app(ModuleViews::class);
+        $declared = $views->for($this->model);
+        $view = $declared === [] ? null : $views->choose($declared, $request->query('view'), $this->currentAdmin(), $this->model::getAdminRoutePrefix());
+
+        if ($view !== null) {
+            return $this->viewIndex($request, $view, $declared, $query, $listFilters);
+        }
+
         $items = $query->paginate($this->model::getAdminPerPage())->withQueryString();
 
         // Every row goes through listRow(): a package may present any of them.
@@ -295,20 +318,220 @@ abstract class AdminController extends Controller
         return Inertia::render($this->getPagePrefix().'/Index', [
             'items' => $items,
             'columns' => $this->serializeColumns($columns),
-            'filters' => [
+            'bulkActions' => $this->visibleBulkActions(),
+            'actionUrls' => $actionUrls,
+            'views' => $views->types($declared),
+            'view' => ModuleViews::TABLE,
+            ...$this->listPageProps([
                 'search' => $request->get('search', ''),
                 'sort' => $sortBy,
                 'direction' => $sortDir,
                 ...$listFilters,
-            ],
+            ]),
+        ]);
+    }
+
+    /**
+     * What every look at the list has: its title, the filters above it, the
+     * buttons the module and the other modules add, and what the roles allow.
+     *
+     * @param  array<string,mixed>  $filters  the state of the search, the sort and the filters
+     * @return array<string,mixed>
+     */
+    private function listPageProps(array $filters): array
+    {
+        return [
+            'filters' => $filters,
             // The filters drawn above the list: the module's and other modules'.
             'filterControls' => app(ModuleFilters::class)->describe($this->model, $this->currentAdmin()),
             'title' => $this->model::getAdminLabel(),
             'links' => Hook::apply('atrium.module.links', [], $this->model),
-            'bulkActions' => $this->visibleBulkActions(),
-            'actionUrls' => $actionUrls,
             ...$this->resourceProps(),
+        ];
+    }
+
+    /**
+     * The list as a kanban board. It is narrowed by the same
+     * search and filters as the table, but is not paged or sorted by them.
+     *
+     * @param  array<string,View>  $declared
+     * @param  Builder<Model&Administrable>  $query
+     * @param  array<string,string>  $listFilters
+     */
+    private function viewIndex(Request $request, View $view, array $declared, Builder $query, array $listFilters): Response
+    {
+        return Inertia::render($this->getPagePrefix().'/Index', [
+            'views' => app(ModuleViews::class)->types($declared),
+            'view' => $view->type(),
+            ...($view instanceof KanbanView ? ['board' => $this->boardProps($view, $query)] : []),
+            ...$this->listPageProps(['search' => $request->get('search', ''), ...$listFilters]),
         ]);
+    }
+
+    /**
+     * The columns of the board with their first cards.
+     *
+     * @param  Builder<Model&Administrable>  $query
+     * @return array<string,mixed>
+     */
+    private function boardProps(KanbanView $view, Builder $query): array
+    {
+        $board = $this->board($view);
+        $counts = $board->counts($query);
+        $lanes = $board->columns();
+
+        // Records no column takes (nothing chosen) get a column of their own, while there are any.
+        if ($counts[''] > 0) {
+            $lanes[] = ['value' => null, 'label' => __('atrium::views.kanban.no_value')];
+        }
+
+        $columns = [];
+
+        foreach ($lanes as $column) {
+            $total = $counts[$column['value'] ?? ''] ?? 0;
+            $page = $board->page(clone $query, $column['value']);
+
+            $columns[] = [
+                ...$column,
+                'total' => $total,
+                'cards' => $this->presentCards($board, collect($page->items())),
+                'more' => $page->hasMorePages(),
+            ];
+        }
+
+        return ['field' => $view->getField(), 'ordered' => $view->getOrder() !== null, 'columns' => $columns];
+    }
+
+    /**
+     * More cards of a column (`?column=draft&page=2`, none for the cards of
+     * no column), narrowed by the search and filters of the list.
+     */
+    public function cards(Request $request): JsonResponse
+    {
+        $view = app(ModuleViews::class)->for($this->model)['kanban'] ?? null;
+        abort_unless($view instanceof KanbanView, 404);
+
+        $board = $this->board($view);
+        $column = $request->query('column');
+        abort_unless($column === null || (is_string($column) && $board->hasColumn($column)), 404);
+
+        [$query] = $this->listQuery($request);
+        $page = $board->page($query, $column, $request->integer('page'));
+
+        return response()->json(['cards' => $this->presentCards($board, collect($page->items())), 'more' => $page->hasMorePages()]);
+    }
+
+    /**
+     * @param  SupportCollection<int,Model>  $records
+     * @return array<int,array<string,mixed>>
+     */
+    private function presentCards(Board $board, SupportCollection $records): array
+    {
+        $texts = $board->texts($records);
+        $titleField = $board->view()->getTitleField();
+
+        return $records->map(fn (Model $record): array => [
+            'id' => $record->getKey(),
+            'title' => (string) ($titleField === null ? $this->adminTitle($record) : ($this->listRow($record)[$titleField] ?? $this->adminTitle($record))),
+            'fields' => $texts[$record->getKey()] ?? [],
+            'url' => route($this->model::getAdminRouteName().'.edit', $record->getKey()),
+        ])->all();
+    }
+
+    /**
+     * What a record is called: its own title, as a module without
+     * InteractsWithAdmin may have none, else its key.
+     */
+    private function adminTitle(Model $record): string
+    {
+        return method_exists($record, 'getAdminTitle') ? $record->getAdminTitle() : (string) $record->getKey();
+    }
+
+    private function board(KanbanView $view): Board
+    {
+        $fields = $this->fieldsByName();
+        $cards = [];
+
+        foreach ($view->getCards() as $name) {
+            if (isset($fields[$name])) {
+                $cards[$name] = $fields[$name];
+            }
+        }
+
+        return new Board($view, $fields[$view->getField()], $cards);
+    }
+
+    /**
+     * The form's fields by name, as the form has them (other modules' too).
+     *
+     * @return array<string,Field>
+     */
+    private function fieldsByName(): array
+    {
+        if ($this->fieldsByNameCache === null) {
+            $this->fieldsByNameCache = [];
+
+            foreach ($this->allAdminFields() as $field) {
+                $this->fieldsByNameCache[$field->getName()] = $field;
+            }
+        }
+
+        return $this->fieldsByNameCache;
+    }
+
+    /**
+     * A card dropped in another column of the board: the new column is
+     * saved the way the form saves it, so it is checked the same way and
+     * heard of by the same hooks. What the view does not write is not taken
+     * from the request.
+     *
+     * `value` is the column, `after` the card now above this one.
+     */
+    public function move(Request $request, int $id): JsonResponse
+    {
+        $view = app(ModuleViews::class)->for($this->model)['kanban'] ?? null;
+        abort_unless($view instanceof KanbanView, 404);
+
+        $item = $this->findItem($id);
+        $board = $this->board($view);
+        $order = $view->getOrder();
+        $value = $request->input('value');
+        $payload = [$view->getField() => $value];
+        $shift = [];
+
+        if ($order !== null) {
+            $after = $request->input('after');
+            $siblings = $board->inColumn($this->model::query()->whereKeyNot($item->getKey()), is_scalar($value) ? (string) $value : null);
+            $placed = $board->place($siblings, is_numeric($after) ? (int) $after : null);
+            $payload[$order] = $placed['order'];
+            $shift = $placed['shift'];
+        }
+
+        return response()->json(['card' => $this->presentCards($board, collect([$this->saveMoved($request, $item, $payload, $order, $shift)]))[0]]);
+    }
+
+    /**
+     * Saves what a move writes, with the cards that make room for it. The
+     * save reads the request, so the request is cut down to those fields.
+     *
+     * @param  array<string,mixed>  $payload
+     * @param  array<int,int>  $shift  id => the new value of the order field of the cards that move over
+     */
+    private function saveMoved(Request $request, Model&Administrable $item, array $payload, ?string $order = null, array $shift = []): Model
+    {
+        $request->replace($payload);
+        $request->query->replace([]);
+        $this->moving = true;
+
+        return DB::transaction(function () use ($request, $item, $order, $shift): Model {
+            if ($order !== null) {
+                foreach ($this->model::query()->whereKey(array_keys($shift))->get() as $sibling) {
+                    $sibling->forceFill([$order => $shift[$sibling->getKey()]])->save();
+                }
+            }
+
+            return $this->saveItem($request, 'edit', $item);
+        });
     }
 
     /**
@@ -766,7 +989,7 @@ abstract class AdminController extends Controller
             : $this->model::getUpdateValidationRules();
 
         if (! empty($explicit)) {
-            return $this->ignoreCurrentRecord($explicit, $record);
+            return $this->onlySent($request, $this->ignoreCurrentRecord($explicit, $record));
         }
 
         $rules = [];
@@ -789,7 +1012,20 @@ abstract class AdminController extends Controller
             );
         }
 
-        return $this->ignoreCurrentRecord($rules, $record);
+        return $this->onlySent($request, $this->ignoreCurrentRecord($rules, $record));
+    }
+
+    /**
+     * While a card is moved, a field the move does not send
+     * stays as it was, so there is nothing to validate: `required` on a name
+     * that was not sent must not block a move.
+     *
+     * @param  array<string,mixed>  $rules
+     * @return array<string,mixed>
+     */
+    private function onlySent(Request $request, array $rules): array
+    {
+        return $this->moving ? array_filter($rules, static fn (mixed $rule, string $name): bool => $request->has($name), ARRAY_FILTER_USE_BOTH) : $rules;
     }
 
     /**

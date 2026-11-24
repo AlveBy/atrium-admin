@@ -39,6 +39,16 @@ class SelectField extends Field
     }
 
     /**
+     * The options as the form offers them: value and label each.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
+    /**
      * Set options from enum
      */
     public function fromEnum(string $enumClass): static

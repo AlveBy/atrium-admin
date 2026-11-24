@@ -21,6 +21,7 @@
         "@tiptap/pm": "^3.30.0",
         "@tiptap/starter-kit": "^3.30.0",
         "@tiptap/vue-3": "^3.30.0",
+        "sortablejs": "^1.15.7",
         "vue": "^3.5.0",
         "vue-multiselect": "^3.5.0",
         "ziggy-js": "^2.6.0"
