@@ -70,10 +70,10 @@ final class Board
             default => [],
         };
 
-        return $this->columns = array_values(array_map(
-            static fn (array $option): array => ['value' => (string) $option['value'], 'label' => (string) $option['label']],
+        return $this->columns = array_map(
+            static fn (array $option): array => ['value' => strval($option['value']), 'label' => strval($option['label'])],
             $options,
-        ));
+        );
     }
 
     public function hasColumn(string $value): bool
@@ -102,8 +102,9 @@ final class Board
         $counts = ['' => 0];
 
         foreach ($rows as $row) {
-            $key = $this->hasColumn((string) $row->board_value) ? (string) $row->board_value : '';
-            $counts[$key] = ($counts[$key] ?? 0) + (int) $row->board_count;
+            $value = strval($row->board_value);
+            $key = $this->hasColumn($value) ? $value : '';
+            $counts[$key] = ($counts[$key] ?? 0) + intval($row->board_count);
         }
 
         return $counts;
@@ -134,11 +135,14 @@ final class Board
      * One page of a column's cards, in the order of the cards when the view
      * has one.
      *
+     * The page is a number from 1, or null for the one the address names
+     * (`?page=2`, which Laravel reads and keeps from going below the first).
+     *
      * @template TModel of Model
      *
      * @param  Builder<TModel>  $query
      */
-    public function page(Builder $query, ?string $value, int $page = 1): Paginator
+    public function page(Builder $query, ?string $value, ?int $page): Paginator
     {
         $query = $this->inColumn($query, $value);
 
@@ -148,7 +152,7 @@ final class Board
                 ->orderBy($query->getModel()->getQualifiedKeyName());
         }
 
-        return $query->simplePaginate($this->view->getPerColumn(), ['*'], 'page', max(1, $page));
+        return $query->simplePaginate($this->view->getPerColumn(), ['*'], 'page', $page);
     }
 
     /**
@@ -163,26 +167,33 @@ final class Board
      */
     public function place(Builder $siblings, ?int $after): array
     {
-        $order = (string) $this->view->getOrder();
+        $order = strval($this->view->getOrder());
         $key = $siblings->getModel()->getKeyName();
 
-        /** @var array<int,int> $values id => order value, top to bottom */
-        $values = array_map(intval(...), $siblings->reorder()->toBase()
+        $values = [];
+
+        foreach ($siblings->reorder()->toBase()
             ->orderBy($siblings->getModel()->qualifyColumn($order))
             ->orderBy($siblings->getModel()->getQualifiedKeyName())
-            ->pluck($order, $key)
-            ->all());
+            ->pluck($order, $key) as $id => $value) {
+            $values[$id] = intval($value);
+        }
 
         $ids = array_keys($values);
-        $found = $after === null ? false : array_search($after, $ids, true);
-        $at = $after === null ? 0 : ($found === false ? count($ids) : $found + 1);
+        $at = 0;
+
+        if ($after !== null) {
+            $found = array_search($after, $ids, true);
+            $at = $found === false ? count($ids) : $found + 1;
+        }
 
         $above = $at > 0 ? $values[$ids[$at - 1]] : null;
         $below = $at < count($ids) ? $values[$ids[$at]] : null;
 
+        // An empty column has neither neighbour: the numbering below gives
+        // the card its first step, with nobody to move.
         $fits = match (true) {
-            $above === null && $below === null => self::STEP,
-            $above === null => $below - self::STEP >= 0 ? $below - self::STEP : null,
+            $above === null => $below >= self::STEP ? $below - self::STEP : null,
             $below === null => $above + self::STEP,
             default => $below - $above >= 2 ? $above + intdiv($below - $above, 2) : null,
         };
@@ -232,24 +243,20 @@ final class Board
     {
         $value = $record->getAttribute($field->getName());
 
-        if ($value === null || $value === '') {
-            return '';
-        }
-
         if ($field instanceof BelongsToField) {
-            return $names[(string) $value] ?? '';
+            return $names[strval($value)] ?? '';
         }
 
         if ($field instanceof SelectField) {
             $key = $value instanceof BackedEnum ? $value->value : $value;
 
-            return is_scalar($key) ? (string) (array_column($field->getOptions(), 'label', 'value')[$key] ?? $key) : '';
+            return is_scalar($key) ? strval(array_column($field->getOptions(), 'label', 'value')[$key] ?? $key) : '';
         }
 
         return match (true) {
             is_bool($value) => $value ? '✓' : '—',
             $value instanceof DateTimeInterface => Carbon::instance($value)->translatedFormat($field->getType() === 'datetime' ? 'j M Y, H:i' : 'j M Y'),
-            is_scalar($value) => Str::limit(trim(strip_tags((string) $value)), 80),
+            is_scalar($value) => Str::limit(trim(strip_tags(strval($value))), 80),
             default => '',
         };
     }
@@ -265,12 +272,16 @@ final class Board
         $names = [];
 
         foreach ($this->cardFields as $name => $field) {
-            $related = $field instanceof BelongsToField ? $field->getModelClass() : null;
+            if (! $field instanceof BelongsToField) {
+                continue;
+            }
+
+            $related = $field->getModelClass();
             $ids = $records->pluck($name)->filter(static fn (mixed $id): bool => is_scalar($id) && $id !== '')->unique()->values()->all();
 
-            if ($field instanceof BelongsToField && $related !== null && $ids !== []) {
+            if ($related !== null && $ids !== []) {
                 $names[$name] = $related::query()->whereIn($field->getValueColumn(), $ids)->get()
-                    ->mapWithKeys(static fn (Model $model): array => [(string) $model->getAttribute($field->getValueColumn()) => (string) $model->getAttribute($field->getDisplayColumn())])
+                    ->mapWithKeys(static fn (Model $model): array => [strval($model->getAttribute($field->getValueColumn())) => strval($model->getAttribute($field->getDisplayColumn()))])
                     ->all();
             }
         }

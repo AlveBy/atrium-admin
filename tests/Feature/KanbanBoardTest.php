@@ -149,9 +149,6 @@ final class KanbanBoardTest extends TestCase
         $second = $this->board()->page(Task::query(), 'todo', 2);
         $this->assertSame([$a], array_column($second->items(), 'id'));
         $this->assertFalse($second->hasMorePages());
-
-        $this->assertSame([$b, $c], array_column($this->board()->page(Task::query(), 'todo', 0)->items(), 'id'), 'No page before the first.');
-        $this->assertSame([$b, $c], array_column($this->board()->page(Task::query(), 'todo', -3)->items(), 'id'));
     }
 
     public function test_equal_orders_fall_back_to_the_id(): void
@@ -332,6 +329,144 @@ final class KanbanBoardTest extends TestCase
         $this->board()->texts($records);
 
         $this->assertCount(1, $queries);
+    }
+
+    public function test_the_columns_of_a_relation_are_asked_for_once(): void
+    {
+        Chapter::query()->create(['name' => 'Lane one']);
+        $board = new Board(KanbanView::make('lane_id'), $this->fields(Ticket::class)['lane_id']);
+
+        $queries = [];
+        DB::listen(static function ($query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+
+        $board->columns();
+        $board->columns();
+        $board->hasColumn('1');
+
+        $this->assertCount(1, $queries);
+    }
+
+    public function test_a_relation_shown_by_its_number_still_makes_text_columns(): void
+    {
+        $lane = Chapter::query()->create(['name' => 'Lane one']);
+        $field = BelongsToField::make('lane_id')->label('Lane')->model(Chapter::class)->displayColumn('id');
+        $board = new Board(KanbanView::make('lane_id'), $field);
+
+        $this->assertSame([['value' => (string) $lane->id, 'label' => (string) $lane->id]], $board->columns());
+    }
+
+    public function test_a_relation_shown_by_its_number_is_a_text_on_the_card(): void
+    {
+        $lane = Chapter::query()->create(['name' => 'Lane one']);
+        $task = Task::query()->create(['title' => 'One', 'status' => 'todo', 'lane_id' => $lane->id]);
+        $field = BelongsToField::make('lane_id')->label('Lane')->model(Chapter::class)->displayColumn('id');
+        $board = new Board(KanbanView::make('status'), $this->fields(Task::class)['status'], ['lane_id' => $field]);
+
+        $this->assertSame((string) $lane->id, $board->texts(Task::query()->get())[$task->id][0]['text']);
+    }
+
+    public function test_cards_without_a_relation_value_ask_nothing(): void
+    {
+        Task::query()->create(['title' => 'One', 'status' => 'todo', 'lane_id' => null]);
+        $records = Task::query()->get();
+
+        $queries = [];
+        DB::listen(static function ($query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+
+        $this->board()->texts($records);
+
+        $this->assertSame([], $queries);
+    }
+
+    public function test_two_relations_on_a_card_each_get_their_names(): void
+    {
+        $one = Chapter::query()->create(['name' => 'Lane one']);
+        $two = Chapter::query()->create(['name' => 'Lane two']);
+        $record = new Task(['title' => 'A']);
+        $record->id = 1;
+        $record->setAttribute('lane_id', $one->id);
+        $record->setAttribute('other_id', $two->id);
+        $fields = ['lane_id' => BelongsToField::make('lane_id')->label('Lane')->model(Chapter::class), 'other_id' => BelongsToField::make('other_id')->label('Other')->model(Chapter::class)];
+
+        $texts = (new Board(KanbanView::make('status'), $this->fields(Task::class)['status'], $fields))->texts(new Collection([$record]))[1];
+
+        $this->assertSame(['Lane one', 'Lane two'], array_column($texts, 'text'));
+    }
+
+    public function test_a_relation_after_another_kind_of_field_still_gets_its_names(): void
+    {
+        $lane = Chapter::query()->create(['name' => 'Lane one']);
+        $task = Task::query()->create(['title' => 'One', 'status' => 'todo', 'rank' => 3, 'lane_id' => $lane->id]);
+        $fields = $this->fields(Task::class);
+        $board = new Board(KanbanView::make('status'), $fields['status'], ['rank' => $fields['rank'], 'lane_id' => $fields['lane_id']]);
+
+        $this->assertSame(['3', 'Lane one'], array_column($board->texts(Task::query()->get())[$task->id], 'text'));
+    }
+
+    public function test_a_relation_that_names_no_model_has_no_text(): void
+    {
+        $record = new Task(['title' => 'A']);
+        $record->id = 1;
+        $record->setAttribute('lane_id', 5);
+        $field = BelongsToField::make('lane_id')->label('Lane');
+
+        $board = new Board(KanbanView::make('status'), $this->fields(Task::class)['status'], ['lane_id' => $field]);
+
+        $this->assertSame('', $board->texts(new Collection([$record]))[1][0]['text']);
+    }
+
+    public function test_a_page_given_as_a_number_ignores_the_address_and_none_follows_it(): void
+    {
+        [$a, $b, $c] = $this->column('todo', [30, 10, 20]);
+        $this->app['request']->merge(['page' => 2]);
+
+        $this->assertSame([$b, $c], array_column($this->board()->page(Task::query(), 'todo', 1)->items(), 'id'));
+        $this->assertSame([$a], array_column($this->board()->page(Task::query(), 'todo', null)->items(), 'id'));
+    }
+
+    public function test_a_card_dropped_at_the_top_of_a_column_that_starts_at_a_step_goes_to_zero(): void
+    {
+        $this->column('todo', [10, 40]);
+
+        $this->assertSame(['order' => 0, 'shift' => []], $this->board()->place(Task::query()->where('status', 'todo'), null));
+    }
+
+    public function test_text_is_trimmed_and_cut_at_eighty_characters(): void
+    {
+        $fields = $this->fields(Task::class);
+        $board = new Board(KanbanView::make('status'), $fields['status'], ['title' => $fields['title']]);
+        $texts = [];
+
+        foreach (['  <i>Padded</i>  ', str_repeat('a', 80), str_repeat('b', 81)] as $index => $title) {
+            $record = new Task(['title' => $title]);
+            $record->id = $index + 1;
+            $texts[] = $board->texts(new Collection([$record]))[$index + 1][0]['text'];
+        }
+
+        $this->assertSame(['Padded', str_repeat('a', 80), str_repeat('b', 80).'...'], $texts);
+    }
+
+    public function test_a_number_the_options_lost_shows_as_text(): void
+    {
+        $record = new Task(['title' => 'A']);
+        $record->id = 1;
+        $record->setAttribute('level', 5);
+        $field = SelectField::make('level')->label('Level')->options(['low' => 'Low']);
+
+        $board = new Board(KanbanView::make('status'), $this->fields(Task::class)['status'], ['level' => $field]);
+
+        $this->assertSame('5', $board->texts(new Collection([$record]))[1][0]['text']);
+    }
+
+    public function test_cards_keep_their_names_in_a_list_and_a_view_writes_what_it_names(): void
+    {
+        $this->assertSame(['rating', 'posted_at'], KanbanView::make('status')->cards(...['a' => 'rating', 'b' => 'posted_at'])->getCards());
+        $this->assertSame(['status'], KanbanView::make('status')->writes());
+        $this->assertSame(['status', 'rank'], KanbanView::make('status')->order('rank')->writes());
     }
 
     public function test_number_and_select_fields_make_the_kinds_a_board_names(): void

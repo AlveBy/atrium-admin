@@ -389,7 +389,7 @@ abstract class AdminController extends Controller
 
         foreach ($lanes as $column) {
             $total = $counts[$column['value'] ?? ''] ?? 0;
-            $page = $board->page(clone $query, $column['value']);
+            $page = $board->page(clone $query, $column['value'], 1);
 
             $columns[] = [
                 ...$column,
@@ -416,7 +416,7 @@ abstract class AdminController extends Controller
         abort_unless($column === null || (is_string($column) && $board->hasColumn($column)), 404);
 
         [$query] = $this->listQuery($request);
-        $page = $board->page($query, $column, $request->integer('page'));
+        $page = $board->page($query, $column, null);
 
         return response()->json(['cards' => $this->presentCards($board, collect($page->items())), 'more' => $page->hasMorePages()]);
     }

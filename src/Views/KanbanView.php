@@ -94,7 +94,7 @@ final class KanbanView extends View
 
     public function writes(): array
     {
-        return array_values(array_filter([$this->field, $this->order]));
+        return $this->order === null ? [$this->field] : [$this->field, $this->order];
     }
 
     public function needs(): array

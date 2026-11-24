@@ -193,6 +193,9 @@ final class KanbanPageTest extends TestCase
             ->assertJsonPath('cards.0.id', $e);
         $this->getJson('/admin/tasks/cards?column=todo')->assertJsonPath('cards.0.id', $a)->assertJsonPath('cards.1.id', $b);
         $this->getJson('/admin/tasks/cards?column=todo&page=junk')->assertJsonPath('cards.0.id', $a);
+        $this->getJson('/admin/tasks/cards?column=todo&page=0')->assertOk()->assertJsonPath('cards.0.id', $a);
+        $this->getJson('/admin/tasks/cards?column=todo&page=-3')->assertOk()->assertJsonPath('cards.0.id', $a);
+        $this->get('/admin/tasks?view=kanban&page=2')->assertInertia(fn (AssertableInertia $page) => $page->where('board.columns.0.cards.0.id', $a));
         $this->getJson('/admin/tasks/cards?column=done')->assertJsonCount(1, 'cards')->assertJsonPath('more', false);
     }
 
