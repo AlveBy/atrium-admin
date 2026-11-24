@@ -45,13 +45,15 @@ final class TransferPermissionsTest extends TransferTestCase
     public static function rows(): array
     {
         $plain = ['view', 'create', 'update', 'delete'];
+        // Content goes to the trash; the languages, a service module, do not.
+        $trash = [...$plain, 'restore', 'force_delete'];
 
         return [
-            'a module that takes part in both' => ['parcels', [...$plain, 'import', 'export']],
-            'another one' => ['posts', [...$plain, 'import', 'export']],
-            'one that opts out of the import' => ['no_import_shelves', [...$plain, 'export']],
-            'one that opts out of the export' => ['no_export_shelves', [...$plain, 'import']],
-            'the sites, which cannot be imported' => ['sites', [...$plain, 'export']],
+            'a module that takes part in both' => ['parcels', [...$trash, 'import', 'export']],
+            'another one' => ['posts', [...$trash, 'import', 'export']],
+            'one that opts out of the import' => ['no_import_shelves', [...$trash, 'export']],
+            'one that opts out of the export' => ['no_export_shelves', [...$trash, 'import']],
+            'the sites, which cannot be imported' => ['sites', [...$trash, 'export']],
             'the languages, the same' => ['languages', [...$plain, 'export']],
         ];
     }

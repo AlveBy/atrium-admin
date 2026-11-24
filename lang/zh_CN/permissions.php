@@ -43,6 +43,8 @@ return [
         'create' => '创建',
         'update' => '编辑',
         'delete' => '删除',
+        'restore' => '从回收站恢复',
+        'force_delete' => '永久删除',
         'use' => '签发和使用令牌',
         'settings' => '设置',
         'import' => '导入',

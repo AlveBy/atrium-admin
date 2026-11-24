@@ -29,6 +29,7 @@ return [
         'updated' => 'Modifié',
         'deleted' => 'Supprimé',
         'restored' => 'Restauré',
+        'purged' => 'Supprimé définitivement',
     ],
     'sources' => [
         'admin' => 'dans le panneau',

@@ -29,6 +29,7 @@ return [
         'updated' => 'Alterado',
         'deleted' => 'Excluído',
         'restored' => 'Restaurado',
+        'purged' => 'Excluído definitivamente',
     ],
     'sources' => [
         'admin' => 'no painel',

@@ -81,9 +81,9 @@ final class ModulePermissionsTest extends TestCase
     {
         $sections = collect($this->app->make(Permissions::class)->sections())->keyBy('key');
 
-        $this->assertSame(['view', 'create', 'update', 'delete', 'import', 'export', 'settings', 'print'], $sections['labels']['actions']);
+        $this->assertSame(['view', 'create', 'update', 'delete', 'restore', 'force_delete', 'import', 'export', 'settings', 'print'], $sections['labels']['actions']);
         $this->assertSame(['print' => 'Print labels'], $sections['labels']['labels']);
-        $this->assertSame(['view', 'create', 'update', 'delete', 'import', 'export', 'label'], $sections['posts']['actions']);
+        $this->assertSame(['view', 'create', 'update', 'delete', 'restore', 'force_delete', 'import', 'export', 'label'], $sections['posts']['actions']);
         $this->assertSame(['label' => 'Label posts'], $sections['posts']['labels']);
 
         $admin = $this->admin();

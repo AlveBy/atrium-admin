@@ -434,11 +434,17 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\ModuleInstallCommand::class,
             Console\Commands\ModuleRemoveCommand::class,
             Console\Commands\SlugRegenerateCommand::class,
+            Console\Commands\TrashEmptyCommand::class,
         ]);
 
         // The imports started in the panel move on here when no queue worker moves them.
         $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
             $schedule->command('atrium:import --pending')->everyMinute()->withoutOverlapping();
+        });
+
+        // What has been in the trash long enough goes for good.
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
+            $schedule->command('atrium:trash:empty')->daily()->withoutOverlapping();
         });
 
         if (config('atrium.demo.enabled')) {

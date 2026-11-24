@@ -29,6 +29,7 @@ return [
         'updated' => 'O\'zgartirildi',
         'deleted' => 'O\'chirildi',
         'restored' => 'Tiklandi',
+        'purged' => 'Butunlay oʻchirildi',
     ],
     'sources' => [
         'admin' => 'panelda',

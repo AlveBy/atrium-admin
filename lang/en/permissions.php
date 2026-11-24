@@ -43,6 +43,8 @@ return [
         'create' => 'Create',
         'update' => 'Edit',
         'delete' => 'Delete',
+        'restore' => 'Restore from the trash',
+        'force_delete' => 'Delete for good',
         'use' => 'Issue and use tokens',
         'settings' => 'Settings',
         'import' => 'Import',

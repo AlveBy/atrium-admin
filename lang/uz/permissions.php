@@ -43,6 +43,8 @@ return [
         'create' => 'Yaratish',
         'update' => 'Tahrirlash',
         'delete' => 'Oʻchirish',
+        'restore' => 'Savatdan tiklash',
+        'force_delete' => 'Butunlay oʻchirish',
         'use' => 'Tokenlar chiqarish va ishlatish',
         'settings' => 'Sozlamalar',
         'import' => 'Import',

@@ -113,7 +113,8 @@ final class DeadlockRetryTest extends TestCase
     {
         $this->actingAs($this->admin(), 'admin');
         $post = Post::query()->create(['name' => 'Kept']);
-        $this->deadlock('delete', 'posts', times: 3);
+        // Deleting puts the record in the trash.
+        $this->deadlock('insert', 'admin_trash', times: 3);
 
         $this->delete("/admin/posts/{$post->id}")->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
 
@@ -149,7 +150,7 @@ final class DeadlockRetryTest extends TestCase
     {
         $this->actingAs($this->admin(), 'admin');
         $post = Post::query()->create(['name' => 'Gone']);
-        $this->deadlock('delete', 'posts', times: 2);
+        $this->deadlock('insert', 'admin_trash', times: 2);
 
         $this->delete("/admin/posts/{$post->id}")->assertRedirect();
 

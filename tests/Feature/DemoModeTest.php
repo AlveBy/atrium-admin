@@ -139,6 +139,11 @@ final class DemoModeTest extends TestCase
         $this->assertNotContains('posts.delete', $granted);
         $this->assertContains('sites.view', $granted);
         $this->assertContains('sites.update', $granted);
+        // The trash of what the visitor may change is theirs too.
+        $this->assertContains('sites.restore', $granted);
+        $this->assertContains('sites.force_delete', $granted);
+        $this->assertNotContains('posts.restore', $granted);
+        $this->assertNotContains('posts.force_delete', $granted);
         $this->assertContains('users.delete', $granted);
         $this->assertNotContains('api-tokens.use', $granted);
         $this->assertSame([], array_filter($granted, static fn (string $permission): bool => str_ends_with($permission, '.settings')));
@@ -149,7 +154,7 @@ final class DemoModeTest extends TestCase
         $this->assertNotContains('posts.import', $granted);
         $this->assertNotContains('posts.export', $granted);
         $this->assertEqualsCanonicalizing(
-            array_values(array_diff($all, ['posts.create', 'posts.update', 'posts.delete', 'posts.import', 'posts.export', 'api-tokens.use'])),
+            array_values(array_diff($all, ['posts.create', 'posts.update', 'posts.delete', 'posts.import', 'posts.export', 'posts.restore', 'posts.force_delete', 'api-tokens.use'])),
             $granted,
         );
     }

@@ -43,6 +43,8 @@ return [
         'create' => 'Anlegen',
         'update' => 'Bearbeiten',
         'delete' => 'Löschen',
+        'restore' => 'Aus dem Papierkorb wiederherstellen',
+        'force_delete' => 'Endgültig löschen',
         'use' => 'Tokens ausstellen und nutzen',
         'settings' => 'Einstellungen',
         'import' => 'Import',

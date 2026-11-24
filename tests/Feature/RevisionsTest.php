@@ -10,12 +10,14 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\History\Revisions;
+use Atrium\Admin\History\Trash;
 use Atrium\Admin\Http\Controllers\Api\ResourceController;
 use Atrium\Admin\Http\Controllers\HistoryController;
 use Atrium\Admin\Models\Activity;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Revision;
+use Atrium\Admin\Models\TrashedRecord;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\PanelAccount;
 use Atrium\Admin\Tests\Fixtures\Post;
@@ -162,6 +164,9 @@ final class RevisionsTest extends TestCase
         $this->put("/admin/posts/{$other->id}", ['name' => 'Other 2'])->assertSessionHasNoErrors();
 
         $this->delete("/admin/posts/{$post->id}")->assertSessionHasNoErrors();
+        $this->assertSame(['Plum', 'Pear', 'Apple'], $this->names($post), 'The trash keeps them.');
+
+        $this->assertTrue(app(Trash::class)->purge(TrashedRecord::query()->sole()));
 
         $this->assertSame([], $this->names($post));
         $this->assertSame(['Other 2', 'Other'], $this->names($other));

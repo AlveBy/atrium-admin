@@ -43,6 +43,8 @@ return [
         'create' => 'Créer',
         'update' => 'Modifier',
         'delete' => 'Supprimer',
+        'restore' => 'Restaurer depuis la corbeille',
+        'force_delete' => 'Supprimer définitivement',
         'use' => 'Émettre et utiliser des jetons',
         'settings' => 'Réglages',
         'import' => 'Import',

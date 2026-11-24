@@ -29,6 +29,7 @@ return [
         'updated' => 'Değiştirildi',
         'deleted' => 'Silindi',
         'restored' => 'Geri yüklendi',
+        'purged' => 'Kalıcı olarak silindi',
     ],
     'sources' => [
         'admin' => 'panelde',

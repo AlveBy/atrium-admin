@@ -15,6 +15,7 @@ use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Site;
+use Atrium\Admin\Scopes\SiteScope;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Actions\Inspect;
 use Atrium\Admin\Tests\Fixtures\Dispatch;
@@ -194,7 +195,7 @@ final class ModuleActionsApiTest extends TestCase
         $this->withToken($token)->postJson('/api/v1/notes/bulk/delete?site=de', ['ids' => [$mine->id, $theirs->id]])
             ->assertOk()->assertJsonPath('message', '1 record deleted.');
 
-        $this->assertSame(['Mine'], Note::query()->withoutGlobalScopes()->pluck('name')->all());
+        $this->assertSame(['Mine'], Note::query()->withoutGlobalScope(SiteScope::class)->pluck('name')->all());
     }
 
     public function test_an_assistant_lists_and_runs_actions_over_mcp(): void

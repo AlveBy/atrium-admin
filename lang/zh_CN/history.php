@@ -29,6 +29,7 @@ return [
         'updated' => '已更改',
         'deleted' => '已删除',
         'restored' => '已恢复',
+        'purged' => '已永久删除',
     ],
     'sources' => [
         'admin' => '在面板中',

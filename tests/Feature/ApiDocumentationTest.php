@@ -68,9 +68,13 @@ final class ApiDocumentationTest extends TestCase
             "| Run an action on a record | `POST /{module}/{id}/actions/{action}` |\n",
             "| Run an action on several records | `POST /{module}/bulk/{action}` with `{\"ids\": [1, 2]}`, at most 1000 |\n",
             "| Versions of a record | `GET /{module}/{id}/versions` |\n",
-            "| Put a version back | `POST /{module}/{id}/versions/{version}/restore` |\n\n",
+            "| Put a version back | `POST /{module}/{id}/versions/{version}/restore` |\n",
+            "| What is in the trash | `GET /{module}/trash?page=1&per_page=20` |\n",
+            "| Bring a record back from the trash | `POST /{module}/trash/{id}/restore` |\n",
+            "| Delete a record in the trash for good | `DELETE /{module}/trash/{id}` |\n\n",
             'An action answers `{"message", "redirect"}`: 200 when it worked, 422 when it did not. `bulk/delete` deletes the records that may be deleted. An action with `confirm` set asks first in the admin panel: ask a human too.'."\n\n",
-            'Every save keeps a version of the record: `versions` lists them newest first (the first is the record as it is), each with `id`, `at`, `admin`, `source` and the `values` of its fields. `restore` saves those values as `PATCH` would and answers with the record; 404 for a module that keeps no versions. Restoring takes a `write` token, listing a `read` one.'."\n\n`per_page`",
+            'Every save keeps a version of the record: `versions` lists them newest first (the first is the record as it is), each with `id`, `at`, `admin`, `source` and the `values` of its fields. `restore` saves those values as `PATCH` would and answers with the record; 404 for a module that keeps no versions. Restoring takes a `write` token, listing a `read` one.'."\n\n",
+            '`DELETE` puts a record of a content module in the trash, where it is hidden everywhere. `trash` lists those records newest first, each with `id`, `title`, `deleted_at` and `deleted_by`. `restore` brings one back and answers with the record; `DELETE /{module}/trash/{id}` deletes it for good (409 when the module refuses). Both take a `write` token and the owner\'s permission `{module}.restore` or `{module}.force_delete`; 404 for a module whose records are deleted at once.'."\n\n`per_page`",
         ], false);
     }
 
@@ -115,7 +119,7 @@ final class ApiDocumentationTest extends TestCase
     public function test_only_the_modules_asked_for_are_described(string $only, array $modules): void
     {
         $paths = array_keys($this->getJson('/api/v1/openapi.json?only='.urlencode($only))->json('paths'));
-        $expected = array_merge(...array_map(static fn (string $key): array => ["/{$key}", "/{$key}/{id}"], $modules), ...[['/files', '/{module}/actions', '/{module}/bulk/{action}', '/{module}/{id}/actions/{action}', '/{module}/{id}/versions', '/{module}/{id}/versions/{version}/restore']]);
+        $expected = array_merge(...array_map(static fn (string $key): array => ["/{$key}", "/{$key}/{id}"], $modules), ...[['/files', '/{module}/actions', '/{module}/bulk/{action}', '/{module}/{id}/actions/{action}', '/{module}/{id}/versions', '/{module}/{id}/versions/{version}/restore', '/{module}/trash', '/{module}/trash/{id}/restore', '/{module}/trash/{id}']]);
         sort($paths);
         sort($expected);
 

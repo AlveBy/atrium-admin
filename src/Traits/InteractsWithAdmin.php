@@ -14,6 +14,7 @@ use Atrium\Admin\Actions\CreateFromRecord;
 use Atrium\Admin\Actions\LinkAction;
 use Atrium\Admin\Actions\RecordAction;
 use Atrium\Admin\Filters\Filter;
+use Atrium\Admin\Scopes\TrashScope;
 use Atrium\Admin\Views\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -153,7 +154,10 @@ trait InteractsWithAdmin
      */
     public static function bootInteractsWithAdmin(): void
     {
-        // Add any model events if needed
+        // What is in the trash is hidden everywhere.
+        if (static::usesAdminTrash()) {
+            static::addGlobalScope(new TrashScope(static::class));
+        }
     }
 
     /**
@@ -237,6 +241,16 @@ trait InteractsWithAdmin
     public static function hasAdminRevisions(): bool
     {
         return true;
+    }
+
+    /**
+     * Whether a deleted record goes to the trash, to be restored or deleted
+     * for good from there (docs/history.md), rather than at once: content
+     * does, the service records of isContentModule() do not.
+     */
+    public static function usesAdminTrash(): bool
+    {
+        return static::isContentModule();
     }
 
     /**

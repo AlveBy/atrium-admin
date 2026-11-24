@@ -480,7 +480,7 @@ final class RowImporterTest extends TransferTestCase
             DB::enableQueryLog();
             $import();
 
-            return count(array_filter(DB::getQueryLog(), static fn (array $query): bool => preg_match('/^select \* from ["`]posts["`]$/', $query['query']) === 1));
+            return count(array_filter(DB::getQueryLog(), static fn (array $query): bool => preg_match('/^select \* from ["`]posts["`] where not exists \([^)]*\)$/', $query['query']) === 1));
         };
 
         $first = $lists(static fn () => $importer->import(2, ['A-1', 'Parka', 'Hello']));

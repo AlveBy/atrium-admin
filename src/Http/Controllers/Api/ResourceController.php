@@ -20,13 +20,16 @@ use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Filters\Filter;
 use Atrium\Admin\Filters\ModuleFilters;
 use Atrium\Admin\History\Revisions;
+use Atrium\Admin\History\Trash;
 use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Revision;
+use Atrium\Admin\Models\TrashedRecord;
 use Atrium\Admin\Support\Like;
 use Atrium\Admin\Support\PublicUrl;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -213,6 +216,69 @@ class ResourceController extends AdminController
     }
 
     /**
+     * What of the module is in the trash, newest first: the record's id and
+     * title, when it was deleted and by whom.
+     */
+    public function listTrash(Request $request, string $resource): JsonResponse
+    {
+        $this->useResource($request, $resource, 'read', Permissions::VIEW);
+
+        $perPage = max(1, min(self::MAX_PER_PAGE, (int) $request->query('per_page', 20)));
+        $page = $this->trashed()->paginate($perPage)->withQueryString();
+
+        return response()->json([
+            'data' => $page->getCollection()->map(static fn (TrashedRecord $entry): array => [
+                'id' => $entry->record_id,
+                'title' => $entry->record_title,
+                'deleted_at' => $entry->created_at->toIso8601String(),
+                'deleted_by' => $entry->admin_name,
+            ])->all(),
+            'meta' => [
+                'current_page' => $page->currentPage(),
+                'last_page' => $page->lastPage(),
+                'per_page' => $page->perPage(),
+                'total' => $page->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Brings a record back from the trash, as the panel's "Restore" does.
+     */
+    public function restoreFromTrash(Request $request, string $resource, int $id): JsonResponse
+    {
+        $this->useResource($request, $resource, 'write', Permissions::RESTORE);
+
+        $trash = app(Trash::class);
+        $entry = $this->trashed()->where('record_id', $id)->firstOrFail();
+        $item = $trash->record($entry);
+
+        abort_if($item === null, 404, 'The record is not there any more.');
+
+        $trash->restore($entry, $item);
+
+        return response()->json(['data' => $this->present($item->fresh($this->eagerRelations()))]);
+    }
+
+    /**
+     * Deletes a record in the trash for good.
+     */
+    public function deleteFromTrash(Request $request, string $resource, int $id): JsonResponse
+    {
+        $this->useResource($request, $resource, 'write', Permissions::FORCE_DELETE);
+
+        try {
+            if (! app(Trash::class)->purge($this->trashed()->where('record_id', $id)->firstOrFail())) {
+                return response()->json(['message' => 'This record cannot be deleted.'], 409);
+            }
+        } catch (Refused $refused) {
+            return response()->json(['message' => $refused->getMessage()], 409);
+        }
+
+        return response()->json(null, 204);
+    }
+
+    /**
      * The buttons of a module the token may run: server actions on a record
      * and actions over a list of records. Links and filled create forms are
      * the panel's own and are not listed.
@@ -317,6 +383,20 @@ class ResourceController extends AdminController
         abort_unless($revisions->enabledFor($this->model), 404, 'This module keeps no versions of its records.');
 
         return $revisions;
+    }
+
+    /**
+     * The module's entries in the trash of the current site.
+     *
+     * @return Builder<TrashedRecord>
+     */
+    private function trashed(): Builder
+    {
+        $trash = app(Trash::class);
+
+        abort_unless($trash->enabledFor($this->model), 404, 'This module has no trash: its records are deleted at once.');
+
+        return $trash->entries()->where('module', $this->model::getAdminRoutePrefix());
     }
 
     /**

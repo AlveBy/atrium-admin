@@ -29,6 +29,7 @@ return [
         'updated' => '変更',
         'deleted' => '削除',
         'restored' => '復元',
+        'purged' => '完全に削除',
     ],
     'sources' => [
         'admin' => 'パネルで',

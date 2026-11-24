@@ -10,13 +10,16 @@ declare(strict_types=1);
 namespace Atrium\Admin\Mcp;
 
 use Atrium\Admin\Mcp\Tools\CreateRecord;
+use Atrium\Admin\Mcp\Tools\DeleteForever;
 use Atrium\Admin\Mcp\Tools\DeleteRecord;
 use Atrium\Admin\Mcp\Tools\DescribeModule;
 use Atrium\Admin\Mcp\Tools\GetRecord;
 use Atrium\Admin\Mcp\Tools\ListActions;
 use Atrium\Admin\Mcp\Tools\ListModules;
 use Atrium\Admin\Mcp\Tools\ListRecords;
+use Atrium\Admin\Mcp\Tools\ListTrash;
 use Atrium\Admin\Mcp\Tools\ListVersions;
+use Atrium\Admin\Mcp\Tools\RestoreFromTrash;
 use Atrium\Admin\Mcp\Tools\RestoreVersion;
 use Atrium\Admin\Mcp\Tools\RunBulkAction;
 use Atrium\Admin\Mcp\Tools\RunRecordAction;
@@ -43,6 +46,7 @@ class AtriumServer extends Server
         - `update_record` changes only the fields you send.
         - Modules may have actions (publish, hide, delete several records at once): `list_actions` shows them, `run_record_action` and `run_bulk_action` run them.
         - `list_versions` shows earlier versions of a record and `restore_version` puts one back, where the module keeps them.
+        - `delete_record` puts a record of a content module in the trash: `list_trash` shows what is there, `restore_from_trash` brings a record back and `delete_forever` deletes it for good.
         - With several sites, pass `site` (the site code) to work with another site than the one this address belongs to.
         - When a call is refused, the message says why: a missing token ability, a missing permission of the token owner, or the invalid fields.
         MARKDOWN;
@@ -60,14 +64,20 @@ class AtriumServer extends Server
         RunBulkAction::class,
         ListVersions::class,
         RestoreVersion::class,
+        ListTrash::class,
+        RestoreFromTrash::class,
+        DeleteForever::class,
     ];
 
     /**
      * Tools of other packages: they push their classes to atrium.mcp.tools
-     * (alveby/atrium-ai adds generate_text).
+     * (alveby/atrium-ai adds generate_text). All of them come in one answer
+     * to tools/list: an agent that never asks for the next page would not
+     * see the tools past the first one.
      */
     protected function boot(): void
     {
         $this->tools = array_unique([...$this->tools, ...(array) config('atrium.mcp.tools', [])]);
+        $this->defaultPaginationLength = $this->maxPaginationLength;
     }
 }

@@ -67,9 +67,10 @@ final class DemoResetCommand extends Command
     }
 
     /**
-     * The content is the visitor's to edit, import and export; the people,
-     * sites and languages only to look at; no API tokens and no module
-     * settings. The import fetches no images in a demo (Transfer\Images).
+     * The content is the visitor's to edit, import and export, and to delete
+     * and restore from the trash; the people, sites and languages only to
+     * look at; no API tokens and no module settings. The import fetches no
+     * images in a demo (Transfer\Images).
      *
      * @return array<int,string>
      */
@@ -80,7 +81,7 @@ final class DemoResetCommand extends Command
         return array_values(array_filter($permissions->all(), static function (string $permission) use ($readOnly): bool {
             [$section, $action] = explode('.', $permission);
 
-            return in_array($action, [...Permissions::ACTIONS, Permissions::IMPORT, Permissions::EXPORT], true)
+            return in_array($action, [...Permissions::ACTIONS, Permissions::IMPORT, Permissions::EXPORT, Permissions::RESTORE, Permissions::FORCE_DELETE], true)
                 && ($action === Permissions::VIEW || ! in_array($section, $readOnly, true));
         }));
     }

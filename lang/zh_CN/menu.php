@@ -19,4 +19,5 @@ return [
     'sites' => '站点',
     'modules' => '模块',
     'activity' => '变更日志',
+    'trash' => '回收站',
 ];

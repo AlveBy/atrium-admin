@@ -19,4 +19,5 @@ return [
     'sites' => 'Witryny',
     'modules' => 'Moduły',
     'activity' => 'Dziennik zmian',
+    'trash' => 'Kosz',
 ];

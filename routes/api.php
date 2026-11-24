@@ -34,6 +34,9 @@ Route::prefix(config('atrium.api.prefix', 'api/v1'))
             Route::post('files', [ResourceController::class, 'upload'])->name('admin.api.files');
 
             Route::get('{resource}', [ResourceController::class, 'listItems'])->name('admin.api.list');
+            Route::get('{resource}/trash', [ResourceController::class, 'listTrash'])->name('admin.api.trash');
+            Route::post('{resource}/trash/{id}/restore', [ResourceController::class, 'restoreFromTrash'])->name('admin.api.trash.restore');
+            Route::delete('{resource}/trash/{id}', [ResourceController::class, 'deleteFromTrash'])->name('admin.api.trash.destroy');
             Route::get('{resource}/actions', [ResourceController::class, 'listActions'])->name('admin.api.actions');
             Route::post('{resource}/bulk/{action}', [ResourceController::class, 'runBulkItemsAction'])->where('action', '[A-Za-z0-9_-]+')->name('admin.api.bulk');
             Route::post('{resource}/{id}/actions/{action}', [ResourceController::class, 'runItemAction'])->where('action', '[A-Za-z0-9_-]+')->name('admin.api.action');

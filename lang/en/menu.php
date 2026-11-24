@@ -17,4 +17,5 @@ return [
     'sites' => 'Sites',
     'modules' => 'Modules',
     'activity' => 'Activity log',
+    'trash' => 'Trash',
 ];

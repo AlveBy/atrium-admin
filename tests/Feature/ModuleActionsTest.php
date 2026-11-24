@@ -19,6 +19,7 @@ use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Site;
+use Atrium\Admin\Scopes\SiteScope;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
 use Atrium\Admin\Tests\Fixtures\Actions\Explode;
@@ -281,7 +282,7 @@ final class ModuleActionsTest extends TestCase
         $this->post('/admin/notes/bulk/delete', ['ids' => [$theirs->id]])->assertSessionHas('error', 'None of the selected records was found.');
         $this->post('/admin/notes/bulk/delete', ['ids' => [$mine->id, $theirs->id]])->assertSessionHas('success', '1 record deleted.');
 
-        $this->assertSame(['Theirs'], Note::query()->withoutGlobalScopes()->pluck('name')->all());
+        $this->assertSame(['Theirs'], Note::query()->withoutGlobalScope(SiteScope::class)->pluck('name')->all());
     }
 
     public function test_delete_removes_what_may_be_removed_and_counts_the_rest(): void

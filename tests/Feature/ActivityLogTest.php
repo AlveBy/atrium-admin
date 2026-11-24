@@ -154,7 +154,8 @@ final class ActivityLogTest extends TestCase
 
         config(['atrium.history.enabled' => false]);
         $this->post('/admin/posts', ['name' => 'Apple'])->assertSessionHasNoErrors();
-        $this->delete('/admin/posts/'.Post::query()->sole()->id)->assertSessionHasNoErrors();
+        // Untracked keeps its rows in the same table.
+        $this->delete('/admin/posts/'.Post::query()->where('name', 'Apple')->sole()->id)->assertSessionHasNoErrors();
         $this->assertSame([], $this->entries());
 
         $this->assertFalse($this->log()->enabledFor(Post::class));

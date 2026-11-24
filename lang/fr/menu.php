@@ -19,4 +19,5 @@ return [
     'sites' => 'Sites',
     'modules' => 'Modules',
     'activity' => 'Journal des modifications',
+    'trash' => 'Corbeille',
 ];

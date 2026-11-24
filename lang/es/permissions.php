@@ -43,6 +43,8 @@ return [
         'create' => 'Crear',
         'update' => 'Editar',
         'delete' => 'Eliminar',
+        'restore' => 'Restaurar de la papelera',
+        'force_delete' => 'Eliminar definitivamente',
         'use' => 'Emitir y usar tokens',
         'settings' => 'Ajustes',
         'import' => 'Importación',

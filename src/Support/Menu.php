@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Route;
  * the menu config; listing it in `atrium.menu` only decides where and under
  * which label.
  *
- * The activity log follows, and the "Modules" entry (installed packages and
- * their settings) comes last when a module package is installed.
+ * The activity log and the trash follow, and the "Modules" entry (installed
+ * packages and their settings) comes last when a module package is installed.
  *
  * Given an administrator, it leaves out what their roles do not open, and a
  * group whose entries are all gone.
@@ -65,6 +65,11 @@ final class Menu
         // Who changed what, in every module.
         if (Route::has('admin.activity.index') && ! in_array('admin.activity.index', $listed, true)) {
             $menu[] = ['label' => 'atrium::menu.activity', 'route' => 'admin.activity.index', 'icon' => 'clock'];
+        }
+
+        // What was deleted, to bring back.
+        if (! in_array('admin.trash.index', $listed, true)) {
+            $menu[] = ['label' => 'atrium::menu.trash', 'route' => 'admin.trash.index', 'icon' => 'trash'];
         }
 
         // The installed module packages and their settings, last.

@@ -19,4 +19,5 @@ return [
     'sites' => 'Saytlar',
     'modules' => 'Modullar',
     'activity' => 'O\'zgarishlar jurnali',
+    'trash' => 'Savat',
 ];

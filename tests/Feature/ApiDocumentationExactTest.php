@@ -73,7 +73,7 @@ final class ApiDocumentationExactTest extends TestCase
 
         $paths = app(ApiDocumentation::class)->openApi(['bares'])['paths'];
 
-        $this->assertSame(['/bares', '/bares/{id}', '/files', '/{module}/actions', '/{module}/{id}/actions/{action}', '/{module}/bulk/{action}', '/{module}/{id}/versions', '/{module}/{id}/versions/{version}/restore'], array_keys($paths));
+        $this->assertSame(['/bares', '/bares/{id}', '/files', '/{module}/actions', '/{module}/{id}/actions/{action}', '/{module}/bulk/{action}', '/{module}/{id}/versions', '/{module}/{id}/versions/{version}/restore', '/{module}/trash', '/{module}/trash/{id}/restore', '/{module}/trash/{id}'], array_keys($paths));
 
         $this->assertSame($this->encoded([
             'get' => [
@@ -193,6 +193,35 @@ final class ApiDocumentationExactTest extends TestCase
             'parameters' => [$module, $id, $version],
             'responses' => ['200' => ['description' => 'The record as restored'] + $json(['type' => 'object', 'properties' => ['data' => ['type' => 'object']]]), '422' => ['description' => 'The version no longer passes validation']] + $errors,
         ]]), $this->encoded($paths['/{module}/{id}/versions/{version}/restore']));
+
+        $this->assertSame($this->encoded(['get' => [
+            'operationId' => 'list_trash',
+            'summary' => 'Records of a module in the trash, newest first',
+            'parameters' => [$module],
+            'responses' => ['200' => ['description' => 'List page'] + $json(['type' => 'object', 'properties' => [
+                'data' => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
+                    'id' => ['type' => 'integer'],
+                    'title' => ['type' => ['string', 'null']],
+                    'deleted_at' => ['type' => 'string', 'format' => 'date-time'],
+                    'deleted_by' => ['type' => ['string', 'null']],
+                ]]],
+                'meta' => ['type' => 'object'],
+            ]])] + $errors,
+        ]]), $this->encoded($paths['/{module}/trash']));
+
+        $this->assertSame($this->encoded(['post' => [
+            'operationId' => 'restore_from_trash',
+            'summary' => 'Bring a record back from the trash',
+            'parameters' => [$module, $id],
+            'responses' => ['200' => ['description' => 'The record as restored'] + $json(['type' => 'object', 'properties' => ['data' => ['type' => 'object']]])] + $errors,
+        ]]), $this->encoded($paths['/{module}/trash/{id}/restore']));
+
+        $this->assertSame($this->encoded(['delete' => [
+            'operationId' => 'delete_forever',
+            'summary' => 'Delete a record in the trash for good',
+            'parameters' => [$module, $id],
+            'responses' => ['204' => ['description' => 'Deleted for good'], '409' => ['description' => 'The record cannot be deleted']] + $errors,
+        ]]), $this->encoded($paths['/{module}/trash/{id}']));
     }
 
     public function test_a_translatable_field_keeps_its_own_note_and_is_typed_by_its_plain_value(): void

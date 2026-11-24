@@ -18,7 +18,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 
 #[Name('delete_record')]
-#[Description('Delete a record for good. Ask the user before calling it.')]
+#[Description('Delete a record. A record of a module with the trash goes there and can be brought back (restore_from_trash); any other is gone for good. Ask the user before calling it.')]
 #[IsDestructive]
 class DeleteRecord extends ApiTool
 {

@@ -19,4 +19,5 @@ return [
     'sites' => 'サイト',
     'modules' => 'モジュール',
     'activity' => '変更履歴',
+    'trash' => 'ごみ箱',
 ];

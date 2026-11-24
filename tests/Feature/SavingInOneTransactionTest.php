@@ -149,12 +149,13 @@ final class SavingInOneTransactionTest extends TestCase
     {
         $this->actingAs($this->admin(), 'admin');
         $post = Post::query()->create(['name' => 'Keep me']);
-        Event::listen('eloquent.deleting: '.Post::class, static function (Post $deleting): void {
+        Event::listen('eloquent.deleted: '.Post::class, static function (Post $deleting): void {
             if ($deleting->name === 'Keep me') {
                 Post::query()->create(['name' => 'Written while deleting']);
             }
         });
-        $this->failOn('delete', 'posts');
+        // The entry of the activity log is the last thing written.
+        $this->failOn('insert', 'admin_activity');
         $this->withoutExceptionHandling();
 
         try {

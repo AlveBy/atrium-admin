@@ -43,6 +43,8 @@ return [
         'create' => 'Oluştur',
         'update' => 'Düzenle',
         'delete' => 'Sil',
+        'restore' => 'Çöp kutusundan geri yükleme',
+        'force_delete' => 'Kalıcı olarak silme',
         'use' => 'Token oluşturma ve kullanma',
         'settings' => 'Ayarlar',
         'import' => 'İçe aktarma',

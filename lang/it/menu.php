@@ -19,4 +19,5 @@ return [
     'sites' => 'Siti',
     'modules' => 'Moduli',
     'activity' => 'Registro delle modifiche',
+    'trash' => 'Cestino',
 ];

@@ -43,6 +43,8 @@ return [
         'create' => 'Criar',
         'update' => 'Editar',
         'delete' => 'Excluir',
+        'restore' => 'Restaurar da lixeira',
+        'force_delete' => 'Excluir definitivamente',
         'use' => 'Emitir e usar tokens',
         'settings' => 'Configurações',
         'import' => 'Importação',

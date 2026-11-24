@@ -43,6 +43,8 @@ return [
         'create' => '作成',
         'update' => '編集',
         'delete' => '削除',
+        'restore' => 'ごみ箱から復元',
+        'force_delete' => '完全に削除',
         'use' => 'トークンの発行と使用',
         'settings' => '設定',
         'import' => 'インポート',

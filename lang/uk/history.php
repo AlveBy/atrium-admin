@@ -29,6 +29,7 @@ return [
         'updated' => 'Змінено',
         'deleted' => 'Видалено',
         'restored' => 'Відновлено',
+        'purged' => 'Видалено назавжди',
     ],
     'sources' => [
         'admin' => 'у панелі',

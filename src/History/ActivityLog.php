@@ -43,7 +43,10 @@ final class ActivityLog
 
     public const RESTORED = 'restored';
 
-    public const EVENTS = [self::CREATED, self::UPDATED, self::DELETED, self::RESTORED];
+    /** Deleted from the trash: gone for good. */
+    public const PURGED = 'purged';
+
+    public const EVENTS = [self::CREATED, self::UPDATED, self::DELETED, self::RESTORED, self::PURGED];
 
     /** Saved in the panel. */
     public const ADMIN = 'admin';

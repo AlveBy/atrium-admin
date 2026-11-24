@@ -43,6 +43,8 @@ return [
         'create' => 'Crea',
         'update' => 'Modifica',
         'delete' => 'Elimina',
+        'restore' => 'Ripristino dal cestino',
+        'force_delete' => 'Eliminazione definitiva',
         'use' => 'Emettere e usare token',
         'settings' => 'Impostazioni',
         'import' => 'Importazione',

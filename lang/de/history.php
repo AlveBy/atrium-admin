@@ -29,6 +29,7 @@ return [
         'updated' => 'Geändert',
         'deleted' => 'Gelöscht',
         'restored' => 'Wiederhergestellt',
+        'purged' => 'Endgültig gelöscht',
     ],
     'sources' => [
         'admin' => 'im Panel',

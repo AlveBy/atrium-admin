@@ -14,6 +14,7 @@ use Atrium\Admin\Mcp\Tools\ListModules;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Tests\Concerns\PinsExtensionSurface;
+use Atrium\Admin\Tests\Fixtures\PingTool;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Testing\TestResponse;
@@ -46,7 +47,7 @@ final class McpTest extends TestCase
         $names = array_column($this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools'), 'name');
 
         $this->assertSame(
-            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version'],
+            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version', 'list_trash', 'restore_from_trash', 'delete_forever'],
             $names,
         );
     }
@@ -205,6 +206,32 @@ final class McpTest extends TestCase
         }
     }
 
+    public function test_a_deleted_record_waits_in_the_trash_to_come_back_or_go_for_good(): void
+    {
+        $apple = Post::query()->create(['name' => 'Apple']);
+        $pear = Post::query()->create(['name' => 'Pear']);
+        $token = $this->token(['posts.view', 'posts.delete', 'posts.restore', 'posts.force_delete'], ['posts:read', 'posts:write']);
+        foreach ([$apple, $pear] as $post) {
+            $this->mcp($token, 'tools/call', ['name' => 'delete_record', 'arguments' => ['module' => 'posts', 'id' => $post->id]])->assertJsonPath('result.isError', false);
+        }
+
+        $trash = $this->callTool($token, 'list_trash', ['module' => 'posts', 'page' => 2, 'per_page' => 1]);
+        $this->assertSame([['Apple'], 2], [array_column($trash['data'], 'title'), $trash['meta']['total']]);
+        $this->assertSame(['Pear', 'Apple'], array_column($this->callTool($token, 'list_trash', ['module' => 'posts', 'page' => null])['data'], 'title'));
+
+        $this->assertSame('Apple', $this->callTool($token, 'restore_from_trash', ['module' => 'posts', 'id' => $apple->id])['data']['name']);
+        $this->assertSame('Apple', $apple->fresh()->name);
+
+        $this->mcp($token, 'tools/call', ['name' => 'delete_forever', 'arguments' => ['module' => 'posts', 'id' => $pear->id]])
+            ->assertJsonPath('result.isError', false);
+        $this->assertSame(0, Post::query()->withoutGlobalScopes()->whereKey($pear->id)->count());
+
+        foreach (['list_trash', 'restore_from_trash', 'delete_forever'] as $tool) {
+            $this->mcp($token, 'tools/call', ['name' => $tool, 'arguments' => ['module' => 'nope', 'id' => 1]])
+                ->assertJsonPath('result.content.0.text', 'No module "nope". See list_modules.');
+        }
+    }
+
     public function test_a_token_that_may_use_nothing_is_told_so(): void
     {
         $token = $this->token([], ['posts:read']);
@@ -304,10 +331,21 @@ final class McpTest extends TestCase
         $names = array_column($this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools'), 'name');
 
         $this->assertSame(
-            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version'],
+            ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version', 'list_trash', 'restore_from_trash', 'delete_forever'],
             $names,
             'Listed once, in the order given.',
         );
+    }
+
+    public function test_every_tool_comes_in_one_answer(): void
+    {
+        config()->set('atrium.mcp.tools', [PingTool::class]);
+
+        $result = $this->mcp($this->token(['posts.view']), 'tools/list')->json('result');
+
+        $this->assertCount(16, $result['tools'], 'More than the 15 a page of laravel/mcp holds.');
+        $this->assertSame('ping', $result['tools'][15]['name']);
+        $this->assertArrayNotHasKey('nextCursor', $result);
     }
 
     public function test_every_tool_describes_its_arguments_exactly(): void
@@ -358,6 +396,14 @@ final class McpTest extends TestCase
                 'id' => $id,
                 'version' => ['description' => 'Version id from list_versions.', 'type' => 'integer'],
             ], 'required' => ['module', 'id', 'version']],
+            'list_trash' => ['properties' => [
+                'module' => $module,
+                'site' => $site,
+                'page' => ['description' => 'Page number, from 1.', 'type' => 'integer'],
+                'per_page' => ['description' => 'Records per page, 1 to 100. Default: 20.', 'type' => 'integer'],
+            ], 'required' => ['module']],
+            'restore_from_trash' => ['properties' => ['module' => $module, 'site' => $site, 'id' => $id], 'required' => ['module', 'id']],
+            'delete_forever' => ['properties' => ['module' => $module, 'site' => $site, 'id' => $id], 'required' => ['module', 'id']],
         ];
 
         $tools = $this->mcp($this->token(['posts.view']), 'tools/list')->json('result.tools');
@@ -451,7 +497,7 @@ final class McpTest extends TestCase
             $names = array_column($this->mcp($token, 'tools/list')->json('result.tools'), 'name');
 
             $this->assertSame(
-                ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version'],
+                ['list_modules', 'describe_module', 'list_records', 'get_record', 'create_record', 'update_record', 'delete_record', 'list_actions', 'run_record_action', 'run_bulk_action', 'list_versions', 'restore_version', 'list_trash', 'restore_from_trash', 'delete_forever'],
                 $names,
             );
         }

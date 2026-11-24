@@ -13,6 +13,7 @@ use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\History\Revisions;
+use Atrium\Admin\History\Trash;
 use Atrium\Admin\Hooks\Refused;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,8 @@ use Illuminate\Support\Facades\DB;
  * Deletes a record the way the panel does: with what beforeAdminDelete()
  * takes with it, whole or not at all. The list's delete button, the API and
  * the bulk "Delete" all go through it, and the deletion goes to the activity
- * log with the record.
+ * log with the record. A module with the trash (Atrium\Admin\History\Trash)
+ * has its records put there; they are deleted for good from there.
  */
 final class RecordDeleter
 {
@@ -29,13 +31,14 @@ final class RecordDeleter
      * False when beforeAdminDelete() refuses. A listener of
      * `atrium.record.deleting` refuses by throwing Refused, which leaves
      * here after the rollback. `atrium.record.deleted` is heard after the
-     * commit only.
+     * commit only: both when the record goes to the trash and when it is
+     * deleted for good ($forever).
      *
      * @throws Refused
      */
-    public function delete(Model&Administrable $item): bool
+    public function delete(Model&Administrable $item, bool $forever = false): bool
     {
-        $deleted = DB::transaction(static function () use ($item): ?Model {
+        $deleted = DB::transaction(static function () use ($item, $forever): ?Model {
             // A retry after a deadlock starts again from the record as it came.
             $record = clone $item;
 
@@ -47,16 +50,22 @@ final class RecordDeleter
                 return null;
             }
 
-            $record->delete();
+            $trash = app(Trash::class);
+
+            if (! $forever && $trash->enabledFor($record::class)) {
+                $trash->put($record);
+            } else {
+                $record->delete();
+                $trash->forget($record);
+                // Gone for good: so are its versions.
+                app(Revisions::class)->forget($record);
+            }
 
             $history = app(ActivityLog::class);
 
             if ($history->enabledFor($record::class)) {
-                $history->record($record, ActivityLog::DELETED);
+                $history->record($record, $forever ? ActivityLog::PURGED : ActivityLog::DELETED);
             }
-
-            // Gone for good: so are its versions.
-            app(Revisions::class)->forget($record);
 
             return $record;
         }, attempts: 3);

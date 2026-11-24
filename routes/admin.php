@@ -28,6 +28,7 @@ use Atrium\Admin\Http\Controllers\ResourceController;
 use Atrium\Admin\Http\Controllers\RoleController;
 use Atrium\Admin\Http\Controllers\SiteController;
 use Atrium\Admin\Http\Controllers\ThemeController;
+use Atrium\Admin\Http\Controllers\TrashController;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Transfer\Availability;
@@ -107,6 +108,11 @@ Route::prefix(config('atrium.prefix', 'admin'))
             if (config('atrium.history.enabled')) {
                 Route::get('activity', [HistoryController::class, 'index'])->name('admin.activity.index');
             }
+
+            // What was deleted, to restore or delete for good; each sees the modules their roles open.
+            Route::get('trash', [TrashController::class, 'index'])->name('admin.trash.index');
+            Route::post('trash/{entry}/restore', [TrashController::class, 'restore'])->whereNumber('entry')->name('admin.trash.restore');
+            Route::delete('trash/{entry}', [TrashController::class, 'destroy'])->whereNumber('entry')->name('admin.trash.destroy');
 
             if (app(ActivityLog::class)->enabledFor(AdminUser::class)) {
                 Route::get('users/{id}/history', [HistoryController::class, 'record'])->defaults('module', 'users')->whereNumber('id')->name('admin.users.history');

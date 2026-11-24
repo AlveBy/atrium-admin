@@ -634,6 +634,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trash
+    |--------------------------------------------------------------------------
+    |
+    | What is deleted in the panel, through the API or the MCP tools goes to
+    | the trash (docs/history.md), to be restored or deleted for good. A
+    | module deletes at once with `usesAdminTrash(): false`.
+    |
+    | days  how long a record stays in the trash before it is deleted for
+    |       good by the scheduler (atrium:trash:empty); 0 keeps it until it
+    |       is deleted by hand
+    |
+    */
+    'trash' => [
+        'days' => (int) env('ATRIUM_TRASH_DAYS', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache
     |--------------------------------------------------------------------------
     |

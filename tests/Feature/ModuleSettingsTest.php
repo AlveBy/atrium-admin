@@ -189,7 +189,7 @@ final class ModuleSettingsTest extends TestCase
     {
         $section = collect($this->app->make(Permissions::class)->sections())->firstWhere('key', 'labels');
 
-        $this->assertSame(['view', 'create', 'update', 'delete', 'import', 'export', 'settings', 'print'], $section['actions']);
+        $this->assertSame(['view', 'create', 'update', 'delete', 'restore', 'force_delete', 'import', 'export', 'settings', 'print'], $section['actions']);
     }
 
     public function test_per_site_settings_are_kept_for_each_site(): void

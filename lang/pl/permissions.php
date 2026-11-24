@@ -43,6 +43,8 @@ return [
         'create' => 'Tworzenie',
         'update' => 'Edycja',
         'delete' => 'Usuwanie',
+        'restore' => 'Przywracanie z kosza',
+        'force_delete' => 'Usuwanie na stałe',
         'use' => 'Wydawanie i używanie tokenów',
         'settings' => 'Ustawienia',
         'import' => 'Import',

@@ -11,10 +11,13 @@ namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Mcp\ApiGateway;
 use Atrium\Admin\Mcp\Tools\CreateRecord;
+use Atrium\Admin\Mcp\Tools\DeleteForever;
 use Atrium\Admin\Mcp\Tools\DeleteRecord;
 use Atrium\Admin\Mcp\Tools\GetRecord;
 use Atrium\Admin\Mcp\Tools\ListRecords;
+use Atrium\Admin\Mcp\Tools\ListTrash;
 use Atrium\Admin\Mcp\Tools\ListVersions;
+use Atrium\Admin\Mcp\Tools\RestoreFromTrash;
 use Atrium\Admin\Mcp\Tools\RestoreVersion;
 use Atrium\Admin\Mcp\Tools\UpdateRecord;
 use Atrium\Admin\Tests\TestCase;
@@ -110,7 +113,19 @@ final class McpToolQueryTest extends TestCase
         $this->assertSame(['POST', '/api/v1/posts/7/versions/3/restore', []], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
     }
 
-    private function sent(ListRecords|GetRecord|DeleteRecord|CreateRecord|UpdateRecord|ListVersions|RestoreVersion $tool, array $arguments): Request
+    public function test_the_trash_tools_send_numbers_in_the_address(): void
+    {
+        $seen = $this->sent(new ListTrash, ['module' => 'posts', 'site' => 'shop', 'page' => 2, 'per_page' => 5]);
+        $this->assertSame(['GET', '/api/v1/posts/trash', ['page' => '2', 'per_page' => '5', 'site' => 'shop']], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
+
+        $seen = $this->sent(new RestoreFromTrash, ['module' => 'posts', 'id' => '07']);
+        $this->assertSame(['POST', '/api/v1/posts/trash/7/restore', []], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
+
+        $seen = $this->sent(new DeleteForever, ['module' => 'posts', 'id' => '07']);
+        $this->assertSame(['DELETE', '/api/v1/posts/trash/7', []], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
+    }
+
+    private function sent(ListRecords|GetRecord|DeleteRecord|CreateRecord|UpdateRecord|ListVersions|RestoreVersion|ListTrash|RestoreFromTrash|DeleteForever $tool, array $arguments): Request
     {
         $router = $this->recordingRouter(fn () => new Response('{}', 200));
         $tool->handle(new McpRequest($arguments), new ApiGateway($router));

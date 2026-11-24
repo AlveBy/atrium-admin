@@ -19,4 +19,5 @@ return [
     'sites' => 'Siteler',
     'modules' => 'Modüller',
     'activity' => 'Değişiklik günlüğü',
+    'trash' => 'Çöp kutusu',
 ];
