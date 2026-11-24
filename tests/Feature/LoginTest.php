@@ -239,6 +239,9 @@ final class LoginTest extends TestCase
 
     public function test_the_throttle_key_is_the_lower_case_email_and_the_address_and_it_locks_after_five_hits(): void
     {
+        // A clock that ticks between the fifth hit and the check would make it 59 s.
+        $this->freezeTime();
+
         $request = LoginRequest::create('/admin/login', 'POST', ['email' => 'Admin@Example.com'], server: ['REMOTE_ADDR' => '10.1.2.3']);
 
         $this->assertSame('admin@example.com|10.1.2.3', $request->throttleKey());
