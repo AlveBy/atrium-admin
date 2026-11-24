@@ -291,4 +291,58 @@ final class EmbedsTest extends TestCase
             ->assertOk()
             ->assertExactJson(['data' => [['id' => (string) $one->id, 'label' => 'One'], ['id' => (string) $two->id, 'label' => 'Two']]]);
     }
+
+    public function test_every_type_is_listed_with_its_key_as_text_even_a_numeric_one(): void
+    {
+        Hook::register(Embeds::REGISTRY, '7', new class extends PostEmbed
+        {
+            public function label(): string
+            {
+                return 'Seven';
+            }
+        });
+
+        $this->assertSame(
+            [
+                ['type' => 'post', 'label' => 'Post', 'url' => '/admin/embeds/post'],
+                ['type' => '7', 'label' => 'Seven', 'url' => '/admin/embeds/7'],
+            ],
+            $this->embeds()->types($this->admin()),
+        );
+    }
+
+    public function test_a_type_nobody_registered_is_dropped_without_a_report(): void
+    {
+        Exceptions::fake();
+        $post = $this->makePost('Hello');
+
+        $this->assertSame('<p>a</p>', $this->embeds()->render('<p>a</p>'.$this->placeholder('nothing', $post->id)));
+        Exceptions::assertNothingReported();
+    }
+
+    public function test_only_whole_numbers_are_ids(): void
+    {
+        $one = $this->makePost('One');
+        $this->actingAs($this->admin(), 'admin');
+
+        // A database would read "1.0" and "1e0" as 1.
+        $this->getJson("/admin/embeds/post?ids={$one->id}.0,{$one->id}e0")->assertOk()->assertExactJson(['data' => []]);
+        $this->assertSame([], $this->embeds()->get('post')?->labels(["{$one->id}.0"]));
+        $this->assertSame('', $this->embeds()->get('post')?->render("{$one->id}.0"));
+    }
+
+    public function test_text_the_regex_engine_gives_up_on_is_left_as_it_was(): void
+    {
+        $html = '<p>a</p>'.$this->placeholder('post', $this->makePost('Hello')->id);
+
+        $jit = ini_set('pcre.jit', '0');
+        $limit = ini_set('pcre.backtrack_limit', '1');
+
+        try {
+            $this->assertSame($html, $this->embeds()->render($html));
+        } finally {
+            ini_set('pcre.jit', (string) $jit);
+            ini_set('pcre.backtrack_limit', (string) $limit);
+        }
+    }
 }

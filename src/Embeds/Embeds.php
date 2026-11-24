@@ -77,11 +77,10 @@ final class Embeds
     {
         $html = (string) $html;
 
-        if (stripos($html, 'data-atrium-embed') === false) {
-            return $html;
-        }
-
-        return (string) preg_replace_callback(self::PLACEHOLDER, fn (array $match): string => $this->one($match[0]), $html);
+        // One string search for the text that has no placeholder at all.
+        return stripos($html, 'data-atrium-embed') === false
+            ? $html
+            : preg_replace_callback(self::PLACEHOLDER, fn (array $match): string => $this->one($match[0]), $html) ?? $html;
     }
 
     private function one(string $placeholder): string
