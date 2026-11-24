@@ -16,14 +16,17 @@ use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Fields\BelongsToManyField;
 use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\MultiSelectField;
+use Atrium\Admin\Fields\SiteRolesField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Traits\InteractsWithAdmin;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -148,6 +151,15 @@ class AdminUser extends Authenticatable implements Administrable
                     ->hint(__('atrium::permissions.roles_hint'))
                     ->model(AdminRole::class)
                     ->displayColumn('name'),
+
+                // With one site a role on it is a role everywhere.
+                ...(app(Sites::class)->isMultisite() ? [
+                    SiteRolesField::make('roles_by_site')
+                        ->label(__('atrium::permissions.site_roles'))
+                        ->hint(__('atrium::permissions.site_roles_hint'))
+                        ->sites(app(Sites::class)->all()->mapWithKeys(fn ($site) => [$site->id => $site->name])->all())
+                        ->roles(AdminRole::query()->orderBy('name')->pluck('name', 'id')->all()),
+                ] : []),
             ] : []),
         ];
     }
@@ -203,6 +215,7 @@ class AdminUser extends Authenticatable implements Administrable
             'roles.*' => ['integer', Rule::exists('admin_roles', 'id')],
             'site_ids' => ['nullable', 'array'],
             'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->all())],
+            ...self::siteRoleRules(),
         ];
     }
 
@@ -221,6 +234,7 @@ class AdminUser extends Authenticatable implements Administrable
             'roles.*' => ['integer', Rule::exists('admin_roles', 'id')],
             'site_ids' => ['nullable', 'array'],
             'site_ids.*' => [Rule::in(app(Sites::class)->all()->pluck('id')->all())],
+            ...self::siteRoleRules(),
         ];
     }
 
@@ -259,6 +273,76 @@ class AdminUser extends Authenticatable implements Administrable
     }
 
     /**
+     * Roles on one site only, with the site in the pivot's `site_id`.
+     *
+     * @return BelongsToMany<AdminRole, $this>
+     */
+    public function siteRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(AdminRole::class, 'admin_role_site_user', 'admin_user_id', 'admin_role_id')->withPivot('site_id');
+    }
+
+    /**
+     * `roles_by_site`: the roles on each site, site id => role ids.
+     *
+     * @return Attribute<array<non-empty-list<mixed>>, never>
+     */
+    protected function rolesBySite(): Attribute
+    {
+        return Attribute::get(function (): array {
+            $ids = [];
+
+            foreach (DB::table('admin_role_site_user')->where('admin_user_id', $this->id)->get() as $row) {
+                $ids[$row->site_id][] = $row->admin_role_id;
+            }
+
+            return $ids;
+        });
+    }
+
+    /**
+     * The roles on single sites come with the form only where it has them:
+     * a superadmin's, with more than one site.
+     *
+     * @param  array<string,mixed>  $data
+     */
+    public function afterAdminSave(array $data): void
+    {
+        if (array_key_exists('roles_by_site', $data)) {
+            $this->syncSiteRoles((array) $data['roles_by_site']);
+        }
+    }
+
+    /**
+     * Give the administrator these roles on these sites, and no others on
+     * any site. Sites that are not there are skipped.
+     *
+     * @param  array<array-key,mixed>  $roles  site id => role ids
+     */
+    public function syncSiteRoles(array $roles): void
+    {
+        $sites = app(Sites::class);
+        $rows = [];
+
+        foreach ($roles as $siteId => $roleIds) {
+            if ($sites->find($siteId) === null) {
+                continue;
+            }
+
+            foreach (array_unique((array) $roleIds) as $roleId) {
+                $rows[] = ['admin_user_id' => $this->id, 'site_id' => $siteId, 'admin_role_id' => $roleId];
+            }
+        }
+
+        DB::transaction(function () use ($rows): void {
+            DB::table('admin_role_site_user')->where('admin_user_id', $this->id)->delete();
+            DB::table('admin_role_site_user')->insert($rows);
+        });
+
+        $this->unsetRelation('siteRoles');
+    }
+
+    /**
      * A superadmin may do everything, roles or not.
      */
     public function isSuperadmin(): bool
@@ -275,17 +359,42 @@ class AdminUser extends Authenticatable implements Administrable
     }
 
     /**
-     * The permissions of all the administrator's roles together.
+     * The permissions of all the administrator's roles together: those on
+     * every site, and those on the site the request works with. A request
+     * that has not said which site it is about (an API call without ?site)
+     * gets no site's roles.
      *
      * @return array<int,string>
      */
     public function adminPermissions(): array
     {
-        return $this->roles
+        $sites = app(Sites::class);
+        $roles = $this->roles;
+
+        if ($sites->isResolved()) {
+            // where() compares loosely: the pivot's id may come back as a string.
+            $roles = $roles->concat($this->siteRoles->where('pivot.site_id', $sites->current()->id));
+        }
+
+        return $roles
             ->flatMap(fn (AdminRole $role): array => $role->permissions)
             ->unique()
             ->values()
             ->all();
+    }
+
+    /**
+     * Each site's roles: only sites that are there, only roles that are.
+     *
+     * @return array<string,array<int,mixed>>
+     */
+    private static function siteRoleRules(): array
+    {
+        return [
+            'roles_by_site' => ['nullable', 'array:'.app(Sites::class)->all()->pluck('id')->implode(',')],
+            'roles_by_site.*' => ['nullable', 'array'],
+            'roles_by_site.*.*' => ['integer', Rule::exists('admin_roles', 'id')],
+        ];
     }
 
     /**

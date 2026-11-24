@@ -16,6 +16,7 @@ import RepeatableField from './RepeatableField.vue'
 import ContentField from './ContentField.vue'
 import BelongsToManyField from './BelongsToManyField.vue'
 import MultiSelectField from './MultiSelectField.vue'
+import SiteRolesField from './SiteRolesField.vue'
 import MapField from './MapField.vue'
 import TreeField from './TreeField.vue'
 import LinkField from './LinkField.vue'
@@ -435,6 +436,19 @@ function pickFromLibrary(file) {
                 :id="field.name"
                 v-model="value"
                 :options="field.options"
+                :placeholder="field.placeholder || $t('common.select')"
+                :disabled="field.disabled"
+                :error="error"
+            />
+        </template>
+
+        <!-- Roles for each site apart -->
+        <template v-else-if="field.type === 'siteRoles'">
+            <SiteRolesField
+                :id="field.name"
+                v-model="value"
+                :sites="field.sites"
+                :roles="field.roles"
                 :placeholder="field.placeholder || $t('common.select')"
                 :disabled="field.disabled"
                 :error="error"

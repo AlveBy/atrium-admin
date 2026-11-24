@@ -15,6 +15,8 @@ return [
     'superadmin_hint' => 'Hech qanday rolsiz hamma narsani qila oladi. Rollarni va boshqa superadminlarni faqat superadmin boshqaradi.',
     'roles' => 'Rollar',
     'roles_hint' => 'Administrator belgilangan rollardan birortasi ruxsat bergan hamma narsani qila oladi.',
+    'site_roles' => 'Alohida saytlardagi rollar',
+    'site_roles_hint' => 'Panelda shu sayt tanlangan paytdagina, yuqoridagi rollarga qo‘shimcha ravishda amal qiladi: bir saytni tahrirlash va boshqasini faqat ko‘rish mumkin.',
     'forbidden' => 'Rolingiz bunga ruxsat bermaydi.',
     'last_superadmin' => 'Bu oxirgi faol superadmin. Rollarni boshqarish uchun kimdir qolishi kerak.',
     'saved' => 'Rol saqlandi.',

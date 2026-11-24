@@ -15,6 +15,8 @@ return [
     'superadmin_hint' => 'Darf ohne Rollen alles und verwaltet als Einziger Rollen und andere Superadmins.',
     'roles' => 'Rollen',
     'roles_hint' => 'Der Administrator darf alles, was eine der angekreuzten Rollen erlaubt.',
+    'site_roles' => 'Rollen auf einzelnen Websites',
+    'site_roles_hint' => 'Gelten nur, solange diese Website im Panel gewählt ist, zusätzlich zu den Rollen oben: eine Website bearbeiten und eine andere nur ansehen.',
     'forbidden' => 'Ihre Rolle erlaubt das nicht.',
     'last_superadmin' => 'Das ist der letzte aktive Superadmin. Jemand muss bleiben, um die Rollen zu verwalten.',
     'saved' => 'Rolle gespeichert.',

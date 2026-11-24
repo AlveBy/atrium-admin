@@ -15,6 +15,8 @@ return [
     'superadmin_hint' => 'Pode fazer tudo sem papéis e é o único que gerencia papéis e outros superadmins.',
     'roles' => 'Papéis',
     'roles_hint' => 'O administrador pode fazer tudo o que qualquer um dos papéis marcados permitir.',
+    'site_roles' => 'Papéis em sites específicos',
+    'site_roles_hint' => 'Valem só enquanto esse site está escolhido no painel, além dos papéis acima: editar um site e apenas ver outro.',
     'forbidden' => 'Seu papel não permite isso.',
     'last_superadmin' => 'Este é o último superadmin ativo. Alguém precisa ficar para gerenciar os papéis.',
     'saved' => 'Papel salvo.',

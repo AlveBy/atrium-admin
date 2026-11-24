@@ -92,6 +92,16 @@ class AdminUserController extends AdminController
         }, attempts: 3);
     }
 
+    protected function prepareItemData(?Model $item): ?array
+    {
+        // Only where the form has the field: a superadmin's, with more than one site.
+        if ($item !== null && collect($this->contextFields('edit'))->contains(fn ($field): bool => $field->getName() === 'roles_by_site')) {
+            $item->append('roles_by_site');
+        }
+
+        return parent::prepareItemData($item);
+    }
+
     /**
      * A superadmin's account is managed by superadmins only.
      */

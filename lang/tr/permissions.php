@@ -15,6 +15,8 @@ return [
     'superadmin_hint' => 'Rol olmadan her şeyi yapabilir; rolleri ve diğer süper yöneticileri yalnızca o yönetir.',
     'roles' => 'Roller',
     'roles_hint' => 'Yönetici, işaretli rollerden herhangi birinin izin verdiği her şeyi yapabilir.',
+    'site_roles' => 'Tek sitedeki roller',
+    'site_roles_hint' => 'Yalnızca panelde o site seçiliyken, yukarıdaki rollere ek olarak geçerlidir: bir siteyi düzenleyip diğerini yalnızca görüntüleyebilirsiniz.',
     'forbidden' => 'Rolünüz buna izin vermiyor.',
     'last_superadmin' => 'Bu son etkin süper yönetici. Rolleri yönetmek için birinin kalması gerekir.',
     'saved' => 'Rol kaydedildi.',

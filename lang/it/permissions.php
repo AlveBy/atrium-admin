@@ -15,6 +15,8 @@ return [
     'superadmin_hint' => 'Può fare tutto senza ruoli ed è l’unico a gestire i ruoli e gli altri superadmin.',
     'roles' => 'Ruoli',
     'roles_hint' => 'L’amministratore può fare tutto ciò che consente uno qualsiasi dei ruoli selezionati.',
+    'site_roles' => 'Ruoli su singoli siti',
+    'site_roles_hint' => 'Valgono solo mentre quel sito è scelto nel pannello, oltre ai ruoli sopra: modificare un sito e solo guardarne un altro.',
     'forbidden' => 'Il tuo ruolo non lo consente.',
     'last_superadmin' => 'È l’ultimo superadmin attivo. Qualcuno deve restare per gestire i ruoli.',
     'saved' => 'Ruolo salvato.',

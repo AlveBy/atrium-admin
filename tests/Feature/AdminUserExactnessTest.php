@@ -109,6 +109,9 @@ final class AdminUserExactnessTest extends TestCase
             'roles.*' => ['integer', Rule::exists('admin_roles', 'id')],
             'site_ids' => ['nullable', 'array'],
             'site_ids.*' => [Rule::in([1])],
+            'roles_by_site' => ['nullable', 'array:1'],
+            'roles_by_site.*' => ['nullable', 'array'],
+            'roles_by_site.*.*' => ['integer', Rule::exists('admin_roles', 'id')],
         ], AdminUser::getCreateValidationRules());
     }
 
@@ -124,6 +127,9 @@ final class AdminUserExactnessTest extends TestCase
             'roles.*' => ['integer', Rule::exists('admin_roles', 'id')],
             'site_ids' => ['nullable', 'array'],
             'site_ids.*' => [Rule::in([1])],
+            'roles_by_site' => ['nullable', 'array:1'],
+            'roles_by_site.*' => ['nullable', 'array'],
+            'roles_by_site.*.*' => ['integer', Rule::exists('admin_roles', 'id')],
         ], AdminUser::getUpdateValidationRules());
     }
 

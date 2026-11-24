@@ -15,6 +15,8 @@ return [
     'superadmin_hint' => 'May do everything without roles and is the only one who manages roles and other superadmins.',
     'roles' => 'Roles',
     'roles_hint' => 'The administrator may do whatever any of these roles allows.',
+    'site_roles' => 'Roles on one site',
+    'site_roles_hint' => 'They count only while that site is chosen in the panel, on top of the roles above: edit one site and only look at another.',
     'forbidden' => 'Your role does not allow this.',
     'last_superadmin' => 'This is the last active superadmin. Someone has to be left to manage roles.',
     'saved' => 'Role saved.',
