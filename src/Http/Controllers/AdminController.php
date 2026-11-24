@@ -20,6 +20,7 @@ use Atrium\Admin\Auth\Permissions;
 use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Columns\Column;
 use Atrium\Admin\Contracts\Administrable;
+use Atrium\Admin\Extensions\Panels;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Fields\BelongsToField;
 use Atrium\Admin\Fields\CheckboxField;
@@ -872,7 +873,15 @@ abstract class AdminController extends Controller
 
         $data = $this->prepareFormData('edit', $item);
 
-        return Inertia::render($this->getPagePrefix().'/Edit', [...$data, 'actionUrls' => $this->actionUrls([$item]), ...$this->resourceProps()]);
+        $admin = $this->currentAdmin();
+
+        return Inertia::render($this->getPagePrefix().'/Edit', [
+            ...$data,
+            'actionUrls' => $this->actionUrls([$item]),
+            // Blocks other modules draw on the record (atrium.ui.panels).
+            'panels' => app(Panels::class)->for($item, $admin instanceof AdminUser ? $admin : null),
+            ...$this->resourceProps(),
+        ]);
     }
 
     /**

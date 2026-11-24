@@ -28,6 +28,9 @@ const props = defineProps({
     title: String,
     adminLabel: String,
     can: { type: Object, default: () => ({}) },
+    // Blocks other modules draw on the record (atrium.ui.panels): HTML from
+    // the server, under the form, beside it or on a tab of its own.
+    panels: { type: Array, default: () => [] },
     // Buttons on a record: a filled create form, a link, a server action.
     actions: { type: Array, default: () => [] },
     // Where the link buttons lead for this record: id => name => address.
@@ -112,6 +115,14 @@ const tabsWithBadges = computed(() => {
         badge: getTabErrorCount(tab.name) > 0 ? String(getTabErrorCount(tab.name)) : null
     }))
 })
+
+// A panel asking for a tab goes under the form when the form has none.
+const withTabs = computed(() => Boolean(props.useTabs && props.tabs && props.fieldsByTab))
+const tabPanels = computed(() => withTabs.value ? props.panels.filter(panel => panel.placement === 'tab') : [])
+const sidePanels = computed(() => props.panels.filter(panel => panel.placement === 'side'))
+const belowPanels = computed(() => props.panels.filter(panel => panel.placement === 'below' || (panel.placement === 'tab' && !withTabs.value)))
+const panelTab = (panel) => `panel:${panel.key}`
+const allTabs = computed(() => [...tabsWithBadges.value, ...tabPanels.value.map(panel => ({ name: panelTab(panel), label: panel.label }))])
 </script>
 
 <template>
@@ -137,6 +148,7 @@ const tabsWithBadges = computed(() => {
         </nav>
     </div>
 
+    <div :class="sidePanels.length ? 'grid gap-6 xl:grid-cols-[minmax(0,56rem)_20rem] xl:items-start' : ''">
     <div class="max-w-4xl">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
             <h1 class="text-2xl font-bold text-fg">{{ title }}</h1>
@@ -194,7 +206,7 @@ const tabsWithBadges = computed(() => {
 
                 <!-- With Tabs -->
                 <template v-if="useTabs && tabs && fieldsByTab">
-                    <AdminTabs :tabs="tabsWithBadges" v-model="activeTab">
+                    <AdminTabs :tabs="allTabs" v-model="activeTab">
                         <template #default="{ activeTab: currentTab }">
                             <AdminTabPanel
                                 v-for="tab in tabs"
@@ -219,6 +231,14 @@ const tabsWithBadges = computed(() => {
                                         <p>{{ $t('resource.form.empty_tab') }}</p>
                                     </div>
                                 </div>
+                            </AdminTabPanel>
+                            <AdminTabPanel
+                                v-for="panel in tabPanels"
+                                :key="panelTab(panel)"
+                                :name="panelTab(panel)"
+                                :activeTab="currentTab"
+                            >
+                                <div class="text-sm text-fg" :data-panel="panel.key" data-panel-html v-html="panel.html" />
                             </AdminTabPanel>
                         </template>
                     </AdminTabs>
@@ -250,6 +270,17 @@ const tabsWithBadges = computed(() => {
                 </div>
             </form>
         </AdminCard>
+
+        <AdminCard v-for="panel in belowPanels" :key="panel.key" :title="panel.label" :data-panel="panel.key" class="mt-6">
+            <div class="text-sm text-fg" data-panel-html v-html="panel.html" />
+        </AdminCard>
+    </div>
+
+    <aside v-if="sidePanels.length" class="space-y-6" data-panels="side">
+        <AdminCard v-for="panel in sidePanels" :key="panel.key" :title="panel.label" :data-panel="panel.key">
+            <div class="text-sm text-fg" data-panel-html v-html="panel.html" />
+        </AdminCard>
+    </aside>
     </div>
     <AdminModal :show="pendingAction !== null" :title="$t('actions.confirm_title')" @close="pendingAction = null">
         <p data-action-question class="text-fg">{{ pendingAction?.confirm }}</p>
