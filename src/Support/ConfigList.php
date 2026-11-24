@@ -18,7 +18,7 @@ namespace Atrium\Admin\Support;
  * in the header and a gadget twice on the dashboard.
  *
  * @example
- * ConfigList::add('atrium.dashboard.gadgets', ErrorsGadget::class);
+ * ConfigList::add('atrium-ai.help.tools', SiteSpeed::class);
  */
 final class ConfigList
 {

@@ -5,10 +5,11 @@
  */
 
 /**
- * Admin dashboard — gadget tiles; the set is configured in
- * config/atrium.php → dashboard.gadgets.
+ * Admin dashboard — gadget tiles, registered in `atrium.ui.gadgets` and laid
+ * out by config/atrium.php → dashboard.gadgets.
  *
- * The tiles themselves live in Components/Admin/Dashboard, this is only the layout.
+ * The tiles themselves live in Components/Admin/Dashboard, this is only the
+ * layout. A package's tile is HtmlGadget: HTML drawn on the server.
  */
 import { Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
@@ -17,6 +18,7 @@ import PerformanceGadget from '@atrium/Components/Admin/Dashboard/PerformanceGad
 import RecentElementsGadget from '@atrium/Components/Admin/Dashboard/RecentElementsGadget.vue'
 import ErrorsGadget from '@atrium/Components/Admin/Dashboard/ErrorsGadget.vue'
 import MonitoringGadget from '@atrium/Components/Admin/Dashboard/MonitoringGadget.vue'
+import HtmlGadget from '@atrium/Components/Admin/Dashboard/HtmlGadget.vue'
 
 const COMPONENTS = {
     SiteSpeedGadget,
@@ -24,6 +26,7 @@ const COMPONENTS = {
     RecentElementsGadget,
     ErrorsGadget,
     MonitoringGadget,
+    HtmlGadget,
 }
 
 const props = defineProps({

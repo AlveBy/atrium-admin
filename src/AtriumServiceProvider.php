@@ -17,6 +17,9 @@ use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Cache\Versions;
 use Atrium\Admin\Captcha\CaptchaManager;
 use Atrium\Admin\Contracts\Sitemapable;
+use Atrium\Admin\Dashboard\Gadgets\PerformanceGadget;
+use Atrium\Admin\Dashboard\Gadgets\RecentElementsGadget;
+use Atrium\Admin\Dashboard\Gadgets\SiteSpeedGadget;
 use Atrium\Admin\Embeds\Embeds;
 use Atrium\Admin\Hooks\Hooks;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
@@ -125,6 +128,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerLocalizedRoutes();
         $this->registerSitemapFlush();
+        $this->registerGadgets();
         $this->registerCache();
         $this->registerCommands();
         $this->registerCdnAssets();
@@ -188,6 +192,18 @@ final class AtriumServiceProvider extends ServiceProvider
         if (config('atrium.dashboard.timings.enabled', true)) {
             $this->appendToWebGroup(RecordPageTiming::class);
         }
+    }
+
+    /**
+     * The panel's own dashboard tiles, on the point a package's go through.
+     * "Recent items" shows nothing until the layout names its model.
+     */
+    private function registerGadgets(): void
+    {
+        $hooks = $this->app->make(Hooks::class);
+        $hooks->register('atrium.ui.gadgets', 'site-speed', SiteSpeedGadget::class);
+        $hooks->register('atrium.ui.gadgets', 'performance', PerformanceGadget::class);
+        $hooks->register('atrium.ui.gadgets', 'recent', RecentElementsGadget::class);
     }
 
     /**
