@@ -15,7 +15,9 @@ use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Modules\ActionFailed;
 use Atrium\Admin\Modules\Catalogue;
+use Atrium\Admin\Modules\HasActions;
 use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Modules\ModuleSettings;
@@ -166,11 +168,20 @@ class ModuleController extends Controller
         [$found, $declaration] = $this->resolve($request, $module);
         $siteId = $this->settings->siteId($declaration);
 
+        $secrets = $declaration->secrets();
+        $masks = $this->masks($declaration, $found->key(), $siteId);
+
         return Inertia::render('Admin/Modules/Settings', [
             'module' => ['key' => $found->key(), 'name' => $found->name, 'label' => $found->label()],
             'description' => $declaration->description(),
-            'fields' => array_map(static fn (Field $field): array => $field->toArray(), $declaration->fields()),
-            'values' => (object) $this->settings->stored($found->key(), $siteId),
+            'fields' => array_map(static function (Field $field) use ($masks): array {
+                $props = $field->toArray();
+
+                return isset($masks[$field->getName()]) ? [...$props, 'placeholder' => $masks[$field->getName()]] : $props;
+            }, $declaration->fields()),
+            'actions' => $declaration instanceof HasActions ? $declaration->actions() : [],
+            // A secret never goes back to the screen: its mask is the placeholder.
+            'values' => (object) array_diff_key($this->settings->stored($found->key(), $siteId), array_flip($secrets)),
             'site' => $declaration->perSite ? app(Sites::class)->find($siteId)?->only(['id', 'name']) : null,
             'title' => __('atrium::modules.settings_title', ['module' => $found->label()]),
         ]);
@@ -195,6 +206,11 @@ class ModuleController extends Controller
         foreach ($fields as $field) {
             $name = $field->getName();
 
+            // An empty secret field keeps the saved secret.
+            if (in_array($name, $declaration->secrets(), true) && trim((string) $request->input($name)) === '') {
+                continue;
+            }
+
             if ($request->has($name)) {
                 $values[$name] = $field instanceof CheckboxField ? $field->transformValue($request->input($name)) : $request->input($name);
             }
@@ -203,6 +219,41 @@ class ModuleController extends Controller
         $this->settings->save($found->key(), $values);
 
         return redirect()->route('admin.modules.settings', $found->key())->with('success', __('atrium::modules.saved'));
+    }
+
+    /**
+     * A button of the settings screen: what it did, or why it could not.
+     */
+    public function action(Request $request, string $module, string $action): RedirectResponse
+    {
+        [, $declaration] = $this->resolve($request, $module);
+
+        abort_unless($declaration instanceof HasActions && in_array($action, array_column($declaration->actions(), 'name'), true), 404);
+
+        try {
+            return back()->with('success', $declaration->run($action));
+        } catch (ActionFailed $failed) {
+            return back()->with('error', $failed->getMessage());
+        }
+    }
+
+    /**
+     * What the screen shows for each saved secret, by field name.
+     *
+     * @return array<string,string>
+     */
+    private function masks(ModuleSettings $declaration, string $key, int $siteId): array
+    {
+        $values = $this->settings->all($key, $siteId);
+        $masks = [];
+
+        foreach ($declaration->secrets() as $name) {
+            if (is_string($values[$name] ?? null) && $values[$name] !== '') {
+                $masks[$name] = $declaration->mask($name, $values[$name]);
+            }
+        }
+
+        return $masks;
     }
 
     /**

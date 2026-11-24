@@ -8,8 +8,8 @@
  * A module's settings: the fields of its ModuleSettings class. For a module
  * with per-site settings, those of the site chosen in the header.
  */
-import { computed, provide } from 'vue'
-import { useForm, Link, Head } from '@inertiajs/vue3'
+import { computed, provide, ref } from 'vue'
+import { useForm, router, Link, Head } from '@inertiajs/vue3'
 import AdminButton from '../../../Components/Admin/UI/AdminButton.vue'
 import AdminCard from '../../../Components/Admin/UI/AdminCard.vue'
 import FormField from '../../../Components/Admin/Fields/FormField.vue'
@@ -20,6 +20,7 @@ const props = defineProps({
     description: String,
     fields: Array,
     values: Object,
+    actions: { type: Array, default: () => [] },
     site: { type: Object, default: null },
     title: String,
 })
@@ -34,6 +35,18 @@ const form = useForm(initialData)
 provide('formData', computed(() => form.data()))
 
 // form.submit(): a setting named "post" or "put" would shadow form.put().
+// A button the module put on the screen ("Check the connection"): it works
+// with what is saved, so the page says so in the module's own words.
+const running = ref(null)
+
+const run = (action) => {
+    router.post(route('admin.modules.settings.action', [props.module.key, action.name]), {}, {
+        preserveScroll: true,
+        onStart: () => { running.value = action.name },
+        onFinish: () => { running.value = null },
+    })
+}
+
 const submit = () => {
     form.submit('put', route('admin.modules.settings.update', props.module.key), { preserveScroll: true })
 }
@@ -62,9 +75,22 @@ const submit = () => {
                     />
                 </div>
 
-                <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t">
-                    <AdminButton :href="route('admin.modules.index')" variant="secondary">{{ $t('common.cancel') }}</AdminButton>
-                    <AdminButton data-action="save" type="submit" :loading="form.processing">{{ $t('common.save') }}</AdminButton>
+                <div class="flex items-center justify-between pt-6 mt-6 border-t">
+                    <div class="flex items-center space-x-3">
+                        <AdminButton
+                            v-for="action in actions"
+                            :key="action.name"
+                            :data-action="'run-' + action.name"
+                            type="button"
+                            variant="secondary"
+                            :loading="running === action.name"
+                            @click="run(action)"
+                        >{{ action.label }}</AdminButton>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <AdminButton :href="route('admin.modules.index')" variant="secondary">{{ $t('common.cancel') }}</AdminButton>
+                        <AdminButton data-action="save" type="submit" :loading="form.processing">{{ $t('common.save') }}</AdminButton>
+                    </div>
                 </div>
             </form>
         </AdminCard>

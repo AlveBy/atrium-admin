@@ -1,0 +1,10 @@
+{
+    "name": "acme/atrium-vault",
+    "description": "A module with a secret and a button: a module package for the tests",
+    "type": "atrium-module",
+    "extra": {
+        "atrium": {
+            "settings": "Atrium\\Admin\\Tests\\Fixtures\\Modules\\VaultSettings"
+        }
+    }
+}

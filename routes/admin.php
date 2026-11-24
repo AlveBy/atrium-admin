@@ -102,6 +102,7 @@ Route::prefix(config('atrium.prefix', 'admin'))
             Route::get('modules', [ModuleController::class, 'index'])->name('admin.modules.index');
             Route::get('modules/{module}/settings', [ModuleController::class, 'settings'])->name('admin.modules.settings');
             Route::put('modules/{module}/settings', [ModuleController::class, 'update'])->name('admin.modules.settings.update');
+            Route::post('modules/{module}/settings/actions/{action}', [ModuleController::class, 'action'])->name('admin.modules.settings.action');
             Route::post('modules/{module}/enable', [ModuleController::class, 'enable'])->name('admin.modules.enable');
             Route::post('modules/{module}/disable', [ModuleController::class, 'disable'])->name('admin.modules.disable');
 

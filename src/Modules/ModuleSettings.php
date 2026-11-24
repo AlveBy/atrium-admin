@@ -46,6 +46,28 @@ abstract class ModuleSettings
     abstract public function fields(): array;
 
     /**
+     * Names of the fields that hold a secret (a webhook address, a password):
+     * kept encrypted with the application key, never sent back to the screen
+     * (an empty field keeps what is saved, the placeholder shows mask()) and
+     * read decrypted with Setting::get().
+     *
+     * @return array<int,string>
+     */
+    public function secrets(): array
+    {
+        return [];
+    }
+
+    /**
+     * What the screen shows in place of a saved secret. Override to keep the
+     * recognisable part, such as the host of an address.
+     */
+    public function mask(string $field, string $value): string
+    {
+        return str_repeat('•', 8);
+    }
+
+    /**
      * A line under the title of the settings screen.
      */
     public function description(): string

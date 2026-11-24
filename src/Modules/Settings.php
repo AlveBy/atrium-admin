@@ -12,7 +12,9 @@ namespace Atrium\Admin\Modules;
 use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Support\Sites;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -67,7 +69,13 @@ final class Settings
 
         $stored = array_filter($this->stored($module, $this->siteId($declaration, $site)), static fn (mixed $value): bool => $value !== null && $value !== '');
 
-        return array_replace($declaration->defaults(), $stored);
+        foreach ($declaration->secrets() as $name) {
+            if (isset($stored[$name])) {
+                $stored[$name] = $this->reveal((string) $stored[$name]);
+            }
+        }
+
+        return array_replace($declaration->defaults(), array_filter($stored, static fn (mixed $value): bool => $value !== null));
     }
 
     /**
@@ -110,6 +118,12 @@ final class Settings
     {
         $declaration = $this->declaration($module);
         $siteId = $declaration === null ? 0 : $this->siteId($declaration, $site);
+        foreach ($declaration?->secrets() ?? [] as $name) {
+            if (isset($values[$name]) && $values[$name] !== '') {
+                $values[$name] = Crypt::encryptString((string) $values[$name]);
+            }
+        }
+
         $values = [...$this->stored($module, $siteId), ...$values];
         $now = now();
 
@@ -130,6 +144,19 @@ final class Settings
 
         $this->stored[$module][$siteId] = $values;
         app(RecordCache::class)->flushClass(self::class);
+    }
+
+    /**
+     * A secret as it was saved, or null when it cannot be read: the
+     * application key changed since.
+     */
+    private function reveal(string $encrypted): ?string
+    {
+        try {
+            return Crypt::decryptString($encrypted);
+        } catch (DecryptException) {
+            return null;
+        }
     }
 
     /**
