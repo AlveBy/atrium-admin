@@ -71,7 +71,7 @@ const field = 'block w-full rounded-md border border-field bg-surface text-fg te
 
     <form class="bg-surface rounded-lg shadow p-4 mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" dusk="errors-filters" @submit.prevent="apply">
         <label class="sm:col-span-2 text-sm text-fg">
-            <span class="sr-only">{{ strings.list.search }}</span>
+            <span class="block mb-1 text-muted">{{ strings.list.search }}</span>
             <input v-model="form.q" type="search" :placeholder="strings.list.search" :class="field" dusk="errors-search">
         </label>
         <label class="text-sm text-fg">
