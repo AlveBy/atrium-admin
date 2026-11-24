@@ -16,6 +16,7 @@ use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Http\Controllers\AdminController;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Language;
+use Atrium\Admin\Tabs\Tab;
 use Atrium\Admin\Tests\Fixtures\Article;
 use Atrium\Admin\Tests\Fixtures\Brochure;
 use Atrium\Admin\Tests\Fixtures\Bulletin;
@@ -609,6 +610,62 @@ final class AdminControllerExactnessTest extends TestCase
         }
 
         $this->assertTrue($this->controller(Chapter::class)->call('prepareFormData', 'create')['useTabs'] ?? false);
+    }
+
+    public function test_a_module_without_tabs_gets_them_when_another_module_adds_some(): void
+    {
+        Hook::filter('atrium.module.fields', static fn (array $fields, string $model): array => $model === Post::class ? [
+            ...$fields,
+            TextField::make('delivery')->label('Delivery')->tab('shop'),
+            TextField::make('code_only')->label('On edit')->tab('shop')->hideOnCreate(),
+            TextField::make('lost')->label('Lost')->tab('nowhere'),
+            TextField::make('notes')->label('Notes')->tab('extra')->onlyOnCreate(),
+        ] : $fields);
+        Hook::filter('atrium.module.tabs', static fn (array $tabs, string $model): array => $model === Post::class
+            ? [...$tabs, Tab::make('shop')->label('Shop')->order(50), ['name' => 'extra', 'label' => 'Extra', 'order' => 20], Tab::make('empty')->label('Empty')]
+            : $tabs);
+        $post = Post::query()->create(['name' => 'Apple']);
+        $posts = $this->controller(Post::class);
+
+        $create = $posts->call('prepareFormData', 'create');
+        $edit = $posts->call('prepareFormData', 'edit', $post);
+
+        // The module's own fields, and a field of a tab the form has not, stay on the first tab.
+        $this->assertTrue($create['useTabs']);
+        $this->assertSame(['params', 'extra', 'shop'], array_column($create['tabs'], 'name'));
+        $this->assertSame('General', $create['tabs'][0]['label']);
+        $this->assertSame('Shop', $create['tabs'][2]['label']);
+        $this->assertSame(['delivery'], array_column($create['fieldsByTab']['shop'], 'name'));
+        $this->assertSame(['notes'], array_column($create['fieldsByTab']['extra'], 'name'));
+        $this->assertContains('name', array_column($create['fieldsByTab']['params'], 'name'));
+        $this->assertContains('lost', array_column($create['fieldsByTab']['params'], 'name'));
+        $this->assertNotContains('code_only', array_column($create['fieldsByTab']['shop'], 'name'));
+        $this->assertNotContains('empty', array_column($create['tabs'], 'name'));
+        $this->assertContains('notes', array_column($create['fields'], 'name'), 'the plain list stays for the old pages');
+
+        // On edit the field of the other context is the one shown.
+        $this->assertSame(['params', 'shop'], array_column($edit['tabs'], 'name'));
+        $this->assertSame(['delivery', 'code_only'], array_column($edit['fieldsByTab']['shop'], 'name'));
+        $this->assertSame('Apple', $edit['itemTitle']);
+        $this->assertSame('Edit: Apple', $edit['title']);
+        $this->assertSame('Posts', $edit['adminLabel']);
+        $this->assertSame('Create Posts', $create['title']);
+        $this->assertNull($create['itemTitle']);
+        $this->assertNull($create['item']);
+    }
+
+    public function test_an_added_tab_without_fields_leaves_a_module_without_tabs_flat(): void
+    {
+        Hook::filter('atrium.module.tabs', static fn (array $tabs, string $model): array => [...$tabs, Tab::make('shop')->label('Shop')]);
+        // A field of the added tab that the form does not show on create.
+        Hook::filter('atrium.module.fields', static fn (array $fields, string $model): array => $model === Post::class ? [...$fields, TextField::make('delivery')->tab('shop')->hideOnCreate()] : $fields);
+
+        $form = $this->controller(Post::class)->call('prepareFormData', 'create');
+
+        $this->assertFalse($form['useTabs']);
+        $this->assertArrayNotHasKey('tabs', $form);
+        $this->assertArrayNotHasKey('fieldsByTab', $form);
+        $this->assertTrue($this->controller(Post::class)->call('prepareFormData', 'edit', Post::query()->create(['name' => 'Apple']))['useTabs']);
     }
 
     public function test_translations_in_a_language_that_is_not_active_are_dropped_from_every_translated_field(): void

@@ -35,6 +35,8 @@ use Atrium\Admin\Support\Like;
 use Atrium\Admin\Support\PublicUrl;
 use Atrium\Admin\Support\RecordDeleter;
 use Atrium\Admin\Support\Sites;
+use Atrium\Admin\Tabs\Tab;
+use Atrium\Admin\Tabs\TabRegistry;
 use Atrium\Admin\Traits\BelongsToSite;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -1039,6 +1041,32 @@ abstract class AdminController extends Controller
 
         // Fallback: old logic without tabs
         $fields = $this->withRelationSearch($this->allAdminFields(), $item);
+
+        // A module without tabs gets them once another module adds a tab
+        // that has fields: the module's own fields stay on the first tab.
+        $added = Hook::apply('atrium.module.tabs', [], $this->model);
+        $shown = array_filter($fields, static fn ($field): bool => $context === 'create' ? $field->shouldShowOnCreate() : $field->shouldShowOnEdit());
+        $names = array_map(static fn ($tab): string => $tab instanceof Tab ? $tab->getName() : $tab['name'], $added);
+        $grouped = [];
+
+        foreach ($shown as $field) {
+            $grouped[in_array($field->getTab(), $names, true) ? $field->getTab() : 'params'][] = $field;
+        }
+
+        $tabs = TabRegistry::sortTabs(TabRegistry::filterEmptyTabs([Tab::make('params')->label(__('atrium::fields.tabs.main')), ...$added], $grouped));
+
+        if (count($tabs) > 1) {
+            return [
+                'tabs' => array_map(static fn ($tab): array => $tab instanceof Tab ? $tab->toArray() : $tab, $tabs),
+                'fieldsByTab' => $this->serializeFieldsByTab($grouped, $context),
+                'fields' => $this->serializeFields($fields, $context),
+                'item' => $this->prepareItemData($item),
+                'itemTitle' => $item?->getAdminTitle(),
+                'title' => $title,
+                'adminLabel' => $adminLabel,
+                'useTabs' => true,
+            ];
+        }
 
         return [
             'fields' => $this->serializeFields($fields, $context),
