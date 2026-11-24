@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Http\Middleware;
 
+use Atrium\Admin\Embeds\Embeds;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Support\Locales;
@@ -90,6 +91,8 @@ final class HandleAtriumRequests extends Middleware
                 ->map(fn ($language) => ['code' => $language->code, 'name' => $language->name, 'default' => $language->code === app(ContentLanguages::class)->default()])
                 ->values()
                 ->all(),
+            // The editor's "Insert" list: the embed types this administrator may use.
+            'embeds' => fn () => app(Embeds::class)->types($this->admin($request)),
             // The header's site switch: the sites this admin may work with.
             'sites' => fn () => $this->sites($request),
             'currentSite' => fn () => [

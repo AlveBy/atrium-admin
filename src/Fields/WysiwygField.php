@@ -11,7 +11,7 @@ namespace Atrium\Admin\Fields;
 
 class WysiwygField extends Field
 {
-    protected array $toolbar = ['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'heading', 'image', 'file'];
+    protected array $toolbar = ['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'heading', 'image', 'file', 'embed'];
 
     protected int $minHeight = 200;
 
@@ -56,7 +56,7 @@ class WysiwygField extends Field
             'bold', 'italic', 'underline', 'strike',
             'link', 'bulletList', 'orderedList',
             'heading', 'blockquote', 'code',
-            'image', 'file', 'horizontalRule',
+            'image', 'file', 'embed', 'horizontalRule',
             'undo', 'redo',
         ];
 

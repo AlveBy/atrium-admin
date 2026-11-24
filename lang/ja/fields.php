@@ -58,6 +58,10 @@ return [
         'table_delete_column' => '列を削除',
         'table_merge_split' => 'セルの結合/分割',
         'table_delete' => '表を削除',
+        'embed' => 'フォームまたはブロックを挿入',
+        'embed_search' => '検索',
+        'embed_empty' => '見つかりませんでした',
+        'embed_failed' => 'リストを読み込めませんでした',
     ],
 
     'upload' => [

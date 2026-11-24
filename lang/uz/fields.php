@@ -58,6 +58,10 @@ return [
         'table_delete_column' => 'Ustunni oʻchirish',
         'table_merge_split' => 'Kataklarni birlashtirish yoki ajratish',
         'table_delete' => 'Jadvalni oʻchirish',
+        'embed' => 'Forma yoki blok qoʻshish',
+        'embed_search' => 'Qidirish',
+        'embed_empty' => 'Hech narsa topilmadi',
+        'embed_failed' => 'Roʻyxatni yuklab boʻlmadi',
     ],
 
     'upload' => [

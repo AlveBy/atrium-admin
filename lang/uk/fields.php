@@ -58,6 +58,10 @@ return [
         'table_delete_column' => 'Видалити стовпець',
         'table_merge_split' => 'Об\'єднати або розділити клітинки',
         'table_delete' => 'Видалити таблицю',
+        'embed' => 'Вставити форму або блок',
+        'embed_search' => 'Пошук',
+        'embed_empty' => 'Нічого не знайдено',
+        'embed_failed' => 'Не вдалося завантажити список',
     ],
 
     'upload' => [

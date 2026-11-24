@@ -23,6 +23,7 @@
         >
           <component :is="button.icon" class="h-4 w-4" />
         </button>
+        <EmbedMenu v-if="toolbar.includes('embed')" :editor="editor" :caret="caret" />
       </div>
 
       <editor-content
@@ -60,6 +61,7 @@ import { useEditor, EditorContent } from '@tiptap/vue-3';
 import CharacterCount from '@tiptap/extension-character-count';
 import { caretPosition, editorExtensions, insertLibraryFile } from '../../../Support/editor';
 import FileManager from '../FileManager.vue';
+import EmbedMenu from './EmbedMenu.vue';
 import { t } from '@atrium/Support/i18n';
 
 const props = defineProps({

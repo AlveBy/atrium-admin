@@ -185,7 +185,7 @@ final class TextFieldsTest extends FieldTestCase
         $this->assertSame(['text', 'html', 'wysiwyg'], $array['modes']);
         $this->assertSame(6, $array['rows']);
         $this->assertSame(200, $array['minHeight']);
-        $this->assertSame(['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table'], $array['toolbar']);
+        $this->assertSame(['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table', 'embed'], $array['toolbar']);
         $this->assertSame(['nullable'], $field->getValidationRules(), 'HTML of any length is taken');
     }
 
@@ -223,7 +223,7 @@ final class TextFieldsTest extends FieldTestCase
         $array = $field->toArray();
 
         $this->assertSame('wysiwyg', $field->getType());
-        $this->assertSame(['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'heading', 'image', 'file'], $array['toolbar']);
+        $this->assertSame(['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'heading', 'image', 'file', 'embed'], $array['toolbar']);
         $this->assertSame(200, $array['minHeight']);
         $this->assertNull($array['maxHeight']);
         $this->assertTrue($array['allowImages']);
@@ -259,7 +259,7 @@ final class TextFieldsTest extends FieldTestCase
             'bold', 'italic', 'underline', 'strike',
             'link', 'bulletList', 'orderedList',
             'heading', 'blockquote', 'code',
-            'image', 'file', 'horizontalRule',
+            'image', 'file', 'embed', 'horizontalRule',
             'undo', 'redo',
         ], WysiwygField::make('body')->simple()->full()->toArray()['toolbar']);
     }
@@ -270,7 +270,7 @@ final class TextFieldsTest extends FieldTestCase
 
         $this->assertFalse($array['allowImages']);
         $this->assertNotContains('image', $array['toolbar']);
-        $this->assertSame(['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'heading', 'file'], array_values($array['toolbar']));
+        $this->assertSame(['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'heading', 'file', 'embed'], array_values($array['toolbar']));
     }
 
     public function test_switching_images_on_keeps_the_toolbar(): void

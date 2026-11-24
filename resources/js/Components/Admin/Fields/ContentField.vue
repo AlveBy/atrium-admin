@@ -114,6 +114,9 @@
           </button>
         </template>
 
+        <!-- Forms, blocks and the like that modules offer; drawn only when there are any. -->
+        <EmbedMenu v-if="toolbar.includes('embed')" :editor="editor" :caret="caret" />
+
         <!-- AI: write, improve (the selected piece, if there is one), translate.
              Here, not under the field, because the selection is at hand. -->
         <div v-if="assist" ref="aiMenuRoot" class="relative ml-auto">
@@ -199,6 +202,7 @@ import {
 } from '../../../Support/editor'
 import { aiBridge, enlist } from '../../../Support/aiBridge'
 import FileManager from '../FileManager.vue'
+import EmbedMenu from './EmbedMenu.vue'
 import { t } from '@atrium/Support/i18n'
 
 const props = defineProps({
@@ -218,7 +222,7 @@ const props = defineProps({
   // there the field went without images for a long time because the lists diverged.
   toolbar: {
     type: Array,
-    default: () => ['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table'],
+    default: () => ['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table', 'embed'],
   },
   minHeight: { type: Number, default: 200 },
 })

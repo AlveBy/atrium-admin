@@ -58,6 +58,10 @@ return [
         'table_delete_column' => 'Excluir coluna',
         'table_merge_split' => 'Mesclar ou dividir células',
         'table_delete' => 'Excluir tabela',
+        'embed' => 'Inserir formulário ou bloco',
+        'embed_search' => 'Buscar',
+        'embed_empty' => 'Nada encontrado',
+        'embed_failed' => 'Não foi possível carregar a lista',
     ],
 
     'upload' => [

@@ -34,7 +34,7 @@ class RepeatableField extends Field
      *
      * @var array<int,string>
      */
-    protected array $itemToolbar = ['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table'];
+    protected array $itemToolbar = ['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table', 'embed'];
 
     public function getType(): string
     {

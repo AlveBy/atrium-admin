@@ -36,7 +36,7 @@ class ContentField extends Field
      * 'fontSize' as a list of sizes in points, like in Word, 'color' sets the
      * text colour, 'image'/'file' take a file from the media library.
      */
-    protected array $toolbar = ['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table'];
+    protected array $toolbar = ['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table', 'embed'];
 
     protected int $minHeight = 200;
 

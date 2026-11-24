@@ -17,6 +17,7 @@ use Atrium\Admin\Cache\RecordCache;
 use Atrium\Admin\Cache\Versions;
 use Atrium\Admin\Captcha\CaptchaManager;
 use Atrium\Admin\Contracts\Sitemapable;
+use Atrium\Admin\Embeds\Embeds;
 use Atrium\Admin\Hooks\Hooks;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
@@ -90,6 +91,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(Modules::class);
         $this->app->singleton(Settings::class);
         $this->app->singleton(Hooks::class);
+        $this->app->singleton(Embeds::class);
         $this->app->singleton(CaptchaManager::class);
         $this->app->singleton(ResourceRegistry::class);
         $this->app->singleton(ApiResources::class);
@@ -214,6 +216,9 @@ final class AtriumServiceProvider extends ServiceProvider
         // @atriumSlot('footer.end'): what modules add there, given the
         // template's variables (an @extends layout has the page's too).
         Blade::directive('atriumSlot', static fn (string $name): string => '<?php echo app(\\Atrium\\Admin\\Hooks\\Hooks::class)->renderSlot('.$name.', \\Illuminate\\Support\\Arr::except($__data ?? [], [\'__env\', \'app\'])); ?>');
+
+        // @embeds($html): the text with the forms and blocks put into it.
+        Blade::directive('embeds', static fn (string $html): string => '<?php echo app(\\Atrium\\Admin\\Embeds\\Embeds::class)->render('.$html.'); ?>');
 
         if (! $this->app->runningInConsole()) {
             return;

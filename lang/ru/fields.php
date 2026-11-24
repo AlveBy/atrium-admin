@@ -59,6 +59,10 @@ return [
         'table_delete_column' => 'Удалить столбец',
         'table_merge_split' => 'Объединить или разделить ячейки',
         'table_delete' => 'Удалить таблицу',
+        'embed' => 'Вставить форму или блок',
+        'embed_search' => 'Поиск',
+        'embed_empty' => 'Ничего не найдено',
+        'embed_failed' => 'Не удалось загрузить список',
     ],
 
     'upload' => [

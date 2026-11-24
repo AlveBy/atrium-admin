@@ -59,6 +59,10 @@ return [
         'table_delete_column' => 'Delete column',
         'table_merge_split' => 'Merge or split cells',
         'table_delete' => 'Delete table',
+        'embed' => 'Insert form or block',
+        'embed_search' => 'Search',
+        'embed_empty' => 'Nothing found',
+        'embed_failed' => 'Could not load the list',
     ],
 
     'upload' => [

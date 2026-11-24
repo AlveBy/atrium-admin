@@ -143,3 +143,24 @@
     background: color-mix(in srgb, var(--atrium-accent) 18%, transparent);
     pointer-events: none;
 }
+
+/* An embed (a form, a block…) is drawn as a chip: the editor cannot show what
+   the site will, only say what stands there. Colours are the theme's own pairs. */
+.ProseMirror .atrium-embed {
+    display: block;
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border: 1px dashed var(--atrium-field);
+    border-radius: 6px;
+    background: var(--atrium-accent-soft);
+    color: var(--atrium-accent-soft-fg);
+    font-size: 14px;
+    line-height: 1.4;
+    cursor: default;
+    user-select: none;
+}
+
+.ProseMirror .atrium-embed.ProseMirror-selectednode {
+    outline: 2px solid var(--atrium-focus);
+    outline-offset: 2px;
+}

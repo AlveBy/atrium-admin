@@ -169,7 +169,7 @@ final class StructuredFieldsTest extends FieldTestCase
         $this->assertSame('Add', $array['addLabel']);
         $this->assertSame('', $array['itemLabel']);
         $this->assertSame(['text', 'html', 'wysiwyg'], $array['itemModes']);
-        $this->assertSame(['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table'], $array['itemToolbar']);
+        $this->assertSame(['bold', 'italic', 'underline', 'strike', 'color', 'link', 'bulletList', 'orderedList', 'align', 'heading', 'fontSize', 'image', 'file', 'table', 'embed'], $array['itemToolbar']);
         $this->assertSame(['nullable', 'array'], $field->getValidationRules());
     }
 

@@ -58,6 +58,10 @@ return [
         'table_delete_column' => 'Spalte löschen',
         'table_merge_split' => 'Zellen verbinden oder teilen',
         'table_delete' => 'Tabelle löschen',
+        'embed' => 'Formular oder Block einfügen',
+        'embed_search' => 'Suchen',
+        'embed_empty' => 'Nichts gefunden',
+        'embed_failed' => 'Die Liste konnte nicht geladen werden',
     ],
 
     'upload' => [

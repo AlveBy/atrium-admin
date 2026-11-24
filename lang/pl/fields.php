@@ -58,6 +58,10 @@ return [
         'table_delete_column' => 'Usuń kolumnę',
         'table_merge_split' => 'Scal lub podziel komórki',
         'table_delete' => 'Usuń tabelę',
+        'embed' => 'Wstaw formularz lub blok',
+        'embed_search' => 'Szukaj',
+        'embed_empty' => 'Nic nie znaleziono',
+        'embed_failed' => 'Nie udało się wczytać listy',
     ],
 
     'upload' => [

@@ -58,6 +58,10 @@ return [
         'table_delete_column' => 'Бағанды жою',
         'table_merge_split' => 'Ұяшықтарды біріктіру немесе бөлу',
         'table_delete' => 'Кестені жою',
+        'embed' => 'Форманы немесе блокты қою',
+        'embed_search' => 'Іздеу',
+        'embed_empty' => 'Ештеңе табылмады',
+        'embed_failed' => 'Тізімді жүктеу мүмкін болмады',
     ],
 
     'upload' => [

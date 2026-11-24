@@ -58,6 +58,10 @@ return [
         'table_delete_column' => 'Выдаліць слупок',
         'table_merge_split' => 'Аб\'яднаць або падзяліць ячэйкі',
         'table_delete' => 'Выдаліць табліцу',
+        'embed' => 'Уставіць форму або блок',
+        'embed_search' => 'Пошук',
+        'embed_empty' => 'Нічога не знойдзена',
+        'embed_failed' => 'Не ўдалося загрузіць спіс',
     ],
 
     'upload' => [

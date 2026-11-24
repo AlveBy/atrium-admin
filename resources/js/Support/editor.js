@@ -34,6 +34,7 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { t } from './i18n';
+import { embedExtension } from './embeds';
 
 /** An attribute kept as is — TipTap knows nothing about it. */
 function passthroughAttribute(name) {
@@ -141,6 +142,9 @@ export function editorExtensions({ placeholder = t('fields.editor.placeholder'),
     keeping(TableRow, ROW_ATTRIBUTES),
     keeping(TableHeader, CELL_ATTRIBUTES),
     keeping(TableCell, CELL_ATTRIBUTES),
+    // Forms, blocks and the rest that modules offer under "Insert": a node of its
+    // own, or the editor would throw the placeholders away on the first save.
+    embedExtension(),
     Placeholder.configure({ placeholder }),
     ...extra,
   ];

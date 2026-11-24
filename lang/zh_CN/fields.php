@@ -58,6 +58,10 @@ return [
         'table_delete_column' => '删除列',
         'table_merge_split' => '合并或拆分单元格',
         'table_delete' => '删除表格',
+        'embed' => '插入表单或区块',
+        'embed_search' => '搜索',
+        'embed_empty' => '未找到任何内容',
+        'embed_failed' => '无法加载列表',
     ],
 
     'upload' => [

@@ -58,6 +58,10 @@ return [
         'table_delete_column' => 'Sütunu sil',
         'table_merge_split' => 'Hücreleri birleştir veya böl',
         'table_delete' => 'Tabloyu sil',
+        'embed' => 'Form veya blok ekle',
+        'embed_search' => 'Ara',
+        'embed_empty' => 'Hiçbir şey bulunamadı',
+        'embed_failed' => 'Liste yüklenemedi',
     ],
 
     'upload' => [

@@ -12,6 +12,7 @@ use Atrium\Admin\Http\Controllers\ApiTokenController;
 use Atrium\Admin\Http\Controllers\Auth\LoginController;
 use Atrium\Admin\Http\Controllers\CacheController;
 use Atrium\Admin\Http\Controllers\DashboardController;
+use Atrium\Admin\Http\Controllers\EmbedController;
 use Atrium\Admin\Http\Controllers\ExportController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
 use Atrium\Admin\Http\Controllers\ImportController;
@@ -72,6 +73,9 @@ Route::prefix(config('atrium.prefix', 'admin'))
 
             // The record picker of link fields (menus and the like)
             Route::get('links/records', [LinkController::class, 'records'])->name('admin.links.records');
+
+            // What the editor's "Insert" button offers: forms, blocks and other embeds
+            Route::get('embeds/{type}', EmbedController::class)->where('type', '[A-Za-z0-9_-]+')->name('admin.embeds');
 
             // The site the panel works with (header switch)
             Route::post('site', [SiteController::class, 'update'])->name('admin.site');
