@@ -1,1 +1,0 @@
-function e(e,t,n={}){let r=t.split(`.`).reduce((e,t)=>e&&typeof e==`object`?e[t]:void 0,e);if(typeof r!=`string`)return t;for(let[e,t]of Object.entries(n))r=r.replaceAll(`:${e}`,String(t??``));return r}export{e as t};

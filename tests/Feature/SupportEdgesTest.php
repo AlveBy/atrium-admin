@@ -116,6 +116,8 @@ final class SupportEdgesTest extends TestCase
         } catch (ViteManifestNotFoundException $e) {
             $this->assertStringContainsString('php artisan atrium:install', $e->getMessage());
             $this->assertStringContainsString('--tag=atrium-assets', $e->getMessage());
+            $this->assertStringContainsString('`npm ci && npm run build` in packages/admin', $e->getMessage());
+            $this->assertStringContainsString('the stable branch', $e->getMessage());
             $this->assertInstanceOf(ViteManifestNotFoundException::class, $e->getPrevious());
             $this->assertStringContainsString('vendor/atrium/manifest.json', (string) $e->getPrevious()?->getMessage());
         }

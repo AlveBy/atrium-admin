@@ -9,8 +9,9 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath } from 'node:url';
 
-// The admin ships prebuilt: `npm run build` writes dist/, which
-// `php artisan atrium:install` publishes to public/vendor/atrium.
+// `npm run build` writes dist/, which `php artisan atrium:install` publishes
+// to public/vendor/atrium. main does not keep dist/: GitHub builds it for the
+// stable branch and for the package on Packagist.
 // `npm run dev` drops a hot file there so the demo app loads from Vite.
 export default defineConfig({
     base: '/vendor/atrium/',

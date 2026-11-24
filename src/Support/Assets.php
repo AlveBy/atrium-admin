@@ -37,7 +37,7 @@ final class Assets
             return $vite(['resources/js/app.js']);
         } catch (ViteManifestNotFoundException $e) {
             throw new ViteManifestNotFoundException(
-                'Atrium assets are not published. Run `php artisan atrium:install` (or `php artisan vendor:publish --tag=atrium-assets --force`).',
+                'Atrium assets are not published. Run `php artisan atrium:install` (or `php artisan vendor:publish --tag=atrium-assets --force`). A checkout of the main branch has no built admin: build it first with `npm ci && npm run build` in packages/admin, or install from the stable branch.',
                 previous: $e,
             );
         }
