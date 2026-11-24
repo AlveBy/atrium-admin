@@ -160,7 +160,6 @@ final class TemplatesTest extends TestCase
         file_put_contents($second.'/templates/posts/alpha.blade.php', '{{-- Template: Alpha --}}');
         view()->addLocation($second);
         $this->template('templates/posts/zeta');
-        $this->template('templates/posts/alpha');
 
         $this->assertSame(['alpha', 'zeta'], array_keys($this->templates()->available(Post::class)));
     }
@@ -226,6 +225,20 @@ final class TemplatesTest extends TestCase
         $this->assertSame(['wide'], array_keys($this->templates()->available(Post::class)));
     }
 
+    public function test_a_place_added_later_is_looked_in_at_once(): void
+    {
+        $this->template('templates/posts/wide');
+        $this->assertSame(['wide'], array_keys($this->templates()->available(Post::class)));
+
+        $theme = $this->views.'/late';
+        mkdir($theme.'/templates/posts', 0777, true);
+        file_put_contents($theme.'/templates/posts/late.blade.php', '{{-- Template: Late --}}');
+        view()->addNamespace('late', $theme);
+        $this->templates()->roots(static fn (): array => ['late::']);
+
+        $this->assertSame(['wide', 'late'], array_keys($this->templates()->available(Post::class)));
+    }
+
     public function test_the_templates_are_looked_for_again_after_forget(): void
     {
         $this->template('templates/posts/wide');
@@ -249,6 +262,7 @@ final class TemplatesTest extends TestCase
         $this->template('templates/posts/e', '{{-- Template: --}}');
         $this->template('templates/posts/f', '{{-- Template: Multi word - and "quotes" --}}');
         $this->template('templates/posts/my-landing_page', '<p>x</p>');
+        $this->template('templates/posts/g', '{{--Template:Tight--}}');
 
         $labels = array_map(static fn (Template $template): string => $template->label, $this->templates()->available(Post::class));
 
@@ -259,6 +273,7 @@ final class TemplatesTest extends TestCase
             'd' => 'D',
             'e' => 'E',
             'f' => 'Multi word - and "quotes"',
+            'g' => 'Tight',
             'my-landing_page' => 'My Landing Page',
         ], $labels);
     }
@@ -407,10 +422,10 @@ final class TemplatesTest extends TestCase
         Tabbed::$tabs = $tabs;
         Tabbed::$uses = $uses;
 
-        $fields = Hook::apply('atrium.module.fields', ['first'], Tabbed::class);
+        $fields = Hook::apply('atrium.module.fields', ['first', 'second'], Tabbed::class);
 
-        $this->assertSame('first', $fields[0], 'the fields of the module stay');
-        $this->assertSame($expected, $fields[1]->getTab());
+        $this->assertSame(['first', 'second'], array_slice($fields, 0, 2), 'the fields of the module stay');
+        $this->assertSame($expected, $fields[2]->getTab());
     }
 
     public function test_a_finder_that_knows_no_folders_finds_no_templates(): void

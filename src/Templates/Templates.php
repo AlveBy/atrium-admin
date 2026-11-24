@@ -179,7 +179,7 @@ final class Templates
     {
         $key = $this->picked($record);
 
-        return $key !== null && $key !== self::DEFAULT && isset($this->views($record::class)[$key]) ? $key : self::DEFAULT;
+        return $key !== null && isset($this->views($record::class)[$key]) ? $key : self::DEFAULT;
     }
 
     /**
