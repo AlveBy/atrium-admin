@@ -15,6 +15,7 @@ import { tc } from '../../../Support/i18n'
 
 // Only a module with a board loads it, and with it the drag-and-drop library.
 const KanbanBoard = defineAsyncComponent(() => import('../../../Components/Admin/Views/KanbanBoard.vue'))
+const CalendarView = defineAsyncComponent(() => import('../../../Components/Admin/Views/CalendarView.vue'))
 
 const props = defineProps({
     routeName: String,
@@ -38,11 +39,13 @@ const props = defineProps({
     links: { type: Array, default: () => [] },
     // Filters drawn above the list, the module's and other modules': name, type, label, options.
     filterControls: { type: Array, default: () => [] },
-    // The looks of the list the module declared ('table', 'kanban'…) and the one drawn now.
+    // The looks of the list the module declared ('table', 'kanban', 'calendar'…) and the one drawn now.
     views: { type: Array, default: () => [] },
     view: { type: String, default: 'table' },
     // The kanban board: columns with their first cards.
     board: { type: Object, default: null },
+    // The calendar: the mode, the days it draws and the records on them.
+    calendar: { type: Object, default: null },
 })
 
 // Filters from the address (?module=…) that the module declared: kept on
@@ -67,7 +70,7 @@ const applyFilters = () => {
         }
     }
 
-    router.get(route(`${props.routeName}.index`), query, { preserveState: true, preserveScroll: true })
+    router.get(route(`${props.routeName}.index`), { ...calendarQuery.value, ...query }, { preserveState: true, preserveScroll: true })
 }
 
 const resetFilters = () => {
@@ -77,6 +80,9 @@ const resetFilters = () => {
 
     applyFilters()
 }
+
+// A calendar keeps its mode and its day when the list is searched or filtered.
+const calendarQuery = computed(() => (props.calendar ? { mode: props.calendar.mode, date: props.calendar.date } : {}))
 
 // What a change of the look keeps: the search and the filters.
 const switchQuery = computed(() => Object.fromEntries(
@@ -124,7 +130,7 @@ const showDeleteModal = ref(false)
 const itemToDelete = ref(null)
 
 const handleSearch = () => {
-    router.get(route(`${props.routeName}.index`), { ...listFilters.value, search: search.value }, {
+    router.get(route(`${props.routeName}.index`), { ...calendarQuery.value, ...listFilters.value, search: search.value }, {
         preserveState: true,
         preserveScroll: true,
     })
@@ -268,11 +274,6 @@ const handleDelete = () => {
         </div>
     </div>
 
-    <!--
-        The bar above the list while rows are checked. The count is read
-        out as it changes; "Delete" is told apart by its icon, not only
-        by its colour.
-    -->
     <KanbanBoard
         v-if="view === 'kanban' && board"
         :route-name="routeName"
@@ -280,8 +281,22 @@ const handleDelete = () => {
         :filters="switchQuery"
         :can-move="can.update !== false"
     />
+    <CalendarView
+        v-if="view === 'calendar' && calendar"
+        :route-name="routeName"
+        :calendar="calendar"
+        :filters="switchQuery"
+        :create-query="listFilters"
+        :can-move="can.update !== false"
+        :can-create="can.create !== false"
+    />
 
     <template v-if="items">
+    <!--
+        The bar above the list while rows are checked. The count is read
+        out as it changes; "Delete" is told apart by its icon, not only
+        by its colour.
+    -->
     <p class="sr-only" aria-live="polite">{{ selected.length ? tc('actions.bulk.selected', selected.length) : '' }}</p>
     <div
         v-if="bulkActions.length && selected.length"

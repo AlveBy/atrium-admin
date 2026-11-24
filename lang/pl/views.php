@@ -39,6 +39,7 @@ return [
         'empty' => 'W te dni nic nie ma',
         'truncated' => 'Wyświetlono tylko pierwsze :count rekordów. Zawęź listę wyszukiwaniem lub filtrem.',
         'no_date' => 'Rekord nie ma daty, więc nie można go przenieść.',
+        'move_to' => 'Przenieś na dzień',
         'failed' => 'Nie udało się przenieść rekordu.',
     ],
 ];

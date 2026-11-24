@@ -39,6 +39,7 @@ return [
         'empty' => 'Bu günlerde hiçbir şey yok',
         'truncated' => 'Yalnızca ilk :count kayıt gösteriliyor. Listeyi arama veya filtre ile daraltın.',
         'no_date' => 'Kaydın tarihi olmadığı için taşınamaz.',
+        'move_to' => 'Güne taşı',
         'failed' => 'Kayıt taşınamadı.',
     ],
 ];

@@ -44,9 +44,12 @@ use Atrium\Admin\Tabs\TabRegistry;
 use Atrium\Admin\Templates\Templates;
 use Atrium\Admin\Traits\BelongsToSite;
 use Atrium\Admin\Views\Board;
+use Atrium\Admin\Views\CalendarView;
 use Atrium\Admin\Views\KanbanView;
 use Atrium\Admin\Views\ModuleViews;
+use Atrium\Admin\Views\Schedule;
 use Atrium\Admin\Views\View;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -97,7 +100,7 @@ abstract class AdminController extends Controller
     private ?array $fieldsByNameCache = null;
 
     /**
-     * Set while a card is moved on a board: the save then
+     * Set while a card or an event is moved in a view: the save then
      * validates only what the move sends, as an update from the API does.
      */
     private bool $moving = false;
@@ -351,7 +354,7 @@ abstract class AdminController extends Controller
     }
 
     /**
-     * The list as a kanban board. It is narrowed by the same
+     * The list as a kanban board or a calendar. It is narrowed by the same
      * search and filters as the table, but is not paged or sorted by them.
      *
      * @param  array<string,View>  $declared
@@ -364,6 +367,7 @@ abstract class AdminController extends Controller
             'views' => app(ModuleViews::class)->types($declared),
             'view' => $view->type(),
             ...($view instanceof KanbanView ? ['board' => $this->boardProps($view, $query)] : []),
+            ...($view instanceof CalendarView ? ['calendar' => $this->calendarProps($request, $view, $query)] : []),
             ...$this->listPageProps(['search' => $request->get('search', ''), ...$listFilters]),
         ]);
     }
@@ -432,10 +436,19 @@ abstract class AdminController extends Controller
 
         return $records->map(fn (Model $record): array => [
             'id' => $record->getKey(),
-            'title' => (string) ($titleField === null ? $this->adminTitle($record) : ($this->listRow($record)[$titleField] ?? $this->adminTitle($record))),
+            'title' => $this->cardTitle($record, $titleField),
             'fields' => $texts[$record->getKey()] ?? [],
             'url' => route($this->model::getAdminRouteName().'.edit', $record->getKey()),
         ])->all();
+    }
+
+    /**
+     * What a card or an event of a view is called: the field the view names,
+     * else what the record is called.
+     */
+    private function cardTitle(Model $record, ?string $field): string
+    {
+        return (string) ($field === null ? $this->adminTitle($record) : ($this->listRow($record)[$field] ?? $this->adminTitle($record)));
     }
 
     /**
@@ -480,19 +493,80 @@ abstract class AdminController extends Controller
     }
 
     /**
-     * A card dropped in another column of the board: the new column is
-     * saved the way the form saves it, so it is checked the same way and
-     * heard of by the same hooks. What the view does not write is not taken
-     * from the request.
+     * The records of the range the calendar draws.
      *
-     * `value` is the column, `after` the card now above this one.
+     * @param  Builder<Model&Administrable>  $query
+     * @return array<string,mixed>
+     */
+    private function calendarProps(Request $request, CalendarView $view, Builder $query): array
+    {
+        $schedule = $this->schedule($view);
+        $mode = Schedule::mode($request->query('mode'));
+        $day = Schedule::day($request->query('date')) ?? CarbonImmutable::today();
+        [$from, $to] = Schedule::range($mode, $day);
+
+        $records = $schedule->within($query, $from, $to)->get();
+
+        return [
+            'mode' => $mode,
+            'date' => $day->format('Y-m-d'),
+            'from' => $from->format('Y-m-d'),
+            'to' => $to->subDay()->format('Y-m-d'),
+            'today' => CarbonImmutable::today()->format('Y-m-d'),
+            'field' => $view->getField(),
+            'timed' => $this->fieldsByName()[$view->getField()]->getType() === 'datetime',
+            'truncated' => $records->count() > Schedule::MAX_EVENTS,
+            'events' => $records->take(Schedule::MAX_EVENTS)->map(fn (Model $record): array => $this->event($schedule, $view, $record))->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function event(Schedule $schedule, CalendarView $view, Model $record): array
+    {
+        $titleField = $view->getTitleField();
+        $until = $view->getUntil();
+
+        return [
+            'id' => $record->getKey(),
+            'title' => $this->cardTitle($record, $titleField),
+            'start' => $schedule->stamp($record, $this->fieldsByName()[$view->getField()]),
+            'end' => $schedule->stamp($record, $until === null ? null : $this->fieldsByName()[$until]),
+            'url' => route($this->model::getAdminRouteName().'.edit', $record->getKey()),
+        ];
+    }
+
+    private function schedule(CalendarView $view): Schedule
+    {
+        $until = $view->getUntil();
+
+        return new Schedule($view, $this->fieldsByName()[$view->getField()], $until === null ? null : $this->fieldsByName()[$until]);
+    }
+
+    /**
+     * A card or an event dropped somewhere else in its view: the new column
+     * or the new day is saved the way the form saves it, so it is checked
+     * the same way and heard of by the same hooks. What the view does not
+     * write is not taken from the request.
+     *
+     * `view` says which one is meant (the board by default).
+     * Kanban: `value` is the column, `after` the card now above this one.
+     * Calendar: `day` is the day (2026-12-31) the event was dropped on.
      */
     public function move(Request $request, int $id): JsonResponse
     {
-        $view = app(ModuleViews::class)->for($this->model)['kanban'] ?? null;
-        abort_unless($view instanceof KanbanView, 404);
+        $type = $request->input('view', 'kanban');
+        $view = is_string($type) ? (app(ModuleViews::class)->for($this->model)[$type] ?? null) : null;
+        abort_unless($view instanceof KanbanView || $view instanceof CalendarView, 404);
 
         $item = $this->findItem($id);
+
+        return $view instanceof KanbanView ? $this->moveCard($request, $view, $item) : $this->moveEvent($request, $view, $item);
+    }
+
+    private function moveCard(Request $request, KanbanView $view, Model&Administrable $item): JsonResponse
+    {
         $board = $this->board($view);
         $order = $view->getOrder();
         $value = $request->input('value');
@@ -508,6 +582,24 @@ abstract class AdminController extends Controller
         }
 
         return response()->json(['card' => $this->presentCards($board, collect([$this->saveMoved($request, $item, $payload, $order, $shift)]))[0]]);
+    }
+
+    private function moveEvent(Request $request, CalendarView $view, Model&Administrable $item): JsonResponse
+    {
+        $day = Schedule::day($request->input('day'));
+
+        if ($day === null) {
+            throw ValidationException::withMessages(['day' => __('validation.date', ['attribute' => 'day'])]);
+        }
+
+        $schedule = $this->schedule($view);
+        $moved = $schedule->moved($item, $day);
+
+        if ($moved === null) {
+            throw ValidationException::withMessages([$view->getField() => __('atrium::views.calendar.no_date')]);
+        }
+
+        return response()->json(['event' => $this->event($schedule, $view, $this->saveMoved($request, $item, $moved))]);
     }
 
     /**
@@ -623,7 +715,7 @@ abstract class AdminController extends Controller
     {
         abort_unless($this->moduleAllows(Permissions::CREATE), 403);
 
-        $data = $this->prefillFromActions($request, $this->preselectSection($request, $this->prepareFormData('create')));
+        $data = $this->prefillFromViews($request, $this->prefillFromActions($request, $this->preselectSection($request, $this->prepareFormData('create'))));
         $data = $this->withFieldDefaults($data, $this->listFilters($request));
 
         return Inertia::render($this->getPagePrefix().'/Create', [...$data, ...$this->resourceProps()]);
@@ -673,6 +765,32 @@ abstract class AdminController extends Controller
         }
 
         return $this->withFieldDefaults($data, [self::SECTION_QUERY => $sectionId]);
+    }
+
+    /**
+     * The date a click on a day of the calendar passes (`?active_from=2026-12-31`):
+     * only the field of a calendar view of the module, and only a real day.
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    private function prefillFromViews(Request $request, array $data): array
+    {
+        $defaults = [];
+
+        foreach (app(ModuleViews::class)->for($this->model) as $view) {
+            if (! $view instanceof CalendarView) {
+                continue;
+            }
+
+            $day = Schedule::day($request->query($view->getField()));
+
+            if ($day !== null) {
+                $defaults[$view->getField()] = $this->schedule($view)->created($day);
+            }
+        }
+
+        return $this->withFieldDefaults($data, $defaults);
     }
 
     /**
@@ -1016,7 +1134,7 @@ abstract class AdminController extends Controller
     }
 
     /**
-     * While a card is moved, a field the move does not send
+     * While a card or an event is moved, a field the move does not send
      * stays as it was, so there is nothing to validate: `required` on a name
      * that was not sent must not block a move.
      *

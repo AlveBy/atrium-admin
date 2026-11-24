@@ -38,6 +38,22 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('meetings', function (Blueprint $table): void {
+            $table->id();
+            $table->string('title');
+            $table->dateTime('starts_at')->nullable();
+            $table->dateTime('ends_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('holidays', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('site_id')->nullable()->index();
+            $table->string('name');
+            $table->date('on_day')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('tickets', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('site_id')->nullable()->index();
@@ -213,7 +229,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['tickets', 'tasks', 'kit_post', 'kit_note', 'kit_page', 'kit_topic', 'kits', 'sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'parcels', 'posts'] as $table) {
+        foreach (['holidays', 'meetings', 'tickets', 'tasks', 'kit_post', 'kit_note', 'kit_page', 'kit_topic', 'kits', 'sections', 'bundle_topic', 'bundle_post', 'bundles', 'leaflets', 'topics', 'guides', 'chapters', 'api_aisles', 'remarks', 'articles', 'gadget_label', 'gadgets', 'pages', 'notes', 'stories', 'parcels', 'posts'] as $table) {
             Schema::dropIfExists($table);
         }
     }

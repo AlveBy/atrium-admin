@@ -39,6 +39,7 @@ return [
         'empty' => 'Nada nestes dias',
         'truncated' => 'Somente os primeiros :count registros são exibidos. Reduza a lista com a busca ou um filtro.',
         'no_date' => 'O registro não tem data, por isso não pode ser movido.',
+        'move_to' => 'Mover para o dia',
         'failed' => 'Não foi possível mover o registro.',
     ],
 ];

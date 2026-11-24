@@ -39,6 +39,7 @@ return [
         'empty' => 'Niente in questi giorni',
         'truncated' => 'Vengono mostrati solo i primi :count record. Restringi l’elenco con la ricerca o un filtro.',
         'no_date' => 'Il record non ha una data, quindi non può essere spostato.',
+        'move_to' => 'Sposta al giorno',
         'failed' => 'Non è stato possibile spostare il record.',
     ],
 ];

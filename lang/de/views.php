@@ -39,6 +39,7 @@ return [
         'empty' => 'An diesen Tagen ist nichts',
         'truncated' => 'Es werden nur die ersten :count Einträge angezeigt. Grenzen Sie die Liste mit der Suche oder einem Filter ein.',
         'no_date' => 'Der Eintrag hat kein Datum und kann deshalb nicht verschoben werden.',
+        'move_to' => 'Auf Tag verschieben',
         'failed' => 'Der Eintrag konnte nicht verschoben werden.',
     ],
 ];

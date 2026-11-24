@@ -21,6 +21,7 @@ const props = defineProps({
 const looks = {
     table: { label: 'views.table', path: 'M3 5h18M3 12h18M3 19h18' },
     kanban: { label: 'views.kanban.name', path: 'M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v13h-4z' },
+    calendar: { label: 'views.calendar.name', path: 'M8 3v4M16 3v4M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z' },
 }
 
 const choose = (type) => {

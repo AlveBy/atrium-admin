@@ -39,6 +39,7 @@ return [
         'empty' => 'Nothing on these days',
         'truncated' => 'Only the first :count records are shown. Narrow the list with the search or a filter.',
         'no_date' => 'The record has no date, so it cannot be moved.',
+        'move_to' => 'Move to day',
         'failed' => 'The record could not be moved.',
     ],
 ];

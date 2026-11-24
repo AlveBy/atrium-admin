@@ -39,6 +39,7 @@ return [
         'empty' => 'Rien ces jours-ci',
         'truncated' => 'Seuls les :count premiers enregistrements sont affichés. Réduisez la liste avec la recherche ou un filtre.',
         'no_date' => 'L\'enregistrement n\'a pas de date, il ne peut donc pas être déplacé.',
+        'move_to' => 'Déplacer au jour',
         'failed' => 'L\'enregistrement n\'a pas pu être déplacé.',
     ],
 ];

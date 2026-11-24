@@ -39,6 +39,7 @@ return [
         'empty' => 'Bu kunlarda hech narsa yo‘q',
         'truncated' => 'Faqat birinchi :count ta yozuv ko‘rsatilgan. Ro‘yxatni qidiruv yoki filtr bilan toraytiring.',
         'no_date' => 'Yozuvda sana yo‘q, shuning uchun uni ko‘chirib bo‘lmaydi.',
+        'move_to' => 'Kunga ko‘chirish',
         'failed' => 'Yozuvni ko‘chirib bo‘lmadi.',
     ],
 ];
