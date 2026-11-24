@@ -149,6 +149,7 @@ return [
         'image_host' => 'Obraz znajduje się pod adresem wewnątrz sieci, który nie jest pobierany: :url',
         'image_download' => 'Nie udało się pobrać obrazu: :url',
         'image_large' => 'Obraz jest większy niż :max KB: :url',
+        'image_demo' => 'W wersji demo obrazy nie są pobierane z adresu: :url',
     ],
 
     'console' => [

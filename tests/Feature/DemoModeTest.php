@@ -142,16 +142,31 @@ final class DemoModeTest extends TestCase
         $this->assertContains('users.delete', $granted);
         $this->assertNotContains('api-tokens.use', $granted);
         $this->assertSame([], array_filter($granted, static fn (string $permission): bool => str_ends_with($permission, '.settings')));
-        // Bringing records in from a file (it may fetch pictures from any address) and taking them out is not the visitor's.
-        $transfer = array_values(array_filter($all, static fn (string $permission): bool => str_ends_with($permission, '.import') || str_ends_with($permission, '.export')));
-        $this->assertContains('posts.import', $transfer);
-        $this->assertContains('posts.export', $transfer);
-        $this->assertContains('languages.export', $transfer);
-        $this->assertSame([], array_intersect($transfer, $granted));
+        // Import and export go with editing: where the visitor edits, and not where they only look.
+        $this->assertContains('languages.export', $granted);
+        $this->assertContains('posts.import', $all);
+        $this->assertContains('posts.export', $all);
+        $this->assertNotContains('posts.import', $granted);
+        $this->assertNotContains('posts.export', $granted);
         $this->assertEqualsCanonicalizing(
-            array_values(array_diff($all, ['posts.create', 'posts.update', 'posts.delete', 'api-tokens.use'], $transfer)),
+            array_values(array_diff($all, ['posts.create', 'posts.update', 'posts.delete', 'posts.import', 'posts.export', 'api-tokens.use'])),
             $granted,
         );
+    }
+
+    public function test_the_visitor_imports_and_exports_what_they_edit(): void
+    {
+        $this->demo();
+        config(['atrium.demo.read_only' => ['languages']]);
+
+        $this->artisan('atrium:demo:reset')->assertSuccessful();
+
+        $granted = AdminUser::query()->sole()->adminPermissions();
+
+        $this->assertContains('posts.import', $granted);
+        $this->assertContains('posts.export', $granted);
+        $this->assertContains('languages.view', $granted);
+        $this->assertNotContains('languages.export', $granted);
     }
 
     public function test_the_sections_a_demo_only_shows_are_in_the_config_by_default(): void

@@ -149,6 +149,7 @@ return [
         'image_host' => 'L’immagine si trova a un indirizzo interno alla rete, che non viene scaricato: :url',
         'image_download' => 'Non è stato possibile scaricare l’immagine: :url',
         'image_large' => 'L’immagine supera :max KB: :url',
+        'image_demo' => 'La demo non scarica le immagini da un indirizzo: :url',
     ],
 
     'console' => [

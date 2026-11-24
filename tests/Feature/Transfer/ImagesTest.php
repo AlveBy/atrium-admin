@@ -177,6 +177,46 @@ final class ImagesTest extends TransferTestCase
         $this->images(check: true)->one('http://');
     }
 
+    public function test_a_demo_downloads_no_image_and_says_so(): void
+    {
+        config(['atrium.demo.enabled' => true]);
+        Http::fake(['example.com/*' => Http::response(base64_decode(self::GIF))]);
+
+        $this->assertProblem('The demo does not download images by address: https://example.com/1.gif', 'https://example.com/1.gif');
+
+        Http::assertNothingSent();
+        $this->assertSame(0, MediaItem::query()->count());
+        $this->assertSame(0, DB::table('admin_import_media')->count());
+    }
+
+    public function test_a_check_in_a_demo_already_says_the_image_is_not_downloaded(): void
+    {
+        config(['atrium.demo.enabled' => true]);
+
+        $this->expectExceptionObject(new RowProblem('The demo does not download images by address: https://example.com/1.gif'));
+
+        $this->images(check: true)->one('https://example.com/1.gif');
+    }
+
+    public function test_a_demo_still_takes_a_path_and_still_names_a_bad_address(): void
+    {
+        config(['atrium.demo.enabled' => true]);
+        Storage::disk('public')->put('catalog/1.jpg', 'x');
+
+        $this->assertSame('catalog/1.jpg', $this->images()->one('catalog/1.jpg'));
+        $this->assertProblem('The image address is not valid: http://exa mple.com/1.jpg', 'http://exa mple.com/1.jpg');
+    }
+
+    public function test_outside_a_demo_the_same_address_is_downloaded(): void
+    {
+        config(['atrium.demo.enabled' => false]);
+        Http::fake(['example.com/*' => Http::response(base64_decode(self::GIF))]);
+
+        $this->assertStringEndsWith('.gif', $this->images()->one('https://example.com/1.gif'));
+
+        Http::assertSentCount(1);
+    }
+
     public function test_an_image_is_downloaded_into_the_media_library(): void
     {
         $this->travelTo('2026-03-05 10:00:00');

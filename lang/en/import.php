@@ -149,6 +149,7 @@ return [
         'image_host' => 'The image is on an address inside the network, which is not fetched: :url',
         'image_download' => 'The image could not be downloaded: :url',
         'image_large' => 'The image is larger than :max KB: :url',
+        'image_demo' => 'The demo does not download images by address: :url',
     ],
 
     'console' => [

@@ -108,8 +108,9 @@ return [
     | For a public demo of the panel (docs/demo.md), never for a real site.
     | `php artisan atrium:demo:reset` puts the database and the uploaded
     | files back as they were: the demo content and one administrator,
-    | `email` / `password`, who is not a superadmin, edits the content and
-    | looks at the sections in `read_only` (administrators, sites, languages,
+    | `email` / `password`, who is not a superadmin, edits, imports and
+    | exports the content (images by address are not downloaded), looks at
+    | the sections in `read_only` (administrators, sites, languages,
     | the uptime checks) but changes none of them, has no API tokens, no
     | module settings and cannot change their own name, e-mail or password.
     | `reset` is the cron expression that runs the reset when the scheduler

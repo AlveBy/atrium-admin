@@ -35,6 +35,9 @@ use Illuminate\Support\Str;
  * ("/upload/catalog/1.jpg") or on the public disk ("catalog/1.jpg").
  *
  * A check downloads nothing: it only looks at whether the URL is one.
+ *
+ * A public demo (`atrium.demo.enabled`) downloads nothing at all: a row with
+ * an image URL is not imported, and the check already says why.
  */
 final class Images
 {
@@ -57,6 +60,10 @@ final class Images
 
         if (filter_var($value, FILTER_VALIDATE_URL) === false) {
             throw RowProblem::because('image_url', ['url' => $value]);
+        }
+
+        if (config('atrium.demo.enabled')) {
+            throw RowProblem::because('image_demo', ['url' => $value]);
         }
 
         return $this->check ? $value : $this->download($value);

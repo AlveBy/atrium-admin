@@ -149,6 +149,7 @@ return [
         'image_host' => 'Das Bild liegt unter einer Adresse im internen Netz, die nicht abgerufen wird: :url',
         'image_download' => 'Das Bild konnte nicht heruntergeladen werden: :url',
         'image_large' => 'Das Bild ist größer als :max KB: :url',
+        'image_demo' => 'In der Demo werden Bilder nicht über eine Adresse heruntergeladen: :url',
     ],
 
     'console' => [

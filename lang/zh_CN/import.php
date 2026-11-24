@@ -149,6 +149,7 @@ return [
         'image_host' => '图片位于内网地址，此类图片不会被下载：:url',
         'image_download' => '无法下载图片：:url',
         'image_large' => '图片超过 :max KB：:url',
+        'image_demo' => '演示版不会按地址下载图片：:url',
     ],
 
     'console' => [

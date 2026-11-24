@@ -149,6 +149,7 @@ return [
         'image_host' => 'Görsel ağ içindeki bir adreste duruyor, bunlar indirilmez: :url',
         'image_download' => 'Görsel indirilemedi: :url',
         'image_large' => 'Görsel :max KB değerinden büyük: :url',
+        'image_demo' => 'Demoda görseller adresten indirilmez: :url',
     ],
 
     'console' => [

@@ -149,6 +149,7 @@ return [
         'image_host' => 'L’image se trouve à une adresse du réseau interne, qui n’est pas récupérée : :url',
         'image_download' => 'L’image n’a pas pu être téléchargée : :url',
         'image_large' => 'L’image dépasse :max Ko : :url',
+        'image_demo' => 'La démo ne télécharge pas les images par adresse : :url',
     ],
 
     'console' => [

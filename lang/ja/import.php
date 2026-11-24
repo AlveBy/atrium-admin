@@ -149,6 +149,7 @@ return [
         'image_host' => '画像がネットワーク内部のアドレスにあるため取得されません：:url',
         'image_download' => '画像をダウンロードできませんでした：:url',
         'image_large' => '画像が :max KB を超えています：:url',
+        'image_demo' => 'デモでは画像をアドレスからダウンロードしません: :url',
     ],
 
     'console' => [

@@ -149,6 +149,7 @@ return [
         'image_host' => 'Rasm tarmoq ichidagi manzilda turibdi, bunday rasmlar yuklanmaydi: :url',
         'image_download' => 'Rasmni yuklab boʻlmadi: :url',
         'image_large' => 'Rasm :max KB dan katta: :url',
+        'image_demo' => 'Demoda rasmlar manzil boʻyicha yuklab olinmaydi: :url',
     ],
 
     'console' => [
