@@ -30,7 +30,7 @@ class AtriumServer extends Server
 {
     protected string $name = 'Atrium';
 
-    protected string $version = '0.1.0';
+    protected string $version = '0.2.0';
 
     protected string $instructions = <<<'MARKDOWN'
         This server edits the content of a website managed with Atrium: its admin modules (news, products, pages and so on) and their records.
