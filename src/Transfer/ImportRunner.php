@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Transfer;
 
+use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\Models\DataImport;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Illuminate\Support\Facades\Cache;
@@ -40,7 +41,8 @@ final class ImportRunner
         try {
             $import->refresh();
 
-            return $import->isRunning() && $this->work($import, $seconds);
+            // What the rows change is logged as the import of whoever started it.
+            return $import->isRunning() && app(ActivityLog::class)->during(ActivityLog::IMPORT, $import->user, fn (): bool => $this->work($import, $seconds));
         } finally {
             $lock->release();
         }

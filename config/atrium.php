@@ -592,6 +592,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | History of records
+    |--------------------------------------------------------------------------
+    |
+    | The activity log (docs/history.md): who created, changed, deleted or
+    | restored a record of any module, and which fields went from what to
+    | what, from the form, the API, the MCP tools and the import alike. A
+    | module leaves it with `hasAdminHistory(): false`.
+    |
+    | secrets  fields whose values are never written, only that they changed:
+    |          a name containing one of these, a password input, an attribute
+    |          the model hides
+    |
+    */
+    'history' => [
+        'enabled' => (bool) env('ATRIUM_HISTORY_ENABLED', true),
+        'secrets' => ['password', 'secret', 'token', 'api_key', 'private_key'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache
     |--------------------------------------------------------------------------
     |

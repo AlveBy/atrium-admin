@@ -21,6 +21,7 @@ use Atrium\Admin\Dashboard\Gadgets\PerformanceGadget;
 use Atrium\Admin\Dashboard\Gadgets\RecentElementsGadget;
 use Atrium\Admin\Dashboard\Gadgets\SiteSpeedGadget;
 use Atrium\Admin\Embeds\Embeds;
+use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\Hooks\Hooks;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
@@ -118,6 +119,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->app->singleton(Versions::class, fn ($app): Versions => new Versions($app->make(CacheStore::class)->repository()));
         $this->app->singleton(RecordCache::class);
         $this->app->singleton(RecordUrls::class);
+        $this->app->singleton(ActivityLog::class);
     }
 
     public function boot(): void
@@ -130,6 +132,7 @@ final class AtriumServiceProvider extends ServiceProvider
         $this->registerSitemapFlush();
         $this->registerGadgets();
         $this->registerCache();
+        $this->registerHistory();
         $this->registerCommands();
         $this->registerCdnAssets();
     }
@@ -384,6 +387,22 @@ final class AtriumServiceProvider extends ServiceProvider
                 'misses' => (int) ($stats['misses'] ?? 0) + $own['misses'],
             ] + $stats;
         });
+    }
+
+    /**
+     * What a module's button changes goes to the activity log while it runs
+     * (ActivityLog::watch()). Until anything asks for the log, nothing is
+     * watching: one check per saved record.
+     */
+    private function registerHistory(): void
+    {
+        foreach ([ActivityLog::CREATED, ActivityLog::UPDATED] as $event) {
+            Event::listen('eloquent.'.$event.': *', function (string $name, array $payload) use ($event): void {
+                if ($this->app->resolved(ActivityLog::class)) {
+                    $this->app->make(ActivityLog::class)->observed($event, $payload[0]);
+                }
+            });
+        }
     }
 
     private function registerCommands(): void

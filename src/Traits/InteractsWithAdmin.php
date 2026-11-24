@@ -205,6 +205,17 @@ trait InteractsWithAdmin
     }
 
     /**
+     * Whether changes of the records go to the activity log (who changed
+     * what and when) and get a "History" button on the form. Return false for
+     * records that change too often to tell anything, or that log
+     * themselves.
+     */
+    public static function hasAdminHistory(): bool
+    {
+        return true;
+    }
+
+    /**
      * Whether the module holds content: what editors write and the site
      * shows or sells (pages, products, news, the sites themselves). False
      * for service records the panel keeps for itself: logs, audit results,

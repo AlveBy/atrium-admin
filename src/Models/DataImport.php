@@ -48,6 +48,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $message
  * @property Carbon|null $started_at
  * @property Carbon|null $finished_at
+ * @property-read AdminUser|null $user
  */
 class DataImport extends Model
 {

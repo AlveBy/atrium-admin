@@ -35,6 +35,8 @@ const props = defineProps({
     actions: { type: Array, default: () => [] },
     // Where the link buttons lead for this record: id => name => address.
     actionUrls: { type: [Object, Array], default: () => ({}) },
+    // Where the record's history is, or null when the module keeps none.
+    historyUrl: { type: String, default: null },
 })
 
 // A server action that asks first waits here for the answer.
@@ -152,7 +154,10 @@ const allTabs = computed(() => [...tabsWithBadges.value, ...tabPanels.value.map(
     <div class="max-w-4xl">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
             <h1 class="text-2xl font-bold text-fg">{{ title }}</h1>
-            <div v-if="actions.length" class="flex flex-wrap gap-2">
+            <div v-if="actions.length || historyUrl" class="flex flex-wrap gap-2">
+                <AdminButton v-if="historyUrl" data-action="history" variant="secondary" :href="historyUrl">
+                    {{ $t('history.button') }}
+                </AdminButton>
                 <template v-for="action in actions" :key="action.name">
                     <AdminButton
                         v-if="action.type === 'record'"

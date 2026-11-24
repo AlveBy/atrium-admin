@@ -16,4 +16,5 @@ return [
     'languages' => 'Languages',
     'sites' => 'Sites',
     'modules' => 'Modules',
+    'activity' => 'Activity log',
 ];

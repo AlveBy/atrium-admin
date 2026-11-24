@@ -11,6 +11,7 @@ namespace Atrium\Admin\Actions;
 
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\Sites;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -129,6 +130,15 @@ final class ModuleActions
     }
 
     /**
+     * Runs a server button on a record. What it changes goes to the activity
+     * log.
+     */
+    public function runRecord(RecordAction $action, Model $record): ActionResult
+    {
+        return app(ActivityLog::class)->watch(static fn (): ActionResult => $action->handle($record));
+    }
+
+    /**
      * Runs a bulk action over the selected records, or puts it on the queue.
      *
      * @param  class-string<Model&Administrable>  $model
@@ -142,11 +152,13 @@ final class ModuleActions
             return ActionResult::error(__('atrium::actions.nothing_selected'));
         }
 
+        $history = app(ActivityLog::class);
+
         if (! $action instanceof ShouldQueue) {
-            return $action->handle($records);
+            return $history->watch(static fn (): ActionResult => $action->handle($records));
         }
 
-        dispatch(new RunBulkAction($action, $model, $records->modelKeys(), $this->sites->current()->id));
+        dispatch(new RunBulkAction($action, $model, $records->modelKeys(), $this->sites->current()->id, $history->actor()?->getKey(), $history->source()));
 
         return ActionResult::success(trans_choice('atrium::actions.queued', $records->count()));
     }

@@ -111,6 +111,14 @@ class TextField extends Field
     }
 
     /**
+     * Whether the input hides what is typed: a password, a key.
+     */
+    public function isPassword(): bool
+    {
+        return $this->inputType === 'password';
+    }
+
+    /**
      * Set prefix
      */
     public function prefix(string $prefix): static

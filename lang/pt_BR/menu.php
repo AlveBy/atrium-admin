@@ -18,4 +18,5 @@ return [
     'languages' => 'Idiomas',
     'sites' => 'Sites',
     'modules' => 'Módulos',
+    'activity' => 'Registro de alterações',
 ];

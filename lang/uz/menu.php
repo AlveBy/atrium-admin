@@ -18,4 +18,5 @@ return [
     'languages' => 'Tillar',
     'sites' => 'Saytlar',
     'modules' => 'Modullar',
+    'activity' => 'O\'zgarishlar jurnali',
 ];

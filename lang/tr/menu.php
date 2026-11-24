@@ -18,4 +18,5 @@ return [
     'languages' => 'Diller',
     'sites' => 'Siteler',
     'modules' => 'Modüller',
+    'activity' => 'Değişiklik günlüğü',
 ];

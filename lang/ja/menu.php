@@ -18,4 +18,5 @@ return [
     'languages' => '言語',
     'sites' => 'サイト',
     'modules' => 'モジュール',
+    'activity' => '変更履歴',
 ];

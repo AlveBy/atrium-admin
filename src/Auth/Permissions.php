@@ -84,6 +84,8 @@ final class Permissions
         'bulk' => self::VIEW,
         // The records a relation field of the form searches in: as the form.
         'options' => self::VIEW,
+        // Who changed a record and what: anyone who may open it.
+        'history' => self::VIEW,
     ];
 
     public function __construct(

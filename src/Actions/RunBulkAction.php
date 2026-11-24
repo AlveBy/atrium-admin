@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace Atrium\Admin\Actions;
 
 use Atrium\Admin\Contracts\Administrable;
+use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Site;
 use Atrium\Admin\Support\Sites;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -34,14 +36,19 @@ final class RunBulkAction implements ShouldQueue
         public readonly string $model,
         public readonly array $ids,
         public readonly int $site,
+        // Who started it and from where: what the action changes is logged as theirs.
+        public readonly ?int $admin = null,
+        public readonly string $source = ActivityLog::ADMIN,
     ) {}
 
-    public function handle(Sites $sites, ModuleActions $actions): void
+    public function handle(Sites $sites, ModuleActions $actions, ActivityLog $history): void
     {
         $sites->setCurrent(Site::query()->findOrFail($this->site));
 
         try {
-            $this->action->handle($actions->selected($this->model, $this->ids));
+            $history->during($this->source, AdminUser::query()->find($this->admin), fn (): ActionResult => $history->watch(
+                fn (): ActionResult => $this->action->handle($actions->selected($this->model, $this->ids)),
+            ));
         } finally {
             // A worker runs the next job in the same process.
             $sites->forgetCurrent();

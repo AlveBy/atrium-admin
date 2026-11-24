@@ -7,6 +7,7 @@
 
 declare(strict_types=1);
 
+use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\Http\Controllers\AdminUserController;
 use Atrium\Admin\Http\Controllers\ApiTokenController;
 use Atrium\Admin\Http\Controllers\Auth\LoginController;
@@ -15,6 +16,7 @@ use Atrium\Admin\Http\Controllers\DashboardController;
 use Atrium\Admin\Http\Controllers\EmbedController;
 use Atrium\Admin\Http\Controllers\ExportController;
 use Atrium\Admin\Http\Controllers\FileManagerController;
+use Atrium\Admin\Http\Controllers\HistoryController;
 use Atrium\Admin\Http\Controllers\ImportController;
 use Atrium\Admin\Http\Controllers\LinkController;
 use Atrium\Admin\Http\Controllers\LocaleController;
@@ -25,6 +27,7 @@ use Atrium\Admin\Http\Controllers\ResourceController;
 use Atrium\Admin\Http\Controllers\RoleController;
 use Atrium\Admin\Http\Controllers\SiteController;
 use Atrium\Admin\Http\Controllers\ThemeController;
+use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Resources\ResourceRegistry;
 use Atrium\Admin\Transfer\Availability;
 use Illuminate\Support\Facades\Route;
@@ -99,6 +102,15 @@ Route::prefix(config('atrium.prefix', 'admin'))
                 'destroy' => 'admin.users.destroy',
             ]);
 
+            // The activity log of every module; each sees the modules their roles open.
+            if (config('atrium.history.enabled')) {
+                Route::get('activity', [HistoryController::class, 'index'])->name('admin.activity.index');
+            }
+
+            if (app(ActivityLog::class)->enabledFor(AdminUser::class)) {
+                Route::get('users/{id}/history', [HistoryController::class, 'record'])->defaults('module', 'users')->whereNumber('id')->name('admin.users.history');
+            }
+
             // Roles of administrators — superadmins only
             Route::resource('roles', RoleController::class)->except(['show'])->names('admin.roles');
 
@@ -135,6 +147,11 @@ Route::prefix(config('atrium.prefix', 'admin'))
                     ->except(['show'])
                     ->parameters([$key => 'id'])
                     ->names("admin.{$key}");
+
+                // Who changed the record, when and what.
+                if (app(ActivityLog::class)->enabledFor($model)) {
+                    Route::get("{$key}/{id}/history", [HistoryController::class, 'record'])->defaults('module', $key)->whereNumber('id')->name("admin.{$key}.history");
+                }
 
                 // A module's buttons: on one record, and over the selected ones.
                 Route::post("{$key}/{id}/actions/{action}", [ResourceController::class, 'runAction'])

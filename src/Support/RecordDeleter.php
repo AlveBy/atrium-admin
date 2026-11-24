@@ -11,6 +11,7 @@ namespace Atrium\Admin\Support;
 
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\Hooks\Refused;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Deletes a record the way the panel does: with what beforeAdminDelete()
  * takes with it, whole or not at all. The list's delete button, the API and
- * the bulk "Delete" all go through it.
+ * the bulk "Delete" all go through it, and the deletion goes to the activity
+ * log with the record.
  */
 final class RecordDeleter
 {
@@ -45,6 +47,12 @@ final class RecordDeleter
             }
 
             $record->delete();
+
+            $history = app(ActivityLog::class);
+
+            if ($history->enabledFor($record::class)) {
+                $history->record($record, ActivityLog::DELETED);
+            }
 
             return $record;
         }, attempts: 3);

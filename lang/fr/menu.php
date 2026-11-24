@@ -18,4 +18,5 @@ return [
     'languages' => 'Langues',
     'sites' => 'Sites',
     'modules' => 'Modules',
+    'activity' => 'Journal des modifications',
 ];

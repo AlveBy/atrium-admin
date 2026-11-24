@@ -18,4 +18,5 @@ return [
     'languages' => 'Sprachen',
     'sites' => 'Websites',
     'modules' => 'Module',
+    'activity' => 'Änderungsprotokoll',
 ];

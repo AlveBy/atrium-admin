@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature\Transfer;
 
+use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\Models\Activity;
 use Atrium\Admin\Models\DataImport;
 use Atrium\Admin\Tests\Fixtures\Parcel;
 use Atrium\Admin\Tests\Fixtures\Post;
@@ -185,6 +187,27 @@ final class ImportRunnerTest extends TransferTestCase
         $this->assertSame(DataImport::DONE, $import->refresh()->status);
         $this->assertSame(['Hello', 'World'], Post::query()->orderBy('id')->pluck('name')->all());
         $this->assertSame(0, Parcel::query()->count());
+    }
+
+    public function test_what_an_import_writes_is_logged_as_the_import_of_whoever_started_it(): void
+    {
+        $admin = $this->admin();
+        $import = $this->import(DataImport::IMPORTING, 2, ['admin_user_id' => $admin->id]);
+
+        $this->runner()->step($import, 20);
+
+        $this->assertSame(
+            [['parcels', 'created', 'import', $admin->id, 'Admin'], ['parcels', 'created', 'import', $admin->id, 'Admin']],
+            Activity::query()->orderBy('id')->get()->map(fn (Activity $a): array => [$a->module, $a->event, $a->source, $a->admin_user_id, $a->admin_name])->all(),
+        );
+        $this->assertSame('console', app(ActivityLog::class)->source(), 'Only while the import runs.');
+    }
+
+    public function test_a_check_logs_nothing(): void
+    {
+        $this->runner()->step($this->import(DataImport::CHECKING, 2), 20);
+
+        $this->assertSame(0, Activity::query()->count());
     }
 
     private function runner(): ImportRunner

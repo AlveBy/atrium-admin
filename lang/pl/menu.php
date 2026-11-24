@@ -18,4 +18,5 @@ return [
     'languages' => 'Języki',
     'sites' => 'Witryny',
     'modules' => 'Moduły',
+    'activity' => 'Dziennik zmian',
 ];

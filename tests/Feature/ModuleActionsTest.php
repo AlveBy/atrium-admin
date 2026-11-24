@@ -15,6 +15,7 @@ use Atrium\Admin\Actions\LinkAction;
 use Atrium\Admin\Actions\ModuleActions;
 use Atrium\Admin\Actions\RunBulkAction;
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Site;
@@ -335,13 +336,13 @@ final class ModuleActionsTest extends TestCase
         $theirs = Note::query()->create(['name' => 'Theirs', 'code' => 'b', 'site_id' => $second->id]);
         $sites = app(Sites::class);
 
-        (new RunBulkAction(Stamp::make('stamp'), Note::class, [$mine->id, $theirs->id], $second->id))->handle($sites, app(ModuleActions::class));
+        (new RunBulkAction(Stamp::make('stamp'), Note::class, [$mine->id, $theirs->id], $second->id))->handle($sites, app(ModuleActions::class), app(ActivityLog::class));
 
         $this->assertSame(['Mine', 'Theirs (stamped)'], Note::query()->withoutGlobalScopes()->orderBy('id')->pluck('name')->all());
         $this->assertFalse($sites->isResolved());
 
         try {
-            (new RunBulkAction(Explode::make('boom'), Note::class, [$theirs->id], $second->id))->handle($sites, app(ModuleActions::class));
+            (new RunBulkAction(Explode::make('boom'), Note::class, [$theirs->id], $second->id))->handle($sites, app(ModuleActions::class), app(ActivityLog::class));
             $this->fail('The failure reaches the queue.');
         } catch (RuntimeException $e) {
             $this->assertSame('Boom.', $e->getMessage());

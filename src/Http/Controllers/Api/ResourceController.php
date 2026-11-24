@@ -212,7 +212,7 @@ class ResourceController extends AdminController
         $actions = app(ModuleActions::class);
         $found = $this->usableAction($request, $resource, $actions->find($actions->forRecords($this->model), $action, RecordAction::class, $request->user(), $this->model));
 
-        return $this->actionJson($found->handle($this->findItem($id)));
+        return $this->actionJson($actions->runRecord($found, $this->findItem($id)));
     }
 
     /**

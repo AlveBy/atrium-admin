@@ -18,4 +18,5 @@ return [
     'languages' => '语言',
     'sites' => '站点',
     'modules' => '模块',
+    'activity' => '变更日志',
 ];

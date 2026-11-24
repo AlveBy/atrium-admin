@@ -27,8 +27,10 @@ use Atrium\Admin\Fields\CheckboxField;
 use Atrium\Admin\Fields\DisplayField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FieldContext;
+use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Filters\Filter;
 use Atrium\Admin\Filters\ModuleFilters;
+use Atrium\Admin\History\ActivityLog;
 use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Support\ContentLanguages;
@@ -212,7 +214,7 @@ abstract class AdminController extends Controller
         $actions = app(ModuleActions::class);
         $found = $actions->find($actions->forRecords($this->model), $action, RecordAction::class, $this->currentAdmin(), $this->model);
 
-        return $this->actionResponse($found->handle($this->findItem($id)));
+        return $this->actionResponse($actions->runRecord($found, $this->findItem($id)));
     }
 
     /**
@@ -572,17 +574,31 @@ abstract class AdminController extends Controller
         $relations = $this->extractRelationValues($validated);
         $seo = $this->extractSeoValues($validated);
 
-        $saved = DB::transaction(function () use ($item, $validated, $relations, $seo): Model {
+        $history = app(ActivityLog::class);
+        $logged = $history->enabledFor($this->model);
+        $fields = $this->contextFields($context);
+
+        $saved = DB::transaction(function () use ($item, $validated, $relations, $seo, $history, $logged, $fields): Model {
             // A retry after a deadlock starts again from the record as it
             // came: a rolled back insert leaves the model thinking it exists.
             $record = clone $item;
-            $record->fill($validated);
-            $record->save();
+            $before = $logged && $record->exists ? $this->snapshot($record, $fields) : [];
 
-            $this->syncRelations($record, $relations);
-            $this->persistSeoValues($record, $seo);
+            // The save logs itself below; a button that saves through here
+            // must not log it a second time.
+            $history->quietly(function () use ($record, $validated, $relations, $seo): void {
+                $record->fill($validated);
+                $record->save();
 
-            $record->afterAdminSave($validated);
+                $this->syncRelations($record, $relations);
+                $this->persistSeoValues($record, $seo);
+
+                $record->afterAdminSave($validated);
+            });
+
+            if ($logged) {
+                $this->logSave($history, $record, $fields, $before, $validated);
+            }
 
             return $record;
         }, attempts: 3);
@@ -595,6 +611,74 @@ abstract class AdminController extends Controller
         DB::afterCommit(static fn () => Hook::fire('atrium.record.saved', $saved, $context));
 
         return $saved;
+    }
+
+    /**
+     * Writes what the save changed to the activity log: a new record with the
+     * values it was given, a changed one with the fields that differ. A save
+     * that changed nothing leaves no entry.
+     *
+     * @param  array<int,Field>  $fields  the fields of the form that was saved
+     * @param  array<string,mixed>  $before  snapshot() before the save; empty for a new record
+     * @param  array<string,mixed>  $validated
+     */
+    private function logSave(ActivityLog $history, Model&Administrable $record, array $fields, array $before, array $validated): void
+    {
+        $secrets = array_filter(
+            $this->secretFields($record, $fields),
+            static fn (string $name): bool => filled($validated[$name] ?? null),
+        );
+
+        $changes = $history->changes($before, $this->snapshot($record, $fields), $secrets);
+
+        if ($record->wasRecentlyCreated || $changes !== []) {
+            $history->record($record, $record->wasRecentlyCreated ? ActivityLog::CREATED : ActivityLog::UPDATED, $changes);
+        }
+    }
+
+    /**
+     * The record as its form shows it, field by field: what the activity log
+     * compares. Read-only fields and secret ones (passwords, keys) are left
+     * out.
+     *
+     * @param  array<int,Field>  $fields
+     * @return array<string,mixed>
+     */
+    protected function snapshot(Model $record, array $fields): array
+    {
+        $record->load($this->getBelongsToManyRelations());
+
+        $secrets = $this->secretFields($record, $fields);
+        $tracked = array_filter(
+            $fields,
+            static fn (Field $field): bool => ! $field instanceof DisplayField && ! in_array($field->getName(), $secrets, true),
+        );
+
+        return array_intersect_key(
+            $this->presentItem($record, $tracked),
+            array_flip(array_map(static fn (Field $field): string => $field->getName(), $tracked)),
+        );
+    }
+
+    /**
+     * Those of $fields that hold a password, a key or a token: a password
+     * input, an attribute the model hides, or a name that says so
+     * (`atrium.history.secrets`).
+     *
+     * @param  array<int,Field>  $fields
+     * @return array<int,string>
+     */
+    protected function secretFields(Model $record, array $fields): array
+    {
+        $secrets = [];
+
+        foreach ($fields as $field) {
+            if (($field instanceof TextField && $field->isPassword()) || ActivityLog::isSecretName($field->getName(), $record)) {
+                $secrets[] = $field->getName();
+            }
+        }
+
+        return $secrets;
     }
 
     /**
@@ -878,6 +962,7 @@ abstract class AdminController extends Controller
         return Inertia::render($this->getPagePrefix().'/Edit', [
             ...$data,
             'actionUrls' => $this->actionUrls([$item]),
+            'historyUrl' => HistoryController::urlFor($this->model::getAdminRouteName(), $id),
             // Blocks other modules draw on the record (atrium.ui.panels).
             'panels' => app(Panels::class)->for($item, $admin instanceof AdminUser ? $admin : null),
             ...$this->resourceProps(),
@@ -1215,6 +1300,17 @@ abstract class AdminController extends Controller
             return null;
         }
 
+        return $this->presentItem($item, $this->allAdminFields());
+    }
+
+    /**
+     * The values of a record as the form of $fields shows them.
+     *
+     * @param  array<int,Field>  $fields
+     * @return array<string,mixed>
+     */
+    private function presentItem(Model $item, array $fields): array
+    {
         $data = $item->toArray();
 
         // Transform BelongsToMany relations to arrays of IDs
@@ -1226,7 +1322,7 @@ abstract class AdminController extends Controller
         }
 
         // Read-only HTML fields are drawn from the record here.
-        foreach ($this->allAdminFields() as $field) {
+        foreach ($fields as $field) {
             if ($field instanceof DisplayField) {
                 $data[$field->getName()] = $field->render($item);
             }

@@ -18,4 +18,5 @@ return [
     'languages' => 'Мовы',
     'sites' => 'Сайты',
     'modules' => 'Модулі',
+    'activity' => 'Журнал змен',
 ];

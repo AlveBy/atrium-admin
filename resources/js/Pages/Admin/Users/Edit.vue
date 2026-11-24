@@ -15,6 +15,8 @@ const props = defineProps({
     fields: Array,
     title: String,
     can: { type: Object, default: () => ({}) },
+    // Where the account's history is, or null when it keeps none.
+    historyUrl: { type: String, default: null },
 })
 
 // Inputs drawn right here; anything else (sites, roles) by the shared field component.
@@ -69,7 +71,12 @@ const submit = () => {
     </div>
 
     <div class="max-w-2xl">
-        <h1 class="text-2xl font-bold text-fg mb-6">{{ title }}</h1>
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <h1 class="text-2xl font-bold text-fg">{{ title }}</h1>
+            <AdminButton v-if="historyUrl" data-action="history" variant="secondary" :href="historyUrl">
+                {{ $t('history.button') }}
+            </AdminButton>
+        </div>
 
         <AdminCard>
             <p v-if="readOnly" data-read-only class="mb-6 rounded-md border border-field bg-surface-alt px-4 py-3 text-sm text-fg">

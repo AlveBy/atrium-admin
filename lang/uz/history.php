@@ -1,0 +1,49 @@
+<?php
+
+/*
+ * This file is part of Atrium (https://github.com/AlveBy/atrium).
+ * Copyright (c) 2026 AlveBy. Licensed under the MIT License, see LICENSE.
+ */
+
+declare(strict_types=1);
+
+// Machine-translated from English; needs review by a native speaker.
+
+return [
+    'title' => 'O\'zgarishlar jurnali',
+    'subtitle' => 'Sizga ochiq barcha modullarda kim, qachon va nimani o\'zgartirgan.',
+    'record_title' => 'Tarix: :title',
+    'button' => 'Tarix',
+    'empty' => 'Hozircha hech narsa yozilmagan.',
+    'filters' => [
+        'module' => 'Modul',
+        'admin' => 'Administrator',
+        'from' => 'Dan',
+        'to' => 'Gacha',
+        'all' => 'Hammasi',
+        'apply' => 'Qo\'llash',
+        'reset' => 'Tozalash',
+    ],
+    'events' => [
+        'created' => 'Yaratildi',
+        'updated' => 'O\'zgartirildi',
+        'deleted' => 'O\'chirildi',
+        'restored' => 'Tiklandi',
+    ],
+    'sources' => [
+        'admin' => 'panelda',
+        'api' => 'API orqali',
+        'import' => 'import orqali',
+        'console' => 'buyruq orqali',
+        'schedule' => 'jadval bo\'yicha',
+    ],
+    'system' => 'Tizim',
+    'field' => 'Maydon',
+    'old' => 'Edi',
+    'new' => 'Hozir',
+    'secret' => 'o\'zgartirildi (qiymat saqlanmaydi)',
+    'empty_value' => 'bo\'sh',
+    'yes' => 'ha',
+    'no' => 'yo\'q',
+    'back' => 'Yozuvga qaytish',
+];
