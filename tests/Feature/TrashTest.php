@@ -349,16 +349,18 @@ final class TrashTest extends TestCase
     {
         Carbon::setTestNow('2026-10-01 12:00:00');
         $old = $this->trash(Post::query()->create(['name' => 'Old']));
+        $older = $this->trash(Post::query()->create(['name' => 'Older']));
         $refused = $this->trash(Dispatch::query()->create(['name' => 'Kept']));
         Dispatch::query()->withoutGlobalScopes()->whereKey($refused->record_id)->update(['name' => 'Pinned']);
         Carbon::setTestNow('2026-10-02 12:00:00');
         $edge = $this->trash(Post::query()->create(['name' => 'Edge']));
         Carbon::setTestNow('2026-11-01 12:00:00');
 
-        $this->artisan('atrium:trash:empty')->expectsOutput('1 deleted for good.')->assertSuccessful();
+        // Two deleted, the refused one not counted.
+        $this->artisan('atrium:trash:empty')->expectsOutput('2 deleted for good.')->assertSuccessful();
 
         $this->assertSame([$refused->id, $edge->id], TrashedRecord::query()->orderBy('id')->pluck('id')->all());
-        $this->assertSame(0, DB::table('posts')->where('id', $old->record_id)->count());
+        $this->assertSame(0, DB::table('posts')->whereIn('id', [$old->record_id, $older->record_id])->count());
 
         Carbon::setTestNow('2026-11-01 12:00:01');
         $this->artisan('atrium:trash:empty')->expectsOutput('1 deleted for good.')->assertSuccessful();
@@ -385,6 +387,27 @@ final class TrashTest extends TestCase
         $this->artisan('atrium:trash:empty')->expectsOutput('The trash keeps everything: atrium.trash.days is 0.')->assertSuccessful();
 
         $this->assertSame(1, TrashedRecord::query()->count());
+
+        config(['atrium.trash.days' => 1]);
+        $this->artisan('atrium:trash:empty')->expectsOutput('1 deleted for good.')->assertSuccessful();
+        $this->assertSame(0, TrashedRecord::query()->count());
+    }
+
+    public function test_the_modules_to_filter_by_go_by_their_names_and_an_empty_one_is_all(): void
+    {
+        config(['atrium.menu' => [['label' => 'Articles', 'route' => 'admin.posts.index']]]);
+        $this->trash(Post::query()->create(['name' => 'Apple']));
+
+        $this->actingAs($this->admin(), 'admin')->get('/admin/trash?module=')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('filters', ['module' => ''])
+            ->where('modules.0', ['key' => 'posts', 'label' => 'Articles'])
+            ->where('modules.1.key', 'dispatches')
+            ->has('entries.data', 1));
+    }
+
+    public function test_the_entry_keeps_the_id_of_its_record_as_a_number(): void
+    {
+        $this->assertSame(7, (new TrashedRecord(['record_id' => '7']))->record_id);
     }
 
     public function test_the_scheduler_empties_the_trash_every_night(): void

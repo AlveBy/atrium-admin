@@ -34,10 +34,10 @@ class ListTrash extends ApiTool
     public function handle(Request $request, ApiGateway $api): Response
     {
         $module = $this->module($request);
-        $query = array_filter([
+        $query = [
             'page' => $request->get('page'),
             'per_page' => $request->get('per_page'),
-        ], static fn (mixed $value): bool => $value !== null);
+        ];
 
         return $module === null
             ? $this->unknownModule($request)

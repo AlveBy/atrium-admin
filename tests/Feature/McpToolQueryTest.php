@@ -118,6 +118,10 @@ final class McpToolQueryTest extends TestCase
         $seen = $this->sent(new ListTrash, ['module' => 'posts', 'site' => 'shop', 'page' => 2, 'per_page' => 5]);
         $this->assertSame(['GET', '/api/v1/posts/trash', ['page' => '2', 'per_page' => '5', 'site' => 'shop']], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
 
+        // A page not asked for is not sent.
+        $seen = $this->sent(new ListTrash, ['module' => 'posts']);
+        $this->assertSame([], $seen->query->all());
+
         $seen = $this->sent(new RestoreFromTrash, ['module' => 'posts', 'id' => '07']);
         $this->assertSame(['POST', '/api/v1/posts/trash/7/restore', []], [$seen->getMethod(), $seen->getPathInfo(), $seen->query->all()]);
 
