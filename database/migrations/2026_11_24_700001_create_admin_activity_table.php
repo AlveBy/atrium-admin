@@ -30,7 +30,9 @@ return new class extends Migration
             $table->unsignedBigInteger('record_id');
             $table->string('record_title')->nullable();
             $table->string('event', 16);
-            $table->json('changes')->nullable();
+            // Text, not JSON: a JSON column of MySQL sorts the keys, and the
+            // fields would no longer come in the order they were changed.
+            $table->longText('changes')->nullable();
             $table->foreignId('admin_user_id')->nullable()->index();
             $table->string('admin_name')->nullable();
             // admin, api, import, console, schedule
