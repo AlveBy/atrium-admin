@@ -47,6 +47,7 @@ class AtriumServer extends Server
         - Modules may have actions (publish, hide, delete several records at once): `list_actions` shows them, `run_record_action` and `run_bulk_action` run them.
         - `list_versions` shows earlier versions of a record and `restore_version` puts one back, where the module keeps them.
         - `delete_record` puts a record of a content module in the trash: `list_trash` shows what is there, `restore_from_trash` brings a record back and `delete_forever` deletes it for good.
+        - Content modules have `publish_at` and `unpublish_at` (ISO 8601 times): at that time the record switches itself on or off. Send null to cancel.
         - With several sites, pass `site` (the site code) to work with another site than the one this address belongs to.
         - When a call is refused, the message says why: a missing token ability, a missing permission of the token owner, or the invalid fields.
         MARKDOWN;

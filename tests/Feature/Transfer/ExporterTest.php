@@ -68,7 +68,7 @@ final class ExporterTest extends TransferTestCase
     {
         $this->assertSame(self::HEADER, Exporter::for(Parcel::class)->header());
         $this->assertSame(self::HEADER, array_column(Targets::for(Parcel::class)->options(), 'label'));
-        $this->assertSame(['ID', 'Name', 'Active', 'Sort'], Exporter::for(Post::class)->header());
+        $this->assertSame(['ID', 'Name', 'Active', 'Publish at', 'Unpublish at', 'Sort'], Exporter::for(Post::class)->header());
     }
 
     public function test_a_file_has_the_header_and_nothing_else_when_there_are_no_records(): void
@@ -185,6 +185,22 @@ final class ExporterTest extends TransferTestCase
             // What the form is given is in UTC; the file has what the list shows.
             $this->assertSame('2026-03-05T01:30:00.000000Z', (new RecordWriter(Parcel::class))->present($fresh)['starts_at']);
             $this->assertSame(['2026-03-05 10:30:00', '2026-03-05'], [$row[7], $row[8]]);
+        } finally {
+            date_default_timezone_set($was);
+        }
+    }
+
+    public function test_a_date_kept_outside_the_record_is_written_in_the_time_zone_of_the_application_too(): void
+    {
+        $was = date_default_timezone_get();
+        date_default_timezone_set('Asia/Tokyo');
+
+        try {
+            $post = Post::query()->create(['name' => 'a']);
+            (new RecordWriter(Post::class))->write(['publish_at' => '2026-03-05 10:30:00'], $post);
+
+            // "Publish at" lives in admin_schedules; "Unpublish at" is not planned.
+            $this->assertSame([(string) $post->id, 'a', '1', '2026-03-05 10:30:00', '', '500'], $this->rows(Post::class)[1]);
         } finally {
             date_default_timezone_set($was);
         }

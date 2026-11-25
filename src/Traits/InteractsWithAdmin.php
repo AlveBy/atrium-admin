@@ -254,6 +254,16 @@ trait InteractsWithAdmin
     }
 
     /**
+     * Whether the record may be switched on and off at set times ("Publish
+     * at", "Unpublish at" next to the "Active" field, docs/history.md):
+     * content may, the service records of isContentModule() may not.
+     */
+    public static function usesAdminSchedule(): bool
+    {
+        return static::isContentModule();
+    }
+
+    /**
      * Whether the module holds content: what editors write and the site
      * shows or sells (pages, products, news, the sites themselves). False
      * for service records the panel keeps for itself: logs, audit results,

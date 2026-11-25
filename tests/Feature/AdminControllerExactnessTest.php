@@ -221,7 +221,7 @@ final class AdminControllerExactnessTest extends TestCase
             : $fields);
 
         $this->panel()->get('/admin/posts/create?section_id=1')->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page->where('fields.3.name', 'section_id')->where('fields.3.default', null));
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('fields.5.name', 'section_id')->where('fields.5.default', null));
     }
 
     public function test_a_controller_whose_form_has_no_plain_field_list_still_gets_its_defaults(): void
@@ -306,8 +306,8 @@ final class AdminControllerExactnessTest extends TestCase
             : $fields);
         $controller = $this->controller(Post::class);
 
-        $this->assertSame(['only_create', 'name', 'active', 'sort'], array_map(static fn ($field) => $field->getName(), $controller->call('contextFields', 'create')));
-        $this->assertSame(['name', 'active', 'sort', 'only_edit'], array_map(static fn ($field) => $field->getName(), $controller->call('contextFields', 'edit')));
+        $this->assertSame(['only_create', 'name', 'active', 'publish_at', 'unpublish_at', 'sort'], array_map(static fn ($field) => $field->getName(), $controller->call('contextFields', 'create')));
+        $this->assertSame(['name', 'active', 'publish_at', 'unpublish_at', 'sort', 'only_edit'], array_map(static fn ($field) => $field->getName(), $controller->call('contextFields', 'edit')));
     }
 
     public function test_unique_rules_are_rewritten_to_skip_the_record_being_edited(): void
@@ -510,7 +510,7 @@ final class AdminControllerExactnessTest extends TestCase
             array_map(static fn ($field): string => $field->getName(), AdminController::fieldsOf(Brochure::class)),
         );
         $this->assertSame(
-            ['name', 'active', 'sort'],
+            ['name', 'active', 'publish_at', 'unpublish_at', 'sort'],
             array_map(static fn ($field): string => $field->getName(), AdminController::fieldsOf(Post::class)),
         );
     }

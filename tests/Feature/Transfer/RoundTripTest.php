@@ -9,7 +9,9 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Tests\Feature\Transfer;
 
+use Atrium\Admin\Models\Activity;
 use Atrium\Admin\Models\DataImport;
+use Atrium\Admin\Models\ScheduledRecord;
 use Atrium\Admin\Tests\Fixtures\ApiAisle;
 use Atrium\Admin\Tests\Fixtures\Parcel;
 use Atrium\Admin\Tests\Fixtures\Post;
@@ -55,5 +57,23 @@ final class RoundTripTest extends TransferTestCase
         $this->assertSame([2, 0, 2, 0], [$import->processed, $import->created, $import->updated, $import->failed], json_encode($import->errors));
         $this->assertSame($before, Parcel::query()->orderBy('id')->get()->toArray());
         $this->assertSame($parcel->id, Parcel::query()->where('article', 'A-1')->value('id'));
+    }
+
+    public function test_the_times_planned_go_out_with_the_list_and_come_back_in(): void
+    {
+        $post = Post::query()->create(['name' => 'Hello', 'active' => false]);
+        $this->actingAs($this->admin(), 'admin')->put("/admin/posts/{$post->id}", ['name' => 'Hello', 'active' => false, 'publish_at' => '2026-12-01 10:00:00', 'unpublish_at' => '2026-12-05 18:30:00'])->assertRedirect();
+
+        $response = $this->get('/admin/posts/export?format=csv');
+        $path = tempnam(sys_get_temp_dir(), 'rt').'.csv';
+        copy($response->baseResponse->getFile()->getPathname(), $path);
+        ScheduledRecord::query()->delete();
+
+        $import = $this->run_($this->importOf('posts', $path, ['mode' => 'update']), DataImport::IMPORTING);
+
+        $this->assertSame([1, 1, 0], [$import->processed, $import->updated, $import->failed], json_encode($import->errors));
+        $entry = ScheduledRecord::query()->sole();
+        $this->assertSame([$post->id, '2026-12-01 10:00:00', '2026-12-05 18:30:00'], [$entry->record_id, $entry->publish_at->format('Y-m-d H:i:s'), $entry->unpublish_at->format('Y-m-d H:i:s')]);
+        $this->assertSame('import', Activity::query()->latest('id')->value('source'));
     }
 }

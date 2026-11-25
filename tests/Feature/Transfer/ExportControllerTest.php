@@ -141,8 +141,8 @@ final class ExportControllerTest extends TransferTestCase
         $response = $this->actingAs($this->admin(), 'admin')->get('/admin/posts/export');
 
         $response->assertDownload('posts-2026-11-22.csv');
-        $this->assertSame(['ID', 'Name', 'Active', 'Sort'], $this->read($response, 'csv')['headers']);
-        $this->assertSame([['2', '1', 'Hello', '1', '500']], $this->read($response, 'csv')['rows']);
+        $this->assertSame(['ID', 'Name', 'Active', 'Publish at', 'Unpublish at', 'Sort'], $this->read($response, 'csv')['headers']);
+        $this->assertSame([['2', '1', 'Hello', '1', '', '', '500']], $this->read($response, 'csv')['rows']);
     }
 
     /**

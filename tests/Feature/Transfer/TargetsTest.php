@@ -72,7 +72,7 @@ final class TargetsTest extends TransferTestCase
 
     public function test_a_post_has_the_targets_of_its_own_form(): void
     {
-        $this->assertSame(['id', 'name', 'active', 'sort'], array_keys(Targets::for(Post::class)->all()));
+        $this->assertSame(['id', 'name', 'active', 'publish_at', 'unpublish_at', 'sort'], array_keys(Targets::for(Post::class)->all()));
     }
 
     public function test_fields_a_cell_of_text_cannot_fill_are_left_out(): void

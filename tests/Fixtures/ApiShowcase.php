@@ -59,6 +59,12 @@ final class ApiShowcase extends Model implements Administrable
         return $this->belongsToMany(Post::class, 'api_showcase_post');
     }
 
+    /** No "Publish at": its documentation is about its own fields. */
+    public static function usesAdminSchedule(): bool
+    {
+        return false;
+    }
+
     public static function getAdminLabel(): string
     {
         return "Showcase | of <b>fields</b>\n";

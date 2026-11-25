@@ -343,6 +343,8 @@ final class ApiDocumentation
             '',
             '`DELETE` puts a record of a content module in the trash, where it is hidden everywhere. `trash` lists those records newest first, each with `id`, `title`, `deleted_at` and `deleted_by`. `restore` brings one back and answers with the record; `DELETE /{module}/trash/{id}` deletes it for good (409 when the module refuses). Both take a `write` token and the owner\'s permission `{module}.restore` or `{module}.force_delete`; 404 for a module whose records are deleted at once.',
             '',
+            '`publish_at` and `unpublish_at` of a content module plan when the record switches itself on and off: send ISO 8601 times, or null to cancel. The record shows them until they come. `unpublish_at` must come after `publish_at`.',
+            '',
             '`per_page` is at most 100. `filter` and `sort` accept only fields of the module.',
             'Record response: `{"data": {...}}`, which also has `admin_url` (edit in the admin panel) and `public_url` (the page on the site, if any).',
             'List response: `{"data": [...], "meta": {"current_page", "last_page", "per_page", "total"}}`.',

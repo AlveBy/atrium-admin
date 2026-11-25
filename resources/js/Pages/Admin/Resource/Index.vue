@@ -46,6 +46,8 @@ const props = defineProps({
     board: { type: Object, default: null },
     // The calendar: the mode, the days it draws and the records on them.
     calendar: { type: Object, default: null },
+    // Records that switch themselves on or off later: id => their times.
+    scheduled: { type: [Object, Array], default: () => ({}) },
 })
 
 // Filters from the address (?module=…) that the module declared: kept on
@@ -336,6 +338,7 @@ const handleDelete = () => {
         :sort-direction="filters.direction"
         :can-delete="can.delete !== false"
         :row-actions="rowActions"
+        :scheduled="scheduled"
         :selectable="bulkActions.length > 0"
         v-model:selected="selected"
         @action="handleRecordAction"

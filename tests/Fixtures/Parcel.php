@@ -69,6 +69,12 @@ final class Parcel extends Model implements Administrable
         return ['article', 'code', 'id'];
     }
 
+    /** No "Publish at": its export is about the cells of its own fields. */
+    public static function usesAdminSchedule(): bool
+    {
+        return false;
+    }
+
     public static function getAdminLabel(): string
     {
         return 'Parcels';

@@ -20,9 +20,9 @@ use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Transfer\Output\CsvOutput;
 use Atrium\Admin\Transfer\Output\Output;
 use Atrium\Admin\Transfer\Output\XlsxOutput;
-use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * A module's records as a file: a header row, then a row for each record the
@@ -113,11 +113,12 @@ final class Exporter
         $field = $target->field;
         $name = $field->getName();
 
-        // A date is read from the record, in the application's time zone: the form's copy is in UTC.
+        // A date is the form's copy, which is in UTC, put in the application's time zone; a package may
+        // keep it outside the record's table.
         if ($field instanceof DateTimeField || $field instanceof DateField) {
-            $value = $record->getAttribute($name);
-
-            return $value instanceof DateTimeInterface ? $value->format($field instanceof DateTimeField ? 'Y-m-d H:i:s' : 'Y-m-d') : (string) $value;
+            return is_string($present[$name] ?? null)
+                ? Carbon::parse($present[$name])->setTimezone(date_default_timezone_get())->format($field instanceof DateTimeField ? 'Y-m-d H:i:s' : 'Y-m-d')
+                : '';
         }
 
         $value = $present[$name] ?? null;

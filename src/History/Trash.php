@@ -16,7 +16,6 @@ use Atrium\Admin\Models\TrashedRecord;
 use Atrium\Admin\Scopes\TrashScope;
 use Atrium\Admin\Support\RecordDeleter;
 use Atrium\Admin\Support\Sites;
-use Atrium\Admin\Traits\BelongsToSite;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -65,7 +64,7 @@ final class Trash
         $entry = TrashedRecord::query()->create([
             'module' => $record::getAdminRoutePrefix(),
             'record_id' => $record->getKey(),
-            'site_id' => in_array(BelongsToSite::class, class_uses_recursive($record), true) ? $record->getAttribute('site_id') : null,
+            'site_id' => ActivityLog::siteOf($record),
             'record_title' => Str::limit(ActivityLog::titleOf($record), 250),
             'admin_user_id' => $actor?->getKey(),
             'admin_name' => $actor?->name,

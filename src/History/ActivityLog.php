@@ -195,7 +195,7 @@ final class ActivityLog
         $actor = $this->actor();
 
         return Activity::query()->create([
-            'site_id' => in_array(BelongsToSite::class, class_uses_recursive($record), true) ? $record->getAttribute('site_id') : null,
+            'site_id' => self::siteOf($record),
             'module' => $record::getAdminRoutePrefix(),
             'record_id' => $record->getKey(),
             'record_title' => Str::limit(self::titleOf($record), 250),
@@ -244,6 +244,14 @@ final class ActivityLog
     public static function titleOf(Model $record): string
     {
         return method_exists($record, 'getAdminTitle') ? $record->getAdminTitle() : '#'.$record->getKey();
+    }
+
+    /**
+     * The site the record belongs to; null for a module all sites share.
+     */
+    public static function siteOf(Model $record): ?int
+    {
+        return in_array(BelongsToSite::class, class_uses_recursive($record), true) ? $record->getAttribute('site_id') : null;
     }
 
     /**

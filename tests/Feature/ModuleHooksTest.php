@@ -266,7 +266,7 @@ final class ModuleHooksTest extends TestCase
         $this->assertTrue((new ReflectionMethod(Chapter::class, 'getAdminFieldsWithTabs'))->isPublic());
         $this->assertNotContains('weight', array_map(static fn ($field): string => $field->getName(), AdminController::fieldsOf(Bulletin::class)));
 
-        $this->panel()->get('/admin/posts/create')->assertInertia(fn (AssertableInertia $page) => $page->where('fields.3.name', 'weight'));
+        $this->panel()->get('/admin/posts/create')->assertInertia(fn (AssertableInertia $page) => $page->where('fields.5.name', 'weight'));
     }
 
     public function test_a_package_marks_its_fields_translatable_in_the_api_documentation(): void

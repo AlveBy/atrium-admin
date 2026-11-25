@@ -5,8 +5,9 @@
  */
 
 import { computed } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
+import { router, Link, usePage } from '@inertiajs/vue3'
 import AdminPagination from './AdminPagination.vue'
+import { t } from '../../../Support/i18n'
 
 const props = defineProps({
     columns: {
@@ -45,6 +46,12 @@ const props = defineProps({
         type: Array,
         default: () => []
     },
+    // Records that switch themselves on or off later:
+    // id => { publish_at, unpublish_at } as ISO 8601 times.
+    scheduled: {
+        type: [Object, Array],
+        default: () => ({})
+    },
 })
 
 const emit = defineEmits(['sort', 'edit', 'delete', 'action', 'update:selected'])
@@ -64,13 +71,32 @@ const toggleRow = (id) => {
     emit('update:selected', props.selected.includes(id) ? props.selected.filter((other) => other !== id) : [...props.selected, id])
 }
 
+// The first text column: it names the row.
+const titleColumn = computed(() => props.columns.find((candidate) => !['image', 'boolean'].includes(candidate.type)))
+
+// A record that switches itself on or off later is marked next to its
+// "Active" column, or its name when the list has none.
+const markColumn = computed(() => props.columns.find((candidate) => candidate.name === 'active') || titleColumn.value)
+
 // What a screen reader says for a row's box: the first text column, as the
 // row reads, or its number.
 const rowTitle = (item) => {
-    const column = props.columns.find((candidate) => !['image', 'boolean'].includes(candidate.type))
+    const column = titleColumn.value
     const value = column ? item[column.name] : null
 
     return value === null || value === undefined || value === '' ? `#${item.id}` : String(value)
+}
+
+const when = (at) => new Date(at).toLocaleString((usePage().props.locale || 'en').replace('_', '-'), { dateStyle: 'medium', timeStyle: 'short' })
+
+// The planned switches of a row, said in words for the mark's tooltip.
+const plan = (item) => {
+    const times = props.scheduled[item.id] || {}
+
+    return [
+        times.publish_at ? t('schedule.publishes', { at: when(times.publish_at) }) : null,
+        times.unpublish_at ? t('schedule.unpublishes', { at: when(times.unpublish_at) }) : null,
+    ].filter(Boolean).join(' · ')
 }
 
 const handleSort = (column) => {
@@ -267,6 +293,16 @@ const cellTitle = (item, column) => {
                                     <span v-else class="text-fg">{{ item[column.name] ?? '—' }}</span>
                                 </template>
                             </slot>
+                            <span
+                                v-if="column === markColumn && scheduled[item.id]"
+                                data-badge="scheduled"
+                                class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-badge-line text-xs font-semibold bg-off text-off-fg"
+                                :title="plan(item)"
+                            >
+                                <svg class="h-3 w-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="8" r="6.5" /><path d="M8 4.5V8l2.5 1.5" stroke-linecap="round" /></svg>
+                                {{ $t('schedule.scheduled') }}
+                                <span class="sr-only">{{ plan(item) }}</span>
+                            </span>
                         </td>
                         <td class="sticky right-0 z-10 border-b border-l border-line bg-inherit px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
                             <slot name="actions" :item="item">

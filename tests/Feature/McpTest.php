@@ -66,7 +66,7 @@ final class McpTest extends TestCase
     {
         $module = $this->callTool($this->token(['posts.view']), 'describe_module', ['module' => 'posts']);
 
-        $this->assertSame(['name', 'active', 'sort'], array_column($module['fields'], 'name'));
+        $this->assertSame(['name', 'active', 'publish_at', 'unpublish_at', 'sort'], array_column($module['fields'], 'name'));
         $this->assertTrue($module['fields'][0]['required']);
     }
 

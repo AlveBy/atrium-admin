@@ -12,6 +12,7 @@ namespace Atrium\Admin\Support;
 use Atrium\Admin\Contracts\Administrable;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\History\PublishingSchedule;
 use Atrium\Admin\History\Revisions;
 use Atrium\Admin\History\Trash;
 use Atrium\Admin\Hooks\Refused;
@@ -57,8 +58,9 @@ final class RecordDeleter
             } else {
                 $record->delete();
                 $trash->forget($record);
-                // Gone for good: so are its versions.
+                // Gone for good: so are its versions and its plan.
                 app(Revisions::class)->forget($record);
+                app(PublishingSchedule::class)->forget($record);
             }
 
             $history = app(ActivityLog::class);

@@ -31,6 +31,7 @@ use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\Filters\Filter;
 use Atrium\Admin\Filters\ModuleFilters;
 use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\History\PublishingSchedule;
 use Atrium\Admin\History\Revisions;
 use Atrium\Admin\Hooks\Refused;
 use Atrium\Admin\Models\AdminUser;
@@ -315,6 +316,7 @@ abstract class AdminController extends Controller
 
         // Every row goes through listRow(): a package may present any of them.
         $actionUrls = $this->actionUrls($items->getCollection());
+        $planned = app(PublishingSchedule::class)->planned($this->model, $items->getCollection()->modelKeys());
         $computed = array_filter($columns, static fn (object $column): bool => $column instanceof Column && $column->isComputed());
         $items->through(fn (Model $item): array => $this->listRow($item, $related, $computed));
 
@@ -323,6 +325,8 @@ abstract class AdminController extends Controller
             'columns' => $this->serializeColumns($columns),
             'bulkActions' => $this->visibleBulkActions(),
             'actionUrls' => $actionUrls,
+            // Records that switch themselves on or off later, by id.
+            'scheduled' => $planned,
             'views' => $views->types($declared),
             'view' => ModuleViews::TABLE,
             ...$this->listPageProps([
@@ -925,8 +929,10 @@ abstract class AdminController extends Controller
         $history = app(ActivityLog::class);
         $logged = $history->enabledFor($this->model);
         $fields = $this->contextFields($context);
+        $schedule = app(PublishingSchedule::class);
+        $planned = $schedule->extract($fields, $validated);
 
-        $saved = DB::transaction(function () use ($item, $validated, $relations, $seo, $templates, $template, $history, $logged, $fields): Model {
+        $saved = DB::transaction(function () use ($item, $validated, $relations, $seo, $templates, $template, $planned, $schedule, $history, $logged, $fields): Model {
             // A retry after a deadlock starts again from the record as it
             // came: a rolled back insert leaves the model thinking it exists.
             $record = clone $item;
@@ -934,7 +940,7 @@ abstract class AdminController extends Controller
 
             // The save logs itself below; a button that saves through here
             // must not log it a second time.
-            $history->quietly(function () use ($record, $validated, $relations, $seo, $templates, $template): void {
+            $history->quietly(function () use ($record, $validated, $relations, $seo, $templates, $template, $planned, $schedule): void {
                 $record->fill($validated);
                 $record->save();
 
@@ -944,6 +950,10 @@ abstract class AdminController extends Controller
                 // Before the history reads the record as it is now.
                 if ($template !== null) {
                     $templates->pick($record, $template);
+                }
+
+                if ($planned !== []) {
+                    $schedule->plan($record, $planned);
                 }
 
                 $record->afterAdminSave($validated);
@@ -1716,6 +1726,8 @@ abstract class AdminController extends Controller
                 $data[$fieldName] = $meta->{$column} ?? null;
             }
         }
+
+        $data = [...$data, ...app(PublishingSchedule::class)->present($this->model, $item->getKey(), $fields)];
 
         return Hook::apply('atrium.record.present', $data, $item, 'form');
     }

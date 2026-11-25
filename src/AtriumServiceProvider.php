@@ -22,6 +22,7 @@ use Atrium\Admin\Dashboard\Gadgets\RecentElementsGadget;
 use Atrium\Admin\Dashboard\Gadgets\SiteSpeedGadget;
 use Atrium\Admin\Embeds\Embeds;
 use Atrium\Admin\History\ActivityLog;
+use Atrium\Admin\History\PublishingSchedule;
 use Atrium\Admin\Hooks\Hooks;
 use Atrium\Admin\Http\Middleware\AdminAuthenticate;
 use Atrium\Admin\Http\Middleware\AuthenticateApiToken;
@@ -404,6 +405,9 @@ final class AtriumServiceProvider extends ServiceProvider
      */
     private function registerHistory(): void
     {
+        // "Publish at" and "Unpublish at" next to the "Active" field of every form.
+        $this->app->make(Hooks::class)->filter('atrium.module.fields', fn (array $fields, string $model): array => $this->app->make(PublishingSchedule::class)->withFields($fields, $model));
+
         foreach ([ActivityLog::CREATED, ActivityLog::UPDATED] as $event) {
             Event::listen('eloquent.'.$event.': *', function (string $name, array $payload) use ($event): void {
                 if ($this->app->resolved(ActivityLog::class)) {
@@ -433,6 +437,7 @@ final class AtriumServiceProvider extends ServiceProvider
             Console\Commands\MakePackageCommand::class,
             Console\Commands\ModuleInstallCommand::class,
             Console\Commands\ModuleRemoveCommand::class,
+            Console\Commands\PublishCommand::class,
             Console\Commands\SlugRegenerateCommand::class,
             Console\Commands\TrashEmptyCommand::class,
         ]);
@@ -440,6 +445,11 @@ final class AtriumServiceProvider extends ServiceProvider
         // The imports started in the panel move on here when no queue worker moves them.
         $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
             $schedule->command('atrium:import --pending')->everyMinute()->withoutOverlapping();
+        });
+
+        // Records switch themselves on and off at the times planned.
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
+            $schedule->command('atrium:publish')->everyMinute()->withoutOverlapping();
         });
 
         // What has been in the trash long enough goes for good.
