@@ -27,7 +27,9 @@ return new class extends Migration
             // The module's key: "news".
             $table->string('module', 100);
             $table->unsignedBigInteger('record_id');
-            $table->json('values');
+            // Text, not JSON: a JSON column of MySQL sorts the keys, and the
+            // fields would no longer come in the order of the form.
+            $table->longText('values');
             $table->timestamp('created_at')->nullable();
 
             $table->index(['module', 'record_id']);

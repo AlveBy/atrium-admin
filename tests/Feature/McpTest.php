@@ -175,7 +175,12 @@ final class McpTest extends TestCase
     {
         $post = Post::query()->create(['name' => 'Hello']);
         $token = $this->token(['posts.view', 'posts.create', 'posts.update', 'posts.delete'], ['posts:read', 'posts:write']);
-        $arguments = array_map(static fn ($value) => $value === 1 ? $post->id : $value, $arguments);
+        // The record's id, which is 1 only on a database that starts it again for each test.
+        $arguments = array_map(static fn ($value) => match ($value) {
+            1 => $post->id,
+            [1] => [$post->id],
+            default => $value,
+        }, $arguments);
 
         $this->mcp($token, 'tools/call', ['name' => $tool, 'arguments' => ['module' => 'posts'] + $arguments])
             ->assertJsonPath('result.isError', false);
