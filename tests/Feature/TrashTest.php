@@ -125,7 +125,7 @@ final class TrashTest extends TestCase
     public function test_the_entry_keeps_the_site_of_the_record_a_short_title_and_no_one_from_the_console(): void
     {
         $site = Site::query()->where('is_default', true)->sole();
-        $note = Note::query()->create(['name' => str_repeat('a', 300), 'code' => 'long', 'site_id' => $site->id]);
+        $note = Note::query()->create(['name' => str_repeat('a', 255), 'code' => 'long', 'site_id' => $site->id]);
 
         $entry = $this->trash($note);
 
