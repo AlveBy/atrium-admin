@@ -22,6 +22,7 @@ import TreeField from './TreeField.vue'
 import LinkField from './LinkField.vue'
 import RelationSearch from './RelationSearch.vue'
 import FormBuilderField from './FormBuilderField.vue'
+import LayoutField from './LayoutField.vue'
 import FileManager from '../FileManager.vue'
 import { ajaxHeaders, sessionExpiredMessage } from '../../../Support/csrf'
 import { t } from '@atrium/Support/i18n'
@@ -57,6 +58,7 @@ const fieldComponents = {
     tree: markRaw(TreeField),
     link: markRaw(LinkField),
     formBuilder: markRaw(FormBuilderField),
+    layout: markRaw(LayoutField),
 }
 
 // Check if field has a specialized component

@@ -20,8 +20,10 @@ export function useContentLocale(fields) {
 
     provide('contentLocale', locale);
 
-    // The switch only makes sense with something to switch.
-    const showSwitcher = computed(() => locales.value.length > 1 && fields().some((field) => field.translatable));
+    // The switch only makes sense with something to switch: a translatable
+    // field, or a block of a layout field with a translatable setting.
+    const showSwitcher = computed(() => locales.value.length > 1 && fields().some((field) => field.translatable
+        || field.types?.some?.((type) => type.fields?.some((setting) => setting.translatable))));
 
     return { locale, locales, showSwitcher };
 }

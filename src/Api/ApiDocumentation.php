@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Atrium\Admin\Api;
 
+use Atrium\Admin\Builder\Layout;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\TextField;
@@ -137,6 +138,7 @@ final class ApiDocumentation
             'image', 'file' => $this->set($doc, ['type' => 'string'], 'File URL: upload the file via POST /files and use `url` from the response.'),
             'gallery' => $this->set($doc, ['type' => 'array', 'items' => ['type' => 'string']], 'List of file URLs, each uploaded via POST /files.'),
             'repeatable' => $this->set($doc, ['type' => 'array', 'items' => $this->repeatableItem($props['itemType'] ?? 'text')], $this->repeatableNote($props['itemType'] ?? 'text')),
+            'layout' => $this->set($doc, $this->layoutSchema(), 'The tree of a page built from blocks: {"version": 1, "sections": [{"id", "settings", "columns": [{"id", "settings", "blocks": [{"id", "type", "settings"}]}]}]} (docs/site-builder.md). Ids are unique within the tree; block types and their settings come from the installed modules.'),
             'select' => $this->optionsSchema($doc, $props['options'] ?? [], false),
             'multiSelect' => $this->optionsSchema($doc, $props['options'] ?? [], true),
             'treeSelect' => $this->relationSchema($doc, $this->flattenTree($props['options'] ?? []), $props['multiple'], $props['modelClass'] ?? null),
@@ -185,6 +187,17 @@ final class ApiDocumentation
         $doc['note'] = trim(($doc['note'] ?? '').' '.$note) ?: null;
 
         return $doc;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function layoutSchema(): array
+    {
+        return ['type' => 'object', 'properties' => [
+            'version' => ['type' => 'integer', 'enum' => [Layout::VERSION]],
+            'sections' => ['type' => 'array', 'items' => ['type' => 'object']],
+        ]];
     }
 
     private function checkboxSchema(array $doc, array $props): array
@@ -619,6 +632,7 @@ final class ApiDocumentation
             'integer' => 'id',
             'number' => 'number',
             'boolean' => 'yes/no',
+            'object' => 'object',
             'date' => 'date',
             'date-time' => 'date and time',
             default => 'string',

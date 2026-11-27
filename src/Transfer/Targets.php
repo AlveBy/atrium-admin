@@ -14,6 +14,7 @@ use Atrium\Admin\Fields\BelongsToManyField;
 use Atrium\Admin\Fields\DisplayField;
 use Atrium\Admin\Fields\Field;
 use Atrium\Admin\Fields\FileField;
+use Atrium\Admin\Fields\LayoutField;
 use Atrium\Admin\Fields\LinkField;
 use Atrium\Admin\Fields\MapField;
 use Atrium\Admin\Fields\TreeField;
@@ -198,11 +199,11 @@ final class Targets
 
     /**
      * Fields a cell of text cannot fill: read-only ones, links to many
-     * records, a tree of several choices, maps, documents.
+     * records, a tree of several choices, maps, documents, page layouts.
      */
     private static function skipped(Field $field): bool
     {
-        foreach ([DisplayField::class, BelongsToManyField::class, TreeField::class, FileField::class, LinkField::class, MapField::class] as $class) {
+        foreach ([DisplayField::class, BelongsToManyField::class, TreeField::class, FileField::class, LinkField::class, MapField::class, LayoutField::class] as $class) {
             if ($field instanceof $class) {
                 return true;
             }
