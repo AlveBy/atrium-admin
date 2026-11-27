@@ -701,6 +701,32 @@ final class TemplatesTest extends TestCase
         $this->assertSame('default', $this->templates()->key(new Flyer(['name' => 'nope'])));
         $this->assertSame('wide', $this->templates()->key(new Flyer(['name' => 'wide'])));
         $this->assertSame('default', $this->templates()->key(new Flyer(['name' => 'default'])));
+
+        // The column is on the record: nothing is kept, so a change shows at once.
+        $flyer = Flyer::query()->create(['name' => 'wide']);
+        $this->assertSame('own.wide', $this->templates()->viewOf($flyer, 'plain.view'));
+        $flyer->name = 'nope';
+        $this->assertSame('plain.view', $this->templates()->viewOf($flyer, 'plain.view'));
+    }
+
+    public function test_the_choice_is_asked_once_until_it_is_changed(): void
+    {
+        $this->template('templates/posts/wide');
+        $post = Post::query()->create(['name' => 'First']);
+        $this->templates()->pick($post, 'wide');
+        $this->assertSame('templates.posts.wide', $this->templates()->viewOf($post, 'plain.view'));
+
+        $queries = 0;
+        DB::listen(static function () use (&$queries): void {
+            $queries++;
+        });
+
+        $this->assertSame('templates.posts.wide', $this->templates()->viewOf($post, 'plain.view'));
+        $this->assertSame(0, $queries, 'a warm page asks nothing');
+
+        $this->templates()->pick($post, null);
+
+        $this->assertSame('plain.view', $this->templates()->viewOf($post, 'plain.view'));
     }
 
     public function test_a_record_of_a_module_without_a_template_costs_no_query(): void
