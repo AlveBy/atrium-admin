@@ -51,8 +51,8 @@ final class Templates
     /** @var array<string,array<string,string>> the views found by module */
     private array $found = [];
 
-    /** @var array{class:class-string<Model>,key:string}|null the choice in the form being saved */
-    private ?array $pending = null;
+    /** The choice in the form being saved. */
+    private ?string $pending = null;
 
     public function __construct(private readonly Modules $modules) {}
 
@@ -202,7 +202,14 @@ final class Templates
      */
     public function viewOf(Model $record, string $default): string
     {
-        return $this->view($record::class, $this->picked($record), $default);
+        // Kept with the cache of the module's records, so a warm page runs no
+        // query; saving the choice drops it, as it drops the record's cards.
+        // The form reads past it: the history compares what is stored now.
+        $key = $this->ownColumn($record::class) === null
+            ? app(RecordCache::class)->remember($record::class, "template:{$record->getKey()}", fn (): ?string => $this->picked($record))
+            : $this->picked($record);
+
+        return $this->view($record::class, is_string($key) ? $key : null, $default);
     }
 
     /**
@@ -224,28 +231,23 @@ final class Templates
     }
 
     /**
-     * The choice in the form being saved: the record does not exist yet, so
-     * it is kept until `atrium.record.saved` says where it was saved.
-     *
-     * @param  class-string<Model>  $model
+     * The choice in the form being saved: the record may not exist yet, so
+     * it is kept until the save takes it.
      */
-    public function hold(string $model, ?string $key): void
+    public function hold(?string $key): void
     {
-        $this->pending = $key === null ? null : ['class' => $model, 'key' => $key];
+        $this->pending = $key;
     }
 
     /**
-     * Write the choice held for the model of the record just saved.
+     * The choice held, if any; it is held no longer.
      */
-    public function release(Model $record): void
+    public function take(): ?string
     {
-        if ($this->pending === null || $this->pending['class'] !== $record::class) {
-            return;
-        }
-
-        $key = $this->pending['key'];
+        $key = $this->pending;
         $this->pending = null;
-        $this->pick($record, $key);
+
+        return $key;
     }
 
     /**
@@ -268,12 +270,10 @@ final class Templates
             return is_string($key) ? $key : null;
         }
 
-        // Kept with the cache of the module's records, so a warm page runs no
-        // query; saving the choice drops it, as it drops the record's cards.
-        $key = app(RecordCache::class)->remember($model, "template:{$record->getKey()}", fn (): mixed => RecordTemplate::query()
+        $key = RecordTemplate::query()
             ->where('templatable_type', $record->getMorphClass())
             ->where('templatable_id', $record->getKey())
-            ->value('template'));
+            ->value('template');
 
         return is_string($key) ? $key : null;
     }

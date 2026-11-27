@@ -10,8 +10,11 @@ declare(strict_types=1);
 namespace Atrium\Admin\Tests\Feature;
 
 use Atrium\Admin\Facades\Hook;
+use Atrium\Admin\History\Revisions;
+use Atrium\Admin\Models\Activity;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Models\Revision;
 use Atrium\Admin\Modules\Module;
 use Atrium\Admin\Modules\Modules;
 use Atrium\Admin\Tabs\Tab;
@@ -533,6 +536,36 @@ final class TemplatesTest extends TestCase
         $this->assertSame('wide', $this->templates()->key(Post::query()->firstOrFail()));
     }
 
+    public function test_the_history_logs_the_template_and_a_version_puts_it_back(): void
+    {
+        $this->template('templates/posts/wide');
+        $panel = $this->actingAs($this->admin(), 'admin');
+
+        $panel->post('/admin/posts', ['name' => 'First', 'active' => true, 'sort' => 10, 'template' => 'wide'])->assertSessionHasNoErrors();
+        $post = Post::query()->firstOrFail();
+        $created = Revision::query()->sole();
+        $this->assertSame('wide', $created->values['template'], 'a new record keeps the template it was given');
+
+        $panel->put("/admin/posts/{$post->id}", ['name' => 'First', 'active' => true, 'sort' => 10, 'template' => 'default'])->assertSessionHasNoErrors();
+        $changes = Activity::query()->latest('id')->firstOrFail()->changes;
+        $this->assertSame(['template' => ['old' => 'wide', 'new' => 'default']], $changes, 'a change of the template alone is a change');
+        $this->assertSame(['default', 'wide'], app(Revisions::class)->of($post)->get()->map(static fn (Revision $version): mixed => $version->values['template'])->all());
+
+        app(Revisions::class)->restore($post, $created);
+
+        $this->assertSame('wide', $this->templates()->key($post));
+    }
+
+    public function test_a_choice_of_a_refused_save_does_not_reach_the_next_one(): void
+    {
+        $this->template('templates/posts/wide');
+        $this->templates()->hold('wide');
+
+        $this->withToken($this->token())->postJson('/api/v1/posts', ['name' => 'Next'])->assertCreated();
+
+        $this->assertSame(0, RecordTemplate::query()->count());
+    }
+
     public function test_the_choice_goes_with_the_record(): void
     {
         $this->template('templates/posts/wide');
@@ -563,35 +596,20 @@ final class TemplatesTest extends TestCase
         $this->assertTrue($other->fresh()?->exists ?? false);
     }
 
-    public function test_a_held_choice_is_written_for_the_model_it_was_held_for_only(): void
+    public function test_a_held_choice_is_taken_once(): void
     {
-        $this->template('templates/posts/wide');
-        $post = Post::query()->create(['name' => 'First']);
-        $other = new Label(['name' => 'Label']);
+        $this->templates()->hold('wide');
 
-        $this->templates()->hold(Post::class, 'wide');
-        $this->templates()->release($other);
-        $this->assertSame(0, RecordTemplate::query()->count());
-
-        $this->templates()->release($post);
-        $this->assertSame('wide', $this->templates()->key($post));
-
-        $this->templates()->release($post);
-        $this->templates()->pick($post, null);
-        $this->templates()->release($post);
-        $this->assertSame('default', $this->templates()->key($post));
+        $this->assertSame('wide', $this->templates()->take());
+        $this->assertNull($this->templates()->take());
     }
 
     public function test_a_held_choice_is_dropped_when_none_is_held(): void
     {
-        $this->template('templates/posts/wide');
-        $post = Post::query()->create(['name' => 'First']);
+        $this->templates()->hold('wide');
+        $this->templates()->hold(null);
 
-        $this->templates()->hold(Post::class, 'wide');
-        $this->templates()->hold(Post::class, null);
-        $this->templates()->release($post);
-
-        $this->assertSame(0, RecordTemplate::query()->count());
+        $this->assertNull($this->templates()->take());
     }
 
     public function test_a_template_sent_as_something_else_than_text_means_the_default(): void
@@ -601,10 +619,9 @@ final class TemplatesTest extends TestCase
         $this->templates()->pick($post, 'wide');
 
         $data = Hook::apply('atrium.record.data', ['template' => ['x'], 'name' => 'Kept'], $post, 'edit');
-        Hook::fire('atrium.record.saved', $post, 'edit');
 
         $this->assertSame(['name' => 'Kept'], $data);
-        $this->assertSame('wide', $this->templates()->key($post));
+        $this->assertNull($this->templates()->take());
     }
 
     public function test_other_hooks_do_nothing_for_a_record_without_the_field(): void

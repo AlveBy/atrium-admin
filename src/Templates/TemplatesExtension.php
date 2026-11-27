@@ -40,7 +40,7 @@ final class TemplatesExtension
 
             $key = $data[self::FIELD];
             unset($data[self::FIELD]);
-            $templates()->hold($record::class, is_string($key) ? $key : null);
+            $templates()->hold(is_string($key) ? $key : null);
 
             return $data;
         });
@@ -54,8 +54,6 @@ final class TemplatesExtension
 
             return $data;
         });
-
-        Hook::on('atrium.record.saved', static fn (Model $record) => $templates()->release($record));
 
         // The choice goes with the record.
         Event::listen('eloquent.deleted: *', static function (string $event, array $payload) use ($templates): void {

@@ -41,6 +41,7 @@ use Atrium\Admin\Support\RecordDeleter;
 use Atrium\Admin\Support\Sites;
 use Atrium\Admin\Tabs\Tab;
 use Atrium\Admin\Tabs\TabRegistry;
+use Atrium\Admin\Templates\Templates;
 use Atrium\Admin\Traits\BelongsToSite;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -566,7 +567,12 @@ abstract class AdminController extends Controller
         }
 
         $validated = $item->transformAdminData($validated);
+        // The template picked is held by an `atrium.record.data` listener and
+        // written with the record; nothing is left over from a refused save.
+        $templates = app(Templates::class);
+        $templates->hold(null);
         $validated = $this->filterRecordData($request, $validated, $item, $context);
+        $template = $templates->take();
 
         // BelongsToMany values live in a pivot table, not a column. They must
         // be pulled out before fill(), or the insert fails with
@@ -579,7 +585,7 @@ abstract class AdminController extends Controller
         $logged = $history->enabledFor($this->model);
         $fields = $this->contextFields($context);
 
-        $saved = DB::transaction(function () use ($item, $validated, $relations, $seo, $history, $logged, $fields): Model {
+        $saved = DB::transaction(function () use ($item, $validated, $relations, $seo, $templates, $template, $history, $logged, $fields): Model {
             // A retry after a deadlock starts again from the record as it
             // came: a rolled back insert leaves the model thinking it exists.
             $record = clone $item;
@@ -587,12 +593,17 @@ abstract class AdminController extends Controller
 
             // The save logs itself below; a button that saves through here
             // must not log it a second time.
-            $history->quietly(function () use ($record, $validated, $relations, $seo): void {
+            $history->quietly(function () use ($record, $validated, $relations, $seo, $templates, $template): void {
                 $record->fill($validated);
                 $record->save();
 
                 $this->syncRelations($record, $relations);
                 $this->persistSeoValues($record, $seo);
+
+                // Before the history reads the record as it is now.
+                if ($template !== null) {
+                    $templates->pick($record, $template);
+                }
 
                 $record->afterAdminSave($validated);
             });
