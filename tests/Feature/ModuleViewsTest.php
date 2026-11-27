@@ -12,6 +12,7 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\Fixtures\Task;
+use Atrium\Admin\Tests\Fixtures\TimelineView;
 use Atrium\Admin\Tests\TestCase;
 use Atrium\Admin\Views\KanbanView;
 use Atrium\Admin\Views\ModuleViews;
@@ -79,6 +80,19 @@ final class ModuleViewsTest extends TestCase
 
         $this->assertSame('status', $views->for(Task::class)['kanban']->getField(), 'Of two views of a type the first one wins.');
         $this->assertSame(['kanban'], array_keys($views->for(Task::class)));
+    }
+
+    public function test_a_module_keeps_a_view_of_every_type_it_is_given(): void
+    {
+        $views = app(ModuleViews::class);
+        $second = TimelineView::make('due_on');
+        Hook::filter('atrium.module.views', static fn (array $views, string $model): array => $model === Task::class ? [...$views, $second] : $views);
+
+        $declared = $views->for(Task::class);
+
+        $this->assertSame(['kanban', 'timeline'], array_keys($declared));
+        $this->assertSame($second, $declared['timeline']);
+        $this->assertSame(['table', 'kanban', 'timeline'], $views->types($declared));
     }
 
     public function test_another_module_may_add_a_view_to_a_module(): void
