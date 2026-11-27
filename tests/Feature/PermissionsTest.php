@@ -415,6 +415,8 @@ final class PermissionsTest extends TestCase
 
     public function test_the_migration_makes_existing_administrators_superadmins(): void
     {
+        $siteRoles = require dirname(__DIR__, 2).'/database/migrations/2026_11_24_000001_create_admin_role_site_user_table.php';
+        $siteRoles->down();
         $migration = require dirname(__DIR__, 2).'/database/migrations/2026_11_17_000001_create_admin_roles_tables.php';
         $migration->down();
 
@@ -424,6 +426,7 @@ final class PermissionsTest extends TestCase
         ]);
 
         $migration->up();
+        $siteRoles->up();
 
         $this->assertTrue(AdminUser::query()->where('email', 'old@example.com')->sole()->isSuperadmin());
     }

@@ -322,6 +322,7 @@ final class ModuleCommandsTest extends TestCase
     public function test_the_permissions_step_is_skipped_when_the_roles_table_is_missing(): void
     {
         $this->app->make(Modules::class)->add(new Module(name: 'acme/atrium-orders', declaredPermissions: ['orders.refund' => ['label' => 'Refund', 'with' => 'orders.view']]));
+        Schema::drop('admin_role_site_user');
         Schema::drop('admin_role_user');
         Schema::drop('admin_roles');
 
