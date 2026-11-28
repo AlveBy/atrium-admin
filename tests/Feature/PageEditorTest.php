@@ -16,12 +16,14 @@ use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Fields\LayoutField;
 use Atrium\Admin\Fields\TextField;
 use Atrium\Admin\History\Revisions;
+use Atrium\Admin\History\Trash;
 use Atrium\Admin\Http\Controllers\BuilderController;
 use Atrium\Admin\Models\Activity;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
 use Atrium\Admin\Models\Language;
 use Atrium\Admin\Models\Revision;
+use Atrium\Admin\Models\TrashedRecord;
 use Atrium\Admin\Support\ContentLanguages;
 use Atrium\Admin\Tests\Fixtures\Billboard;
 use Atrium\Admin\Tests\Fixtures\Builder\NoteBlock;
@@ -983,6 +985,12 @@ final class PageEditorTest extends TestCase
         $this->saveDraft($other, self::tree('Two'))->assertOk();
 
         $this->delete("/admin/billboards/{$billboard->id}")->assertSessionHasNoErrors();
+
+        // In the trash the record keeps them, and has no editor.
+        $this->assertSame([$billboard->id, $other->id], Revision::query()->orderBy('record_id')->pluck('record_id')->all());
+        $this->get($this->url($billboard))->assertNotFound();
+
+        app(Trash::class)->purge(TrashedRecord::query()->sole());
 
         $this->assertSame([$other->id], Revision::query()->pluck('record_id')->all());
     }
