@@ -37,6 +37,8 @@ const props = defineProps({
     actionUrls: { type: [Object, Array], default: () => ({}) },
     // Where the record's history is, or null when the module keeps none.
     historyUrl: { type: String, default: null },
+    // The page editor of each layout field: field name => address.
+    builders: { type: [Object, Array], default: () => ({}) },
 })
 
 // A server action that asks first waits here for the answer.
@@ -87,6 +89,9 @@ const formData = computed(() => ({
     ...form.data()
 }))
 provide('formData', formData)
+// A layout field with a page editor is changed there: this form does not send it.
+provide('builders', computed(() => props.builders))
+form.transform((data) => Object.fromEntries(Object.entries(data).filter(([name]) => !props.builders[name])))
 // The module key the AI buttons send (alveby/atrium-ai).
 provide('aiModule', props.routeName?.replace(/^admin\./, '') || null)
 

@@ -12,6 +12,7 @@ use Atrium\Admin\History\Revisions;
 use Atrium\Admin\Http\Controllers\AdminUserController;
 use Atrium\Admin\Http\Controllers\ApiTokenController;
 use Atrium\Admin\Http\Controllers\Auth\LoginController;
+use Atrium\Admin\Http\Controllers\BuilderController;
 use Atrium\Admin\Http\Controllers\CacheController;
 use Atrium\Admin\Http\Controllers\DashboardController;
 use Atrium\Admin\Http\Controllers\EmbedController;
@@ -163,6 +164,19 @@ Route::prefix(config('atrium.prefix', 'admin'))
                 // Putting an old version of the record back.
                 if (app(Revisions::class)->enabledFor($model)) {
                     Route::post("{$key}/{id}/history/{revision}", [HistoryController::class, 'revert'])->defaults('module', $key)->whereNumber(['id', 'revision'])->name("admin.{$key}.revert");
+                }
+
+                // The page editor of a record's layout field: the screen, the preview, the draft and publishing.
+                foreach ([
+                    'builder' => ['get', '', 'show'],
+                    'builder.preview' => ['post', '/preview', 'preview'],
+                    'builder.draft' => ['put', '/draft', 'draft'],
+                    'builder.discard' => ['delete', '/draft', 'discard'],
+                    'builder.publish' => ['post', '/publish', 'publish'],
+                    'builder.version' => ['get', '/versions/{revision}', 'version'],
+                ] as $name => [$method, $path, $action]) {
+                    Route::match([$method], "{$key}/{id}/builder/{field}{$path}", [BuilderController::class, $action])
+                        ->defaults('module', $key)->whereNumber(['id', 'revision'])->where('field', '[A-Za-z0-9_]+')->name("admin.{$key}.{$name}");
                 }
 
                 // The kanban board and the calendar of a module's list: more cards of a column, a card or an event moved.

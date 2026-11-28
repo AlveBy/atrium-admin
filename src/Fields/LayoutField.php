@@ -54,9 +54,21 @@ class LayoutField extends Field
         ];
     }
 
+    /**
+     * The edit form leaves the tree to the page editor and does not send it:
+     * a tree that is not sent stays as it is, required or not.
+     */
     public function getValidationRules(?FieldContext $context = null): array
     {
-        return [...$this->baseValidationRules($context), 'array', $this->treeRule($context)];
+        $rules = [...$this->baseValidationRules($context), 'array', $this->treeRule($context)];
+
+        return $context?->isEdit() && ! $context->present ? ['sometimes', ...$rules] : $rules;
+    }
+
+    /** Whether the form lets the tree change. */
+    public function isEditable(): bool
+    {
+        return ! $this->disabled && ! $this->readonly;
     }
 
     private function treeRule(?FieldContext $context): Closure

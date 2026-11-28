@@ -69,6 +69,30 @@ final class Layout
     }
 
     /**
+     * The same text for the same tree, however its keys are ordered (a JSON
+     * column of MySQL reorders them): tells whether a stored tree changed
+     * since it was read.
+     */
+    public static function fingerprint(mixed $tree): string
+    {
+        return hash('sha256', serialize(self::sorted($tree)));
+    }
+
+    /**
+     * The value with the keys of every map in it in order.
+     */
+    private static function sorted(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        ksort($value);
+
+        return array_map(self::sorted(...), $value);
+    }
+
+    /**
      * @return array<int,Field>
      */
     public static function sectionFields(): array

@@ -1348,6 +1348,10 @@ abstract class AdminController extends Controller
             ...$data,
             'actionUrls' => $this->actionUrls([$item]),
             'historyUrl' => HistoryController::urlFor($this->model::getAdminRouteName(), $id),
+            // The page editor of each layout field, for those who may change the record.
+            'builders' => $this->abilities()[Permissions::UPDATE]
+                ? BuilderController::urlsFor($this->model::getAdminRouteName(), $id, $this->contextFields('edit'))
+                : [],
             // Blocks other modules draw on the record (atrium.ui.panels).
             'panels' => app(Panels::class)->for($item, $admin instanceof AdminUser ? $admin : null),
             ...$this->resourceProps(),

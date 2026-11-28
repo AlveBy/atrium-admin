@@ -31,6 +31,12 @@ final class LayoutValidator
     /** @var array<string,string> id => fingerprint of the stored block */
     private array $kept = [];
 
+    /** Whether the blocks have to be filled in. */
+    private bool $complete = true;
+
+    /** The id of the node the last problem is in. */
+    private ?string $failed = null;
+
     public function __construct(
         private readonly BlockTypes $types,
         private readonly ContentLanguages $languages,
@@ -41,9 +47,12 @@ final class LayoutValidator
      *
      * @param  array<array-key,mixed>  $layout
      * @param  mixed  $stored  the tree the record holds now
+     * @param  bool  $complete  false for a draft: the tree has to be sound, its blocks may still be unfinished
      */
-    public function problem(array $layout, mixed $stored = null): ?string
+    public function problem(array $layout, mixed $stored = null, bool $complete = true): ?string
     {
+        $this->complete = $complete;
+        $this->failed = null;
         $this->ids = [];
         $this->kept = $this->fingerprints($stored);
         $sections = $layout['sections'] ?? null;
@@ -67,6 +76,15 @@ final class LayoutValidator
         return null;
     }
 
+    /**
+     * The id of the section, column or block the problem() found is in; null
+     * when there was none, or it is not in one node with an id.
+     */
+    public function failedAt(): ?string
+    {
+        return $this->failed;
+    }
+
     private function section(mixed $section, int $number): ?string
     {
         $place = ['section' => $number];
@@ -75,7 +93,7 @@ final class LayoutValidator
             ?? $this->settings($section['settings'] ?? [], Layout::sectionFields());
 
         if ($problem !== null) {
-            return $this->at('section', $place, $problem);
+            return $this->at('section', $place, $problem, $section);
         }
 
         foreach ($section['columns'] as $index => $column) {
@@ -99,7 +117,7 @@ final class LayoutValidator
             ?? $this->settings($column['settings'] ?? [], Layout::columnFields());
 
         if ($problem !== null) {
-            return $this->at('column', $place, $problem);
+            return $this->at('column', $place, $problem, $column);
         }
 
         foreach ($column['blocks'] as $index => $block) {
@@ -125,12 +143,13 @@ final class LayoutValidator
         if ($problem === null && ($this->kept[$block['id']] ?? null) !== $this->fingerprint($block)) {
             $problem = match (true) {
                 $key === '' => $this->say('invalid'),
+                ! $this->complete => $this->isMap($block['settings'] ?? []) ? null : $this->say('invalid'),
                 $type === null => $this->say('unknown_type', ['type' => $key]),
                 default => $this->settings($block['settings'] ?? [], $type->fields(), $type->translatable()),
             };
         }
 
-        return $problem === null ? null : $this->at('block', $place + ['type' => $type?->label() ?? $key], $problem);
+        return $problem === null ? null : $this->at('block', $place + ['type' => $type?->label() ?? $key], $problem, $block);
     }
 
     /**
@@ -271,18 +290,7 @@ final class LayoutValidator
      */
     private function fingerprint(array $block): string
     {
-        return serialize([$block['type'] ?? null, $this->sorted($block['settings'] ?? [])]);
-    }
-
-    private function sorted(mixed $value): mixed
-    {
-        if (! is_array($value)) {
-            return $value;
-        }
-
-        ksort($value);
-
-        return array_map($this->sorted(...), $value);
+        return Layout::fingerprint([$block['type'] ?? null, $block['settings'] ?? []]);
     }
 
     /**
@@ -321,10 +329,14 @@ final class LayoutValidator
     }
 
     /**
+     * The problem with its place in front, and the node it is in kept for failedAt().
+     *
      * @param  array<string,int|string>  $place
      */
-    private function at(string $level, array $place, string $problem): string
+    private function at(string $level, array $place, string $problem, mixed $node): string
     {
+        $this->failed = is_array($node) && is_string($node['id'] ?? null) ? $node['id'] : null;
+
         return __('atrium::fields.layout.at', [
             'place' => __("atrium::fields.layout.places.{$level}", $place),
             'problem' => $problem,

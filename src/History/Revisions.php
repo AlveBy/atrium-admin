@@ -32,6 +32,11 @@ use Illuminate\Validation\ValidationException;
  * `atrium.history.revisions` at 0, and none is kept where there is no
  * activity log. A version holds no secrets: the form's values, without
  * passwords and keys.
+ *
+ * The same rows hold drafts: what the page editor saves of one field before
+ * it is published. A record has one draft of a field at most, whether or not
+ * its module keeps versions; a draft is not a version, is not counted with
+ * them, and goes with the record too.
  */
 final class Revisions
 {
@@ -79,10 +84,39 @@ final class Revisions
      */
     public function of(Model $record): Builder
     {
-        return Revision::query()
-            ->where('module', $record::getAdminRoutePrefix())
-            ->where('record_id', $record->getKey())
-            ->orderByDesc('id');
+        return $this->rows($record)->whereNull('draft')->orderByDesc('id');
+    }
+
+    /**
+     * The draft of a field of $record, or null: `values` holds it under the
+     * field's name.
+     *
+     * @param  Model&Administrable  $record
+     */
+    public function draft(Model $record, string $field): ?Revision
+    {
+        return $this->rows($record)->where('draft', $field)->first();
+    }
+
+    /**
+     * Keeps $value as the draft of a field of $record, in place of the one
+     * before. $base is the fingerprint of the value it was started from.
+     *
+     * @param  Model&Administrable  $record
+     */
+    public function keepDraft(Model $record, string $field, mixed $value, string $base, ?string $author): Revision
+    {
+        $this->dropDraft($record, $field);
+
+        return $this->store($record, null, [$field => $value], ['draft' => $field, 'base' => $base, 'author' => $author]);
+    }
+
+    /**
+     * @param  Model&Administrable  $record
+     */
+    public function dropDraft(Model $record, string $field): void
+    {
+        $this->rows($record)->where('draft', $field)->delete();
     }
 
     /**
@@ -100,26 +134,41 @@ final class Revisions
     }
 
     /**
-     * Forgets the versions of a record that is gone.
+     * Forgets the versions and the drafts of a record that is gone.
      *
      * @param  Model&Administrable  $record
      */
     public function forget(Model $record): void
     {
-        $this->of($record)->delete();
+        $this->rows($record)->delete();
+    }
+
+    /**
+     * Everything kept of a record: versions and drafts.
+     *
+     * @param  Model&Administrable  $record
+     * @return Builder<Revision>
+     */
+    private function rows(Model $record): Builder
+    {
+        return Revision::query()
+            ->where('module', $record::getAdminRoutePrefix())
+            ->where('record_id', $record->getKey());
     }
 
     /**
      * @param  Model&Administrable  $record
      * @param  array<string,mixed>  $values
+     * @param  array<string,string|null>  $draft  the columns of a draft
      */
-    private function store(Model $record, ?Activity $entry, array $values): Revision
+    private function store(Model $record, ?Activity $entry, array $values, array $draft = []): Revision
     {
         return Revision::query()->create([
             'activity_id' => $entry?->id,
             'module' => $record::getAdminRoutePrefix(),
             'record_id' => $record->getKey(),
             'values' => $values,
+            ...$draft,
         ]);
     }
 }

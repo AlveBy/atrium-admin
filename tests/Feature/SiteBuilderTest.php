@@ -422,7 +422,150 @@ final class SiteBuilderTest extends TestCase
         $this->assertNotNull($this->problem($unknown, ['version' => 2] + $unknown));
     }
 
+    // ---- drafts ----
+
+    private function draftProblem(array $layout): ?string
+    {
+        return app(LayoutValidator::class)->problem($layout, complete: false);
+    }
+
+    /**
+     * @return array<string,array{0:array<string,mixed>}>
+     */
+    public static function unfinishedBlocks(): array
+    {
+        return [
+            'a required title left out' => [self::note([])],
+            'a title too long' => [self::note(['title' => ['en' => str_repeat('a', 11)]])],
+            'a setting nobody knows' => [self::note(['size' => 2])],
+            'a type nobody registered' => [['id' => 'b1', 'type' => 'price']],
+            'a block without settings' => [['id' => 'b1', 'type' => 'note']],
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $block
+     */
+    #[DataProvider('unfinishedBlocks')]
+    public function test_a_draft_takes_a_block_that_is_not_filled_in(array $block): void
+    {
+        $this->assertNull($this->draftProblem(self::tree([$block])));
+    }
+
+    /**
+     * @return array<string,array{0:array<string,mixed>,1:string}>
+     */
+    public static function brokenDrafts(): array
+    {
+        return [
+            'settings that are text' => [self::tree([['id' => 'b1', 'type' => 'note', 'settings' => 'x']]), 'Section 1, column 1, block 1 (Note): '.self::BROKEN],
+            'settings that are a list' => [self::tree([['id' => 'b1', 'type' => 'note', 'settings' => ['x']]]), 'Section 1, column 1, block 1 (Note): '.self::BROKEN],
+            'a block without a type' => [self::tree([['id' => 'b1', 'settings' => []]]), 'Section 1, column 1, block 1 (): '.self::BROKEN],
+            'the same id twice' => [self::tree([self::note(), self::note()]), 'Section 1, column 1, block 2 (Note): The identifier “b1” is used twice.'],
+            'a section badly set up' => [['version' => 1, 'sections' => [['id' => 's1', 'columns' => [], 'settings' => ['width' => 'huge']]]], 'Section 1: The selected Width is invalid.'],
+            'another version' => [['version' => 2, 'sections' => []], self::BROKEN],
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $layout
+     */
+    #[DataProvider('brokenDrafts')]
+    public function test_a_draft_still_has_to_be_a_sound_tree(array $layout, string $problem): void
+    {
+        $this->assertSame($problem, $this->draftProblem($layout));
+    }
+
+    public function test_the_validator_asks_for_filled_blocks_unless_told_otherwise(): void
+    {
+        $validator = app(LayoutValidator::class);
+        $tree = self::tree([self::note([])]);
+
+        $this->assertNull($validator->problem($tree, complete: false));
+        $this->assertNotNull($validator->problem($tree));
+    }
+
+    /**
+     * @return array<string,array{0:array<array-key,mixed>,1:string|null}>
+     */
+    public static function failingNodes(): array
+    {
+        $section = static fn (mixed $node): array => ['version' => 1, 'sections' => [$node]];
+
+        return [
+            'a section' => [$section(['id' => 's7', 'columns' => [], 'settings' => ['height' => 1]]), 's7'],
+            'a column' => [$section(['id' => 's1', 'columns' => [['id' => 'c7']]]), 'c7'],
+            'a block' => [self::tree([self::note([], 'b7')]), 'b7'],
+            'a section that is text' => [$section('x'), null],
+            'a section without an id' => [$section(['columns' => []]), null],
+            'an id that is a number' => [$section(['id' => 7, 'columns' => []]), null],
+            'the tree itself' => [['version' => 2, 'sections' => []], null],
+            'too many sections' => [['version' => 1, 'sections' => array_fill(0, 101, [])], null],
+        ];
+    }
+
+    /**
+     * @param  array<array-key,mixed>  $layout
+     */
+    #[DataProvider('failingNodes')]
+    public function test_the_node_a_problem_is_in_is_named(array $layout, ?string $id): void
+    {
+        $validator = app(LayoutValidator::class);
+
+        $this->assertNotNull($validator->problem($layout));
+        $this->assertSame($id, $validator->failedAt());
+    }
+
+    public function test_no_node_is_named_once_a_tree_is_sound(): void
+    {
+        $validator = app(LayoutValidator::class);
+        $this->assertNull($validator->failedAt());
+
+        $validator->problem(self::tree([self::note([])]));
+        $this->assertSame('b1', $validator->failedAt());
+
+        $validator->problem(self::tree());
+        $this->assertNull($validator->failedAt());
+    }
+
+    // ---- telling trees apart ----
+
+    public function test_a_fingerprint_tells_trees_apart_whatever_the_order_of_their_keys(): void
+    {
+        $tree = ['version' => 1, 'sections' => [['id' => 's1', 'settings' => ['width' => 'full', 'tone' => 'plain']]]];
+        $reordered = ['sections' => [['settings' => ['tone' => 'plain', 'width' => 'full'], 'id' => 's1']], 'version' => 1];
+        $print = Layout::fingerprint($tree);
+
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $print);
+        $this->assertSame($print, Layout::fingerprint($reordered));
+        $this->assertNotSame($print, Layout::fingerprint(['version' => '1'] + $tree));
+        $this->assertNotSame($print, Layout::fingerprint(['version' => 1, 'sections' => []]));
+        $this->assertNotSame(Layout::fingerprint(['a', 'b']), Layout::fingerprint(['b', 'a']), 'The order of a list is part of it.');
+        $this->assertNotSame(Layout::fingerprint(null), Layout::fingerprint([]));
+        $this->assertSame(hash('sha256', serialize(null)), Layout::fingerprint(null));
+    }
+
     // ---- the field ----
+
+    public function test_an_edit_that_does_not_send_the_tree_leaves_it_alone(): void
+    {
+        $field = LayoutField::make('layout')->required();
+        $first = static fn (?FieldContext $context): mixed => $field->getValidationRules($context)[0];
+
+        $this->assertSame('sometimes', $first(FieldContext::edit(new Landing, null, false)));
+        $this->assertSame('required', $first(FieldContext::edit(new Landing, null, true)));
+        $this->assertSame('required', $first(FieldContext::create(null, false)));
+        $this->assertSame('required', $first(null));
+        $this->assertCount(4, $field->getValidationRules(FieldContext::edit(new Landing, null, false)));
+    }
+
+    public function test_the_field_lets_the_tree_change_unless_it_is_shut(): void
+    {
+        $this->assertTrue(LayoutField::make('layout')->isEditable());
+        $this->assertFalse(LayoutField::make('layout')->disabled()->isEditable());
+        $this->assertFalse(LayoutField::make('layout')->readonly()->isEditable());
+        $this->assertTrue(LayoutField::make('layout')->disabled(false)->readonly(false)->isEditable());
+    }
 
     public function test_the_field_tells_the_editor_the_types_and_the_limits(): void
     {

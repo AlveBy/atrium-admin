@@ -27,6 +27,11 @@ final class Landing extends Model implements Administrable
 
     protected $fillable = ['name', 'layout'];
 
+    protected function casts(): array
+    {
+        return ['layout' => 'array'];
+    }
+
     public static function getAdminLabel(): string
     {
         return 'Landings';

@@ -328,6 +328,12 @@ final class Permissions
             return $match[1].'.'.$match[2];
         }
 
+        // The page editor and its steps change the record.
+        if (preg_match('/^admin\.([a-z0-9_]+)\.builder(\.[a-z]+)?$/', $routeName, $match)
+            && isset($this->resources->modules()[$match[1]])) {
+            return $match[1].'.'.self::UPDATE;
+        }
+
         if (preg_match('/^admin\.([a-z0-9_]+)\.([a-z]+)$/', $routeName, $match)
             && isset(self::ROUTE_ACTIONS[$match[2]])
             && isset($this->resources->modules()[$match[1]])) {

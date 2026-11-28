@@ -19,11 +19,18 @@ use Illuminate\Support\Carbon;
  * saved it, when and from where; none for the record as it was before its
  * history began.
  *
+ * A draft is a row of its own: the value of one field (`draft` names it) that
+ * is not on the record yet, with who wrote it and the fingerprint of the
+ * value it was started from (Atrium\Admin\History\Revisions::draft()).
+ *
  * @property int $id
  * @property int|null $activity_id
  * @property string $module
  * @property int $record_id
  * @property array<string,mixed> $values
+ * @property string|null $draft
+ * @property string|null $author
+ * @property string|null $base
  * @property Carbon|null $created_at
  * @property-read Activity|null $activity
  */
@@ -33,7 +40,7 @@ class Revision extends Model
 
     protected $table = 'admin_revisions';
 
-    protected $fillable = ['activity_id', 'module', 'record_id', 'values'];
+    protected $fillable = ['activity_id', 'module', 'record_id', 'values', 'draft', 'author', 'base'];
 
     /**
      * @return BelongsTo<Activity,$this>

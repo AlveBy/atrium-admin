@@ -12,7 +12,9 @@ namespace Atrium\Admin\Tests\Feature;
 use Atrium\Admin\Facades\Hook;
 use Atrium\Admin\Models\AdminRole;
 use Atrium\Admin\Models\AdminUser;
+use Atrium\Admin\Models\Revision;
 use Atrium\Admin\Tests\Fixtures\Album;
+use Atrium\Admin\Tests\Fixtures\Billboard;
 use Atrium\Admin\Tests\Fixtures\Post;
 use Atrium\Admin\Tests\TestCase;
 use Illuminate\Database\Events\QueryExecuted;
@@ -36,6 +38,13 @@ final class DeadlockRetryTest extends TestCase
     protected function connectionsToTransact(): array
     {
         return [];
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+
+        $app['config']->set('atrium.resources', [Post::class, Billboard::class]);
     }
 
     protected function setUp(): void
@@ -173,6 +182,24 @@ final class DeadlockRetryTest extends TestCase
 
         $this->assertSame(['Deleted Gone'], Post::query()->pluck('name')->all());
         $this->assertSame(['atrium.record.deleted'], $this->heard);
+    }
+
+    public function test_a_draft_of_the_page_editor_is_tried_again_after_two_deadlocks_and_not_after_three(): void
+    {
+        Billboard::reset();
+        $this->actingAs($this->admin(), 'admin');
+        $billboard = Billboard::query()->create(['name' => 'Summer']);
+        $save = fn () => $this->putJson("/admin/billboards/{$billboard->id}/builder/layout/draft", ['draft' => null, 'tree' => null, 'base' => str_repeat('a', 64), 'force' => true]);
+
+        $this->deadlock('insert', 'admin_revisions', times: 2);
+        $save()->assertOk();
+        $this->assertSame(1, Revision::query()->count());
+        $kept = Revision::query()->sole()->id;
+
+        $this->deadlock('insert', 'admin_revisions', times: 3);
+        $save()->assertServerError();
+        // The draft before is still there: nothing of the step stayed.
+        $this->assertSame($kept, Revision::query()->sole()->id);
     }
 
     /**
