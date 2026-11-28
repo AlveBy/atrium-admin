@@ -829,6 +829,8 @@ final class PageEditorTest extends TestCase
 
     public function test_the_versions_listed_are_those_in_which_the_page_changed(): void
     {
+        // Another record first: the addresses must carry the number of this one.
+        $this->billboard();
         $billboard = $this->billboard();
         $this->signedIn();
         Carbon::setTestNow('2026-11-28 10:00:00');
